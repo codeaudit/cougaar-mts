@@ -56,13 +56,14 @@ abstract class MessageQueue
     private SimpleQueue queue;
     private Schedulable thread;
     private String name;
-    private AttributedMessage pending;
-    private Object pending_lock;
+    private AttributedMessage in_progress;
+    private Object in_progress_lock, queue_processing;
 
 
     MessageQueue(String name, Container container) {
 	this.name = name;
-	pending_lock = new Object();
+	in_progress_lock = new Object();
+	queue_processing = new Object();
 	queue = new SimpleQueue();
     }
 
@@ -84,20 +85,46 @@ abstract class MessageQueue
 
 
     public void removeMessages(UnaryPredicate pred, ArrayList removed) {
-	synchronized (queue) {
-	    Iterator itr = queue.iterator();
-	    while (itr.hasNext()) {
-		AttributedMessage msg = (AttributedMessage) itr.next();
-		if (pred.execute(msg)) {
-		    removed.add(msg);
-		    itr.remove();
+	// only one remove can be examining the queue at a time,
+	// even if they are looking for orthogonal messages
+	synchronized (queue_processing) {
+	    // Note: We are blocking processing of the queue during
+	    // this time, which would usually include waiting for an
+	    // in-progress message to complete.  But messages can still
+	    // be added to the queue.
+
+	    AttributedMessage msg = in_progress;
+	    boolean matches = msg != null &&	pred.execute(msg);
+	    if (matches) {
+		// Wait for the in-progress message to complete or fail.
+		synchronized (in_progress_lock) {
+		    if (in_progress == null) {
+			// Between the time we cached the in-progress
+			// message and the time we got the lock, the
+			// message could have been sent
+			// successfully.  In that case in_progress is
+			// null and we don't care about it.
+		    } else if (in_progress == msg) {
+			// Since we have the lock on queue_processing and
+			// in_progress is not null, it must still be
+			// the message we cached, which we know
+			// should be removed.
+			removed.add(in_progress);
+			in_progress = null;
+		    } else {
+			loggingService.error("In Progress Message Changed which is impossible" + msg );
+		    }
 		}
 	    }
-	}
-	synchronized (pending_lock) {
-	    if (pending != null && pred.execute(pending)) {
-		removed.add(pending);
-		pending = null;
+	    synchronized (queue) {
+		Iterator itr = queue.iterator();
+		while (itr.hasNext()) {
+		    msg = (AttributedMessage) itr.next();
+		    if (pred.execute(msg)) {
+			removed.add(msg);
+			itr.remove();
+		    }
+		}
 	    }
 	}
     }
@@ -109,45 +136,49 @@ abstract class MessageQueue
     // Process the last failed message, if any, followed by as many
     // items as possible from the queue, with a max time as given by
     // HOLD_TIME.
-    public void run() {
+    public void run() 
+    {
 	long endTime= System.currentTimeMillis() + HOLD_TIME;
-
-	// Retry the last failed dispatch before looking at the
-	// queue.
-	synchronized (pending_lock) {
-	    if (pending != null) {
-		if (dispatch(pending)) {
-		    pending = null;
+	// Now process the queued items. 
+	while (System.currentTimeMillis() <= endTime) {
+	    if (in_progress == null) {
+		synchronized (queue_processing) {
+		    synchronized (queue) {
+			if (queue.isEmpty()) break; // done for now
+			synchronized (in_progress_lock) {
+			    in_progress = (AttributedMessage) queue.next();
+			}
+		    }
+		}
+	    }
+	    
+	    // Note that in_progress could have been set to null by
+	    // the time we get here, presumaly because it was killed
+	    // via removeMessages, which could have run between the
+	    // synchronization three lines up and this one.  But this
+	    // is OK.  The null will be detected and the thread will
+	    // simply continue processing the queue.
+	    synchronized (in_progress_lock) {
+		if (in_progress == null) {
+		    continue;
+		} else if (dispatch(in_progress)) {
+		    // Processing succeeded, continue popping the queue
+		    in_progress = null;
+		    continue;
 		} else {
-		    // The dispatch code has already scheduled the
-		    // thread to run again later
+		    //  The dispatch code has already scheduled the thread
+		    //  to run again later.
 		    return;
 		}
 	    }
 	}
 
-	// Now process the queued items. 
-	AttributedMessage message;
-	while (System.currentTimeMillis() <= endTime) {
-	    synchronized (queue) {
-		if (queue.isEmpty()) break; // done for now
-		message = (AttributedMessage) queue.next(); // from top
-	    }
-
-
-	    if (message == null || dispatch(message)) {
-		// Processing succeeded, continue popping the queue
-		continue;
-	    } else {
-		// Remember the failed message.  The dispatch code
-		// has already scheduled the thread to run again later
-		pending = message;
-		return;
-	    }
-	}
+	// Ran out of time or queue is empty.  Restart later if any
+	// remains on the queue.
 	restartIfNotEmpty();
-
     }
+
+
 
     // Restart the thread immediately if the queue is not empty.
     private void restartIfNotEmpty() {
@@ -172,11 +203,8 @@ abstract class MessageQueue
 
      public AttributedMessage[] snapshot() 
      {
-         AttributedMessage head;
-         synchronized (pending_lock) {
-             head = pending;
-         }
          synchronized (queue) {
+	     AttributedMessage head = in_progress;
              int size = queue.size();
              if (head != null) size++;
 	     AttributedMessage[] ret = new AttributedMessage[size];
@@ -187,6 +215,7 @@ abstract class MessageQueue
              return ret;
          }
      }
+
 
     /**
      * Process a dequeued message.  Return value indicates success or
