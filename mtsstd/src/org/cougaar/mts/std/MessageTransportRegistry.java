@@ -35,7 +35,7 @@ import java.util.Map;
  * The MessageTransportRegistry singleton is a utility instance that
  * helps certain pieces of the message transport subsystem to find one
  * another. */
-class MessageTransportRegistry implements DebugFlags
+public class MessageTransportRegistry implements DebugFlags
 {
     private static MessageTransportRegistry instance;
 
@@ -178,7 +178,7 @@ class MessageTransportRegistry implements DebugFlags
 
 
 
-    Iterator findRemoteMulticastTransports(MulticastMessageAddress addr)
+    public Iterator findRemoteMulticastTransports(MulticastMessageAddress addr)
     {
 	return nameSupport.lookupMulticast(addr);
     }
