@@ -31,6 +31,7 @@ class Debug
     private static boolean DEBUG_SECURITY;
     private static boolean DEBUG_SERVICE;
     private static boolean DEBUG_STATISTICS;
+    private static boolean DEBUG_WATCHER;
 
 
     static {
@@ -55,6 +56,8 @@ class Debug
 			DEBUG_SERVICE = true;
 		    else if (dbg.equalsIgnoreCase("statistics")) 
 			DEBUG_STATISTICS = true;
+		    else if (dbg.equalsIgnoreCase("watcher")) 
+			DEBUG_WATCHER = true;
 		    else
 			System.err.println("### Unknown MTS debug key " + dbg);
 		}
@@ -86,6 +89,10 @@ class Debug
 
     static boolean debugService() {
 	return DEBUG_TRANSPORT || DEBUG_SERVICE;
+    }
+
+    static boolean debugWatcher() {
+	return DEBUG_TRANSPORT || DEBUG_WATCHER;
     }
 
 }

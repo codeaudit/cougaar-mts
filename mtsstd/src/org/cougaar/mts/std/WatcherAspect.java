@@ -66,7 +66,11 @@ public class WatcherAspect
 	Iterator itr = watchers.iterator();
 	synchronized (this) {
 	    while (itr.hasNext()) {
-		((MessageTransportWatcher) itr.next()).messageSent(message);
+		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
+		if (Debug.debugWatcher()) {
+		    System.err.println("%%% Notifying " + w + " of send");
+		}
+		w.messageSent(message);
 	    }
 	}
     }
@@ -75,7 +79,11 @@ public class WatcherAspect
 	Iterator itr = watchers.iterator();
 	synchronized (this) {
 	    while ( itr.hasNext() ) {
-		((MessageTransportWatcher)itr.next()).messageReceived(m);
+		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
+		if (Debug.debugWatcher()) {
+		    System.err.println("%%% Notifying " + w + " of receive");
+		}
+		w.messageReceived(m);
 	    }
 	}
     }
