@@ -58,6 +58,8 @@ public class Debug implements DebugFlags
 			Flags |= COMM;
 		    else if (dbg.equalsIgnoreCase("multicast")) 
 			Flags |= MULTICAST;
+		    else if (dbg.equalsIgnoreCase("policy")) 
+			Flags |= POLICY;
 		    else if (dbg.equalsIgnoreCase("security")) 
 			Flags |= SECURITY;
 		    else if (dbg.equalsIgnoreCase("service")) 

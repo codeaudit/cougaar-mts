@@ -110,6 +110,9 @@ class DestinationQueueImpl
 	    links = destinationLinks.iterator();
 	    link = selectionPolicy.selectLink(links, message, retryCount, lastException);
 	    if (link != null) {
+		if (Debug.debug(POLICY))
+		System.out.println("#### Selected Protocol " +
+				   link.getProtocolClass());
 		try {
 		    link.forwardMessage(message);
 		    break;

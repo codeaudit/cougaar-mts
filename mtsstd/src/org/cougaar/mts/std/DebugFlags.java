@@ -30,5 +30,6 @@ public interface DebugFlags
     public static int SERVICE = 1<<5;
     public static int STATISTICS = 1<<6;
     public static int WATCHER = 1<<7;
+    public static int POLICY = 1<<8;
 
 }
