@@ -80,39 +80,93 @@ public class StatisticsServlet
 		return;
 	    }
 	}
-	out.print("<h2>Messages from all agents on node ");
+	out.print("<h2>Messages sent and received by all agents on node ");
 	out.print(getNodeID());
 	out.println("</h2>");
 	out.print("<table border=1>\n");
 	out.print("<tr><b>");
-	out.print("<td><b>AvgQueueLength</b></td>");
+	out.print("<td><b></b></td>");
+	out.print("<td><b>Sent</b></td>");
+	out.print("<td><b>Received</b></td>");
+	out.print("</b></tr>");
+
+	out.print("<tr><b>");
+	out.print("<td><b>Avg Queue Length</b></td>");
 	out.print("<td><b>");
 	out.print(f4_2.format(stats.averageMessageQueueLength));
 	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print("NA");
 	out.print("</b></tr>");
 	out.print("<tr><b>");
-	out.print("<td><b>TotalBytes</b></td>");
+	out.print("<td><b>Total Message Bytes</b></td>");
 	out.print("<td><b>");
-	out.print(stats.totalMessageBytes);
+	out.print(stats.totalSentMessageBytes);
+	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalRecvMessageBytes);
 	out.print("</b></td>");
 	out.print("</b></tr>");
 	out.print("<tr><b>");
-	out.print("<td><b>TotalCount</b></td>");
+	out.print("<td><b>Total Header Bytes</b></td>");
 	out.print("<td><b>");
-	out.print(stats.totalMessageCount);
+	out.print(stats.totalSentHeaderBytes);
+	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalRecvHeaderBytes);
 	out.print("</b></td>");
 	out.print("</b></tr>");
-	out.println("</table>");
-	out.print("Note: Intra-Node messages have a length of zero bytes");
+	out.print("<tr><b>");
+	out.print("<td><b>Total Ack Bytes</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalSentAckBytes);
+	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalRecvAckBytes);
+	out.print("</b></td>");
+	out.print("</b></tr>");
+	out.print("<tr><b>");
+	out.print("<td><b>Total Bytes</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalSentMessageBytes + 
+		  stats.totalSentHeaderBytes +
+		  stats.totalSentAckBytes);
+	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalRecvMessageBytes + 
+		  stats.totalRecvHeaderBytes +
+		  stats.totalRecvAckBytes);
+	out.print("</b></td>");
+	out.print("</b></tr>");
+	out.print("<tr><b>");
+	out.print("<td><b>Total Intra-node Messages</b></td>");
+	out.print("<td><b>");
+	out.print(stats.histogram[0]);
+	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print(stats.histogram[0]);
+	out.print("</b></td>");
+	out.print("</b></tr>");
+	out.print("<tr><b>");
+	out.print("<td><b>Total Message Count</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalSentMessageCount);
+	out.print("</b></td>");
+	out.print("<td><b>");
+	out.print(stats.totalRecvMessageCount);
+	out.print("</b></td>");
+	out.print("</b></tr>");
 
-	out.print("<p><h2>Message Length Histogram</h2>");
+	out.println("</table>");
+
+	out.print("<p><h2>Sent Message Length Histogram</h2>");
 	out.print("<table border=1>\n");
 	out.print("<tr><b>");
 	out.print("<td><b>Size</b></td>");
 	out.print("<td><b>Count</b></td>");
 	out.print("</b></tr>");
 
-	for (int i=0; i<stats.histogram.length; i++) {
+	for (int i=1; i<stats.histogram.length; i++) {
 	    out.print("<tr><b>");
 
 	    out.print("<td><b>");
@@ -126,6 +180,5 @@ public class StatisticsServlet
 	    out.print("</b></tr>");
 	}
 	out.print("</table>");
-	out.print("Note: Histagram table does not include intra-Node traffic.");
     }
 }

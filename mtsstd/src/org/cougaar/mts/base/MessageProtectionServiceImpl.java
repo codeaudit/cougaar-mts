@@ -36,13 +36,12 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.ProtectedInputStream;
 import org.cougaar.core.mts.ProtectedOutputStream;
 import org.cougaar.core.service.MessageProtectionService;
 
 public class MessageProtectionServiceImpl 
-    implements MessageProtectionService, ServiceProvider,AttributeConstants
+    implements MessageProtectionService, ServiceProvider
 {
     
 
@@ -74,8 +73,6 @@ public class MessageProtectionServiceImpl
 	oos.writeObject(attributes);
 	oos.close();
 	byte[] header= bos.toByteArray();
-	// save HeaderLength as local attribute (not sent remotely)
-	attributes.setLocalAttribute(HEADER_BYTES_ATTRIBUTE, new Integer(header.length));
 	return header;
 	// For testing security exception handling
 	// throw new java.security.GeneralSecurityException("protectHeader");

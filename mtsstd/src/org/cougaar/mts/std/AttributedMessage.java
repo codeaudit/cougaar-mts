@@ -25,6 +25,9 @@
  */
 
 package org.cougaar.mts.std;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -36,6 +39,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 
 import org.cougaar.core.mts.Attributes;
+import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -63,7 +67,7 @@ import org.cougaar.mts.base.MessageStreamsFactory;
  */
 public class AttributedMessage 
     extends  Message
-    implements Externalizable, MessageAttributes
+    implements Externalizable, MessageAttributes, AttributeConstants
 {
 
     private transient Logger logger = Logging.getLogger(getClass().getName());
@@ -270,21 +274,51 @@ public class AttributedMessage
 
 
 
+    private byte[] serializeObject(Object object)
+    {
+	ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	try {
+	    ObjectOutputStream oos = new ObjectOutputStream(bos);
+	    oos.writeObject(object);
+	    oos.close();
+	} catch (java.io.IOException ex) {
+	    logger.error(null, ex);
+	}
+	return bos.toByteArray();
+    }
+
+    private Object deserializeObject(byte[] bytes)
+    {
+	Object result = null;
+	try {
+	    ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+	    ObjectInputStream ois = new ObjectInputStream(bis);
+	    result = ois.readObject();
+	    ois.close();
+	} catch (Exception ex) {
+	    logger.error(null, ex);
+	}
+
+	return result;
+    }
 
     private void sendAttributes(ObjectOutput out) 
 	throws java.io.IOException, GeneralSecurityException
     {
  	MessageProtectionService svc =
 	    MessageProtectionAspect.getMessageProtectionService();
-
+	byte[] bytes = null;
 	if (svc != null) {
-	    byte[] bytes = svc.protectHeader(attributes, 
-					     getOriginator(),
-					     getTarget());
-	    out.writeObject(bytes);
+	    bytes = svc.protectHeader(attributes, 
+				      getOriginator(),
+				      getTarget());
 	} else {
-	    out.writeObject(attributes);
+	    bytes = serializeObject(attributes);
 	}
+	out.writeObject(bytes);
+	// save HeaderLength as local attribute (not sent remotely)
+	attributes.setLocalAttribute(HEADER_BYTES_ATTRIBUTE, 
+					 new Integer(bytes.length));
     }
 
     private void readAttributes(ObjectInput in) 
@@ -292,16 +326,16 @@ public class AttributedMessage
     {
  	MessageProtectionService svc =
 	    MessageProtectionAspect.getMessageProtectionService();
+	byte[] rawData = (byte[]) in.readObject();
 	if (svc != null) {
-
-	    byte[] rawData = (byte[]) in.readObject();
 	    attributes  = svc.unprotectHeader(rawData, 
 					      getOriginator(),
 					      getTarget());
-
 	} else {
-	    attributes = (SimpleMessageAttributes) in.readObject();
+	    attributes = (SimpleMessageAttributes) deserializeObject(rawData);
 	}
+	attributes.setLocalAttribute(HEADER_BYTES_ATTRIBUTE, 
+					 new Integer(rawData.length));
     }
 
 
