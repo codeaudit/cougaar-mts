@@ -128,6 +128,7 @@ public class MessageTransportServiceProvider
 
         // Traffic Masking Generator
         aspectSupport.addAspect(new TrafficMaskingGeneratorAspect());
+        
 
 	// Now read user-supplied aspects
 	aspectSupport.readAspects();

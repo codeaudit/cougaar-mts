@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.StateObject;
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.MessageEnvelope;
@@ -28,8 +29,8 @@ import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.*;
 
-public class TrafficMaskingGeneratorAspect extends StandardAspect
-{
+public class TrafficMaskingGeneratorAspect extends StandardAspect 
+  implements TrafficMaskingGeneratorService, StateObject {
 
   private MaskingQueueDelegate maskingQDelegate;
   public MessageTransportRegistry registry;
@@ -39,6 +40,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   private NodeKeeperTimerTask nodeKeeper;
   private MessageAddress myAddress;
   private ReplyTimerTask replyTimerTask;
+  private HashMap nodeTimerMap = new HashMap(6);
+  private ArrayList statsList = new ArrayList();
 
   public TrafficMaskingGeneratorAspect() {
     super();
@@ -60,6 +63,22 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
                          requestRate + " reply is: "+replyRate);
   }
 
+  public void setState(Object loadState) {
+    // nothing for now
+  }
+
+  public Object getState() {
+    //nothing for now
+    return null;
+  }
+
+  public void load() {
+   super.load();
+   TrafficMaskingGeneratorServiceProvider tmgSP = 
+     new TrafficMaskingGeneratorServiceProvider(this);
+   getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
+  }
+
   public Object getDelegate(Object delegate, Class type) {
     if (type == SendQueue.class) {
       maskingQDelegate = new MaskingQueueDelegate((SendQueue) delegate);
@@ -69,6 +88,92 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     } else {
       return null;
     }
+  }
+
+  public void cancelTimer(MessageAddress node) {
+    Timer theMaskingTimer = (Timer) nodeTimerMap.get(node);
+    theMaskingTimer.cancel();
+    nodeTimerMap.remove(node);
+  }
+
+  //
+  // implement TrafficMaskingGeneratorService API
+  //
+
+  /** Turn on Traffic Masking for a Node with the following params
+   *  @param node  The MessageAddress of the Node to send fake messages to
+   *  @param avgPeriod How often to send the fake messages in ms
+   *  @param avgSize The size in bytes of the contents of the fake messages 
+   **/
+  public void setRequestParameters(MessageAddress node, int avgPeriod, int avgSize) {
+    //check the avgPeriod
+    if (avgPeriod < 1) {
+      if (avgPeriod == -1) {
+        cancelTimer(node);
+        return;
+      } else {
+        throw new IllegalArgumentException("TrafficMaskingGeneratorAspect.setRequestParameter() "+
+                                           "received an illegal avgPeriod argument: "+avgPeriod);
+      }
+    }
+    // check the avgSize
+    if (avgSize < 1) {
+      throw new IllegalArgumentException("TrafficMaskingGeneratorAspect.setRequestParameter() "+
+                                         "received and illegal avgSize argument: "+avgSize);
+    }
+
+     // if we already have a timer going for this node - cancel the current one
+    if (nodeTimerMap.get(node) != null) {
+      cancelTimer(node);
+    }
+    // start up a request masking timer for this node
+    Timer maskingTimer = new Timer(true);
+    maskingTimer.scheduleAtFixedRate(new MaskingTimerTask(node, avgSize, avgPeriod), avgPeriod, avgPeriod);
+    // register with timer
+    nodeTimerMap.put(node, maskingTimer);
+  }
+
+  /** Set the Think Time and size parameters for Fake Replies coming 
+   *  from the local Node.
+   *  @param thinkTime The time in ms to wait before sending a reply
+   *  @param avgSize The size in bytes of the contents of the fake reply message
+   **/
+  public void setReplyParameters(int thinkTime, int avgSize) {
+    // TODO
+  }
+
+  /** Get information about the fake messages sent from this Node
+   *  @return Collection Collection of TrafficMaskingStatistics objects
+   *  @see org.cougaar.core.mts.TrafficMaskingStatistics
+   **/
+  public Collection getStatistics() {
+    //need elements and iterator to be safe... Does this cover both???
+    return new ArrayList(statsList);
+  }
+
+ // timer to create fake tasks
+  private void setupMaskingTimer() {
+    timerOn = true;
+
+    // start up the node keeper
+    Timer nodeKeeperTimer = new Timer(true);
+    // for now only update every minute and get a new one after 2 seconds
+    nodeKeeper = new NodeKeeperTimerTask();
+    // Get the list in 10 seconds to allow for other nodes to startup
+    // then check every 30 seconds - these probably need tweaking
+    // important thing is not to wait too long to get all the initial nodes
+    nodeKeeperTimer.schedule(nodeKeeper, 10000, 30000);
+
+    // start up the masking task
+    Timer maskingTimer = new Timer(true);
+    // delay start by the requestRate 
+    maskingTimer.scheduleAtFixedRate(new AutoMaskingTimerTask(), requestRate, requestRate);
+
+    //start up the reply timer
+    Timer replyTimer = new Timer(true);
+    // delay start by replyRate
+    replyTimerTask = new ReplyTimerTask();
+    replyTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
   }
 
   //
@@ -162,34 +267,39 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     
   }  // end of MaskingDelivererDelegate inner class
 
+  // creates fake-requests on a set timer - requests are a set size
+  protected class MaskingTimerTask extends TimerTask {
+    private int requestSize;
+    private MessageAddress destination;
+    private TrafficMaskingStatistics mystats;
+    private Random random = new Random();
 
-  // timer to create fake tasks
-  private void setupMaskingTimer() {
-    timerOn = true;
+    public MaskingTimerTask(MessageAddress node, int size, int period) {
+      super();
+      destination = node;
+      requestSize = size;
+      mystats = new TrafficMaskingStatistics(node, period, size);
+      statsList.add(mystats);
+    }
 
-    // start up the node keeper
-    Timer nodeKeeperTimer = new Timer(true);
-    // for now only update every minute and get a new one after 2 seconds
-    nodeKeeper = new NodeKeeperTimerTask();
-    // Get the list in 10 seconds to allow for other nodes to startup
-    // then check every 30 seconds - these probably need tweaking
-    // important thing is not to wait too long to get all the initial nodes
-    nodeKeeperTimer.schedule(nodeKeeper, 10000, 30000);
-
-    // start up the masking task
-    Timer maskingTimer = new Timer(true);
-    // delay start by the requestRate 
-    maskingTimer.scheduleAtFixedRate(new MaskingTimerTask(), requestRate, requestRate);
-
-    //start up the reply timer
-    Timer replyTimer = new Timer(true);
-    // delay start by replyRate
-    replyTimerTask = new ReplyTimerTask();
-    replyTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
+    public void run() {
+      byte[] contents = new byte[requestSize];
+      random.nextBytes(contents);
+      FakeRequestMessage request = new FakeRequestMessage(myAddress, destination, contents);
+      maskingQDelegate.sendMessage(request);
+      if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
+        System.out.println("\n$$$ MaskingTimer about to send FakeRequest from: "+myAddress+
+                           " to: "+destination+" size of byte array: "+contents.length);
+      }
+      // add to stats
+      mystats.incrementCount();
+      mystats.incrementTotalBytes(contents.length);
+    }
   }
+      
 
-  // creates fake-requests on a timer of random size
-  public class MaskingTimerTask extends TimerTask {
+  // creates fake-requests on a timer - requests are a random size
+  public class AutoMaskingTimerTask extends TimerTask {
     private Random contentsGenerator = new Random();
   
     public void run() {
@@ -208,13 +318,13 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
           new FakeRequestMessage(myAddress, fakedest, contents);
         maskingQDelegate.sendMessage(request);
         if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {        
-          System.out.println("\n&&& Masking About to send FakeRequest from: "+myAddress+
+          System.out.println("\n&&& AutoMasking About to send FakeRequest from: "+myAddress+
                              " to: "+fakedest+" size of byte array: "+
                              contents.length);
         }
       }
     }
-  }   // end of MaskingTimerTask inner class
+  }   // end of AutoMaskingTimerTask inner class
 
   // keeps list of nodes up to date and generates random node addresses
   // from the current list

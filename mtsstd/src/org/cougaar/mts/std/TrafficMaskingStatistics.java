@@ -29,15 +29,14 @@ import org.cougaar.core.society.MessageAddress;
    **/
   public class TrafficMaskingStatistics {
     private MessageAddress node;
-    private int requestPeriod, requestSize, msgCount, totalBytesSent;
+    private int requestPeriod, requestSize;
+    private int msgCount = 0;
+    private int totalBytesSent = 0;
     
-    public TrafficMaskingStatistics(MessageAddress nodeAddress, int avgPeriod,
-                                    int avgSize, int totalCount, int totalBytes) {
+    public TrafficMaskingStatistics(MessageAddress nodeAddress, int avgPeriod, int avgSize) {
       node = nodeAddress;
       requestPeriod = avgPeriod;
       requestSize = avgSize;
-      msgCount = totalCount;
-      totalBytesSent = totalBytes;
     }
 
     /** The statistics in this object are for fake request 
@@ -71,6 +70,16 @@ import org.cougaar.core.society.MessageAddress;
      *  @return int The number of bytes sent.
      **/
     public int getTotalBytesSent() {return totalBytesSent;}
+
+    /** Increment Message Count by 1 (one) **/
+    public void incrementCount() {
+      msgCount = msgCount + 1;
+    }
+
+    /** Increment the total byte count **/
+    public void incrementTotalBytes(int moreBytes) {
+      totalBytesSent = totalBytesSent + moreBytes;
+    }
 
   }
     
