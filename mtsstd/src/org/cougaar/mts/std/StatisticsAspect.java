@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.InputStream;
@@ -61,8 +62,11 @@ import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This aspect adds simple statistics gathering to the client side
- * OutputStream of RMI connections.
+ * This Aspect gathers message size and count statistics using the
+ * InputStream and OutputStream of streamed protocols.  The statistics
+ * are made accessible via the {@link MessageStatisticsService}, which
+ * this class implements.  Per-message size statistics are also added
+ * to the AttributedMessage itself, as attributes.
  */
 public class StatisticsAspect 
     extends StandardAspect

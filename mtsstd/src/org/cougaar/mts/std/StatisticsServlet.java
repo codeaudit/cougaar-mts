@@ -35,6 +35,11 @@ import org.cougaar.core.mts.MessageStatistics;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.servlet.ServletFrameset;
 
+/**
+ * This Servlet uses the {@link MessageStatistics} to display message
+ * size and count statistics for the Node.  It's created by the {@link
+ * StatisticsPlugin}.
+ */
 public class StatisticsServlet 
     extends ServletFrameset
 {

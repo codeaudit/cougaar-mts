@@ -41,12 +41,14 @@ import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.LinkProtocol; // javadoc
 import org.cougaar.mts.base.LinkProtocolService;
 import org.cougaar.mts.base.RMILinkProtocol;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- *  Just for testing access to LinkProtocol services.
+ *  This test Aspect is an example of using a {@link
+ *  LinkProtocol}-specific service.
  */
 public class ServiceTestAspect extends StandardAspect
 {

@@ -28,6 +28,10 @@ package org.cougaar.mts.std;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.plugin.ComponentPlugin;
 
+/**
+ * This Plugin loads three servlets: {@link StatisticsServlet}, {@link
+ * AgentRemoteStatusServlet} and {@link AgentLocalStatusServlet}.
+ */
 public class StatisticsPlugin extends ComponentPlugin
 {
     public StatisticsPlugin() {
