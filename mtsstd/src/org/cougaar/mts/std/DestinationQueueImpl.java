@@ -26,7 +26,6 @@ import java.util.Iterator;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.util.PropertyParser;
 
 /**
