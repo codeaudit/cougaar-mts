@@ -9,6 +9,10 @@ import org.cougaar.core.mts.BaseServlet;
 import org.cougaar.mts.base.BoundComponent;
 import org.cougaar.mts.base.MessageTransportRegistryService;
 
+/**
+ * This Component tests the {@link MessageTransportRegistryService} by
+ * invoking its ipAddressChanged method.
+ */
 public class AddressChangeServletComponent
     extends BoundComponent
 {

@@ -34,6 +34,11 @@ import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.BaseServlet;
 import org.cougaar.core.mts.MessageAddress;
 
+/**
+ * This servlet displays MTS statistics for the Agent in which it's
+ * loaded.  Depending on the extension, the data displayed could be
+ * either local or remote.
+ */
 abstract public class AgentStatusServlet
     extends BaseServlet // ServletFrameset
 {

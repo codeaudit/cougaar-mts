@@ -41,9 +41,8 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.MessageTransportAspect;
 
 /**
- * This is utility class which supports loading aspects
- * @property org.cougaar.message.transport.aspects A comma-seperated
- * list of the MTS aspect classes to be instantiated.
+ * This {@link ServiceProvider} provides the {@link AspectSupport}
+ * service, which is implemented by an inner class.
  */
 //final class AspectSupportImpl implements ServiceProvider
 public class AspectSupportImpl implements ServiceProvider

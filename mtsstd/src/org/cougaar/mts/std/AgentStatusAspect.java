@@ -62,6 +62,9 @@ import org.cougaar.mts.base.DestinationQueueProviderService;
 import org.cougaar.mts.base.SendQueueProviderService;
 import org.cougaar.mts.base.QueueListener;
 
+/**
+ * This Aspect implements the {@link AgentStatusService}.
+ */
 public class AgentStatusAspect 
     extends StandardAspect
     implements AgentStatusService, QueueListener, Constants, AttributeConstants

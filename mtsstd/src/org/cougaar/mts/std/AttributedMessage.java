@@ -60,10 +60,8 @@ import org.cougaar.mts.base.MessageStreamsFactory;
  * MTS it will be wrapped in an AttributedMessage, passed through the
  * MTS in that form, and then unwrapped and delivered at the point of
  * final delivery.  AttributedMessages should not be construed as
- * envelopes.  In particular, it's not generally appropriate to
- * introduce further levels of 'wrapping' beyond the initial one.  If
- * you think you need the contents of an AttributedMessage to be
- * another AttributedMessage, you've probably misunderstood...
+ * envelopes.  In particular, it's not appropriate to introduce
+ * further levels of 'wrapping' beyond the initial one.  
  */
 public class AttributedMessage 
     extends  Message
