@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.cougaar.core.component.BinderFactory;
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ContainerSupport;
 import org.cougaar.core.component.ContainerAPI;
@@ -86,7 +87,10 @@ public class MessageTransportServiceProvider
         this.id = id;
 	proxies = new HashMap();
 	rawProxies = new HashMap();
-
+	BinderFactory bf = new MTSBinderFactory();
+	if (!attachBinderFactory(bf)) {
+	    throw new RuntimeException("Failed to load the BinderFactory in MessageTransportServiceProvider");
+	}
     }
  
 
@@ -102,8 +106,8 @@ public class MessageTransportServiceProvider
 
 
     private void createAspectSupport() {
-	ServiceBroker sb = getServiceBroker();
-	aspectSupport = new AspectSupportImpl(sb);
+	aspectSupport = new AspectSupportImpl(this);
+
 	//Watcher Aspect is special because the MTServicer interface
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
@@ -276,13 +280,13 @@ public class MessageTransportServiceProvider
         setChildServiceBroker(new PropagatingServiceBroker(bs));
     }
 
-    protected Class specifyChildBindingSite() {
-        return null;
-    }
 
     public ContainerAPI getContainerProxy() {
 	return this;
     }
 
+
+
 }
+
     

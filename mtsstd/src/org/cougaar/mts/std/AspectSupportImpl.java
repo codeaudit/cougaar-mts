@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 
 /**
@@ -38,13 +39,13 @@ public final class AspectSupportImpl implements AspectSupport
 
     private ArrayList aspects;
     private HashMap aspects_table;
-    private ServiceBroker sb; 
+    private Container container;
 
     // Should this be a singleton?
-    public AspectSupportImpl(ServiceBroker sb) {
+    public AspectSupportImpl(Container container) {
 	aspects = new ArrayList();
 	aspects_table = new HashMap();
-	this.sb = sb;
+	this.container = container;
 	readAspects();
     }
     
@@ -85,7 +86,7 @@ public final class AspectSupportImpl implements AspectSupport
 	    aspects.add(aspect);
 	    aspects_table.put(classname, aspect);
 	}
-	aspect.setServiceBroker(sb);
+	container.add(aspect);
 	System.out.println("******* added aspect " + aspect);
     }
 
@@ -104,13 +105,13 @@ public final class AspectSupportImpl implements AspectSupport
 	while (itr.hasNext()) {
 	    MessageTransportAspect aspect = 
 		(MessageTransportAspect) itr.next();
-	    if (protocol != null && aspect.rejectProtocol(protocol, type))
-		continue; //skip it
 
-	    Object candidate = aspect.getDelegate(delegate, type);
-	    if (candidate != null) delegate = candidate;
-	    if (Debug.debugAspects()) 
-		System.out.println("======> " + delegate);
+	    Object candidate = aspect.getDelegate(delegate, protocol, type);
+	    if (candidate != null) {
+		delegate = candidate;
+		if (Debug.debugAspects()) 
+		    System.out.println("======> " + delegate);
+	    }
 	}
 	return delegate;
     }

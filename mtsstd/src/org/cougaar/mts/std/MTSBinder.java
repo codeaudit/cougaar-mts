@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  Copyright 2001 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -18,25 +18,24 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
-
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ContainerAPI;
-import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.BinderSupport;
+import org.cougaar.core.component.BinderFactory;
+import org.cougaar.core.component.BindingSite;
 
-
-/**
- * Abstract specification of a aspect in the message transport
- * subsystem.  An aspect is only required to perform one job: return
- * an aspect delegate for a given object of a given interface, or null
- * if the aspect prefers not to deal with that interface.  
- *
- * The LinkProtocol is passed along as a bit of hack, to allow the
- * aspect to decide whether or not to attach an aspect based on the
- * protocol. */
-public interface MessageTransportAspect extends ContainerAPI
+public class MTSBinder extends BinderSupport implements BindingSite
 {
-    public Object getDelegate(Object delegate, 
-			      LinkProtocol protocol,
-			      Class type);
+    /** All subclasses must implement a matching constructor. **/
+    public MTSBinder(BinderFactory bf, Object child) {
+	super(bf, child);
+    }
+
+    protected final BindingSite getBinderProxy() {
+	// horribly unsecure! Means that the component has full access
+	// to the binder.
+	return (BindingSite) this;
+    }
+
+
 }

@@ -39,7 +39,10 @@ public class MulticastAspect extends StandardAspect
     }
 
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, 
+			      LinkProtocol protocol, 
+			      Class type) 
+    {
 	if (type == MessageTransportService.class) {
 	    return new ServiceDelegate((MessageTransportService) delegate);
 	} else if (type == MessageDeliverer.class) {

@@ -63,10 +63,6 @@ public class SecurityAspect extends StandardAspect
 	enabled = ensure_msm() != null;
     }
 
-    public boolean rejectProtocol(LinkProtocol protocol, Class type) {
-	return (protocol instanceof LoopbackLinkProtocol);
-    }
-
     public boolean isEnabled() {
 	return enabled;
     }
@@ -108,8 +104,14 @@ public class SecurityAspect extends StandardAspect
     }
 
 
-    public Object getDelegate(Object delegate, Class type) {
-	if (type ==  DestinationLink.class) {
+
+    public Object getDelegate(Object delegate,
+			      LinkProtocol protocol,
+			      Class type) 
+    {
+	if (protocol instanceof LoopbackLinkProtocol) {
+	    return null;
+	} else if (type ==  DestinationLink.class) {
 	    return new SecureDestinationLink((DestinationLink) delegate);
 	} else if (type == MessageDeliverer.class) {
 	    return new SecureDeliverer((MessageDeliverer) delegate);

@@ -89,7 +89,10 @@ public class StatisticsAspect
     }
 
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, 
+			      LinkProtocol protocol, 
+			      Class type) 
+    {
 	if (type == OutputStream.class) {
 	    return new StatisticsStreamWrapper((OutputStream) object);
 	} else if (type == DestinationQueue.class) {

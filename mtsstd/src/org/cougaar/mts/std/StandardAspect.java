@@ -20,23 +20,65 @@
  */
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.BindingSite;
+import org.cougaar.core.component.ContainerAPI;
+import org.cougaar.core.component.ContainerSupport;
+import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
+
 
 /**
  * Default base Aspect class, which will accept any transport at any
  * cutpoint.
  */
 abstract public class StandardAspect 
+    extends ContainerSupport
     implements MessageTransportAspect
 {
-    protected ServiceBroker sb;
-    
-    public void setServiceBroker(ServiceBroker sb) {
-	this.sb = sb;
-    }
 
-    public boolean rejectProtocol(LinkProtocol protocol, Class type) {
-	// Accept any transport at any cut point by default
+
+
+    // Backward compatibility for previous interface
+
+    public  boolean rejectProtocol(LinkProtocol protocol, Class type) {
 	return false;
     }
+
+    public Object getDelegate(Object delegate, Class type) {
+	throw new RuntimeException("Subclass has not defined getDelegate(Object delegate, Class type)");
+    }
+
+    public Object getDelegate(Object delegate, 
+			      LinkProtocol protocol,
+			      Class type) 
+    {
+	if (rejectProtocol(protocol, type)) {
+	    return null;
+	} else {
+	    return getDelegate(delegate, type);
+	}
+    }
+	
+
+
+
+
+    // ContainerAPI
+
+    public void requestStop() {}
+
+    public ContainerAPI getContainerProxy() {
+	return this;
+    }
+
+    protected String specifyContainmentPoint() {
+	return "messagetransportservice.aspect";
+    }
+
+    public final void setBindingSite(BindingSite bs) {
+        super.setBindingSite(bs);
+        setChildServiceBroker(new PropagatingServiceBroker(bs));
+    }
+
+
 }

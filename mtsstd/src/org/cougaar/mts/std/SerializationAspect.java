@@ -42,18 +42,19 @@ public class SerializationAspect extends StandardAspect
     public SerializationAspect() {
     }
     
-    public Object getDelegate(Object object, Class type) {
-	if (type == DestinationLink.class) {
+    public Object getDelegate(Object object,
+			      LinkProtocol protocol,
+			      Class type) 
+    {
+	if (!(protocol instanceof LoopbackLinkProtocol)) {
+	    return null;
+	} else if (type == DestinationLink.class) {
 	    return new SerializingDestinationLink((DestinationLink) object);
 	} else {
 	    return null;
 	}
     }
     
-
-    public boolean rejectProtocol(LinkProtocol protocol, Class type) {
-	return (!(protocol instanceof LoopbackLinkProtocol));
-    }
 
     private class SerializingDestinationLink 
 	implements DestinationLink, Runnable

@@ -59,7 +59,7 @@ public class AgentStatusAspect
     }
 
  
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, LinkProtocol proto, Class type) {
 	if (type == DestinationLink.class) {
 	    return new AgentStatusDestinationLink((DestinationLink) object);
 	} else 	if (type == SendQueue.class) {
@@ -101,7 +101,7 @@ public class AgentStatusAspect
 		long latency = endTime - startTime;
 		double alpha = 0.333;
 		synchronized (state) {
-		    state.status =  ACTIVE;
+		    state.status =  AgentStatusService.ACTIVE;
 		    state.timestamp = System.currentTimeMillis();
 		    state.deliveredCount++;
 		    state.lastDeliverTime = (int) latency;
