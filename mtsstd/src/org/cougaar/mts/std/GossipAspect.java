@@ -103,14 +103,16 @@ public class GossipAspect
 
 	ServiceProvider sp = new GossipServices();
 	rootsb.addService(GossipKeyDistributionService.class, sp);
-	loggingService.info("Registered GossipKeyDistributionService");
+	if (loggingService.isInfoEnabled())
+	    loggingService.info("Registered GossipKeyDistributionService");
     }
 
     // A neighbor wants us to notify him if we see this key
     private void handleKeyGossip(MessageAddress neighbor, KeyGossip gossip) {
-	loggingService.info("Received gossip requests from " 
-			    +neighbor+ "="
-			    +gossip.prettyPrint());
+	if (loggingService.isInfoEnabled())
+	    loggingService.info("Received gossip requests from " 
+				+neighbor+ "="
+				+gossip.prettyPrint());
 	synchronized(this) {
 	   KeyGossip old = (KeyGossip) neighborsRequests.get(neighbor);
 	    if (old == null) {
@@ -132,9 +134,10 @@ public class GossipAspect
     // A neighbor has provided us with a value we asked for
     private void handleValueGossip(MessageAddress neighbor, ValueGossip gossip)
     {
-	loggingService.info("Received gossip data from " 
-			     +neighbor+ "="
-			    +gossip.prettyPrint());
+	if (loggingService.isInfoEnabled())
+	    loggingService.info("Received gossip data from " 
+				+neighbor+ "="
+				+gossip.prettyPrint());
 	ServiceBroker sb = getServiceBroker();
 	synchronized (this) {
 	    if (updateService == null) 
@@ -164,13 +167,14 @@ public class GossipAspect
 	
 	KeyGossip addendum = potentialGossip.computeAddendum(propagatedGossip);
 
-	if (messageGossip != null)
+	if (messageGossip != null && loggingService.isInfoEnabled())
 	    loggingService.info("Existing requests for " +destination+ '=' 
 				+messageGossip.prettyPrint());
 	if (addendum != null) {
-	    loggingService.info("Additional requests for " 
-				+destination+ '='
-				+addendum.prettyPrint());
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("Additional requests for " 
+				    +destination+ '='
+				    +addendum.prettyPrint());
 	    if (messageGossip == null) messageGossip = new KeyGossip(); 
 	    messageGossip.add(addendum);
 	}
@@ -203,10 +207,11 @@ public class GossipAspect
 	if (sub != null) {
 	    ValueGossip changes = sub.getChanges();
 	    if (changes != null) {
-		loggingService.info("Adding gossip data for "
-				    +destination+
-				    "="
-				    +changes.prettyPrint());
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("Adding gossip data for "
+					+destination+
+					"="
+					+changes.prettyPrint());
 		message.setAttribute(VALUE_GOSSIP_ATTR, changes);
 	    }
 	}
@@ -329,7 +334,9 @@ public class GossipAspect
     {
 
 	public void addKey(String key) {
-	    loggingService.info("GossipKeyDistributionService.addKey " +key);
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("GossipKeyDistributionService.addKey " 
+				    +key);
 	    localRequests.add(key);
 	}
 
