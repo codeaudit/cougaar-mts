@@ -218,9 +218,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	// Get the list in 10 seconds to allow for other nodes to startup
 	// then check every 30 seconds - these probably need tweaking
 	// important thing is not to wait too long to get all the initial nodes
-	TimerTask tTask = threadService.getTimerTask(this, nodeKeeper,
-						     "NodeKeeper");
-	threadService.schedule(tTask, 10000, 30000);
+	threadService.schedule(nodeKeeper, 10000, 30000);
 
 	// start up the masking task - delay start by the requestRate 
 	AutoMaskingTimerTaskController amtt = 
@@ -409,14 +407,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    this.generator = generator;
 	}
 
-	abstract Runnable makeTask();
-	abstract String taskName();
+	abstract TimerTask makeTask();
 
 	void makeNextTask() {
 	    // randomize period, then run a new task once at that time
 	    int delay = generator.nextInt(period); // randomize
-	    TimerTask newTask = threadService.getTimerTask(this, makeTask(),
-							   taskName());
+	    TimerTask newTask = makeTask();
 	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		loggingService.debug("Scheduling " +newTask+ " at "
 					  +delay);
@@ -454,16 +450,13 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
       
 
-	String taskName() {
-	    return "MaskingTask";
-	}
 
-	Runnable makeTask() {
+	TimerTask makeTask() {
 	    return new Task();
 	}
 
       
-	private class Task implements Runnable {
+	private class Task extends TimerTask {
 	    public void run() {
 		byte[] contents = randomContents(requestSize);
 		myAddress = getNameSupport().getNodeMessageAddress();
@@ -494,11 +487,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
 
 
-	String taskName() {
-	    return "ReplyTimerTask";
-	}
 
-	Runnable makeTask() {
+	TimerTask makeTask() {
 	    return new Task();
 	}
 
@@ -516,7 +506,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
 
 
-	class Task implements Runnable {
+	class Task extends TimerTask {
 	    public void run() {
 		if (!replyQueue.isEmpty()) {
 		    synchronized(replyQueue) {
@@ -565,15 +555,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
 
 
-	String taskName() {
-	    return "AutoMasker";
-	}
 
-	Runnable makeTask() {
-	    return  new Task();
+	TimerTask makeTask() {
+	    return new Task();
 	}
       
-	class Task implements Runnable {
+	class Task extends TimerTask {
 	    public void run() {
 		MessageAddress fakedest = nodeKeeper.getRandomNodeAddress();
 		// make sure we have other nodes to send to
@@ -604,7 +591,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // keeps list of nodes up to date and generates random node addresses
     // from the current list - only used in auto mode when
     // system properties are defined
-    public class NodeKeeperTask implements Runnable {
+    public class NodeKeeperTask extends TimerTask {
 	private Random generator = new Random();
 
 	//constructor

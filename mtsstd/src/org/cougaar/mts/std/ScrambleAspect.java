@@ -64,7 +64,7 @@ public class ScrambleAspect extends StandardAspect
 	
 
 	
-	private class SendMessageTask implements Runnable {
+	private class SendMessageTask extends TimerTask {
 	    public void run() {
 		forcedHeldMessage();
 	    }
@@ -86,8 +86,7 @@ public class ScrambleAspect extends StandardAspect
 	//================util methods
 	private void holdMessage(AttributedMessage message){
 	    heldMessage = message;
-	    Runnable r = new SendMessageTask ();
-	    timerTask = threadService.getTimerTask(this, r, "ScrambleSender");
+	    timerTask = new SendMessageTask ();
 	    threadService.schedule(timerTask, 3000); //schedule a timer task
 	    heldMessageCount++;
 	    if (loggingService.isDebugEnabled())

@@ -28,7 +28,6 @@ import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.util.CircularQueue;
 
-import java.util.Timer;
 import java.util.TimerTask;
 
 /**
@@ -40,14 +39,6 @@ abstract class MessageQueue
     extends BoundComponent
     implements Runnable
 {
-    private static Timer restartTimer = new Timer(true);
-
-
-//     static void makeRestartTimer() {
-// 	TimerRunnable timer = new TimerRunnable();
-// 	Schedulable thread = threadService.getThread(timer);
-// 	thread.start();
-//     }
     
     private TimerTask restartTask;
     private CircularQueue queue;
@@ -110,7 +101,7 @@ abstract class MessageQueue
 	restartTask = new TimerTask() {
 		public void run() { restart(); }
 	    };
-	restartTimer.schedule(restartTask, delay);
+	threadService.schedule(restartTask, delay);
     }
 
     void restart() {
