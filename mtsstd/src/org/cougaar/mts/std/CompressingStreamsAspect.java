@@ -73,6 +73,8 @@ public class CompressingStreamsAspect extends StandardAspect
 	{
 	    System.out.println("Compression Receiver Test Attribute=" +
 			       message.getAttribute("test"));
+	    System.out.println("Compression Receiver Level Attribute=" +
+			       message.getAttribute(LEVEL_ATTR));
 	    return super.deliverMessage(message, dest);
 	}
 	
@@ -92,9 +94,23 @@ public class CompressingStreamsAspect extends StandardAspect
 	{
 	    message.addValue(MessageAttributes.FILTERS_ATTRIBUTE,
 			     CompressingStreamsAspect.class.getName());
-	    message.setAttribute(LEVEL_ATTR,
-				 new Integer(Deflater.BEST_COMPRESSION));
-	    return super.forwardMessage(message);
+
+	    // Delegate the call down stream
+	    MessageAttributes result = super.forwardMessage(message);
+
+	    // The "test attribute was set on the message on the
+	    // reciever side and returned in the result
+	    System.out.println("Compression Sender Result Test Attribute=" +
+			       result.getAttribute("test"));
+
+	    // The local attribute was set down stream and is now
+	    // available when the call returns
+            Object level = message.getAttribute(LEVEL_ATTR);
+	    System.out.println("Compression Sender Local Attribute ="
+			       + level);
+	    return result;
+
+
 	}
 	
     }
@@ -115,9 +131,10 @@ public class CompressingStreamsAspect extends StandardAspect
 	public void finalizeAttributes(AttributedMessage msg) {
 	    super.finalizeAttributes(msg);
 	    this.msg = msg;
+	    // -D flag from shell script
 	    String levelstr = System.getProperty("compression-level", "0");
 	    int level = Integer.parseInt(levelstr);
-	    msg.setAttribute(LEVEL_ATTR, new Integer(level));
+	    msg.setLocalAttribute(LEVEL_ATTR, new Integer(level));
 	}
 
 
@@ -138,6 +155,7 @@ public class CompressingStreamsAspect extends StandardAspect
 	    // For testing purposes, send a "test" string.
 	    // Object Stream does not work (why?), so we have to do the
 	    // encoding by hand
+	    // note for the string length, only 8 bits is sent.
 	    String test = "test";
 	    def_os.write(test.length());
 	    def_os.write(test.getBytes());
@@ -151,11 +169,7 @@ public class CompressingStreamsAspect extends StandardAspect
 			       " bytes");
 
 	}
-
-
-
     }
-
 
 
 
@@ -189,14 +203,13 @@ public class CompressingStreamsAspect extends StandardAspect
 	public void finishInput() 
 	    throws java.io.IOException
 	{
-
-	    System.out.println("Starting Compression Input =");
 	    // For test purposes, read the test string tailer
 	    int count = inf_in.read();
 	    byte[] bytes = new byte[count];
 	    inf_in.read(bytes);
 	    String data = new String(bytes);
-	    System.out.println("Compression Input Test String=" + data);
+	    System.out.println("Compression Reciever Stream Test String="
+			       + data);
 
 	    // For test purposes
 	    // Set an message attribute with the tailer string

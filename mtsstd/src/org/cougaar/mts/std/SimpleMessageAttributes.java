@@ -21,72 +21,103 @@
 
 package org.cougaar.core.mts;
 
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SimpleMessageAttributes    
-    extends  HashMap
-    implements MessageAttributes
+    implements MessageAttributes, Serializable
 {
+    private HashMap data;
+    private transient HashMap local_data;
+
     public SimpleMessageAttributes() {
-    }
-
-    public SimpleMessageAttributes(AttributedMessage msg) {
-	super();
-	MessageAttributes attr = msg.getRawAttributes();
-	copyAttributes(attr);
+	data = new HashMap();
+	local_data = new HashMap();
     }
 
 
-    public SimpleMessageAttributes(MessageAttributes attr) {
-	super();
-	copyAttributes(attr);
+    public SimpleMessageAttributes(SimpleMessageAttributes attr) {
+	this();
+	data.putAll(attr.data);
+	local_data.putAll(attr.local_data);
     }
 
 
-    private void copyAttributes (MessageAttributes attr) {
-	if (attr instanceof SimpleMessageAttributes) {
-	    putAll((SimpleMessageAttributes) attr);
-	} else {
-	    System.err.println("#### THIS SHOULD NEVER HAPPEN");
-	    Thread.dumpStack();
-	}
+    private void readObject(ObjectInputStream ois)
+	throws java.io.IOException, ClassNotFoundException
+    {
+	ois.defaultReadObject();
+	local_data = new HashMap();
     }
 
 
     // MessageAttributes interface
 
-
-    public void clearAttributes() {
-	clear();
+    public Object getAttribute(String attribute) {
+	Object value = getAttribute(attribute, local_data);
+	if (value != null) return value;
+	return getAttribute(attribute, data);
     }
 
-    public void restoreAttributes(MessageAttributes snapshot) {
-	clear();
-	copyAttributes(snapshot);
+    public void setAttribute(String attribute, Object value) {
+	setAttribute(attribute, value, data);
     }
+
+    public void removeAttribute(String attribute) {
+	removeAttribute(attribute, data);
+    }
+
+    public void addValue(String attribute, Object value) {
+	addValue(attribute, value, data);
+    }
+
+    public void removeValue(String attribute, Object value) {
+	removeValue(attribute, value, data);
+    }
+
+    public void setLocalAttribute(String attribute, Object value) {
+	setAttribute(attribute, value, local_data);
+    }
+
+    public void removeLocalAttribute(String attribute) {
+	removeAttribute(attribute, local_data);
+    }
+
+    public void addLocalValue(String attribute, Object value) { 
+	addValue(attribute, value, local_data);
+   }
+
+    public void removeLocalValue(String attribute, Object value) {
+	removeValue(attribute, value, local_data);
+    }
+
+
+
+    // Internal functions
 
     /**
      * Returns the current value of the given attribute.
      */
-    public Object getAttribute(String attribute) {
-	return get(attribute);
+    private Object getAttribute(String attribute, HashMap map) {
+	return map.get(attribute);
     }
 
     /**
      * Modifies or sets the current value of the given attribute to the
      * given value.
      */
-    public void setAttribute(String attribute, Object value) {
-	put(attribute, value);
+    private void setAttribute(String attribute, Object value, HashMap map) {
+	map.put(attribute, value);
     }
 
 
     /**
      * Removes the given attribute.
      */
-    public void removeAttribute(String attribute) {
-	remove(attribute);
+    private void removeAttribute(String attribute, HashMap map) {
+	map.remove(attribute);
     }
 	
     /**
@@ -96,19 +127,19 @@ public class SimpleMessageAttributes
      * will be created and the current value (if non-null) as well as
      * the new value will be added to it.
      */
-    public void addValue(String attribute, Object value) {
-	Object old = get(attribute);
+    private void addValue(String attribute, Object value, HashMap map) {
+	Object old = map.get(attribute);
 	if (old == null) {
 	    ArrayList list = new ArrayList();
 	    list.add(value);
-	    put(attribute, list);
+	    map.put(attribute, list);
 	} else if (old instanceof ArrayList) {
 	    ((ArrayList) old).add(value);
 	} else {
 	    ArrayList list = new ArrayList();
 	    list.add(old);
 	    list.add(value);
-	    put(attribute, list);
+	    map.put(attribute, list);
 	}
     }
 
@@ -116,15 +147,17 @@ public class SimpleMessageAttributes
      * Remove a value to an attribute.  The current raw value should
      * either be an ArrayList or a singleton equal to the given value.
      */
-    public void removeValue(String attribute, Object value) {
-	Object old = get(attribute);
+    private void removeValue(String attribute, Object value, HashMap map) {
+	Object old = map.get(attribute);
 	if (old == null) {
 	} else if (old instanceof ArrayList) {
 	    ((ArrayList) old).remove(value);
 	} else if (value.equals(old)) {
-	    remove(attribute);
+	    map.remove(attribute);
 	}
     }
+
+
 
 
 

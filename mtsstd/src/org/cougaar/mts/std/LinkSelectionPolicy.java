@@ -30,6 +30,7 @@ public interface LinkSelectionPolicy extends Service, Component
 {
     DestinationLink selectLink (Iterator links, 
 				AttributedMessage msg, 
+				AttributedMessage failedMsg,
 				int retryCount,
 				Exception lastException);
 }

@@ -33,7 +33,6 @@ import org.cougaar.core.component.StateObject;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadControlService;
 import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.service.MessageProtectionService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
@@ -64,12 +63,6 @@ public final class MessageTransportServiceProvider
     private final static String STATISTICS_ASPECT = 
 	"org.cougaar.core.mts.StatisticsAspect";
 
-    private static MessageTransportServiceProvider provider;
-
-    static MessageProtectionService getMessageProtectionService(Object client) 
-    {
-	return provider.messageProtectionService;
-    }
 
     // MTS address
     private MessageAddress address;
@@ -77,7 +70,6 @@ public final class MessageTransportServiceProvider
     // Services we use (more than once)
     private AspectSupport aspectSupport;
     private LoggingService loggingService;
-    private MessageProtectionService messageProtectionService;
     // Hang on to these because they implement services we provide.
     private WatcherAspect watcherAspect;
     private AgentStatusAspect agentStatusAspect;
@@ -91,7 +83,6 @@ public final class MessageTransportServiceProvider
 
     public MessageTransportServiceProvider(String id) {
         this.id = id;
-	provider = this;
 	proxies = new HashMap();
 	BinderFactory bf = new MTSBinderFactory();
 	if (!attachBinderFactory(bf)) {
@@ -229,13 +220,7 @@ public final class MessageTransportServiceProvider
 
         ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
 
-	messageProtectionService = (MessageProtectionService)
-	    sb.getService(this, MessageProtectionService.class, null);
 
-	// Temporary, until NAI's service is part of core
-	if (messageProtectionService == null) {
-	    messageProtectionService = new MessageProtectionServiceImpl();
-	}
 
 
 	loggingService = 

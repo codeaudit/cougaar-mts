@@ -103,13 +103,16 @@ final class DestinationQueueImpl
 	DestinationLink link;
 	int retryCount = 0;
 	Exception lastException = null;
+	AttributedMessage previous = message;
+
 	message.snapshotAttributes();
 	while (true) {
 	    if (retryCount > 0 && Debug.isDebugEnabled(loggingService,SERVICE))
 		loggingService.debug("Retrying " +message);
 
 	    links = destinationLinks.iterator();
-	    link = selectionPolicy.selectLink(links, message, retryCount, lastException);
+	    link = selectionPolicy.selectLink(links, message, previous,
+					      retryCount, lastException);
 	    if (link != null) {
 		if (Debug.isDebugEnabled(loggingService,POLICY))
 		loggingService.debug("Selected Protocol " +
@@ -144,6 +147,7 @@ final class DestinationQueueImpl
 	    retryCount++;
 	    CougaarThread.sleep(delay);
 	    if (delay < MAX_DELAY) delay += delay;
+	    previous = new AttributedMessage(message);
 	    message.restoreSnapshot();
 	}
     }

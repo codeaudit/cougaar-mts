@@ -54,11 +54,12 @@ public class AttributedMessage
 {
 
     private Message contents;
-    private MessageAttributes attributes;
+    private SimpleMessageAttributes attributes;
 
     // We control the externalization, so the 'transient' tag here is
     // really just documentation.
-    private transient MessageAttributes snapshot;
+    private transient SimpleMessageAttributes snapshot;
+
 
     /** 
      * Only invoked by server-side RMI when it's creating one of these
@@ -86,11 +87,11 @@ public class AttributedMessage
      * attributes is a snapshot of the argument's current set of
      * attributes.
      */
-    public AttributedMessage(AttributedMessage contents) 
+    public AttributedMessage(AttributedMessage msg) 
     {
-	super(contents.getOriginator(), contents.getTarget());
-	this.contents = contents.contents;
-	attributes = new SimpleMessageAttributes(contents);
+	super(msg.getOriginator(), msg.getTarget());
+	this.contents = msg.contents;
+	attributes = new SimpleMessageAttributes(msg.attributes);
     }
 
 
@@ -102,7 +103,7 @@ public class AttributedMessage
     {
 	super(source.getOriginator(), source.getTarget());
 	this.contents = null;
-	attributes = new SimpleMessageAttributes(source);
+	attributes = new SimpleMessageAttributes(source.attributes);
     }
 
 
@@ -119,7 +120,7 @@ public class AttributedMessage
 	super(contents == null ? null : contents.getOriginator(), 
 	      contents == null ? null : contents.getTarget());
 	this.contents = contents;
-	attributes = new SimpleMessageAttributes(initialAttributes);
+	attributes = new SimpleMessageAttributes(initialAttributes.attributes);
     }
 
 
@@ -129,8 +130,12 @@ public class AttributedMessage
 
     
     synchronized void restoreSnapshot() {
-	if (snapshot != null) restoreAttributes(snapshot);
+	if (snapshot != null) attributes = snapshot;
     }
+
+
+
+
 
 
     boolean replyOnly() {
@@ -146,37 +151,20 @@ public class AttributedMessage
     }
 
 
-    /**
-     * Return the raw Attributes object.  Only used by
-     * SimpleMessageAttributes to initialize itself from an
-     * AttributedMessage.
-     */
-    MessageAttributes getRawAttributes() {
-	return attributes;
-    }
 
 
     // MessageAttributes interface
     // Delegate all calls 
 
 
-    public void clearAttributes() {
-	attributes.clearAttributes();
-    }
-
-    public void restoreAttributes(MessageAttributes snap) {
-	attributes.restoreAttributes(snap);
-    }
-
-
     public Object getAttribute(String attribute) {
 	return attributes.getAttribute(attribute);
     }
 
+
     public void setAttribute(String attribute, Object value) {
 	attributes.setAttribute(attribute, value);
     }
-
 
     public void removeAttribute(String attribute) {
 	attributes.removeAttribute(attribute);
@@ -192,20 +180,47 @@ public class AttributedMessage
 
 
 
+    public void setLocalAttribute(String attribute, Object value) {
+	attributes.setLocalAttribute(attribute, value);
+    }
+
+    public void removeLocalAttribute(String attribute) {
+	attributes.removeLocalAttribute(attribute);
+    }
+	
+    public void addLocalValue(String attribute, Object value) {
+	attributes.addLocalValue(attribute, value);
+    }
+
+    public void removeLocalValue(String attribute, Object value) {
+	attributes.removeLocalValue(attribute, value);
+    }
+
+
+
+
+
+
     private void sendAttributes(ObjectOutput out) 
 	throws java.io.IOException
     {
  	MessageProtectionService svc =
-	    MessageTransportServiceProvider.getMessageProtectionService(this);
- 	ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	ObjectOutputStream oos = new ObjectOutputStream(bos);
- 	oos.writeObject(attributes);
+	    MessageProtectionAspect.getMessageProtectionService();
 
- 	byte[] bytes = svc.protectHeader(bos.toByteArray(), 
- 					 getOriginator(),
- 					 getTarget());
- 	out.writeObject(bytes);
- 	oos.close();
+	if (svc != null) {
+
+	    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	    ObjectOutputStream oos = new ObjectOutputStream(bos);
+	    oos.writeObject(attributes);
+	    oos.close();
+	    
+	    byte[] bytes = svc.protectHeader(bos.toByteArray(), 
+					     getOriginator(),
+					     getTarget());
+	    out.writeObject(bytes);
+	} else {
+	    out.writeObject(attributes);
+	}
     }
 
     private void readAttributes(ObjectInput in) 
@@ -213,16 +228,21 @@ public class AttributedMessage
 
     {
  	MessageProtectionService svc =
-	    MessageTransportServiceProvider.getMessageProtectionService(this);
+	    MessageProtectionAspect.getMessageProtectionService();
 
- 	byte[] rawData = (byte[]) in.readObject();
- 	byte[] data  = svc.unprotectHeader(rawData, 
-					   getOriginator(),
-					   getTarget());
- 	ByteArrayInputStream bis = new ByteArrayInputStream(data);
-	ObjectInputStream ois = new ObjectInputStream(bis);
- 	attributes = (MessageAttributes) ois.readObject();
- 	ois.close();
+	if (svc != null) {
+
+	    byte[] rawData = (byte[]) in.readObject();
+	    byte[] data  = svc.unprotectHeader(rawData, 
+					       getOriginator(),
+					       getTarget());
+	    ByteArrayInputStream bis = new ByteArrayInputStream(data);
+	    ObjectInputStream ois = new ObjectInputStream(bis);
+	    attributes = (SimpleMessageAttributes) ois.readObject();
+	    ois.close();
+	} else {
+	    attributes = (SimpleMessageAttributes) in.readObject();
+	}
     }
 
 
@@ -315,7 +335,8 @@ public class AttributedMessage
 
 	    ArrayList aspectNames = (ArrayList)
 		attributes.getAttribute(FILTERS_ATTRIBUTE);
-	    MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();  
+	    MessageStreamsFactory factory =  
+		MessageStreamsFactory.getFactory();  
 	    MessageReader reader = factory.getMessageReader(aspectNames);
 
 	    reader.finalizeAttributes(this);

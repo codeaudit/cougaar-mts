@@ -132,7 +132,7 @@ public class MulticastAspect extends StandardAspect
 		    super.deliverMessage(copy, localDestination);
 		}
 		// Hmm...
-		MessageAttributes meta = new SimpleMessageAttributes(msg);
+		MessageAttributes meta = new SimpleMessageAttributes();
 		meta.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
 				  MessageAttributes.DELIVERY_STATUS_DELIVERED);
 		return meta;

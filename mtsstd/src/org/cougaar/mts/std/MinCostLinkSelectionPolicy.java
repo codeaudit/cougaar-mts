@@ -40,6 +40,7 @@ public class MinCostLinkSelectionPolicy
 
     public DestinationLink selectLink (Iterator links, 
 				       AttributedMessage message,
+				       AttributedMessage failedMessage,
 				       int retryCount,
 				       Exception lastException)
     {

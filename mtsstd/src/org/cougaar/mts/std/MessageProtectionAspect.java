@@ -44,14 +44,19 @@ public class MessageProtectionAspect extends StandardAspect
     private static final String THIS_CLASS =
 	"org.cougaar.core.mts.MessageProtectionAspect";
 
-    private MessageProtectionService svc;
+    private static MessageProtectionService svc;
+
+    static MessageProtectionService getMessageProtectionService() {
+	return svc;
+    }
 
     public void load() {
 	super.load();
-// 	svc = (MessageProtectionService)
-// 	    getServiceBroker().getService(this, MessageProtectionService.class,
-// 					  null);
-	svc = MessageTransportServiceProvider.getMessageProtectionService(this);
+	svc = (MessageProtectionService)
+	    getServiceBroker().getService(this, MessageProtectionService.class,
+					  null);
+	// Temporary, until NAI's service is available
+	if (svc == null)  svc = new MessageProtectionServiceImpl();
     }
 
 
@@ -96,14 +101,14 @@ public class MessageProtectionAspect extends StandardAspect
 	    stream = svc.getOutputStream(os, 
 					 msg.getOriginator(),
 					 msg.getTarget(),
-					 msg.getRawAttributes());
+					 msg);
 	    return stream;
 	}
 
 	public void finishOutput()
 	    throws java.io.IOException
 	{
-	    stream.finishOutput(msg.getRawAttributes());
+	    stream.finishOutput(msg);
 	    super.finishOutput();
 	}
     }
@@ -130,14 +135,14 @@ public class MessageProtectionAspect extends StandardAspect
 	    stream = svc.getInputStream(is, 
 					msg.getOriginator(),
 					msg.getTarget(),
-					msg.getRawAttributes());
+					msg);
 	    return stream;
 	}
 
 	public void finishInput()
 	    throws java.io.IOException
 	{
-	    stream.finishInput(msg.getRawAttributes());
+	    stream.finishInput(msg);
 	    super.finishInput();
 	}
 

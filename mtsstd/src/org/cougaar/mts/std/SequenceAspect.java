@@ -141,7 +141,7 @@ public class SequenceAspect extends StandardAspect
 	    }
      
 	    private MessageAttributes handleNewMessage(AttributedMessage message) {
-		MessageAttributes meta = new SimpleMessageAttributes(message);
+		MessageAttributes meta = new SimpleMessageAttributes();
 		String delivery_status = null;
 		int msgSeqNum = getSequenceNumber(message);
 		if (nextSeqNum > msgSeqNum) {
