@@ -35,8 +35,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.component.StateObject;
-import org.cougaar.core.node.InitializerService;
-import org.cougaar.core.node.InitializerServiceException;
+import org.cougaar.core.node.ComponentInitializerService;
 import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.service.LoggingService;
@@ -202,19 +201,19 @@ public final class MessageTransportServiceProvider
 
     protected ComponentDescriptions findExternalComponentDescriptions() {
 	ServiceBroker sb = getServiceBroker();
-	InitializerService is = (InitializerService) 
-	    sb.getService(this, InitializerService.class, null);
+	ComponentInitializerService cis = (ComponentInitializerService) 
+	    sb.getService(this, ComponentInitializerService.class, null);
 	try {
 	    String cp = specifyContainmentPoint();
  	    // Want only items _below_. Could filter (not doing so now)
-	    return new ComponentDescriptions(is.getComponentDescriptions(id,cp));
-	} catch (org.cougaar.core.node.InitializerServiceException e) {
+	    return new ComponentDescriptions(cis.getComponentDescriptions(id,cp));
+	} catch (ComponentInitializerService.InitializerException cise) {
 	    if (loggingService.isInfoEnabled()) {
-		loggingService.info("\nUnable to add "+id+"'s plugins ",e);
+		loggingService.info("\nUnable to add "+id+"'s plugins ",cise);
 	    }
 	    return null;
 	} finally {
-	    sb.releaseService(this, InitializerService.class, is);
+	    sb.releaseService(this, ComponentInitializerService.class, cis);
 	}
     }
 
