@@ -48,6 +48,12 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This test Aspect sends periodic 'heartbeat' messages to a specified
+ * destination, as given by the <code>dstAddr</code> parameter.  Other
+ * parameters specify the delay, timeout and sendInterval of the
+ * hearbeat.
+ */
 public class HeartBeatAspect 
     extends StandardAspect
     implements  AttributeConstants, Runnable

@@ -32,6 +32,11 @@ import java.util.HashMap;
 import org.cougaar.mts.base.ServerSocketWrapper;
 import org.cougaar.mts.base.SocketDelegateImplBase;
 
+/**
+ * This test entity can be used as a wrapper for RMI ServerSockets.
+ * If too many outstanding connections are open from any one client
+ * host, it will not allow any more.
+ */
 public class FuseServerSocket extends ServerSocketWrapper
 {
     private static final int MAX_CONNECTIONS = 10;

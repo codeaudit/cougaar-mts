@@ -38,7 +38,8 @@ import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.LinkProtocol;
 
 /**
- * Debugging aid - fails by design after serializing.
+ * This {@link LinkProtocol} is purely a debugging aid.  It fails by
+ * design, throwing a MisdeliveredMessageException, after serializing.
  */
 class FutileSerializingLinkProtocol 
     extends LinkProtocol

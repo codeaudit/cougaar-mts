@@ -41,6 +41,11 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This test Aspect logs all outgoing messages, including in each log
+ * the source and destination Agent, the destination Node, and the
+ * destination Host. 
+ */
 public class ForwardMessageLoggingAspect extends StandardAspect
 {
     static final String TOPOLOGY = "topology";
