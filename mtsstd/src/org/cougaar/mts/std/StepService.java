@@ -28,6 +28,13 @@ package org.cougaar.mts.std;
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 
+/**
+ * This MTS-internal service can be used to 'single-step' a message
+ * through the stations.  Its only use so far is through a Swing gui,
+ * but in principle it could have other uses (@see
+ * StepperControlExampleAspect).  The implementation is in the
+ * StepperAspect.
+ */
 public interface StepService extends Service
 {
     void pauseAll();

@@ -31,6 +31,12 @@ import java.util.ArrayList;
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 
+/**
+ * This is an MTS-internal service used for simple socket
+ * manipulation in RMI communication.  The implementation is in
+ * RMISocketControlAspect.  It's used only by the RMILinkProtocol and
+ * by OBJS.
+ */
 public interface RMISocketControlService extends Service
 {
     /**
@@ -48,5 +54,9 @@ public interface RMISocketControlService extends Service
 				    MessageAddress addr);
 
 
+    /**
+     * Returns a list of all Sockets used for communication between
+     * the running Node and the given remoted address.
+     */
     ArrayList getSocket(MessageAddress addr);
 }
