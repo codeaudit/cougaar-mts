@@ -30,6 +30,7 @@ public interface ThreadService extends Service
     Thread getThread(Object consumer, Runnable runnable, String name);
 
     TimerTask getTimerTask(Object consumer, Runnable runnable);
+    TimerTask getTimerTask(Object consumer, Runnable runnable, String name);
 
     void schedule(TimerTask task, long delay);
     void schedule(TimerTask task, long delay, long interval);

@@ -219,8 +219,11 @@ public final class MessageTransportServiceProvider
 
 	Debug.load(loggingService);
 
-	// Later this will be replaced by a Node-level service
-	new ThreadServiceImpl(sb);
+	// Get the parent ThreadService, if any, before creating our
+	// own.
+	ThreadService parentThreadService = (ThreadService)
+	    sb.getService(this, ThreadService.class, null);
+	new ThreadServiceImpl(sb, parentThreadService, "MTS");
 
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);
@@ -323,7 +326,7 @@ public final class MessageTransportServiceProvider
 
     public final void setBindingSite(BindingSite bs) {
         super.setBindingSite(bs);
-        setChildServiceBroker(new SharedThreadServiceBroker("MTS", bs));
+        setChildServiceBroker(new PropagatingServiceBroker(bs));
     }
 
 

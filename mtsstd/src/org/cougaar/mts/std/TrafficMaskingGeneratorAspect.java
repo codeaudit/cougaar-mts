@@ -216,7 +216,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	// Get the list in 10 seconds to allow for other nodes to startup
 	// then check every 30 seconds - these probably need tweaking
 	// important thing is not to wait too long to get all the initial nodes
-	TimerTask tTask = threadService.getTimerTask(this, nodeKeeper);
+	TimerTask tTask = threadService.getTimerTask(this, nodeKeeper,
+						     "NodeKeeper");
 	threadService.schedule(tTask, 10000, 30000);
 
 	// start up the masking task - delay start by the requestRate 
@@ -424,11 +425,13 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
 
 	abstract Runnable makeTask();
+	abstract String taskName();
 
 	void makeNextTask() {
 	    // randomize period, then run a new task once at that time
 	    int delay = generator.nextInt(period); // randomize
-	    TimerTask newTask = threadService.getTimerTask(this, makeTask());
+	    TimerTask newTask = threadService.getTimerTask(this, makeTask(),
+							   taskName());
 	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		loggingService.debug("Scheduling " +newTask+ " at "
 					  +delay);
@@ -466,6 +469,10 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
       
 
+	String taskName() {
+	    return "MaskingTask";
+	}
+
 	Runnable makeTask() {
 	    return new Task();
 	}
@@ -499,6 +506,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
 	ReplyTimerTaskController(int period) {
 	    super(new ExpRandom(), period);
+	}
+
+
+	String taskName() {
+	    return "ReplyTimerTask";
 	}
 
 	Runnable makeTask() {
@@ -565,6 +577,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    }
 	    // create one for this node if we don't have one yet
 	    return new TrafficMaskingStatistics(dest, requestRate, 9000);
+	}
+
+
+	String taskName() {
+	    return "AutoMasker";
 	}
 
 	Runnable makeTask() {

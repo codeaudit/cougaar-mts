@@ -17,11 +17,23 @@ public class TimerRunnable implements Runnable
 	boolean runnable;
 	boolean cancelled;
 	Object consumer;
+	String name;
 
 	TaskWrapper(Object consumer, Runnable task) {
+	    this(consumer, task, "TimerTask");
+	}
+
+	TaskWrapper(Object consumer, Runnable task, String name) {
 	    this.task = task;
 	    this.consumer = consumer;
+	    this.name = name;
 	}
+
+
+	private Thread getThread() {
+	    return threadService.getThread(consumer, this, name);
+	}
+
 
 	private void setIntervals(boolean fixedRate, long delay, long period) {
 	    this.period = period;
@@ -68,9 +80,19 @@ public class TimerRunnable implements Runnable
 	this.threadService = threadService;
     }
 
+
     public TimerTask getTimerTask(Object consumer, Runnable runnable) {
 	return new TaskWrapper(consumer, runnable);
     }
+
+
+    public TimerTask getTimerTask(Object consumer, 
+				  Runnable runnable,
+				  String name) 
+    {
+	return new TaskWrapper(consumer, runnable, name);
+    }
+
 
     private void taskCompleted(TaskWrapper task) {
 	synchronized (lock) {
@@ -138,9 +160,7 @@ public class TimerRunnable implements Runnable
 	    if (wrapper.cancelled) continue;
 	    if (wrapper.runnable && wrapper.nextrun <= time) {
 		wrapper.runnable = false;
-		Thread thread = 
-		    threadService.getThread(wrapper.consumer, wrapper, 
-					    "TimerTask");
+		Thread thread = wrapper.getThread();
 		thread.start();
 		// wrapper.run();
 	    }

@@ -40,7 +40,7 @@ import java.util.TimerTask;
  * as well as the service proxy classes, are private and are not
  * directly accessible from anywhere else.
  */
-class ThreadServiceImpl
+public final class ThreadServiceImpl
 {
     private static final String InitialPoolSizeProp =
 	"org.cougaar.thread.poolsize.initial";
@@ -53,11 +53,14 @@ class ThreadServiceImpl
     private static final int MaxRunningCountDefault = Integer.MAX_VALUE;
 
 
-    ThreadServiceImpl(ServiceBroker sb) {
+    public ThreadServiceImpl(ServiceBroker sb, 
+			     ThreadService parent,
+			     String name) 
+    {
 	LoggingService loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
 	ThreadServiceProvider provider = 
-	    new ThreadServiceProvider(loggingService);
+	    new ThreadServiceProvider(parent, name, loggingService);
 	sb.addService(ThreadService.class, provider);
 	sb.addService(ThreadControlService.class, provider);
 	sb.addService(ThreadListenerService.class, provider);
@@ -67,38 +70,19 @@ class ThreadServiceImpl
 
     /**
      * The ServiceProvider for ThreadService and ThreadControlService.
-     * The former is only available to ThreadServiceClients, which
-     * should only be SharedThreadServiceBrokers.  This ensure proper
-     * thread grouping and control, but there's probably no way to
-     * enforce this. We're still in the process of determining who
-     * should have access to the ThreadControlService.
      */
     private static class ThreadServiceProvider implements ServiceProvider {
 
-	private HashMap proxies;
+	private ThreadServiceProxy proxy;
 	private LoggingService loggingService;
 
-	ThreadServiceProvider(LoggingService loggingService) {
-	    proxies = new HashMap();
+	ThreadServiceProvider(ThreadService parent,
+			      String name,
+			      LoggingService loggingService) 
+	{
+	    this.proxy = new ThreadServiceProxy(parent, name, loggingService);
 	    this.loggingService = loggingService;
 	}
-
-	private synchronized Object findOrMakeProxyForClient (Object client) {
-	    Object p = proxies.get(client);
-	    if (p == null) {
-		p =  new ThreadServiceProxy((ThreadServiceClient)client,
-					    loggingService);
-		proxies.put(client, p);
-	    }
-	    return p;
-	}
-
-	private synchronized void removeProxyForClient(Object client, 
-						       Object svc) 
-	{
-	    if (proxies.get(client) == svc) proxies.remove(client);
-	}
-
 
 
 	public Object getService(ServiceBroker sb, 
@@ -106,13 +90,7 @@ class ThreadServiceImpl
 				 Class serviceClass) 
 	{
 	    if (serviceClass == ThreadService.class) {
-		if (requestor instanceof ThreadServiceClient) {
-		    return findOrMakeProxyForClient(requestor);
-		} else {
-		    loggingService.error(requestor + 
-					 " is not a ThreadServiceClient");
-		    return null;
-		}
+		return proxy;
 	    } else if (serviceClass == ThreadControlService.class) {
 		// Later this will be tightly restricted
 		return new ThreadController();
@@ -129,9 +107,6 @@ class ThreadServiceImpl
 				   Class serviceClass, 
 				   Object service)
 	{
-	    if (serviceClass == ThreadService.class) {
-		removeProxyForClient(requestor, service);
-	    }
 	}
 
  
@@ -538,13 +513,20 @@ class ThreadServiceImpl
 	private ThreadGroup group;
 	private TimerRunnable timer;
 	private LoggingService loggingService;
+	private ThreadServiceProxy parent;
 
-	private ThreadServiceProxy(ThreadServiceClient client,
-				    LoggingService loggingService) 
+	private ThreadServiceProxy(ThreadService parentService,
+				   String name,
+				   LoggingService loggingService) 
 	{
 	    this.loggingService = loggingService;
 	    listeners = new ArrayList();
-	    group = client.getGroup();
+	    parent = (ThreadServiceProxy) parentService;
+	    if (parent == null)
+		group = new ThreadGroup(name);
+	    else 
+		group = new ThreadGroup(parent.group, name);
+
 	    timer = new TimerRunnable(this, loggingService);
 
 	    int initialSize = PropertyParser.getInt(InitialPoolSizeProp, 
@@ -552,15 +534,13 @@ class ThreadServiceImpl
 	    int maxSize = PropertyParser.getInt(MaxPoolSizeProp, 
 						MaxPoolSizeDefault);
 
-	    if (group != null) 
-		group = new ThreadGroup(client.toString() + "_ThreadGroup");
 	    threadPool = new ControllablePool(this,
 					      group, 
 					      initialSize,
 					      maxSize);
 
 	    // Use a special Thread for the timer
-	    Thread thread = new Thread(group, timer, "Timer");
+	    Thread thread = new Thread(group, timer, name+"Timer");
 	    thread.setDaemon(true);
 	    thread.start();
 	}
@@ -627,6 +607,14 @@ class ThreadServiceImpl
 
 	public TimerTask getTimerTask(Object consumer, Runnable runnable) {
 	    return timer.getTimerTask(consumer, runnable);
+	}
+
+
+	public TimerTask getTimerTask(Object consumer, 
+				      Runnable runnable,
+				      String name) 
+	{
+	    return timer.getTimerTask(consumer, runnable, name);
 	}
 
 	public void schedule(TimerTask task, long delay) {

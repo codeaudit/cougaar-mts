@@ -88,7 +88,7 @@ public class ScrambleAspect extends StandardAspect
 	//================util methods
 	private void holdMessage(Message message){
 	    Runnable r = new SendMessageTask (this);
-	    timerTask = threadService.getTimerTask(this, r);
+	    timerTask = threadService.getTimerTask(this, r, "ScrambleSender");
 	    threadService.schedule(timerTask, 3000); //schedule a timer task
 	    heldMessage = message;
 	    heldMessageCount++;
