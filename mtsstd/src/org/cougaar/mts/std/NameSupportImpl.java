@@ -130,12 +130,29 @@ public final class NameSupportImpl implements ServiceProvider
 	    while (name.size() > 1) {
 		Name prefix = name.getPrefix(1);
 		name = name.getSuffix(1);
+                // find or create the context given by prefix. First
+                // try lookup. If that fails try creating the
+                // subcontext. If _that_ fails, assume it was because
+                // another MTS created it after we did the lookup, but
+                // before our attempt to create. Do a second lookup to
+                // get the subcontext created by the other MTS. If the
+                // second lookup fails, punt!
 		try {
 		    ctx = (DirContext) ctx.lookup(prefix);
-		} catch (NamingException ne) {
-		    BasicAttributes empty_attr = new BasicAttributes();
-		    ctx = 
-			(DirContext) ctx.createSubcontext(prefix, empty_attr);
+		} catch (NamingException ne1) {
+		    try {
+                        BasicAttributes empty_attr = new BasicAttributes();
+                        ctx = (DirContext)
+                            ctx.createSubcontext(prefix, empty_attr);
+                    } catch (NamingException ne2) {
+                        try {
+                            ctx = (DirContext) ctx.lookup(prefix);
+                        } catch (NamingException ne3) {
+                            ne3.initCause(ne2);
+                            ne2.initCause(ne1);
+                            throw ne3;
+                        }
+                    }
 		} catch (Exception e) {
 		    throw new NamingException(e.toString());
 		}
