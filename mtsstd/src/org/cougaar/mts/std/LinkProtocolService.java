@@ -31,7 +31,7 @@ import org.cougaar.core.component.Service;
 public interface LinkProtocolService extends Service
 {
     // Example
-    public boolean addressKnown(MessageAddress address);
+    boolean addressKnown(MessageAddress address);
 
 }
 

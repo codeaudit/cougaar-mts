@@ -74,7 +74,7 @@ public class RMILinkProtocol
     // Just for testing -- an example of supplying a service from a
     // LinkProtocol.
 
-    public static interface Service extends LinkProtocolService {
+    public interface Service extends LinkProtocolService {
 	// RMI-specific methods would go here.
     }
 

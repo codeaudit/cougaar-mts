@@ -26,17 +26,17 @@ import org.cougaar.core.node.*;
 
 public interface DebugFlags
 {
-    public static int ASPECTS = 1<<0;;
-    public static int COMM = 1<<1;
-    public static int FLUSH = 1<<2;
-    public static int MULTICAST = 1<<3;
-    public static int SECURITY = 1<<4;
-    public static int SERVICE = 1<<5;
-    public static int STATISTICS = 1<<6;
-    public static int WATCHER = 1<<7;
-    public static int POLICY = 1<<8;
-    public static int TRAFFIC_MASKING_GENERATOR = 1<<9;
-    public static int QUO = 1<<10;
-    public static int RMS = 1<<11;
+    int ASPECTS = 1<<0;
+    int COMM = 1<<1;
+    int FLUSH = 1<<2;
+    int MULTICAST = 1<<3;
+    int SECURITY = 1<<4;
+    int SERVICE = 1<<5;
+    int STATISTICS = 1<<6;
+    int WATCHER = 1<<7;
+    int POLICY = 1<<8;
+    int TRAFFIC_MASKING_GENERATOR = 1<<9;
+    int QUO = 1<<10;
+    int RMS = 1<<11;
 
 }

@@ -32,15 +32,15 @@ import java.util.ArrayList;
 
 public interface SendLink
 {
-    public void sendMessage(Message message);
-    public void flushMessages(ArrayList messsages);
-    public void release();
-    public MessageAddress getAddress();
-    public boolean okToSend(Message message);
+    void sendMessage(Message message);
+    void flushMessages(ArrayList messsages);
+    void release();
+    MessageAddress getAddress();
+    boolean okToSend(Message message);
 
-    public void registerClient(MessageTransportClient client);
-    public void unregisterClient(MessageTransportClient client);
-    public String getIdentifier();
-    public boolean addressKnown(MessageAddress a);
+    void registerClient(MessageTransportClient client);
+    void unregisterClient(MessageTransportClient client);
+    String getIdentifier();
+    boolean addressKnown(MessageAddress a);
 }
 

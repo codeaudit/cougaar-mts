@@ -33,7 +33,7 @@ public interface DestinationLink
      * This method is used to request the associated transport to do
      * its thing with the given message.  Only called during
      * processing of messages in DestinationQueueImpl.  */
-    public void forwardMessage(Message message) 
+    void forwardMessage(Message message) 
 	throws UnregisteredNameException, 
 	NameLookupException, 
 	CommFailureException,
@@ -43,30 +43,30 @@ public interface DestinationLink
      * This method returns a simple measure of the cost of sending the
      * given message via the associated transport. Only called during
      * processing of messages in DestinationQueueImpl. */
-    public int cost(Message message);
+    int cost(Message message);
 
     
     /**
      * @return the class of corresponding LinkProtocol.
      */
-    public Class getProtocolClass();
+    Class getProtocolClass();
 
 
     /**
      * Ask Link whether or not further retries should be attempted.
      */
-    public boolean retryFailedMessage(Message message, int retryCount);
+    boolean retryFailedMessage(Message message, int retryCount);
 
 
     /**
      * Return the target/destination of this link. 
      */
-    public MessageAddress getDestination();
+    MessageAddress getDestination();
 
 
     /**
      * Return some form of remote reference for the destination, if it
      * has one (rmi server stub, smtp url, CORBA ior, etc) */
-    public Object getRemoteReference();
+    Object getRemoteReference();
 
 }
