@@ -21,6 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.MessageProtectionService;
 
 import java.io.FilterInputStream;
@@ -31,8 +33,28 @@ import java.io.OutputStream;
 
 
 class MessageProtectionServiceImpl 
-    implements MessageProtectionService
+    implements MessageProtectionService, ServiceProvider
 {
+    
+
+    public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	if (serviceClass == MessageProtectionService.class) {
+	    return this;
+	} else {
+	    return null;
+	}
+    }
+
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
     public byte[] protectHeader(byte[] rawData, 
 				MessageAddress source,
 				MessageAddress destination)
@@ -78,7 +100,6 @@ class MessageProtectionServiceImpl
 	public void finishOutput(MessageAttributes attr) 
 	    throws java.io.IOException
 	{
-	    
 	}
     }
 

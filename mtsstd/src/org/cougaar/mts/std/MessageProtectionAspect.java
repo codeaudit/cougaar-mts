@@ -52,6 +52,7 @@ public class MessageProtectionAspect extends StandardAspect
 	svc = (MessageProtectionService)
 	    getServiceBroker().getService(this, MessageProtectionService.class,
 					  null);
+	System.err.println("Got " +svc+ " from service broker");
 	// Temporary, until NAI's service is available
 	if (svc == null)  svc = new MessageProtectionServiceImpl();
     }
@@ -99,6 +100,7 @@ public class MessageProtectionAspect extends StandardAspect
 					 msg.getOriginator(),
 					 msg.getTarget(),
 					 msg);
+	    System.err.println("Got " +stream+ " from " +svc);
 	    return stream;
 	}
 
@@ -133,6 +135,7 @@ public class MessageProtectionAspect extends StandardAspect
 					msg.getOriginator(),
 					msg.getTarget(),
 					msg);
+	    System.err.println("Got " +stream+ " from " +svc);
 	    return stream;
 	}
 
