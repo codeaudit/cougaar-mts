@@ -246,6 +246,7 @@ public final class MessageTransportServiceProvider
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
+	AttributedMessage.setLoggingService(loggingService);
 	Debug.load(loggingService);
 
 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");

@@ -28,14 +28,28 @@ public class MessageSecurityException
     implements java.io.Serializable
 {
     
-    GeneralSecurityException cause;
+    private GeneralSecurityException cause;
+    private String source;
+    private String destination;
 
-    MessageSecurityException(GeneralSecurityException cause) {
+    MessageSecurityException(GeneralSecurityException cause, 
+			     AttributedMessage msg) 
+    {
 	this.cause = cause;
+	this.source = msg.getOriginator().getAddress();
+	this.destination = msg.getTarget().getAddress();
     }
 
     public Throwable getCause() {
 	return cause;
+    }
+
+    public String getSource() {
+	return source;
+    }
+
+    public String getDestination() {
+	return destination;
     }
 
 }

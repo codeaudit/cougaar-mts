@@ -58,16 +58,22 @@ class MessageProtectionServiceImpl
     public byte[] protectHeader(byte[] rawData, 
 				MessageAddress source,
 				MessageAddress destination)
+	throws java.security.GeneralSecurityException
     {
 	return rawData;
+	// For testing security exception handling
+	// throw new java.security.GeneralSecurityException("protectHeader");
     }
 
 
     public byte[] unprotectHeader(byte[] rawData, 
 				  MessageAddress source,
 				  MessageAddress destination)
+	throws java.security.GeneralSecurityException
     {
 	return rawData;
+	// For testing security exception handling
+	// throw new java.security.GeneralSecurityException("protectHeader");
     }
 
 

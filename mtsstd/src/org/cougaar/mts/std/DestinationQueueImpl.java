@@ -149,6 +149,7 @@ final class DestinationQueueImpl
 	    } catch (CommFailureException comm_failure) {
 		Exception exception = comm_failure.getException();
 		Throwable cause = exception.getCause();
+		boolean remote = false;
 		// A local security exception will be wrapped in a
 		// MarshalException.  In this case 'exception' is the
 		// MarshalException. and 'cause' is the
@@ -166,12 +167,19 @@ final class DestinationQueueImpl
 		//
 		// What could be simpler?
 		//
-		if (cause instanceof java.rmi.UnmarshalException)
+		if (cause instanceof java.rmi.UnmarshalException) {
 		    cause = cause.getCause();
+		    remote = true;
+		}
 		if (cause instanceof MessageSecurityException) {
 		    // Always log these.
-		    cause = cause.getCause();
-		    loggingService.error("Security Exception", cause);
+		    MessageSecurityException mse = (MessageSecurityException)
+			cause;
+		    String src = mse.getSource();
+		    String dst = mse.getDestination();
+		    String msg = remote ? "Remote " : "Local ";
+		    msg += "Security Exception " +src+ "->" +dst;
+		    loggingService.error(msg, mse.getCause());
 
 		    // Act as if the message has gone through.
 		    resetState();

@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.MessageProtectionService;
 
 import java.io.ByteArrayInputStream;
@@ -53,6 +54,16 @@ public class AttributedMessage
     extends  Message
     implements Externalizable, MessageAttributes
 {
+
+    // Static log hack, so we can log security exceptions in the
+    // receiver.
+
+    private static LoggingService loggingService;
+
+    static void setLoggingService(LoggingService svc) {
+	loggingService = svc;
+    }
+
 
     private String FILTERS_ATTRIBUTE = "Filters";
 
@@ -327,7 +338,7 @@ public class AttributedMessage
 	    writer.finishOutput();
 	    writer.postProcess();
 	} catch (GeneralSecurityException ex) {
-	    throw new MessageSecurityException(ex);
+	    throw new MessageSecurityException(ex, this);
 	}
     }
 
@@ -374,7 +385,13 @@ public class AttributedMessage
 	    reader.finishInput();
 	    reader.postProcess();
 	} catch (GeneralSecurityException ex) {
-	    throw new MessageSecurityException(ex);
+	    if (loggingService != null) {
+		MessageAddress src = getOriginator();
+		MessageAddress dst = getTarget();
+		String msg = "Receiver Security Exception " +src+ "->" +dst;
+		loggingService.error(msg, ex);
+	    }
+	    throw new MessageSecurityException(ex, this);
 	}
     }
 }
