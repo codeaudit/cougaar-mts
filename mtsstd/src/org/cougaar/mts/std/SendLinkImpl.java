@@ -49,6 +49,10 @@ final public class SendLinkImpl
 
 
     public void sendMessage(AttributedMessage message) {
+	MessageAddress orig = message.getOriginator();
+	if (!addr.equals(orig)) {
+	    loggingService.error("SendLink saw a message whose originator (" +orig+ ") didn't match the MessageTransportClient address (" +addr+ ")");
+	}
 	sendQ.sendMessage(message);
     }
 
@@ -66,6 +70,8 @@ final public class SendLinkImpl
     }
 
     public boolean okToSend(AttributedMessage message) {
+	if (sendQ == null) return false; // client has released the service
+
 	MessageAddress target = message.getTarget();
 	if (target == null || target.toString().equals("")) {
 	    if (loggingService.isErrorEnabled())
