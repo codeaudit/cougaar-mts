@@ -39,9 +39,6 @@ public class LinkSelectionPolicyServiceProvider
     implements ServiceProvider
 {
 
-    private final static String POLICY_PROPERTY =
-	"org.cougaar.message.transport.policy";
-
     private LinkSelectionPolicy policy;
     private LoggingService loggingService;
 
@@ -53,33 +50,12 @@ public class LinkSelectionPolicyServiceProvider
 	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
 	    sb.getService(this, LinkSelectionProvisionService.class, null);
 	policy = lsp.getPolicy();
-	if (policy == null) policy = createSelectionPolicy(container);
-    }
-
-
-    private LinkSelectionPolicy createSelectionPolicy(Container container) {
-	String policy_classname = System.getProperty(POLICY_PROPERTY);
-	LinkSelectionPolicy selectionPolicy = null;
-	if (policy_classname == null) {
-	    selectionPolicy = new MinCostLinkSelectionPolicy();
-	} else {
-	    try {
-		Class policy_class = Class.forName(policy_classname);
-		selectionPolicy = 
-		    (LinkSelectionPolicy) policy_class.newInstance();
-		if (loggingService.isDebugEnabled())
-		    loggingService.debug("Created " +  policy_classname);
-	    } catch (Exception ex) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error(null, ex);
-		selectionPolicy = new MinCostLinkSelectionPolicy();
-	    }
+	if (policy == null) {
+	    policy = new MinCostLinkSelectionPolicy();
+	    container.add(policy);
 	}
-
-	container.add(selectionPolicy);
-	return selectionPolicy;
-
     }
+
 
 
 

@@ -36,7 +36,6 @@ import org.cougaar.core.component.Service;
 public interface AspectSupport extends Service
 {
     MessageTransportAspect findAspect(String classname);
-    void readAspects();
     void addAspect(MessageTransportAspect aspect);
     void addAspect(StandardAspect aspect);
     Object attachAspects(Object delegate,  Class type);

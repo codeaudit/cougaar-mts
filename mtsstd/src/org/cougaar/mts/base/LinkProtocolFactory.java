@@ -43,8 +43,6 @@ import org.cougaar.core.service.LoggingService;
  */
 final class LinkProtocolFactory 
 {
-    private static final String CLASSES_PROPERTY =
-	"org.cougaar.message.protocol.classes";
 
     private LoggingService loggingService;
     private Container container;
@@ -54,7 +52,16 @@ final class LinkProtocolFactory
 	loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
 	this.container = container;
-	loadProtocols(sb);
+	MessageTransportRegistryService reg =(MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
+	// If any Protocols are already loaded (via CSMART), don't
+	// make the standard ones.
+	if (!reg.hasLinkProtocols()) {
+	LinkProtocol protocol =new LoopbackLinkProtocol();
+	initProtocol(protocol);
+	protocol = new RMILinkProtocol();
+	initProtocol(protocol);
+	}
     }
 
 
@@ -75,32 +82,6 @@ final class LinkProtocolFactory
 	}
 	initProtocol(protocol);
 	return protocol;
-    }
-
-    private void loadProtocols(ServiceBroker sb) {
-	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
-	if (protocol_classes == null || protocol_classes.equals("")) {
-
-	    MessageTransportRegistryService reg =(MessageTransportRegistryService)
-		sb.getService(this, MessageTransportRegistryService.class, null);
-	    // If any Protocols are already loaded (via CSMART), don't
-	    // make the standard ones.
-	    if (reg.hasLinkProtocols()) return;
-
-	    // Make the two standard protocols if none specified.
-	    LinkProtocol protocol =new LoopbackLinkProtocol();
-	    initProtocol(protocol);
-	    protocol = new RMILinkProtocol();
-	    initProtocol(protocol);
-	} else {
-	    StringTokenizer tokenizer = 
-		new StringTokenizer(protocol_classes, ",");
-	    while (tokenizer.hasMoreElements()) {
-		String classname = tokenizer.nextToken();
-		makeProtocol(classname);
-	    }
-	}
-
     }
 
 

@@ -195,14 +195,15 @@ implements ServiceProvider
 
     // components that must be loaded after the config's components
     private void afterConfig() {
-        // backward compatibility for -D option
-        loadAspects(); 
+        ServiceBroker csb = getChildServiceBroker();
+
+        aspectSupport = (AspectSupport)
+	    csb.getService(this, AspectSupport.class, null);
 
         // The rest of the services depend on aspects.
         createNameSupport(id);
         createFactories();
 
-        ServiceBroker csb = getChildServiceBroker();
         NodeControlService ncs = (NodeControlService)
             csb.getService(this, NodeControlService.class, null);
 
@@ -219,12 +220,6 @@ implements ServiceProvider
         csb.addService(NameSupport.class, impl);
     }
 
-    private void loadAspects() {
-        ServiceBroker csb = getChildServiceBroker();
-        aspectSupport = 
-            (AspectSupport) csb.getService(this, AspectSupport.class, null);
-        aspectSupport.readAspects();
-    }
 
     private void createFactories() {
         ServiceBroker csb = getChildServiceBroker();

@@ -48,9 +48,6 @@ import org.cougaar.mts.base.MessageTransportAspect;
 //final class AspectSupportImpl implements ServiceProvider
 public class AspectSupportImpl implements ServiceProvider
 {
-    private final static String ASPECTS_PROPERTY = 
-	"org.cougaar.message.transport.aspects";
-
     private static AspectSupport service;
 
     public AspectSupportImpl(Container container, LoggingService loggingService) {
@@ -97,7 +94,6 @@ public class AspectSupportImpl implements ServiceProvider
     {
 
 	private ArrayList aspects;
-	private ArrayList aspect_classnames;
 	private HashMap aspects_table;
 	private Container container;
 	private LoggingService loggingService;
@@ -107,7 +103,6 @@ public class AspectSupportImpl implements ServiceProvider
 			    LoggingService loggingService) 
 	{
 	    aspects = new ArrayList();
-	    aspect_classnames = new ArrayList();
 	    aspects_table = new HashMap();
 	    this.container = container;
 	    this.loggingService = loggingService;
@@ -128,22 +123,6 @@ public class AspectSupportImpl implements ServiceProvider
 	    }
 	    catch (Exception ex) {
 		loggingService.error(null, ex);
-	    }
-	}
-
-	public void readAspects() {
-	    Iterator itr = aspect_classnames.iterator();
-	    while (itr.hasNext()) {
-		String classname = (String) itr.next();
-		loadAspectClass(classname);
-	    }
-
-	    String classes = System.getProperty(ASPECTS_PROPERTY);
-	    if (classes == null) return;
-	    StringTokenizer tokenizer = new StringTokenizer(classes, ",");
-	    while (tokenizer.hasMoreElements()) {
-		String classname = tokenizer.nextToken();
-		loadAspectClass(classname);
 	    }
 	}
 
