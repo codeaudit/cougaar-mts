@@ -104,6 +104,7 @@ public class TrafficMaskingAspect extends StandardAspect
 
   // Delgate on Deliverer (sees incoming messages)
   public class MaskingDelivererDelegate extends MessageDelivererDelegateImplBase {
+    private Random random = new Random();
     
     public MaskingDelivererDelegate (MessageDeliverer deliverer) {
       super(deliverer);
@@ -116,15 +117,24 @@ public class TrafficMaskingAspect extends StandardAspect
           Message internalmsg = ((MaskingMessageEnvelope) msg).getContents();
           if (internalmsg instanceof FakeRequestMessage) {
             FakeRequestMessage request = (FakeRequestMessage)internalmsg;
-            //send a reply with the same contents for now
+            // create random contents to reply with
+            int replySize = random.nextInt(18000);
+            // if its less than 800 do a little hacking to make sure its not too small.
+            if (replySize < 800) {
+              replySize = replySize + 800;
+            }
+            byte[] replyContents = new byte[replySize];
+            random.nextBytes(replyContents);
             // should be put into a think timer hold eventually
             FakeReplyMessage reply = new FakeReplyMessage(request.getTarget(),
                                                           request.getOriginator(),
-                                                          request.getContents());
+                                                          replyContents);
             maskingQDelegate.sendMessage(reply);
             if (Debug.debug(TRAFFIC_MASKING)) {
               System.out.println("\n$$$ Deliverer got Fake Request: "+request+
-                                 "\n Sending Fake Reply: "+reply);
+                                 " size: "+request.getContents().length +
+                                 "\n Sending Fake Reply: "+reply +
+                                 " size: "+replyContents.length);
             }
           }
           //if its a fake reply (the other kind of masking message)
