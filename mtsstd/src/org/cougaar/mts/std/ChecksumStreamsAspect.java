@@ -140,8 +140,6 @@ public class ChecksumStreamsAspect extends StandardAspect
     private class ChecksumMessageWriter
 	extends MessageWriterDelegateImplBase
     {
-
-	private AttributedMessage msg;
 	private OutputStream stream;
 	private long checksum = 0;
 
