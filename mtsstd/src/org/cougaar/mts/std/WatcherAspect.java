@@ -40,27 +40,31 @@ public class WatcherAspect
     }
 
 
-    void addWatcher(MessageTransportWatcher watcher) {
+    synchronized void addWatcher(MessageTransportWatcher watcher) {
 	watchers.add(watcher);
     }
 
 
-    void removeWatcher(MessageTransportWatcher watcher) {
+    synchronized void removeWatcher(MessageTransportWatcher watcher) {
 	watchers.remove(watcher);
     }
 
 
     private void notifyWatchersOfSend(Message message) {
 	Iterator itr = watchers.iterator();
-	while (itr.hasNext()) {
-	    ((MessageTransportWatcher) itr.next()).messageSent(message);
+	synchronized (this) {
+	    while (itr.hasNext()) {
+		((MessageTransportWatcher) itr.next()).messageSent(message);
+	    }
 	}
     }
 
     private void notifyWatchersOfReceive(Message m) {
 	Iterator itr = watchers.iterator();
-	while ( itr.hasNext() ) {
-	    ((MessageTransportWatcher)itr.next()).messageReceived(m);
+	synchronized (this) {
+	    while ( itr.hasNext() ) {
+		((MessageTransportWatcher)itr.next()).messageReceived(m);
+	    }
 	}
     }
 
