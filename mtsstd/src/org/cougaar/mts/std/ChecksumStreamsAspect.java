@@ -55,12 +55,12 @@ import org.cougaar.mts.base.StandardAspect;
 
 /**
  * This class provides an example of adding trailers to serialized
- * AttributedMessages.  The Writer computes a checksum (as a long) and
- * sends the eight bytes after the Message content.  The Reader
- * computes its own checksum and compares to the one that was sent.
- * The CHECKSUM_VALID_ATTR records whether or not they matched.  This
- * attributes is stored in the AttributedMessage and is available to
- * all receive-side Aspects.
+ * {@link AttributedMessage}s.  The {@link MessageWriter} computes a checksum
+ * (as a long) and sends the eight bytes after the message content.
+ * The {@link MessageReader} computes its own checksum and compares to
+ * the one that was sent.  The CHECKSUM_VALID_ATTR records whether or
+ * not they matched.  This attribute is stored in the
+ * AttributedMessage and is available to all receive-side Aspects.
  */
 
 public class ChecksumStreamsAspect extends StandardAspect 

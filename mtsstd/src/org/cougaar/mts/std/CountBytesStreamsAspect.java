@@ -48,6 +48,11 @@ import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This Aspect counts the bytes of an outgoing message flowing by and
+ * sets a local attribute <code>org.cougaar.core.message.count</code>
+ * with the final value.
+ */
 public class CountBytesStreamsAspect extends StandardAspect 
 {
 

@@ -56,6 +56,10 @@ import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.DontRetryException;
 
+/**
+ * This Aspect logs the delivery of messages, as well as the delay if
+ * the delivery takes awhile.
+ */
 public class DeliveryVerificationAspect 
     extends StandardAspect
     implements AttributeConstants, Runnable, QueueListener

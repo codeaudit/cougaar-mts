@@ -44,6 +44,11 @@ import org.cougaar.core.thread.ThreadListener;
 import org.cougaar.mts.base.BoundComponent;
 import org.cougaar.mts.base.DestinationQueue;
 
+/**
+ * This test Component restricts the number of available threads and
+ * modifies the thread queue order to be more fair with the remaining
+ * rights. 
+ */
 public class DestinationThreadConstrictor
     extends BoundComponent
     implements ThreadListener

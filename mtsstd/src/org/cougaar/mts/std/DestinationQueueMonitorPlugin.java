@@ -32,6 +32,9 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.BlackboardService;
 import org.cougaar.util.GenericStateModelAdapter;
 
+/**
+ * This Component loads the {@link DestinationQueueMonitorServlet}.
+ */
 public class DestinationQueueMonitorPlugin
 extends GenericStateModelAdapter
 implements Component

@@ -34,6 +34,10 @@ import org.cougaar.mts.base.MessageWriter;
 import org.cougaar.mts.base.MessageWriterDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This Aspect caches the serialized message in a byte array as its
+ * btyes pass by.
+ */
 public class CachingStreamsAspect extends StandardAspect
 {
 

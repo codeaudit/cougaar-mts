@@ -48,6 +48,11 @@ import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This Aspect logs large messages, where large is defined by the
+ * <code>MaxMsgLen</code> parameter as a threshold number of bytes.
+ * The default "large" threshold is 100MB.
+ */
 public class DetectBigMessageAspect extends StandardAspect 
 {
 

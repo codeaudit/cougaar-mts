@@ -46,6 +46,10 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This Aspect uses buffered streams in the {@link MessageReader} and
+ * {@link MessageWriter}. 
+ */
 public class BufferedStreamsAspect extends StandardAspect
 {
 

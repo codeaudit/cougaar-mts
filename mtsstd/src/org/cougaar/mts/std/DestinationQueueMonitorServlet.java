@@ -47,7 +47,11 @@ import org.cougaar.core.servlet.ServletFrameset;
 import org.cougaar.mts.base.DestinationQueueMonitorService;
 
 
-//final class DestinationQueueMonitorServlet extends ServletFrameset
+/**
+ * This Servlet displays the state of the DestinationQueues.  It can
+ * also be used to "return" an XML form of the same data to connected
+ * clients. 
+ */
 public final class DestinationQueueMonitorServlet extends ServletFrameset
 {
 
