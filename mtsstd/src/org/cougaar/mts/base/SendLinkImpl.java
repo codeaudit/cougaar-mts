@@ -39,6 +39,7 @@ import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
+import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.util.UnaryPredicate;
 
 
@@ -54,6 +55,7 @@ final public class SendLinkImpl
     private MessageTransportRegistryService registry;
     private LoggingService loggingService;
     private Long incarnation;
+    private Object flush_lock = new Object();
 
     private class BlockingWPCallback implements Callback {
 	boolean callback;
@@ -110,8 +112,10 @@ final public class SendLinkImpl
 		// Callback could be invoked in this thread!  Don't
 		// wait in that case.
 		while (!callback.callback) {
+		    SchedulableStatus.beginWait("Waiting for WP callback");
 		    try { callback.wait(); }
 		    catch (InterruptedException ex) {}
+		    SchedulableStatus.endBlocking();
 		}
 	    }
 	    entry = callback.entry;
@@ -129,14 +133,17 @@ final public class SendLinkImpl
     }
 
 
+    // This should be locked vis-a-vis flushMessages
     public void sendMessage(AttributedMessage message) {
-	MessageAddress orig = message.getOriginator();
-	if (!addr.equals(orig)) {
-	    loggingService.error("SendLink saw a message whose originator (" +orig+ ") didn't match the MessageTransportClient address (" +addr+ ")");
+	synchronized (flush_lock) {
+	    MessageAddress orig = message.getOriginator();
+	    if (!addr.equals(orig)) {
+		loggingService.error("SendLink saw a message whose originator (" +orig+ ") didn't match the MessageTransportClient address (" +addr+ ")");
+	    }
+	    message.setAttribute(AttributeConstants.INCARNATION_ATTRIBUTE,
+				 incarnation);
+	    sendq.sendMessage(message);
 	}
-	message.setAttribute(AttributeConstants.INCARNATION_ATTRIBUTE,
-			     incarnation);
-	sendq.sendMessage(message);
     }
 
 
@@ -151,8 +158,10 @@ final public class SendLinkImpl
 
 
     public void flushMessages(ArrayList droppedMessages) {
-	sendq_impl.removeMessages(flushPredicate, droppedMessages);
-	destq_factory.removeMessages(flushPredicate, droppedMessages);
+	synchronized (flush_lock) {
+	    sendq_impl.removeMessages(flushPredicate, droppedMessages);
+	    destq_factory.removeMessages(flushPredicate, droppedMessages);
+	}
     }
 
     public MessageAddress getAddress() {

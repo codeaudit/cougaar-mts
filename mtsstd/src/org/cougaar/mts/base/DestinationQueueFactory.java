@@ -72,17 +72,19 @@ public class DestinationQueueFactory
     public DestinationQueue getDestinationQueue(MessageAddress destination) 
     {
 	MessageAddress dest = destination.getPrimary();
-	DestinationQueue q = (DestinationQueue) 
-	    queues.get(dest);
-	if (q == null) {
-	    DestinationQueueImpl qimpl = 
-		new DestinationQueueImpl(dest, container);
-	    q = (DestinationQueue) attachAspects(qimpl, 
-						 DestinationQueue.class);
-	    qimpl.setDelegate(q);
-	    synchronized (queues) {
+	DestinationQueue q = null;
+	DestinationQueueImpl qimpl = null;
+	synchronized (queues) {
+	    q = (DestinationQueue) queues.get(dest);
+	    if (q == null) {
+		qimpl = new DestinationQueueImpl(dest, container);
+		q = (DestinationQueue) attachAspects(qimpl, 
+						     DestinationQueue.class);
+		qimpl.setDelegate(q);
 		queues.put(dest, q);
-		impls.add(qimpl);
+		synchronized (impls) {
+		    impls.add(qimpl);
+		}
 	    }
 	}
 	return q;
@@ -90,14 +92,18 @@ public class DestinationQueueFactory
 
 
 
+    // NB: This does _not_ prevent another thread from adding new
+    // messages while the remove operation is in progress.
     public void removeMessages(UnaryPredicate pred, ArrayList removed) 
     {
-	synchronized (queues) {
-	    Iterator itr = impls.iterator();
-	    while (itr.hasNext()) {
-		MessageQueue queue = (MessageQueue) itr.next();
-		queue.removeMessages(pred, removed);
-	    }
+	ArrayList copy;
+	synchronized (impls) {
+	    copy = new ArrayList(impls);
+	}
+	Iterator itr = copy.iterator();
+	while (itr.hasNext()) {
+	    MessageQueue queue = (MessageQueue) itr.next();
+	    queue.removeMessages(pred, removed);
 	}
     }
 
