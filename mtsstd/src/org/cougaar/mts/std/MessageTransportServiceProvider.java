@@ -277,6 +277,11 @@ public final class MessageTransportServiceProvider
 	LinkSelectionProvision lsp = new LinkSelectionProvision();
 	sb.addService(LinkSelectionProvisionService.class, lsp);
 
+	SocketControlProvision scp = new SocketControlProvision();
+	sb.addService(SocketControlProvisionService.class, scp);
+	// SocketFactory has no access to services, so set it manually
+	// in a static.
+	SocketFactory.configureProvider(sb);
    }
 
     // CSMART Aspects (INTERNAL priority) will load between

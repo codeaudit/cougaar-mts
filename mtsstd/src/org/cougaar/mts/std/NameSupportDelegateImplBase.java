@@ -56,9 +56,17 @@ abstract public class NameSupportDelegateImplBase implements NameSupport
     }
 
     public URI lookupAddressInNameServer(MessageAddress address, 
-					    String protocol)
+					 String protocol)
     {
 	return nameSupport.lookupAddressInNameServer(address, protocol);
+    }
+
+    public URI lookupAddressInNameServer(MessageAddress address, 
+					 String protocol,
+					 long timeout)
+    {
+	return nameSupport.lookupAddressInNameServer(address, protocol,
+						     timeout);
     }
 
 

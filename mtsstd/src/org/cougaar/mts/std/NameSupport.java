@@ -46,6 +46,10 @@ public interface NameSupport extends Service
     URI lookupAddressInNameServer(MessageAddress address, 
 				  String protocol);
 
+    URI lookupAddressInNameServer(MessageAddress address, 
+				  String protocol,
+				  long timeout);
+
     Iterator lookupMulticast(MulticastMessageAddress address);
 
 }

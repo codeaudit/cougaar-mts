@@ -21,10 +21,13 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.ServiceBroker;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -52,6 +55,14 @@ public class SocketFactory
     extends RMISocketFactory
     implements java.io.Serializable
 {
+
+    // This has to be set very early from outside
+    private static transient SocketControlProvisionService PolicyProvider; 
+
+    static void configureProvider(ServiceBroker sb) {
+	PolicyProvider = (SocketControlProvisionService)
+	    sb.getService(sb, SocketControlProvisionService.class, null);
+    }
 
     // We're not using this anymore but keep it around for reference.
     private final static String SSL_INSTRUCTIONS = "\n"
@@ -96,21 +107,21 @@ public class SocketFactory
     private static final Class[] FORMALS = {};
     private static final Object[] ACTUALS = {};
 
-    private static javax.net.SocketFactory getSSLSocketFactory() {
+    private static SSLSocketFactory getSSLSocketFactory() {
 	Class cls = null;
 	try {
 	    cls = Class.forName(SSL_SOCFAC_CLASS);
 	} catch (ClassNotFoundException cnf) {
 	    // silently use the default class
-	    return SSLSocketFactory.getDefault();
+	    return (SSLSocketFactory) SSLSocketFactory.getDefault();
 	}
 
 	try {
 	    Method meth = cls.getMethod("getDefault", FORMALS);
-	    return (javax.net.SocketFactory) meth.invoke(cls, ACTUALS);
+	    return (SSLSocketFactory) meth.invoke(cls, ACTUALS);
 	} catch (Exception ex) {
 	    ex.printStackTrace();
-	    return SSLSocketFactory.getDefault();
+	    return (SSLSocketFactory) SSLSocketFactory.getDefault();
 	}
     }
 
@@ -155,24 +166,47 @@ public class SocketFactory
     // happens.  Instead, the aspect delegation will be handled by a
     // special static call.
     boolean use_ssl, use_aspects;
+    transient SocketControlPolicy policy;
 
-    public SocketFactory(boolean use_ssl, boolean use_aspects) {
+    public SocketFactory(boolean use_ssl, boolean use_aspects) 
+    {
 	this.use_ssl = use_ssl;
 	this.use_aspects = use_aspects;
+	// get the policy from a service
     }
 
-    
+    public boolean isMTS() {
+	return use_aspects;
+    }
+
+    public boolean usesSSL() {
+	return use_ssl;
+    }
+
     public Socket createSocket(String host, int port) 
 	throws IOException, UnknownHostException 
     {
-	Socket s = null;
-	if (use_ssl) {
-	    javax.net.SocketFactory socfac = getSSLSocketFactory();
-	    s = socfac.createSocket(host, port);
-	} else {
-	    s = new Socket(host, port);
+	Socket socket = new Socket();
+	InetSocketAddress endpoint = new InetSocketAddress(host, port);
+	if (policy == null && PolicyProvider != null) {
+	    policy = PolicyProvider.getPolicy();
 	}
- 	return use_aspects ? AspectSupportImpl.attachRMISocketAspects(s) : s;
+	
+	if (policy != null) {
+	    int timeout = policy.getConnectTimeout(this, host, port);
+	    socket.connect(endpoint, timeout);
+	} else {
+	    socket.connect(endpoint);
+	}
+
+	if (use_ssl) {
+	    SSLSocketFactory socfac = getSSLSocketFactory();
+	    socket = socfac.createSocket(socket, host, port, true);
+	}
+
+ 	return use_aspects ? 
+	    AspectSupportImpl.attachRMISocketAspects(socket) :
+	    socket;
     }
 
     

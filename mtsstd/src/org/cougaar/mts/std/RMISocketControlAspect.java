@@ -235,6 +235,14 @@ public class RMISocketControlAspect
 	    if (timeout != null) setSoTimeout(reference, timeout.intValue());
 	}
 
+
+	public ArrayList getSocket(MessageAddress addr) {
+	    Remote ref = (Remote)references.get(addr);
+	    if (ref == null) return null;
+	    String key = getKey(ref);
+	    ArrayList skt_list = (ArrayList)sockets.get(key);
+	    return skt_list;
+	}
 	
     }
 

@@ -21,27 +21,48 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
-import java.rmi.Remote;
-import java.util.ArrayList;
-
-public interface RMISocketControlService extends Service
+class SocketControlProvision implements ServiceProvider
 {
-    /**
-     * The SO Timeout is set for ALL sockets that go to the remote RMI
-     * reference The side effect of this is that other agents that are
-     * on the same node will also have their time out changed.
-     */
-    boolean setSoTimeout(MessageAddress addr, int timeout);
+    private SocketControlProvisionImpl impl;
 
-    /** 
-     * The RMILinkProtocol calls this method, Other Aspects should not
-     * call this method.
-     */
-    void setReferenceAddress(Remote reference, 
-				    MessageAddress addr);
+    SocketControlProvision() {
+	impl = new SocketControlProvisionImpl();
+    }
+    
+
+    public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	if (serviceClass == SocketControlProvisionService.class) return impl;
+	return null;
+    }
 
 
-    ArrayList getSocket(MessageAddress addr);
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
+
+
+
+    private static class SocketControlProvisionImpl
+	implements SocketControlProvisionService
+    {
+	SocketControlPolicy policy;
+	public void setPolicy(SocketControlPolicy policy) {
+	    this.policy = policy;
+	}
+	
+	public SocketControlPolicy getPolicy() {
+	    return policy;
+	}
+    }
+
 }

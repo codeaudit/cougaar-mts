@@ -148,9 +148,16 @@ public final class NameSupportImpl implements ServiceProvider
 	public URI lookupAddressInNameServer(MessageAddress address, 
 					     String protocol)
 	{
+	    return lookupAddressInNameServer(address, protocol, 0);
+	}
+
+	public URI lookupAddressInNameServer(MessageAddress address, 
+					     String protocol,
+					     long timeout)
+	{
 	    AddressEntry[] result = null;
 	    try {
-		result = wpService.get(address.getAddress());
+		result = wpService.get(address.getAddress(), timeout);
 	    } catch (Exception ex) {
 		loggingService.error(null, ex);
 	    }
