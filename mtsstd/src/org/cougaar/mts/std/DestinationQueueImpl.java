@@ -23,7 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-
+import org.cougaar.core.thread.CougaarThread;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -140,7 +140,7 @@ final class DestinationQueueImpl
 
 
 	    retryCount++;
-	    threadService.suspendCurrentThread(delay);
+	    CougaarThread.sleep(delay);
 	    if (delay < MAX_DELAY) delay += delay;
 	}
     }

@@ -22,6 +22,8 @@
 package org.cougaar.core.mts;
 
 
+import org.cougaar.core.thread.CougaarThread;
+
 /**
  * This is a debugging aspect.  By attaching it in a single-node
  * society (ie one in which all messages go through the Loopback
@@ -86,14 +88,14 @@ public class WasteCPUAspect extends StandardAspect
 		count++;
 	    }
 
-	    threadService.yieldCurrentThread();
+	    CougaarThread.yield();
 
 	    startTime = System.currentTimeMillis();
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
 		count++;
 	    }
 
-	    threadService.yieldCurrentThread();
+	    CougaarThread.yield();
 
 	    startTime = System.currentTimeMillis();
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
