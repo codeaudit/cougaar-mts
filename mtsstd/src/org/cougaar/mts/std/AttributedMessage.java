@@ -56,6 +56,10 @@ public class AttributedMessage
     private Message contents;
     private MessageAttributes attributes;
 
+    // We control the externalization, so the 'transient' tag here is
+    // really just documentation.
+    private transient MessageAttributes snapshot;
+
     /** 
      * Only invoked by server-side RMI when it's creating one of these
      * to correspond to one that was sent as data.  */ 
@@ -119,6 +123,16 @@ public class AttributedMessage
     }
 
 
+    synchronized void snapshotAttributes() {
+	snapshot = new SimpleMessageAttributes(attributes);
+    }
+
+    
+    synchronized void restoreSnapshot() {
+	if (snapshot != null) restoreAttributes(snapshot);
+    }
+
+
     boolean replyOnly() {
 	return false;
     }
@@ -144,6 +158,16 @@ public class AttributedMessage
 
     // MessageAttributes interface
     // Delegate all calls 
+
+
+    public void clearAttributes() {
+	attributes.clearAttributes();
+    }
+
+    public void restoreAttributes(MessageAttributes snap) {
+	attributes.restoreAttributes(snap);
+    }
+
 
     public Object getAttribute(String attribute) {
 	return attributes.getAttribute(attribute);

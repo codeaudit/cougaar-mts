@@ -180,7 +180,6 @@ public class MessageProtectionAspect extends StandardAspect
 	    message.addValue(MessageAttributes.FILTERS_ATTRIBUTE,
 			     THIS_CLASS);
 
-	    addMessageAttributes(message.getRawAttributes());
 
 	    return super.forwardMessage(message);
 	}

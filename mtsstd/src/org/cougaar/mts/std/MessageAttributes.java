@@ -40,6 +40,8 @@ public interface MessageAttributes extends Serializable
 	"Store&Forward";
     public String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
 
+    void restoreAttributes(MessageAttributes snapshot);
+    void clearAttributes();
     Object getAttribute(String attribute);
     void setAttribute(String attribute, Object value);
     void removeAttribute(String attribute);

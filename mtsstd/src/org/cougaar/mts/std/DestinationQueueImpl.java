@@ -103,6 +103,7 @@ final class DestinationQueueImpl
 	DestinationLink link;
 	int retryCount = 0;
 	Exception lastException = null;
+	message.snapshotAttributes();
 	while (true) {
 	    if (retryCount > 0 && Debug.isDebugEnabled(loggingService,SERVICE))
 		loggingService.debug("Retrying " +message);
@@ -114,6 +115,7 @@ final class DestinationQueueImpl
 		loggingService.debug("Selected Protocol " +
 					  link.getProtocolClass());
 		try {
+		    link.addMessageAttributes(message);
 		    MessageAttributes meta = link.forwardMessage(message);
 		    return;
 		} catch (UnregisteredNameException no_name) {
@@ -142,6 +144,7 @@ final class DestinationQueueImpl
 	    retryCount++;
 	    CougaarThread.sleep(delay);
 	    if (delay < MAX_DELAY) delay += delay;
+	    message.restoreSnapshot();
 	}
     }
 

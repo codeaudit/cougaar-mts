@@ -34,12 +34,37 @@ public class SimpleMessageAttributes
     public SimpleMessageAttributes(AttributedMessage msg) {
 	super();
 	MessageAttributes attr = msg.getRawAttributes();
+	copyAttributes(attr);
+    }
+
+
+    public SimpleMessageAttributes(MessageAttributes attr) {
+	super();
+	copyAttributes(attr);
+    }
+
+
+    private void copyAttributes (MessageAttributes attr) {
 	if (attr instanceof SimpleMessageAttributes) {
 	    putAll((SimpleMessageAttributes) attr);
+	} else {
+	    System.err.println("#### THIS SHOULD NEVER HAPPEN");
+	    Thread.dumpStack();
 	}
     }
 
+
     // MessageAttributes interface
+
+
+    public void clearAttributes() {
+	clear();
+    }
+
+    public void restoreAttributes(MessageAttributes snapshot) {
+	clear();
+	copyAttributes(snapshot);
+    }
 
     /**
      * Returns the current value of the given attribute.
