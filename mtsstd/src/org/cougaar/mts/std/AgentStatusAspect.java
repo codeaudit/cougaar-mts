@@ -201,6 +201,9 @@ public class AgentStatusAspect
 	state.misdeliveredMessageCount = 0;	
 	state.lastLinkProtocolTried = null;
 	state.lastLinkProtocolSuccess=null;
+	state.lastHeardFrom = 0;
+	state.lastSentTo = 0;
+	state.lastFailedSend = 0;
 	return state;
     }
 
@@ -228,6 +231,9 @@ public class AgentStatusAspect
 	    result.misdeliveredMessageCount =state.misdeliveredMessageCount ;
 	    result.lastLinkProtocolTried =state.lastLinkProtocolTried ;
 	    result.lastLinkProtocolSuccess=state.lastLinkProtocolSuccess;
+	    result.lastHeardFrom=state.lastHeardFrom;
+	    result.lastSentTo=state.lastSentTo;
+	    result.lastFailedSend = state.lastFailedSend;
 	}
 	return result;
     }
@@ -388,8 +394,8 @@ public class AgentStatusAspect
 
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
-		
-		if (delivered(meta)) {
+		boolean success = delivered(meta);
+		if (success) {
 		    metricsUpdateService.updateValue(heard_key, 
 						     longMetric(endTime));
 		    metricsUpdateService.updateValue(spoke_key, 
@@ -404,6 +410,10 @@ public class AgentStatusAspect
 		long latency = endTime - startTime;
 		double alpha = 0.20;
 		synchronized (remoteState) {
+		    if (success) {
+			remoteState.lastHeardFrom = endTime;
+			remoteState.lastSentTo = endTime;
+		    }
 		    remoteState.status =  AgentStatusService.ACTIVE;
 		    remoteState.timestamp = System.currentTimeMillis();
 		    remoteState.deliveredCount++;
@@ -434,6 +444,7 @@ public class AgentStatusAspect
 		    remoteState.status = UNREGISTERED;
 		    remoteState.timestamp = now;
 		    remoteState.unregisteredNameCount++;
+		    remoteState.lastFailedSend = now;
 		}
 		metricsUpdateService.updateValue(error_key, 
 						 longMetric(now));
@@ -444,6 +455,7 @@ public class AgentStatusAspect
 		    remoteState.status =UNKNOWN;
 		    remoteState.timestamp = now;
 		    remoteState.nameLookupFailureCount++;
+		    remoteState.lastFailedSend = now;
 		}
 		metricsUpdateService.updateValue(error_key, 
 						 longMetric(now));
@@ -454,6 +466,7 @@ public class AgentStatusAspect
 		    remoteState.status =UNREACHABLE;
 		    remoteState.timestamp = now;
 		    remoteState.commFailureCount++;
+		    remoteState.lastFailedSend = now;
 		}
 		metricsUpdateService.updateValue(error_key, 
 						 longMetric(now));
@@ -464,6 +477,7 @@ public class AgentStatusAspect
 		    remoteState.status =UNREGISTERED;
 		    remoteState.timestamp = now;
 		    remoteState.misdeliveredMessageCount++;
+		    remoteState.lastFailedSend = now;
 		}	
 		metricsUpdateService.updateValue(error_key, 
 						 longMetric(now));
@@ -502,6 +516,7 @@ public class AgentStatusAspect
 	    synchronized (remoteState) {
 		remoteState.receivedCount++;
 		remoteState.receivedBytes+=msgBytes;
+		remoteState.lastHeardFrom = receiveTime;
 	    }
 		    
 	    AgentState localState = 
@@ -545,8 +560,10 @@ public class AgentStatusAspect
 	    }	
 
 	    if (localState != null) {
+		long receiveTime = System.currentTimeMillis();
 		synchronized (localState) {
 		    localState.sendCount++;
+		    localState.lastHeardFrom = receiveTime;
 		}	
 
 		//Local agent sending message means that the MTS has
@@ -554,7 +571,6 @@ public class AgentStatusAspect
 		String localAgent = localAddr.getAddress();
 		String heard_key = "Agent" +KEY_SEPR+ localAgent 
 		    +KEY_SEPR+ "HeardTime";
-		long receiveTime = System.currentTimeMillis();
 		metricsUpdateService.updateValue(heard_key, 
 						 longMetric(receiveTime));
 	    } else {
