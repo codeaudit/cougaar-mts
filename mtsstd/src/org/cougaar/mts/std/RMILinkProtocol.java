@@ -212,8 +212,8 @@ public class RMILinkProtocol
 	Object object = null;
 	try {
 	    object = RMIRemoteObjectDecoder.decode(ref);
-	} catch (Exception ex) {
-	    loggingService.error(null, ex);
+	} catch (Throwable ex) {
+	    loggingService.error("Can't decode URI " +ref, ex);
 	}
 
 	remoteRefs.put(address, object);
@@ -365,8 +365,11 @@ public class RMILinkProtocol
 		return computeCost(message);
 	    }
 	    catch (Exception ex) {
-
-		// not found
+		// not found, fail silently
+		return Integer.MAX_VALUE;
+	    }
+	    catch (Throwable th) {
+		loggingService.error("Can't compute RMI cost", th);
 		return Integer.MAX_VALUE;
 	    }
 	}
