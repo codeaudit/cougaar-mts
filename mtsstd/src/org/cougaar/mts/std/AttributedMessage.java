@@ -163,34 +163,43 @@ public class AttributedMessage
     public void writeExternal(ObjectOutput rawOut) 
 	throws java.io.IOException
     {
-	MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();
-	ArrayList aspectNames = 
-	    (ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
-	MessageWriter writer = factory.getMessageWriter(aspectNames);
+	try {
+	    MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();
+	    ArrayList aspectNames = 
+		(ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
+	    MessageWriter writer = factory.getMessageWriter(aspectNames);
 	
-	writer.finalizeAttributes(this);
+	    writer.finalizeAttributes(this);
 
-	rawOut.writeObject(attributes);
+	    rawOut.writeObject(attributes);
 
-	writer.preProcess();
+	    writer.preProcess();
 
-	OutputStream out = writer.getObjectOutputStream(rawOut);
-	ObjectOutputStream object_out = null;
-	// 'out' should be an ObjectOutputStream but might just be an
-	// OutputStream.  In the latter case, wrap it here.
-	if (out instanceof ObjectOutputStream)
-	    object_out = (ObjectOutputStream) out;
-	else
-	    object_out = new ObjectOutputStream(out);
+	    OutputStream out = writer.getObjectOutputStream(rawOut);
+	    ObjectOutputStream object_out = null;
+	    // 'out' should be an ObjectOutputStream but might just be an
+	    // OutputStream.  In the latter case, wrap it here.
+	    if (out instanceof ObjectOutputStream)
+		object_out = (ObjectOutputStream) out;
+	    else
+		object_out = new ObjectOutputStream(out);
 
 
-	object_out.writeObject(getOriginator());
-	object_out.writeObject(getTarget());
-	object_out.writeObject(contents);
+	    object_out.writeObject(getOriginator());
+	    object_out.writeObject(getTarget());
+	    object_out.writeObject(contents);
 
-	writer.finishOutput();
-
-	writer.postProcess();
+	    writer.finishOutput();
+	    writer.postProcess();
+	} 
+	catch (java.io.IOException ex1) {
+	    ex1.printStackTrace();
+	    throw ex1;
+	}
+	catch (Exception ex2) {
+	    ex2.printStackTrace();
+	    throw new java.io.IOException(ex2.toString());
+	}
 
     }
 
@@ -208,34 +217,43 @@ public class AttributedMessage
     public void readExternal(ObjectInput rawIn) 
 	throws java.io.IOException, ClassNotFoundException
     {
-	
-	attributes = (MessageAttributes) rawIn.readObject();
-	ArrayList aspectNames = (ArrayList)
-	    attributes.getAttribute(FILTERS_ATTRIBUTE);
-	MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();  
-	MessageReader reader = factory.getMessageReader(aspectNames);
+	try {
+	    attributes = (MessageAttributes) rawIn.readObject();
 
-	reader.finalizeAttributes(this);
+	    ArrayList aspectNames = (ArrayList)
+		attributes.getAttribute(FILTERS_ATTRIBUTE);
+	    MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();  
+	    MessageReader reader = factory.getMessageReader(aspectNames);
 
-	reader.preProcess();
+	    reader.finalizeAttributes(this);
 
-	InputStream in = reader.getObjectInputStream(rawIn);
-	ObjectInputStream object_in = null;
-	if (in instanceof ObjectInputStream)
-	    object_in = (ObjectInputStream) in;
-	else
-	    object_in = new ObjectInputStream(in);
+	    reader.preProcess();
+	    InputStream in = reader.getObjectInputStream(rawIn);
+	    ObjectInputStream object_in = null;
+	    if (in instanceof ObjectInputStream)
+		object_in = (ObjectInputStream) in;
+	    else
+		object_in = new ObjectInputStream(in);
 
-	setOriginator((MessageAddress) object_in.readObject());
-	setTarget((MessageAddress) object_in.readObject());
-	contents = (Message) object_in.readObject();
+	    setOriginator((MessageAddress) object_in.readObject());
+	    setTarget((MessageAddress) object_in.readObject());
+	    contents = (Message) object_in.readObject();
 
-	reader.finishInput();
-
-	reader.postProcess();
-
+	    reader.finishInput();
+	    reader.postProcess();
+	} 
+	catch (java.io.IOException ex1) {
+	    ex1.printStackTrace();
+	    throw ex1;
+	}
+	catch (ClassNotFoundException ex2) {
+	    ex2.printStackTrace();
+	    throw ex2;
+	}
+	catch (Exception ex3) {
+	    ex3.printStackTrace();
+	    throw new java.io.IOException(ex3.toString());
+	}
     }
-
-
 }
 

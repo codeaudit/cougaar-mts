@@ -34,6 +34,11 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 
+/**
+ * For reasons unknown, the compression aspect doesn't work reliably
+ * unless its streams are outermost in the nesting.  This implies that
+ * it must be the last stream-filtering aspect in the aspect list.
+ */
 public class CompressingStreamsAspect extends StandardAspect
 {
 
@@ -66,7 +71,8 @@ public class CompressingStreamsAspect extends StandardAspect
 						MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    System.out.println(message.getAttribute("test"));
+	    System.out.println("Compression Receiver Test Attribute=" +
+			       message.getAttribute("test"));
 	    return super.deliverMessage(message, dest);
 	}
 	
@@ -107,13 +113,14 @@ public class CompressingStreamsAspect extends StandardAspect
 	}
 
 	public void finalizeAttributes(AttributedMessage msg) {
+	    super.finalizeAttributes(msg);
 	    this.msg = msg;
 	    String levelstr = System.getProperty("compression-level", "0");
 	    int level = Integer.parseInt(levelstr);
 	    msg.setAttribute(LEVEL_ATTR, new Integer(level));
 	}
 
-	// Join point
+
 	public OutputStream getObjectOutputStream(ObjectOutput out)
 	    throws java.io.IOException
 	{
@@ -127,17 +134,22 @@ public class CompressingStreamsAspect extends StandardAspect
 	public void finishOutput() 
 	    throws java.io.IOException
 	{
+	    super.finishOutput();
+	    // For testing purposes, send a "test" string.
+	    // Object Stream does not work (why?), so we have to do the
+	    // encoding by hand
 	    String test = "test";
 	    def_os.write(test.length());
 	    def_os.write(test.getBytes());
+
+	    //Force the the stream to finish its output
 	    def_os.finish();
 	    def_os.flush();
 
-	    System.out.println("Compressed " +deflater.getTotalIn()+
+	    System.out.println("Compressed Output " +deflater.getTotalIn()+
 			       " bytes to " +deflater.getTotalOut()+
 			       " bytes");
 
-	    super.finishOutput();
 	}
 
 
@@ -160,6 +172,7 @@ public class CompressingStreamsAspect extends StandardAspect
 
 
 	public void finalizeAttributes(AttributedMessage msg) {
+	    super.finalizeAttributes(msg);
 	    this.msg = msg;
 	}
 
@@ -176,13 +189,20 @@ public class CompressingStreamsAspect extends StandardAspect
 	public void finishInput() 
 	    throws java.io.IOException
 	{
+
+	    System.out.println("Starting Compression Input =");
+	    // For test purposes, read the test string tailer
 	    int count = inf_in.read();
 	    byte[] bytes = new byte[count];
 	    inf_in.read(bytes);
 	    String data = new String(bytes);
+	    System.out.println("Compression Input Test String=" + data);
+
+	    // For test purposes
+	    // Set an message attribute with the tailer string
 	    msg.setAttribute(data, Boolean.TRUE);
-	    System.out.println(data);
 	    super.finishInput();
+
 	}
     }
 
