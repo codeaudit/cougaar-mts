@@ -67,7 +67,7 @@ public final class MessageTransportServiceProvider
 	"Requestor is not a MessageTransportClient";
 
     private final static String USE_NEW_FLUSH =
-	"org.cougaar.message.tranport.new_flush";
+      "org.cougaar.message.transport.new_flush";
 
     // MTS address
     private MessageAddress address;
@@ -148,7 +148,8 @@ public final class MessageTransportServiceProvider
 	aspectSupport.addAspect(new MulticastAspect());
 
 	// Handling flushMessage();
-	if (!Boolean.getBoolean(USE_NEW_FLUSH))
+        if ("false".equalsIgnoreCase(
+              System.getProperty(USE_NEW_FLUSH, "true")))
 	    aspectSupport.addAspect(new FlushAspect());
 
         // Traffic Masking Generator
