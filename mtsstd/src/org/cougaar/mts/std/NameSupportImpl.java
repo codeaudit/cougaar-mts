@@ -100,7 +100,7 @@ public final class NameSupportImpl implements ServiceProvider
 		sb.getService(this, LoggingService.class, null);
 	    topologyService = (TopologyWriterService)
 		sb.getService(this, TopologyWriterService.class, null);
-	    myNodeAddress = new MessageAddress(id+"(MTS)");
+	    myNodeAddress = MessageAddress.getMessageAddress(id+"(MTS)");
 
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
@@ -281,7 +281,7 @@ public final class NameSupportImpl implements ServiceProvider
 
 	static class AddressCoercer implements Coercer {
 	    public Object coerce(String raw) {
-		return new MessageAddress(raw);
+		return MessageAddress.getMessageAddress(raw);
 	    }
 	}
 

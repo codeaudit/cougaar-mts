@@ -80,7 +80,7 @@ abstract public class AgentStatusServlet extends BaseServlet
     {
 	String agentString= request.getParameter("agent");
 	if (agentString==null) agentString=nodeID;
-	MessageAddress agent = new MessageAddress(agentString);
+	MessageAddress agent = MessageAddress.getMessageAddress(agentString);
 
 	AgentStatusService.AgentState state = getState(agent);
 

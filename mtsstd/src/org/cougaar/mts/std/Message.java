@@ -23,6 +23,8 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.service.*;
 
+import org.cougaar.core.mts.*;
+import org.cougaar.core.mts.*;
 import org.cougaar.core.node.*;
 
 /**
@@ -41,7 +43,7 @@ public abstract class Message
   implements Serializable 
 {
 
-  private static final MessageAddress sink = new MessageAddress("Unknown");
+  private static final MessageAddress sink = MessageAddress.NULL_SYNC;
   /** This is a Reference target Object **/
   private MessageAddress theOriginator;
   /** This is a Reference target Object **/

@@ -605,7 +605,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // get a request for an address before the timer 
 	    // has run the first time
 	    Iterator iter = getRegistry().findRemoteMulticastTransports(
-								   (MulticastMessageAddress)MessageAddress.SOCIETY);
+								   (MulticastMessageAddress)MessageAddress.MULTICAST_SOCIETY);
 	    while (iter.hasNext()) {
 		MessageAddress anAddress = (MessageAddress) iter.next();
 		if (! anAddress.equals(myAddress)) {
@@ -617,7 +617,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	public void run() {
 	    //update the node list
 	    MulticastMessageAddress societynodes = 
-		(MulticastMessageAddress)MessageAddress.SOCIETY;
+		(MulticastMessageAddress)MessageAddress.MULTICAST_SOCIETY;
 	    Iterator nodeIt = getRegistry().findRemoteMulticastTransports(societynodes);
 	    ArrayList tmpnodes = new ArrayList();
 	    while (nodeIt.hasNext()) {

@@ -22,110 +22,74 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.service.*;
-
 import org.cougaar.core.node.*;
 
 import java.io.*;
 
 /**
- * 
- * @see org.cougaar.core.agent.ClusterIdentifier
- */
-
-/**
  * An address for a Message sender or receiver.
  **/
 
-public class MessageAddress implements Externalizable {
-  protected transient byte[] addressBytes;
-  protected transient int _hc = 0;
-  protected transient String _as = null;
-    private transient MessageAttributes qosAttributes;
+public abstract class MessageAddress 
+  implements Externalizable
+{
 
-  // don't allow subclasses access to default constructor
-  public MessageAddress() {}
-
-  public MessageAddress( String address) {
-    this.addressBytes = address.getBytes();
-    _as = address.intern();
-    _hc = _as.hashCode();
+  /** MessageAttributes associated with this MessageAddress.  
+   * @return MessageAttributes or null
+   **/
+  public MessageAttributes getMessageAttributes() {
+    return null;
   }
-
-    public MessageAddress(MessageAttributes qosAttributes,
-			  String address)
-    {
-	this(address);
-	this.qosAttributes = qosAttributes;
-    }
-
-    public MessageAddress(MessageAttributes qosAttributes)
-    {
-	this();
-	this.qosAttributes = qosAttributes;
-    }
-
-
-    public final MessageAttributes getQosAttributes() {
-	return qosAttributes;
-    }
-
-
+  
   /** @return The address of a society member.  This is Society-centric and
    * may not be human readable or parsable.
    **/
-  public final String getAddress() {
-    return _as;
+  public String getAddress() {
+    return toAddress();
   }
-
-  public boolean equals(MessageAddress ma ){
-    return (ma != null && _as == ma._as);
-  }
-
-  public boolean equals(Object o ){
-    if (this == o) return true;
-    // use == since the strings are interned.
-    if (o instanceof MessageAddress) {
-      MessageAddress oma = (MessageAddress) o;
-      return (_as== oma._as);
-    } else {
-      return false;
-    }
-  }
-
-  public String toString() {
-    return _as;
-  }
-
 
   /** @return the object address part of a URL describing the entity on
    * the COUGAAR society's pseudo-web.  e.g. the URL of an entity could be 
    * contstructed with something like protocol+"://"+host+":"+port+"/"+getAddress()+"/";
    **/
-  public String toAddress() {
-    return _as;
+  public abstract String toAddress();
+
+  public String toString() {
+    return toAddress();
   }
 
-  public final int hashCode() { 
-    return _hc;
+  /** Return the primary MessageAddress associated with this Address.
+   * For example, if an address has MessageAttributes, getPrimary() will
+   * return the Address without the attributes.
+   * @note This is usually an identity operation.
+   **/
+  public MessageAddress getPrimary() {
+    return this;
   }
 
-  public void writeExternal(ObjectOutput out) throws IOException {
-    int l = addressBytes.length;
-    out.writeByte(l);
-    out.write(addressBytes,0,l);
+  //
+  // factory items
+  //
+
+  public static final MessageAddress NULL_SYNC = getMessageAddress("NULL");
+  public static final MessageAddress MULTICAST_SOCIETY = MulticastMessageAddress.getMulticastMessageAddress("SOCIETY");
+  public static final MessageAddress MULTICAST_COMMUNITY = MulticastMessageAddress.getMulticastMessageAddress("COMMUNITY");
+  public static final MessageAddress MULTICAST_LOCAL = MulticastMessageAddress.getMulticastMessageAddress("LOCAL");
+
+
+  public static final MessageAddress getMessageAddress(String address) {
+    return SimpleMessageAddress.getSimpleMessageAddress(address);
   }
 
-  public void readExternal(ObjectInput in) throws ClassNotFoundException, IOException {
-    int l = in.readByte();
-    addressBytes=new byte[l];
-    in.readFully(addressBytes,0,l);
-    _as = new String(addressBytes).intern();
-    _hc = _as.hashCode();
+  public static final MessageAddress getMessageAddress(String address, MessageAttributes mas) {
+    return MessageAddressWithAttributes.getMessageAddressWithAttributes(address,mas);
   }
 
-  public static final MessageAddress SOCIETY = new MulticastMessageAddress("SOCIETY");
-  public static final MessageAddress COMMUNITY = new MulticastMessageAddress("COMMUNITY");
-  public static final MessageAddress LOCAL = new MulticastMessageAddress("LOCAL");
+  public static final MessageAddress getMessageAddress(MessageAddress address, MessageAttributes mas) {
+    return MessageAddressWithAttributes.getMessageAddressWithAttributes(address,mas);
+  }
 
-  
+  public static final MessageAddress getMessageAddress(MessageAttributes mas) {
+    return MessageAddressWithAttributes.getMessageAddressWithAttributes(mas);
+  }
 }

@@ -191,7 +191,7 @@ final class MessageTransportRegistry
 	public boolean isLocalClient(MessageAddress id) {
 	    synchronized (this) {
 		return receiveLinks.get(id) != null ||
-		    id.equals(MessageAddress.LOCAL);
+		    id.equals(MessageAddress.MULTICAST_LOCAL);
 	    }
 	}
 

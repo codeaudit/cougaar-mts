@@ -22,6 +22,8 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.service.*;
 
+import org.cougaar.core.mts.*;
+import org.cougaar.core.mts.*;
 import org.cougaar.core.node.*;
 
 public interface DebugFlags

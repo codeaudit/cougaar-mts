@@ -50,7 +50,7 @@ public abstract class BaseServlet extends HttpServlet
 
 	NodeIdentificationService node_id_svc = (NodeIdentificationService)
 	    sb.getService(this, NodeIdentificationService.class, null);
-	nodeID = node_id_svc.getNodeIdentifier().toString();
+	nodeID = node_id_svc.getMessageAddress().toString();
 	
 
 	// register our servlet

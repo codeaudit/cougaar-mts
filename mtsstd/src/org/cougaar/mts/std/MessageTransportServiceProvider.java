@@ -225,7 +225,7 @@ public final class MessageTransportServiceProvider
 	ServiceBroker sb = getServiceBroker();
 	NodeIdentificationService nis = (NodeIdentificationService)
 	    sb.getService(this, NodeIdentificationService.class, null);
-	id = nis.getNodeIdentifier().toString();
+	id = nis.getMessageAddress().toString();
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
