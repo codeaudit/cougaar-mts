@@ -26,39 +26,15 @@ import org.cougaar.core.society.MessageAddress;
 
 import java.util.ArrayList;
 
-abstract public class ServiceProxyDelegateBaseImpl
-    implements MessageTransportService
+/**
+ * Attachment point for ServiceProxy delegates
+ */
+public interface MessageTransportServiceDelegate 
 {
-
-    protected MessageTransportService service;
-
-    protected ServiceProxyDelegateBaseImpl(MessageTransportService service) {
-	this.service = service;
-    }
-
-    public void sendMessage(Message message) {
-	service.sendMessage(message);
-    }
-
-    public void registerClient(MessageTransportClient client) {
-	service.registerClient(client);
-    }
-
-    public void unregisterClient(MessageTransportClient client) {
-	service.unregisterClient(client);
-    }
-
-    public ArrayList flushMessages() {
-	return service.flushMessages();
-    }
-
-    public String getIdentifier() {
-	return service.getIdentifier();
-    }
-
-    public boolean addressKnown(MessageAddress address) {
-	return service.addressKnown(address);
-    }
-
+    public void sendMessage(Message message);
+    public ArrayList flushMessages();
+    public void release();
+    public MessageAddress getAddress();
+    public boolean okToSend(Message message);
 }
 

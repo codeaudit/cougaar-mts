@@ -102,8 +102,6 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 	int delay = 500; // comes from a property
 	Iterator links;
 	DestinationLink link;
-	MessageTransportServiceProxy serviceProxy =
-	    registry.findServiceProxy(message.getOriginator());
 	int retryCount = 0;
 	Exception lastException = null;
 	while (true) {
@@ -112,8 +110,6 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 	    if (link != null) {
 		try {
 		    link.forwardMessage(message);
-		    if (serviceProxy != null) 
-			serviceProxy.messageDelivered(message);
 		    break;
 		} catch (UnregisteredNameException no_name) {
 		    lastException = no_name;
@@ -128,10 +124,9 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 		    lastException = misd;
 		    System.err.println(misd);
 		}
-	    }
 
-	    if (serviceProxy != null)
-		if (serviceProxy.messageFailed(message)) break;
+		if (!link.retryFailedMessage(message, retryCount)) break;
+	    }
 
 	    retryCount++;
 	    try { Thread.sleep(delay);}

@@ -78,7 +78,6 @@ public class MessageTransportServiceProvider
     private AgentStatusAspect agentStatusAspect;
 
     private String id;
-    private HashMap rawProxies;
     private HashMap proxies;
 
 
@@ -86,7 +85,6 @@ public class MessageTransportServiceProvider
     public MessageTransportServiceProvider(String id) {
         this.id = id;
 	proxies = new HashMap();
-	rawProxies = new HashMap();
 	BinderFactory bf = new MTSBinderFactory();
 	if (!attachBinderFactory(bf)) {
 	    throw new RuntimeException("Failed to load the BinderFactory in MessageTransportServiceProvider");
@@ -119,6 +117,9 @@ public class MessageTransportServiceProvider
 
 	// Multicast Aspect is always required.
 	aspectSupport.addAspect(new MulticastAspect());
+
+	// Flusg Aspect always required
+	aspectSupport.addAspect(new FlushAspect());
     }
 
     private void createFactories() {
@@ -178,11 +179,7 @@ public class MessageTransportServiceProvider
 	MessageAddress addr = client.getMessageAddress();
 	Object proxy = proxies.get(addr);
 	if (proxy != null) return proxy;
-	proxy = new MessageTransportServiceProxy(client,registry,sendQ);
-	rawProxies.put(addr, proxy);
-	proxy = aspectSupport.attachAspects(proxy, 
-					    MessageTransportService.class,
-					    null);
+	proxy = new MessageTransportServiceProxy(client, sendQ, aspectSupport);
 	proxies.put(addr, proxy);
 	if (Debug.debugService())
 	    System.out.println("=== Created MessageTransportServiceProxy for " 
@@ -240,10 +237,9 @@ public class MessageTransportServiceProvider
 		MessageTransportService svc = 
 		    (MessageTransportService) proxies.get(addr);
 		MessageTransportServiceProxy proxy =
-		    (MessageTransportServiceProxy) rawProxies.get(addr);
+		    (MessageTransportServiceProxy) proxies.get(addr);
 		if (svc != service) return; // ???
 		proxies.remove(addr);
-		rawProxies.remove(addr);
 		svc.unregisterClient(client);
 		proxy.release();
 	    }
