@@ -243,8 +243,7 @@ public class MessageTransportServiceProvider
 		if (proxy != service) return; // ???
 		proxies.remove(addr);
 		MessageTransportService svc = (MessageTransportService) proxy;
-		svc.unregisterClient(client); // ???
-		svc.flushMessages();          // ???
+		svc.unregisterClient(client);
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
 	    // TO BE DONE
