@@ -55,7 +55,6 @@ import org.cougaar.mts.std.AspectSupportImpl;
 import org.cougaar.mts.std.MessageWatcherServiceImpl;
 import org.cougaar.mts.std.MessageTimeoutAspect;
 import org.cougaar.mts.std.MulticastAspect;
-import org.cougaar.mts.std.FlushAspect;
 import org.cougaar.mts.std.StatisticsAspect;
 
 /**
@@ -137,9 +136,6 @@ implements ServiceProvider
 
         // Handling multicast messages
         add(new MulticastAspect());
-
-        // Handling flushMessage();
-        add(new FlushAspect());
 
         // Could use a ComponentDescription
         ThreadServiceProvider tsp = new ThreadServiceProvider();
