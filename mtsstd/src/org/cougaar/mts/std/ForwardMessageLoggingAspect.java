@@ -27,23 +27,26 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
-import org.cougaar.core.service.TopologyEntry;
-import org.cougaar.core.service.TopologyReaderService;
+import org.cougaar.core.service.wp.AddressEntry;
+import org.cougaar.core.service.wp.Application;
+import org.cougaar.core.service.wp.WhitePagesService;
 
 public class ForwardMessageLoggingAspect extends StandardAspect
 {
+    static final Application TOPOLOGY = Application.getApplication("topology");
+    static final String SCHEME = "node";
 
     private static final char SEPR = '\t';
 
     private PrintStream log;
     private boolean madeLog;
-    private TopologyReaderService topologySvc;
+    private WhitePagesService wp;
 
     public void load() {
 	super.load();
 	ServiceBroker sb = getServiceBroker();
-	topologySvc = (TopologyReaderService)
-	    sb.getService(this, TopologyReaderService.class, null);
+	wp = (WhitePagesService)
+	    sb.getService(this, WhitePagesService.class, null);
     }
 
     private synchronized void ensureLog() {
@@ -146,14 +149,26 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	ensureLog();
 	MessageAddress src = msg.getOriginator();
 	MessageAddress dst = msg.getTarget();
+	String dst_agent = dst.getAddress();
 	Class pclass = link.getProtocolClass();
 	LinkProtocol protocol = null;
 	long now = System.currentTimeMillis();
 	Object remote = link.getRemoteReference();
 	String remoteIP = 
 	    remote == null ? null : extractInetAddr(remote.toString());
-	TopologyEntry entry = topologySvc.getEntryForAgent(dst.getAddress());
-        String dst_node = entry != null ? entry.getNode() : null;
+        String dst_node =  null;
+	try {
+	    AddressEntry entry = wp.get(dst_agent, TOPOLOGY, SCHEME);
+	    if (entry == null) {
+		dst_node = "???";
+	    } else {
+		dst_node = entry.getAddress().getPath().substring(1);
+	    }
+	} catch (Exception ex) {
+	    ex.printStackTrace();
+	    dst_node = "???";
+	}
+
 
 	synchronized(this) {
 	    log.print(now);

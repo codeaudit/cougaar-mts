@@ -25,11 +25,16 @@ import java.util.ArrayList;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.TopologyReaderService;
+import org.cougaar.core.service.wp.AddressEntry;
+import org.cougaar.core.service.wp.Application;
+import org.cougaar.core.service.wp.WhitePagesService;
+
 
 final public class SendLinkImpl
     implements SendLink
 {
+    static final Application TOPOLOGY = Application.getApplication("topology");
+    static final String SCHEME = "version";
 
     private SendQueue sendq;
     private SendQueueImpl sendq_impl;
@@ -56,9 +61,20 @@ final public class SendLinkImpl
 	    sb.getService(this, LoggingService.class, null);
 
 	String agentID = addr.getAddress();
-	TopologyReaderService topologyService = (TopologyReaderService)
-	    sb.getService(this, TopologyReaderService.class, null);
-	long incn = topologyService.lookupIncarnationForAgent(agentID);
+	WhitePagesService wp = (WhitePagesService)
+	    sb.getService(this, WhitePagesService.class, null);
+	long incn = 0;
+	try {
+	    AddressEntry entry = wp.get(agentID, TOPOLOGY, SCHEME);
+	    if (entry != null) {
+		String path = entry.getAddress().getPath();
+		int end = path.indexOf('/', 1);
+		String incn_str = path.substring(1, end);
+		incn = Long.parseLong(incn_str);
+	    }
+	} catch (Exception ex) {
+	    ex.printStackTrace();
+	}
 	incarnation = new Long(incn);
     }
 
