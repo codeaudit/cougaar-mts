@@ -21,11 +21,7 @@
 
 package org.cougaar.core.mts;
 
-
-public class PrioritizedQueue extends DynamicSortedQueue
+public interface Mapper
 {
-    public PrioritizedQueue(Mapper mapper) {
-	super(new PriorityComparator(), mapper);
-    }
-
+    public Object map(Object obj);
 }

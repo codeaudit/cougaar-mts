@@ -22,16 +22,35 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
+import java.util.Comparator;
 
 public interface ThreadControlService extends Service
 {
+    // Priority scheduling
+    // Queue priority
     void setCougaarPriority(ManagedThread thread, int priority);
     int getCougaarPriority(ManagedThread thread);
+
+    // Raw thread priority
     void setThreadPriority(ManagedThread thread, int priority);
     int getThreadPriority(ManagedThread thread);
+
+
+    // %-CPU scheduling
+
+
+
+    // General
+    void setMaxRunningThreadCount(ThreadService proxy, int count);
+    void setQueueComparator(ThreadService proxy, 
+			    Comparator comparator,
+			    Mapper mapper);
+
+    // Status
     int runningThreadCount(ThreadService proxy);
     int pendingThreadCount(ThreadService proxy);
     int activeThreadCount(ThreadService proxy);
     int maxRunningThreadCount(ThreadService proxy);
-    void setMaxRunningThreadCount(ThreadService proxy, int count);
+
+
 }

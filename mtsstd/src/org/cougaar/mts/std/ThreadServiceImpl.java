@@ -24,12 +24,12 @@ package org.cougaar.core.mts;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.util.CircularQueue;
 import org.cougaar.util.PropertyParser;
 import org.cougaar.util.ReusableThreadPool;
 import org.cougaar.util.ReusableThread;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -144,6 +144,17 @@ class ThreadServiceImpl
 	ThreadController() {
 	}
 
+	public void setQueueComparator(ThreadService svc, 
+				       Comparator comparator,
+				       Mapper mapper)
+	{
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		ControllablePool pool = proxy.threadPool;
+		pool.setQueueComparator(comparator, mapper);
+	    }
+	}
+
 	public void setCougaarPriority(ManagedThread thread, int priority) {
 	    if (thread instanceof ManagedControllableThread) {
 		ManagedControllableThread thr = 
@@ -232,7 +243,7 @@ class ThreadServiceImpl
 
 
     /**
-     * The proxy implementation of ThreadControlService.
+     * The proxy implementation of ThreadListenerService.
      */
     private static class ThreadListenerImpl implements ThreadListenerService {
 
@@ -258,7 +269,12 @@ class ThreadServiceImpl
     }
 
 
-
+    private static Mapper threadMapper = 
+	new Mapper() {
+	    public Object map(Object thing) {
+		return ((ManagedControllableThread) thing).rawThread;
+	    }
+	};
 
     /**
      * A special kind of ReusableThreadPool which makes
@@ -266,7 +282,7 @@ class ThreadServiceImpl
      */
     private static class ControllablePool extends ReusableThreadPool {
 	private ThreadServiceProxy proxy;
-	private PrioritizedQueue pendingThreads;
+	private DynamicSortedQueue pendingThreads;
 	private int maxRunningThreads;
 	private int runningThreadCount = 0;
 
@@ -276,13 +292,17 @@ class ThreadServiceImpl
 	{
 	    super(group, init, max);
 	    this.proxy = proxy;
-	    pendingThreads = new PrioritizedQueue();
+	    pendingThreads = new PrioritizedQueue(threadMapper);
 	    maxRunningThreads = 
 		PropertyParser.getInt(MaxRunningCountProp, 
 				      MaxRunningCountDefault);
 	}
 
-
+	private synchronized void setQueueComparator(Comparator comparator,
+						     Mapper mapper)
+	{
+	    pendingThreads.setComparator(comparator, mapper);
+	}
 
 	protected ReusableThread constructReusableThread() {
 	    ControllableThread thread = new ControllableThread(this);
@@ -343,7 +363,9 @@ class ThreadServiceImpl
 	    ControllableThread thread = null;
 	    synchronized (this) {
 		if (!pendingThreads.isEmpty()) {
-		    thread = (ControllableThread) pendingThreads.next();
+		    ManagedControllableThread mThread = 
+			(ManagedControllableThread)pendingThreads.next();
+		    thread = mThread.rawThread;
 		}
 	    }
 	    if (thread != null) thread.start();
@@ -355,7 +377,9 @@ class ThreadServiceImpl
 	    while (true) {
 		synchronized (this) {
 		    if (!pendingThreads.isEmpty()  && canStartThread()) {
-			thread = (ControllableThread) pendingThreads.next();
+			ManagedControllableThread mThread = 
+			    (ManagedControllableThread)pendingThreads.next();
+			thread = mThread.rawThread;
 		    } else {
 			return;
 		    }
@@ -364,26 +388,25 @@ class ThreadServiceImpl
 	    }
 	}
 
-	private void removeRunningThread(ControllableThread thread) {
+	private void removeRunningThread(ManagedControllableThread mThread) {
 	    synchronized (this) { 
 		--runningThreadCount; 
 	    }
-	    proxy.notifyEnd(thread.mThread);
+	    proxy.notifyEnd(mThread);
 	    runNextPendingThread();
 	}
 
-	private void startRunningThread(ControllableThread thread) {
+	private void startRunningThread(ManagedControllableThread mThread) {
 	    synchronized (this) {
 		++runningThreadCount; 
 	    }
-	    proxy.notifyStart(thread.mThread);
+	    proxy.notifyStart(mThread);
 	}
  
-	private synchronized void addPendingThread(ControllableThread thread) {
-	    ManagedControllableThread mThread = thread.mThread;
-	    thread.timestamp = System.currentTimeMillis();
+	private synchronized void addPendingThread(ManagedControllableThread mThread) {
+	    mThread.rawThread.timestamp = System.currentTimeMillis();
 	    proxy.notifyPending(mThread);
-	    pendingThreads.add(thread);
+	    pendingThreads.add(mThread);
 	}
 
     }
@@ -455,12 +478,12 @@ class ThreadServiceImpl
 	protected void claim() {
 	    // thread has started or restarted
 	    super.claim();
-	    pool.startRunningThread(this);
+	    pool.startRunningThread(mThread);
 	}
 
 	protected void reclaim() {
 	    // thread is done
-	    pool.removeRunningThread(this);
+	    pool.removeRunningThread(mThread);
 	    resetCougaarPriority();
 	    setPriority(Thread.NORM_PRIORITY);
 	    super.reclaim();
@@ -470,7 +493,7 @@ class ThreadServiceImpl
 	    if (pool.canStartThread()) {
 		super.start();
 	    } else {
-		pool.addPendingThread(this);
+		pool.addPendingThread(mThread);
 	    }
 	}
 

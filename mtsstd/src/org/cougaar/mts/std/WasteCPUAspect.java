@@ -81,7 +81,11 @@ public class WasteCPUAspect extends StandardAspect
 	    // queue.
 	    long count = 0;
 	    long startTime = System.currentTimeMillis();
-	    int wasteTime= expRandom.nextInt(250);
+	    int wasteTime= expRandom.nextInt(166);
+	    while (System.currentTimeMillis() - startTime < wasteTime) {
+		count++;
+	    }
+	    Thread.yield();
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
 		count++;
 	    }
