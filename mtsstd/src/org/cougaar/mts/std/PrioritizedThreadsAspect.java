@@ -43,7 +43,7 @@ public class PrioritizedThreadsAspect
     private HashMap priorities;
     private HashMap threads;
 
-    // Maps ManagedThreads to their priorities
+    // Maps Threads to their priorities
     private Mapper threadMapper = 
 	new Mapper() {
 	    public Object map(Object x) {
@@ -130,7 +130,7 @@ public class PrioritizedThreadsAspect
     
 
     // ThreadListener
-    public void threadPending(ManagedThread thread, Object consumer) {
+    public void threadPending(Thread thread, Object consumer) {
 	if (consumer instanceof DestinationQueue) {
 	    // Note the thread's priority just before it goes on the
 	    // queue.  The comparator will use this later. 
@@ -140,10 +140,10 @@ public class PrioritizedThreadsAspect
 	}
     }
 
-    public void threadStarted(ManagedThread thread, Object consumer) {
+    public void threadStarted(Thread thread, Object consumer) {
     }
 
-    public void threadStopped(ManagedThread thread, Object consumer) {
+    public void threadStopped(Thread thread, Object consumer) {
     }
 
 }

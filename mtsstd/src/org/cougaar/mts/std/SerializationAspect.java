@@ -65,7 +65,7 @@ public class SerializationAspect extends StandardAspect
 	PipedOutputStream piped_os;
 	ObjectInputStream reader;
 	ObjectOutputStream writer;
-	ManagedThread thread;
+	Thread thread;
 
 	SerializingDestinationLink(DestinationLink link) {
 	    super(link);

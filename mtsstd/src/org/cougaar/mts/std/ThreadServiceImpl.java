@@ -239,10 +239,10 @@ class ThreadServiceImpl
 	    }
 
 	    public int compare (Object x, Object y) {
-		ManagedControllableThread t1 =
-		    (ManagedControllableThread) x;
-		ManagedControllableThread t2 =
-		    (ManagedControllableThread) y;
+		ControllableThread t1 =
+		    (ControllableThread) x;
+		ControllableThread t2 =
+		    (ControllableThread) y;
 		if (t1.timestamp < t2.timestamp)
 		    return -1;
 		else if (t1.timestamp > t2.timestamp)
@@ -281,23 +281,7 @@ class ThreadServiceImpl
 	}
 
 	protected ReusableThread constructReusableThread() {
-	    ControllableThread thread = new ControllableThread(this);
-	    ManagedThread mThread = new ManagedControllableThread(thread);
-	    return thread;
-	}
-
-	private ManagedThread getManagedThread(Runnable runnable, 
-					       String name)
-	{
-	    ControllableThread rawThread = 
-		(ControllableThread) getThread(runnable, name);
-	    return rawThread.mThread;
-	}
-
-	private ManagedThread getManagedThread(Runnable runnable) {
-	   ControllableThread rawThread = 
-	       (ControllableThread) getThread(runnable);
-	   return rawThread.mThread;
+	    return  new ControllableThread(this);
 	}
 
 
@@ -339,9 +323,7 @@ class ThreadServiceImpl
 	    ControllableThread thread = null;
 	    synchronized (this) {
 		if (!pendingThreads.isEmpty()) {
-		    ManagedControllableThread mThread = 
-			(ManagedControllableThread)pendingThreads.next();
-		    thread = mThread.rawThread;
+		    thread = (ControllableThread)pendingThreads.next();
 		}
 	    }
 	    if (thread != null) thread.start();
@@ -353,9 +335,7 @@ class ThreadServiceImpl
 	    while (true) {
 		synchronized (this) {
 		    if (!pendingThreads.isEmpty()  && canStartThread()) {
-			ManagedControllableThread mThread = 
-			    (ManagedControllableThread)pendingThreads.next();
-			thread = mThread.rawThread;
+			thread = (ControllableThread)pendingThreads.next();
 		    } else {
 			return;
 		    }
@@ -364,47 +344,31 @@ class ThreadServiceImpl
 	    }
 	}
 
-	private void removeRunningThread(ManagedControllableThread mThread) {
+	private void removeRunningThread(ControllableThread thread) {
 	    synchronized (this) { 
 		--runningThreadCount; 
 	    }
-	    proxy.notifyEnd(mThread);
+	    proxy.notifyEnd(thread);
 	    runNextPendingThread();
 	}
 
-	private void startRunningThread(ManagedControllableThread mThread) {
+	private void startRunningThread(ControllableThread thread) {
 	    synchronized (this) {
 		++runningThreadCount; 
 	    }
-	    proxy.notifyStart(mThread);
+	    proxy.notifyStart(thread);
 	}
  
-	private synchronized void addPendingThread(ManagedControllableThread mThread) {
-	    mThread.timestamp = System.currentTimeMillis();
-	    proxy.notifyPending(mThread);
-	    pendingThreads.add(mThread);
-	}
-
-    }
-
-
-    private static class ManagedControllableThread
-	implements ManagedThread
-    {
-	private ControllableThread rawThread;
-	private long timestamp;
-
-	ManagedControllableThread(ControllableThread rawThread) 
+	private synchronized void addPendingThread(ControllableThread thread) 
 	{
-	    this.rawThread = rawThread;
-	    rawThread.setManagedThread(this);
+	    thread.timestamp = System.currentTimeMillis();
+	    proxy.notifyPending(thread);
+	    pendingThreads.add(thread);
 	}
 
-	public void start() {
-	    rawThread.start();
-	}
     }
-	
+
+
 
     /**
      * A special kind of ReusableThread which will notify listeners at
@@ -414,7 +378,7 @@ class ThreadServiceImpl
 	extends ReusableThread
     {
 	private ControllablePool pool;
-	private ManagedControllableThread mThread;
+	private long timestamp;
 
 	ControllableThread(ControllablePool pool) 
 	{
@@ -422,21 +386,16 @@ class ThreadServiceImpl
 	    this.pool = pool;
 	}
 
-	
-
-	void setManagedThread(ManagedControllableThread mThread) {
-	    this.mThread = mThread;
-	}
 
 	protected void claim() {
 	    // thread has started or restarted
 	    super.claim();
-	    pool.startRunningThread(mThread);
+	    pool.startRunningThread(this);
 	}
 
 	protected void reclaim() {
 	    // thread is done
-	    pool.removeRunningThread(mThread);
+	    pool.removeRunningThread(this);
 	    super.reclaim();
 	}
 
@@ -444,7 +403,7 @@ class ThreadServiceImpl
 	    if (pool.canStartThread()) {
 		super.start();
 	    } else {
-		pool.addPendingThread(mThread);
+		pool.addPendingThread(this);
 	    }
 	}
 
@@ -499,18 +458,18 @@ class ThreadServiceImpl
 	    return threadPool.activeThreadCount();
 	}
 
-	private ManagedThread consumeThread(ManagedThread thread, 
-					    Object consumer) 
+	private Thread consumeThread(Thread thread, 
+				     Object consumer) 
 	{
 	    consumers.put(thread, consumer);
 	    return thread;
 	}
 
-	private Object threadConsumer(ManagedThread thread) {
+	private Object threadConsumer(Thread thread) {
 	    return consumers.get(thread);
 	}
 
-	synchronized void notifyPending(ManagedThread thread) {
+	synchronized void notifyPending(Thread thread) {
 	    Object consumer = threadConsumer(thread);
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -519,7 +478,7 @@ class ThreadServiceImpl
 	    }
 	}
 
-	synchronized void notifyStart(ManagedThread thread) {
+	synchronized void notifyStart(Thread thread) {
 	    Object consumer = threadConsumer(thread);
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -528,7 +487,7 @@ class ThreadServiceImpl
 	    }
 	}
 
-	synchronized void notifyEnd(ManagedThread thread) {
+	synchronized void notifyEnd(Thread thread) {
 	    Object consumer = threadConsumer(thread);
   	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -550,16 +509,15 @@ class ThreadServiceImpl
 	}
 
 
-	public ManagedThread getThread(Object consumer, Runnable runnable) {
-	    return consumeThread(threadPool.getManagedThread(runnable), 
-				 consumer);
+	public Thread getThread(Object consumer, Runnable runnable) {
+	    return consumeThread(threadPool.getThread(runnable),  consumer);
 	}
 
-	public ManagedThread getThread(Object consumer, 
-				       Runnable runnable, 
-				       String name) 
+	public Thread getThread(Object consumer, 
+				Runnable runnable, 
+				String name) 
 	{
-	    return consumeThread(threadPool.getManagedThread(runnable, name), 
+	    return consumeThread(threadPool.getThread(runnable, name), 
 				 consumer);
 	}
     }

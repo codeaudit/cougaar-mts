@@ -25,6 +25,6 @@ import org.cougaar.core.component.Service;
 
 public interface ThreadService extends Service
 {
-    ManagedThread getThread(Object consumer, Runnable runnable);
-    ManagedThread getThread(Object consumer, Runnable runnable, String name);
+    Thread getThread(Object consumer, Runnable runnable);
+    Thread getThread(Object consumer, Runnable runnable, String name);
 }
