@@ -40,6 +40,11 @@ public interface NameSupport {
     String NODE_ATTR = "Node";
     String AGENT_ATTR = "Agent";
     String INCARNATION_ATTR = "Incarnation";
+    String CATEGORY_ATTR = "Category";
+
+    String NODE_CATEGORY = "node";
+    String AGENT_CATEGORY = "agent";
+    String SYSTEM_CATEGORY = "system";
 
     String REGISTERED_STATUS = "registered";
     String UNREGISTERED_STATUS = "unregistered";
@@ -61,7 +66,7 @@ public interface NameSupport {
 
     Iterator lookupMulticast(MulticastMessageAddress address);
 
-    void addToTopology(MessageAddress addr);
+    void addToTopology(MessageAddress addr, String category);
     void removeFromTopology(MessageAddress addr);
     Iterator lookupInTopology(Attributes match, String attribute);
     Iterator lookupInTopology(Attributes match, String[] ret_attr);

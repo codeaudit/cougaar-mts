@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.MulticastMessageAddress;
+import org.cougaar.core.society.Node;
 
 
 import java.util.ArrayList;
@@ -214,7 +215,10 @@ public class MessageTransportRegistry implements DebugFlags
     void registerClient(MessageTransportClient client) {
 	addLocalClient(client);
 	registerClientWithSociety(client);
-	nameSupport.addToTopology(client.getMessageAddress());
+	String category = NameSupport.AGENT_CATEGORY;
+	if (Node.class.isAssignableFrom(client.getClass()))
+	    category = NameSupport.NODE_CATEGORY;
+	nameSupport.addToTopology(client.getMessageAddress(), category);
     }
 
 

@@ -69,8 +69,8 @@ abstract public class NameSupportDelegateImplBase implements NameSupport
 	return nameSupport.lookupMulticast(address);
     }
 
-    public void addToTopology(MessageAddress addr) {
-	nameSupport.addToTopology(addr);
+    public void addToTopology(MessageAddress addr, String category) {
+	nameSupport.addToTopology(addr, category);
     }
 
     public void removeFromTopology(MessageAddress addr) {

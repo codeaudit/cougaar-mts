@@ -166,7 +166,7 @@ public final class NameSupportImpl implements NameSupport
 	    System.err.println("Failed to register " +  name);
 	    e.printStackTrace();
 	}
-	addToTopology(mts_address);
+	addToTopology(mts_address, SYSTEM_CATEGORY);
 
     }
 
@@ -283,12 +283,13 @@ public final class NameSupportImpl implements NameSupport
 
 
 
-    public void addToTopology(MessageAddress addr) {
+    public void addToTopology(MessageAddress addr, String category) {
 	BasicAttributes attr = new BasicAttributes();
 	attr.put(STATUS_ATTR, REGISTERED_STATUS);
 	attr.put(HOST_ATTR, hostname);
 	attr.put(NODE_ATTR, id);
 	attr.put(AGENT_ATTR, addr);
+	attr.put(CATEGORY_ATTR, category);
 	attr.put(INCARNATION_ATTR, Long.toString(System.currentTimeMillis()));
 	String key = TOPOLOGY_DIR + NS.DirSeparator + addr;
 	try {
