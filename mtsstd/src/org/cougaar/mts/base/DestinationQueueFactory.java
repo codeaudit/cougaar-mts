@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,9 +37,6 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
 import org.cougaar.mts.std.AttributedMessage;
-import org.cougaar.mts.std.DeliveryVerificationAspect;
-import org.cougaar.mts.std.DestinationQueueMonitorServlet;
-import org.cougaar.mts.std.MessageTimeoutAspect;
 
 /**
  * A factory which makes DestinationQueues.  It uses the standard
