@@ -67,7 +67,9 @@ public class SerializationAspect extends StandardAspect
 	DestinationLink link;
 
 	SerializingDestinationLink(DestinationLink link) {
+	    super("SerializingDestinationLink " + link);
 	    this.link = link;
+	    setDaemon(true);
 	    try {
 		piped_is = new PipedInputStream();
 		piped_os = new PipedOutputStream();

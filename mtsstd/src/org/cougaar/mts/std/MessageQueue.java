@@ -37,6 +37,7 @@ abstract class MessageQueue extends Thread
     MessageQueue(String name) {
 	super(name);
 	queue = new CircularQueue();
+	setDaemon(true);
 	start();
     }
 
