@@ -30,7 +30,7 @@ package org.cougaar.core.mts;
 public interface ReceiveLink
 {
     /** Deliver the message to the final recipient (an Agent). */
-    void deliverMessage(AttributedMessage message);
+    MessageAttributes deliverMessage(AttributedMessage message);
     MessageTransportClient getClient();
 
 }

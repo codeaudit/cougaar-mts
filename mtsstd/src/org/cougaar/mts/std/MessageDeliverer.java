@@ -38,7 +38,8 @@ import org.cougaar.core.component.Service;
 
 public interface MessageDeliverer extends Service
 {
-    void deliverMessage(AttributedMessage message, MessageAddress dest)
+    MessageAttributes deliverMessage(AttributedMessage message,
+				     MessageAddress dest)
 	throws MisdeliveredMessageException;
     boolean matches(String name);
 

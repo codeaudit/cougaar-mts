@@ -79,7 +79,7 @@ public class AgentStatusAspect
 	    super(link);
 	}
 	
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 	    NameLookupException, 
 	    CommFailureException,
@@ -91,7 +91,7 @@ public class AgentStatusAspect
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
-		super.forwardMessage(message);
+		MessageAttributes meta = super.forwardMessage(message);
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
 		long latency = endTime - startTime;
@@ -104,7 +104,7 @@ public class AgentStatusAspect
 		    state.averageDeliverTime = (alpha * latency) +
 			((1-alpha) * latency);
 		}
-		    
+		return meta;
 	    } catch (UnregisteredNameException unreg) {
 		synchronized (state) {
 		    state.status = UNREGISTERED;

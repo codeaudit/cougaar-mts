@@ -30,8 +30,8 @@ abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink
 	this.link = link;
     }
 
-    public void deliverMessage(AttributedMessage message) {
-	link.deliverMessage(message);
+    public MessageAttributes deliverMessage(AttributedMessage message) {
+	return link.deliverMessage(message);
     }
 
     public MessageTransportClient getClient() {

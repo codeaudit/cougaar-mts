@@ -140,7 +140,9 @@ public class SequenceAspect extends StandardAspect
 		nextSeqNum++;
 	    }
      
-	    private void handleNewMessage(AttributedMessage message) {
+	    private MessageAttributes handleNewMessage(AttributedMessage message) {
+		MessageAttributes meta = new SimpleMessageAttributes(message);
+		String delivery_status = null;
 		int msgSeqNum = getSequenceNumber(message);
 		if (nextSeqNum > msgSeqNum) {
 		    Message contents = message.getRawMessage();
@@ -152,6 +154,8 @@ public class SequenceAspect extends StandardAspect
 					     " " +message.getOriginator()+ 
 					     "->" +message.getTarget()+
 					     " #" +msgSeqNum);
+		    delivery_status =
+			MessageAttributes.DELIVERY_STATUS_DROPPED_DUPLICATE;
 		} else  if (nextSeqNum == msgSeqNum) {
 		    stripAndDeliver(message);
 		    Iterator itr  = heldMessages.iterator();
@@ -166,12 +170,21 @@ public class SequenceAspect extends StandardAspect
 			    itr.remove();
 			}
 		    }//end while
+		    delivery_status =
+			MessageAttributes.DELIVERY_STATUS_DELIVERED;
 		} else {
 		    if (loggingService.isDebugEnabled())
 			loggingService.debug("holding out of sequence message"
 					     + message); 
 		    heldMessages.add(message);
+		    delivery_status =
+			MessageAttributes.DELIVERY_STATUS_HELD;
 		}
+
+		
+		meta.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
+				  delivery_status);
+		return meta;
 	    }
 	}
 
@@ -185,7 +198,7 @@ public class SequenceAspect extends StandardAspect
 	    super.deliverMessage(message);
 	}
      
-	public void deliverMessage(AttributedMessage message) {
+	public MessageAttributes deliverMessage(AttributedMessage message) {
 	    Object seq = message.getAttribute(SEQ);
 	    if ( seq != null ) {
 		MessageAddress src = message.getOriginator();
@@ -196,12 +209,12 @@ public class SequenceAspect extends StandardAspect
 		    conversationState.put (src, conversation);
 		}
 	     
-		conversation.handleNewMessage(message);
+		return conversation.handleNewMessage(message);
 	    }
 	    else {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error("No Sequence tag: " + message);
-		super.deliverMessage(message);
+		return super.deliverMessage(message);
 	    }
 
 	}

@@ -146,10 +146,11 @@ public class RMILinkProtocol
 	return new MTImpl(myAddress, deliverer, socfac);
     }
 
-    protected void doForwarding(MT remote, AttributedMessage message) 
+    protected MessageAttributes doForwarding(MT remote, 
+					     AttributedMessage message) 
 	throws MisdeliveredMessageException, java.rmi.RemoteException
     {
-	remote.rerouteMessage(message);
+	return remote.rerouteMessage(message);
     }
 
 
@@ -332,7 +333,7 @@ public class RMILinkProtocol
 	}
 
 
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws NameLookupException, 
 		   UnregisteredNameException, 
 		   CommFailureException,
@@ -340,7 +341,7 @@ public class RMILinkProtocol
 	{
 	    cacheRemote();
 	    try {
-		doForwarding(remote, message);
+		return doForwarding(remote, message);
 	    } 
 	    catch (MisdeliveredMessageException mis) {
 		// force recache of remote
@@ -349,7 +350,7 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// force recache of remote
-		if (Debug.isDebugEnabled(loggingService,COMM)) 
+		if (Debug.isErrorEnabled(loggingService,COMM)) 
 		    loggingService.error(null, ex);
 		remote = null;
 		// Assume anything else is a comm failure

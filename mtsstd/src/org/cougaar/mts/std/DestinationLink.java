@@ -33,7 +33,7 @@ public interface DestinationLink
      * This method is used to request the associated transport to do
      * its thing with the given message.  Only called during
      * processing of messages in DestinationQueueImpl.  */
-    void forwardMessage(AttributedMessage message) 
+    MessageAttributes forwardMessage(AttributedMessage message) 
 	throws UnregisteredNameException, 
 	NameLookupException, 
 	CommFailureException,

@@ -187,7 +187,7 @@ public class TraceAspect
 	    super(link);
 	}
 	
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -195,7 +195,7 @@ public class TraceAspect
 
 	{
 	    log("DestinationLink", message.toString());
-	    super.forwardMessage(message);
+	    return super.forwardMessage(message);
 	}
 	
     }
@@ -208,12 +208,12 @@ public class TraceAspect
 	    super(deliverer);
 	}
 	
-	public void deliverMessage(AttributedMessage message, 
-				   MessageAddress dest) 
+	public MessageAttributes deliverMessage(AttributedMessage message, 
+						MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
 	    log("MessageDeliverer", message.toString());
-	    super.deliverMessage(message, dest);
+	    return super.deliverMessage(message, dest);
 	}
 	
     }
@@ -225,9 +225,9 @@ public class TraceAspect
 	    super(link);
 	}
 	
-	public void deliverMessage(AttributedMessage message) {
+	public MessageAttributes deliverMessage(AttributedMessage message) {
 	    log("ReceiveLink", message.toString());
-	    super.deliverMessage(message);
+	    return super.deliverMessage(message);
 	}
 
     }

@@ -140,13 +140,13 @@ public class SecurityAspect extends StandardAspect
 	    super(link);
 	}
 
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    super.forwardMessage(secure(message));
+	    return super.forwardMessage(secure(message));
 	}
 
 
@@ -159,10 +159,11 @@ public class SecurityAspect extends StandardAspect
 	    super(deliverer);
 	}
 
-	public void deliverMessage(AttributedMessage m, MessageAddress dest) 
+	public MessageAttributes deliverMessage(AttributedMessage m, 
+						MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    super.deliverMessage(unsecure(m), dest);
+	    return super.deliverMessage(unsecure(m), dest);
 	}
 
     }

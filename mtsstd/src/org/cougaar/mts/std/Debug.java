@@ -112,4 +112,20 @@ public final class Debug implements DebugFlags
 	    return ((flags & mask) == mask);
     }
 
+
+    public static boolean isInfoEnabled(LoggingService ls, int mask) {
+	if (ls == null || !ls.isInfoEnabled())
+	    return false;
+	else
+	    return ((flags & mask) == mask);
+    }
+
+
+    public static boolean isErrorEnabled(LoggingService ls, int mask) {
+	if (ls == null || !ls.isErrorEnabled())
+	    return false;
+	else
+	    return ((flags & mask) == mask);
+    }
+
 }

@@ -29,7 +29,6 @@ import java.io.OutputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.StringTokenizer;
 
 
@@ -51,7 +50,7 @@ public class AttributedMessage
 {
 
     private Message contents;
-    private HashMap attributes;
+    private MessageAttributes attributes;
 
     /** 
      * Only invoked by server-side RMI when it's creating one of these
@@ -68,8 +67,8 @@ public class AttributedMessage
     {
 	super(contents.getOriginator(), contents.getTarget());
 	this.contents = contents;
-	attributes = new HashMap();
-	attributes.put(FILTERS_ATTRIBUTE, new ArrayList());
+	attributes = new SimpleMessageAttributes();
+	attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
     }
 
 
@@ -83,8 +82,7 @@ public class AttributedMessage
     {
 	super(contents.getOriginator(), contents.getTarget());
 	this.contents = contents.contents;
-	attributes = new HashMap();
-	attributes.putAll(contents.attributes);
+	attributes = new SimpleMessageAttributes(contents);
     }
 
 
@@ -97,10 +95,10 @@ public class AttributedMessage
     public AttributedMessage(Message contents,
 			     AttributedMessage initialAttributes) 
     {
-	super(contents.getOriginator(), contents.getTarget());
+	super(contents == null ? null : contents.getOriginator(), 
+	      contents == null ? null : contents.getTarget());
 	this.contents = contents;
-	attributes = new HashMap();
-	attributes.putAll(initialAttributes.attributes);
+	attributes = new SimpleMessageAttributes(initialAttributes);
     }
 
 
@@ -112,69 +110,38 @@ public class AttributedMessage
     }
 
 
-
+    /**
+     * Return the raw Attributes object.  Only used by
+     * SimpleMessageAttributes to initialize itself from an
+     * AttributedMessage.
+     */
+    MessageAttributes getRawAttributes() {
+	return attributes;
+    }
 
 
     // MessageAttributes interface
+    // Delegate all calls 
 
-    /**
-     * Returns the current value of the given attribute.
-     */
     public Object getAttribute(String attribute) {
-	return attributes.get(attribute);
+	return attributes.getAttribute(attribute);
     }
 
-    /**
-     * Modifies or sets the current value of the given attribute to the
-     * given value.
-     */
     public void setAttribute(String attribute, Object value) {
-	attributes.put(attribute, value);
+	attributes.setAttribute(attribute, value);
     }
 
 
-    /**
-     * Removes the given attribute.
-     */
     public void removeAttribute(String attribute) {
-	attributes.remove(attribute);
+	attributes.removeAttribute(attribute);
     }
 	
-    /**
-     * Add a value to an attribute.  If the current raw value of the
-     * attribute is an ArrayList, the new value will be added to it.
-     * If the current raw value is not an ArrayList, a new ArrayList
-     * will be created and the current value (if non-null) as well as
-     * the new value will be added to it.
-     */
     public void addValue(String attribute, Object value) {
-	Object old = attributes.get(attribute);
-	if (old == null) {
-	    ArrayList list = new ArrayList();
-	    list.add(value);
-	    attributes.put(attribute, list);
-	} else if (old instanceof ArrayList) {
-	    ((ArrayList) old).add(value);
-	} else {
-	    ArrayList list = new ArrayList();
-	    list.add(old);
-	    list.add(value);
-	    attributes.put(attribute, list);
-	}
+	attributes.addValue(attribute, value);
     }
 
-    /**
-     * Remove a value to an attribute.  The current raw value should
-     * either be an ArrayList or a singleton equal to the given value.
-     */
     public void removeValue(String attribute, Object value) {
-	Object old = attributes.get(attribute);
-	if (old == null) {
-	} else if (old instanceof ArrayList) {
-	    ((ArrayList) old).remove(value);
-	} else if (value.equals(old)) {
-	    attributes.remove(attribute);
-	}
+	attributes.removeValue(attribute, value);
     }
 
 
@@ -197,7 +164,8 @@ public class AttributedMessage
 	throws java.io.IOException
     {
 	MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();
-	ArrayList aspectNames = (ArrayList) attributes.get(FILTERS_ATTRIBUTE);
+	ArrayList aspectNames = 
+	    (ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
 	MessageWriter writer = factory.getMessageWriter(aspectNames);
 	
 	writer.finalizeAttributes(this);
@@ -241,8 +209,9 @@ public class AttributedMessage
 	throws java.io.IOException, ClassNotFoundException
     {
 	
-	attributes = (HashMap) rawIn.readObject();
-	ArrayList aspectNames = (ArrayList) attributes.get(FILTERS_ATTRIBUTE);
+	attributes = (MessageAttributes) rawIn.readObject();
+	ArrayList aspectNames = (ArrayList)
+	    attributes.getAttribute(FILTERS_ATTRIBUTE);
 	MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();  
 	MessageReader reader = factory.getMessageReader(aspectNames);
 

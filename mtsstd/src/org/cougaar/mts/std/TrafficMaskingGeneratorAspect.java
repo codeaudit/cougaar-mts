@@ -356,7 +356,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    super(link);
 	}
     
-	public void deliverMessage(AttributedMessage msg) 
+	public MessageAttributes deliverMessage(AttributedMessage msg) 
 	{
 	    Boolean isFake = (Boolean) msg.getAttribute(FAKE);
 	    if (isFake != null && isFake.booleanValue()) {
@@ -383,9 +383,10 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		}
 		//if its a fake reply (the other kind of masking message)
 		// drop it on the floor.
+		return null;
 	    } else {
 		// any other kind of message just gets passed through
-		super.deliverMessage(msg);
+		return super.deliverMessage(msg);
 	    }
 	} 
     }  // end of MaskingDelivererDelegate inner class

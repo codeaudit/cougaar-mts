@@ -86,10 +86,10 @@ class LoopbackLinkProtocol
 	
 
 
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws MisdeliveredMessageException
 	{
-	    getDeliverer().deliverMessage(message, message.getTarget());
+	    return getDeliverer().deliverMessage(message, message.getTarget());
 	}
 
 	public boolean retryFailedMessage(AttributedMessage message,

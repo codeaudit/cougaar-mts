@@ -92,13 +92,13 @@ public class ServiceTestAspect extends StandardAspect
 	    super(link);
 	}
 
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    super.forwardMessage(send(message));
+	    return super.forwardMessage(send(message));
 	}
 
 
@@ -111,10 +111,11 @@ public class ServiceTestAspect extends StandardAspect
 	    super(deliverer);
 	}
 
-	public void deliverMessage(AttributedMessage m, MessageAddress dest) 
+	public MessageAttributes deliverMessage(AttributedMessage m, 
+						MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    super.deliverMessage(receive(m), dest);
+	    return super.deliverMessage(receive(m), dest);
 	}
 
     }

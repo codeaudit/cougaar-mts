@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
 
+
 /**
  * The only current implementation of ReceiveLink.  The implementation
  * of <strong>deliverMessage</strong> invokes
@@ -40,13 +41,20 @@ public class ReceiveLinkImpl implements ReceiveLink
 	    sb.getService(this, LoggingService.class, null);
     }
 
-    public void deliverMessage(AttributedMessage message)
+    public MessageAttributes deliverMessage(AttributedMessage message)
     {
+	MessageAttributes metadata = new SimpleMessageAttributes(message);
 	try {
 	    client.receiveMessage(message.getRawMessage());
+	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
+				  MessageAttributes.DELIVERY_STATUS_DELIVERED);
+	    return metadata;
 	} catch (Throwable th) {
 	    if (loggingService.isErrorEnabled())
 		loggingService.error("MessageTransportClient threw an exception in receiveMessage, not retrying.", th);
+	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
+				  MessageAttributes.DELIVERY_STATUS_CLIENT_ERROR);
+	    return metadata;
 	}
 
     }

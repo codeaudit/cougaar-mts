@@ -31,10 +31,11 @@ abstract public class MessageDelivererDelegateImplBase
 	this.deliverer = deliverer;
     }
 
-    public void deliverMessage(AttributedMessage message, MessageAddress dest)
+    public MessageAttributes deliverMessage(AttributedMessage message, 
+					    MessageAddress dest)
 	throws MisdeliveredMessageException
     {
-	deliverer.deliverMessage(message, dest);
+	return deliverer.deliverMessage(message, dest);
     }
 
     public boolean matches(String name) {

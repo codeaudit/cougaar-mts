@@ -50,10 +50,10 @@ public class MTImpl extends UnicastRemoteObject implements MT
 	return socfac;
     }
 
-    public void rerouteMessage(AttributedMessage message) 
+    public MessageAttributes rerouteMessage(AttributedMessage message) 
 	throws MisdeliveredMessageException
     {
-	deliverer.deliverMessage(message, message.getTarget());
+	return deliverer.deliverMessage(message, message.getTarget());
     }
 
     public MessageAddress getMessageAddress() {

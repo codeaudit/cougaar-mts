@@ -35,13 +35,13 @@ abstract public class DestinationLinkDelegateImplBase
 	this.link = link;
     }
 
-    public void forwardMessage(AttributedMessage message) 
+    public MessageAttributes forwardMessage(AttributedMessage message) 
 	throws UnregisteredNameException, 
 	NameLookupException, 
 	CommFailureException,
 	MisdeliveredMessageException
     {
-	link.forwardMessage(message);
+	return link.forwardMessage(message);
     }
 
     public int cost(AttributedMessage message) {

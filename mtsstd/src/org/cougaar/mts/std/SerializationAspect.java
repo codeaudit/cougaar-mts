@@ -116,7 +116,8 @@ public class SerializationAspect extends StandardAspect
 	    }
 	}
 
-	public synchronized void forwardMessage(AttributedMessage message) 
+	public synchronized MessageAttributes
+	    forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -133,14 +134,16 @@ public class SerializationAspect extends StandardAspect
 		    writer.flush();
 		    if (loggingService.isInfoEnabled())
 			loggingService.info("Serialized " + message);
+		    // Hmmm
+		    return null;
 		} catch (Exception ex) {
 		    loggingService.error(null, ex);
-		    super.forwardMessage(message);
+		    return super.forwardMessage(message);
 		}
 	    } else {
 		if (loggingService.isInfoEnabled())
 		    loggingService.info("Forwarding " + message);
-		super.forwardMessage(message);
+		return super.forwardMessage(message);
 	    }
 	}
 

@@ -33,6 +33,7 @@ import java.util.zip.Inflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
+
 public class CompressingStreamsAspect extends StandardAspect
 {
 
@@ -61,12 +62,12 @@ public class CompressingStreamsAspect extends StandardAspect
 	    super(delegatee);
 	}
 
-	public void deliverMessage(AttributedMessage message, 
-				   MessageAddress dest) 
+	public MessageAttributes deliverMessage(AttributedMessage message, 
+						MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
 	    System.out.println(message.getAttribute("test"));
-	    super.deliverMessage(message, dest);
+	    return super.deliverMessage(message, dest);
 	}
 	
     }
@@ -77,7 +78,7 @@ public class CompressingStreamsAspect extends StandardAspect
 	    super(delegatee);
 	}
 	
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -87,7 +88,7 @@ public class CompressingStreamsAspect extends StandardAspect
 			     CompressingStreamsAspect.class.getName());
 	    message.setAttribute(LEVEL_ATTR,
 				 new Integer(Deflater.BEST_COMPRESSION));
-	    super.forwardMessage(message);
+	    return super.forwardMessage(message);
 	}
 	
     }

@@ -51,14 +51,16 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	return new SerializedMTImpl(myAddress, deliverer, socfac);
     }
 
-    protected void doForwarding(MT remote, AttributedMessage message) 
+    protected MessageAttributes doForwarding(MT remote, 
+					     AttributedMessage message) 
 	throws MisdeliveredMessageException, java.rmi.RemoteException
     {
 	if (remote instanceof SerializedMT) {
 	    byte[] messageBytes = SerializationUtils.toByteArray(message);
-	    ((SerializedMT) remote).rerouteMessage(messageBytes);
+	    byte[] res = ((SerializedMT) remote).rerouteMessage(messageBytes);
+	    return (MessageAttributes) SerializationUtils.fromByteArray(res);
 	} else {
-	    super.doForwarding(remote, message);
+	    return super.doForwarding(remote, message);
 	}
     }
 

@@ -113,12 +113,13 @@ public class WatcherAspect
 	    super(deliverer);
 	}
 	
-	public void deliverMessage(AttributedMessage message, 
-				   MessageAddress dest) 
+	public MessageAttributes deliverMessage(AttributedMessage message, 
+						MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    super.deliverMessage(message, dest);
+	    MessageAttributes result = super.deliverMessage(message, dest);
 	    notifyWatchersOfReceive(message);
+	    return result;
 	}
 	
 

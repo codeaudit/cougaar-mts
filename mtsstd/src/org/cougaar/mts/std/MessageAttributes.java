@@ -21,9 +21,22 @@
 
 package org.cougaar.core.mts;
 
-public interface MessageAttributes
+import java.io.Serializable;
+
+public interface MessageAttributes extends Serializable
 {
     public static final String FILTERS_ATTRIBUTE = "Filters";
+
+    public static final String DELIVERY_ATTRIBUTE = "DeliveryStatus";
+    public static final String DELIVERY_STATUS_DELIVERED = "Delivered";
+    public static final String DELIVERY_STATUS_CLIENT_ERROR = 
+	"ClientException";
+    public static final String DELIVERY_STATUS_DROPPED_DUPLICATE = 
+	"DroppedDuplicate";
+    public static final String DELIVERY_STATUS_HELD = "Held";
+    public static final String DELIVERY_STATUS_STORE_AND_FORWARD  =
+	"Store&Forward";
+    public static final String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
 
     public Object getAttribute(String attribute);
     public void setAttribute(String attribute, Object value);

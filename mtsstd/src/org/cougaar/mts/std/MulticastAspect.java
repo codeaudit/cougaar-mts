@@ -108,8 +108,8 @@ public class MulticastAspect extends StandardAspect
 	    super(deliverer);
 	}
 	
-	public void deliverMessage(AttributedMessage msg, 
-				   MessageAddress destination) 
+	public MessageAttributes deliverMessage(AttributedMessage msg, 
+						MessageAddress destination) 
 	    throws MisdeliveredMessageException
 	{
 	    MulticastMessageAddress mcastAddr = 
@@ -131,8 +131,13 @@ public class MulticastAspect extends StandardAspect
 						  + localDestination);
 		    super.deliverMessage(copy, localDestination);
 		}
+		// Hmm...
+		MessageAttributes meta = new SimpleMessageAttributes(msg);
+		meta.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
+				  MessageAttributes.DELIVERY_STATUS_DELIVERED);
+		return meta;
 	    } else {	
-		super.deliverMessage(msg, destination);
+		return super.deliverMessage(msg, destination);
 	    }
 	}
 	

@@ -74,7 +74,7 @@ public class FlushAspect extends StandardAspect
 	    super(link);
 	}
 
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -86,8 +86,9 @@ public class FlushAspect extends StandardAspect
 					  message.getOriginator());
 	    }
 	    try {
-		super.forwardMessage(message);
+		MessageAttributes meta = super.forwardMessage(message);
 		if (sendLink != null) sendLink.messageDelivered(message);
+		return meta;
 	    } catch (NameLookupException name_ex) {
 		if (sendLink != null) sendLink.messageFailed(message);
 		throw name_ex;

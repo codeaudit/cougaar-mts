@@ -181,7 +181,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	}
 	
 
-	public void forwardMessage(AttributedMessage msg) 
+	public MessageAttributes forwardMessage(AttributedMessage msg) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -189,8 +189,9 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 		   
 	{
 	    try {
-		super.forwardMessage(msg);
+		MessageAttributes result = super.forwardMessage(msg);
 		logMessage(msg, "Sent", this);
+		return result;
 	    } catch (UnregisteredNameException ex1) {
 		logMessage(msg, "Failed", this);
 		throw ex1;

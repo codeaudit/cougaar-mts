@@ -30,6 +30,6 @@ import java.rmi.RemoteException;
 
 public interface SerializedMT extends MT {
   /** receive a message **/
-  void rerouteMessage(byte[] messageBytes) throws RemoteException;
+  byte[] rerouteMessage(byte[] messageBytes) throws RemoteException;
 
 }

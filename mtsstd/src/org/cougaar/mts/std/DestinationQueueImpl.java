@@ -114,18 +114,18 @@ final class DestinationQueueImpl
 		loggingService.debug("Selected Protocol " +
 					  link.getProtocolClass());
 		try {
-		    link.forwardMessage(message);
+		    MessageAttributes meta = link.forwardMessage(message);
 		    return;
 		} catch (UnregisteredNameException no_name) {
 		    lastException = no_name;
 		    // nothing to say here
 		} catch (NameLookupException lookup_error) {
 		    lastException = lookup_error;
-		    if (Debug.isDebugEnabled(loggingService,COMM)) 
+		    if (Debug.isErrorEnabled(loggingService,COMM)) 
 			loggingService.error(null, lookup_error);
 		} catch (CommFailureException comm_failure) {
 		    lastException = comm_failure;
-		    if (Debug.isDebugEnabled(loggingService,COMM)) 
+		    if (Debug.isErrorEnabled(loggingService,COMM)) 
 			loggingService.error(null, comm_failure);
 		} catch (MisdeliveredMessageException misd) {
 		    lastException = misd;

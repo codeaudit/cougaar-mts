@@ -72,7 +72,7 @@ public class WasteCPUAspect extends StandardAspect
 	}
 
 
-	public synchronized void forwardMessage(AttributedMessage message) 
+	public synchronized MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -102,7 +102,7 @@ public class WasteCPUAspect extends StandardAspect
 		count++;
 	    }
 
-	    super.forwardMessage(message);
+	    return super.forwardMessage(message);
 
 	}
     }

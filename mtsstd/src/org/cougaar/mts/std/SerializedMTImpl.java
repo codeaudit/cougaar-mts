@@ -38,12 +38,13 @@ public class SerializedMTImpl extends MTImpl
 	super(addr, deliverer, socfac);
     }
 
-    public void rerouteMessage(byte[] messageBytes) 
+    public byte[] rerouteMessage(byte[] messageBytes) 
 	throws MisdeliveredMessageException
     {
 	AttributedMessage message = 
 	    (AttributedMessage) SerializationUtils.fromByteArray(messageBytes);
-	super.rerouteMessage(message);
+	MessageAttributes meta = super.rerouteMessage(message);
+	return SerializationUtils.toByteArray(meta);
     }
 
 }

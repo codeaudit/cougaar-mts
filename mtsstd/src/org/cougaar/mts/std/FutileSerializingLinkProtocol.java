@@ -128,7 +128,7 @@ class FutileSerializingLinkProtocol
 		loggingService.info("Serialized " + message);
 	}
 
-	public void forwardMessage(AttributedMessage message) 
+	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws MisdeliveredMessageException
 	{
 	    serialize(message);
