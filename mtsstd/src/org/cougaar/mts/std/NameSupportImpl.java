@@ -26,6 +26,8 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.naming.NS;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.NamingService;
+import org.cougaar.core.service.TopologyEntry;
+import org.cougaar.core.service.TopologyWriterService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,18 +55,11 @@ public final class NameSupportImpl implements ServiceProvider
 
     NameSupportImpl(String id,  ServiceBroker sb) 
     {
-	Object svc = sb.getService(this, NamingService.class, null);
-	NamingService nameService = (NamingService) svc;
-	svc = sb.getService(this, AspectSupport.class, null);
-	AspectSupport aspectSupport = (AspectSupport) svc;
-
-	LoggingService loggingService = (LoggingService)
-	    sb.getService(this, LoggingService.class, null);
-
-	Object ns = new ServiceImpl(id, nameService, loggingService);
-	ns = aspectSupport.attachAspects(ns, NameSupport.class);
-	service = (NameSupport) ns;
-	
+	service = new ServiceImpl(id, sb);
+	AspectSupport aspectSupport = (AspectSupport)
+	    sb.getService(this, AspectSupport.class, null);
+	service = (NameSupport) 
+	    aspectSupport.attachAspects(service, NameSupport.class);
     }
 
     public Object getService(ServiceBroker sb, 
@@ -90,22 +85,23 @@ public final class NameSupportImpl implements ServiceProvider
     private final static class ServiceImpl 
 	implements NameSupport
     {
-
-
+	private TopologyWriterService topologyService;
+	private LoggingService loggingService;
 	private NamingService namingService;
 	private MessageAddress myNodeAddress;
 	private String id;
 	private String hostname;
-	private LoggingService loggingService;
 
-	private ServiceImpl(String id, 
-			    NamingService namingService,
-			    LoggingService loggingService) 
-	{
+	private ServiceImpl(String id, ServiceBroker sb) {
 	    this.id = id;
-	    this.loggingService = loggingService;
+	    namingService = (NamingService) 
+		sb.getService(this, NamingService.class, null);
+	    loggingService = (LoggingService)
+		sb.getService(this, LoggingService.class, null);
+	    topologyService = (TopologyWriterService)
+		sb.getService(this, TopologyWriterService.class, null);
 	    myNodeAddress = new MessageAddress(id+"(MTS)");
-	    this.namingService = namingService;
+
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
 	    } catch (java.net.UnknownHostException ex) {
@@ -188,10 +184,9 @@ public final class NameSupportImpl implements ServiceProvider
 	    }
 	}
 
-	public void registerMTS(MessageAddress mts_address) 
-	{
+	public void registerMTS(MessageAddress mts_address) {
 	    // Register Node address as MTS multicast handler
-	    String name = makeName(MTS_DIR, mts_address, "");
+		   String name = makeName(MTS_DIR, mts_address, "");
 	    try {
 		BasicAttributes mts_attr = new BasicAttributes();
 		mts_attr.put(MTS_ATTR, Boolean.TRUE);
@@ -200,10 +195,14 @@ public final class NameSupportImpl implements ServiceProvider
 	    } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error("Failed to register " +  name,
-					      e);
+					 e);
 	    }
 
-            // Node is no longer registered as a topology SYSTEM entry
+	    topologyService.createAgent(mts_address.getAddress(),
+					TopologyEntry.SYSTEM_TYPE,
+					0, 0,
+					TopologyEntry.ACTIVE);
+
 	}
 
 	public Object lookupAddressInNameServer(MessageAddress address, 
