@@ -243,10 +243,12 @@ class ThreadServiceImpl
 		    (ManagedControllableThread) x;
 		ManagedControllableThread t2 =
 		    (ManagedControllableThread) y;
-		if (t1.timestamp <= t2.timestamp)
+		if (t1.timestamp < t2.timestamp)
 		    return -1;
-		else
+		else if (t1.timestamp > t2.timestamp)
 		    return 1;
+		else
+		    return 0;
 	    }
 	};
 

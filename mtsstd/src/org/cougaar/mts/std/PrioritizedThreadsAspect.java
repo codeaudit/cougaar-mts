@@ -66,6 +66,8 @@ public class PrioritizedThreadsAspect
 		if (x == null) return -1;
 		if (y == null) return 1;
 		
+		// Higher priority should precede lower, so reverse
+		// the arguments.
 		return ((Comparable) y).compareTo(x);
 	    }
 	};
