@@ -254,15 +254,8 @@ public class RMILinkProtocol
 
 
     public final void registerMTS(MessageAddress addr) {
-	findOrMakeMT();
-	try {
-	    getNameSupport().registerAgentInNameServer(ref,addr,
-						       getProtocolType());
-	} catch (Exception e) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("Error registering Protocol",
-					  e);
-	}
+	// No-op now.  Probably the whole notion of per-protocol
+	// registerMTS is no longer useful.
     }
 
     public final void registerClient(MessageTransportClient client) {
