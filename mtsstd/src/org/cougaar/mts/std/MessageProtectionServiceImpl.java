@@ -73,7 +73,7 @@ class MessageProtectionServiceImpl
     {
 	return rawData;
 	// For testing security exception handling
-	// throw new java.security.GeneralSecurityException("protectHeader");
+	// throw new java.security.GeneralSecurityException("unprotectHeader");
     }
 
 

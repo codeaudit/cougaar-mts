@@ -53,12 +53,39 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 
     protected MessageAttributes doForwarding(MT remote, 
 					     AttributedMessage message) 
-	throws MisdeliveredMessageException, java.rmi.RemoteException
+	throws MisdeliveredMessageException, 
+	       java.rmi.RemoteException,
+	       CommFailureException
     {
 	if (remote instanceof SerializedMT) {
-	    byte[] messageBytes = SerializationUtils.toByteArray(message);
-	    byte[] res = ((SerializedMT) remote).rerouteMessage(messageBytes);
-	    return (MessageAttributes) SerializationUtils.fromByteArray(res);
+	    byte[] messageBytes = null;
+	    try {
+		messageBytes = SerializationUtils.toByteArray(message);
+	    } catch (MessageSecurityException mex) {
+		throw new CommFailureException(mex);
+	    } catch (java.io.IOException iox) {
+		// What would this mean?
+	    }
+
+	    byte[] res = null;
+	    try {
+		res = ((SerializedMT) remote).rerouteMessage(messageBytes);
+	    } catch (MessageSecurityException mex) {
+		throw new CommFailureException(mex);
+	    }
+
+	    MessageAttributes attrs = null;
+	    try {
+		attrs = (MessageAttributes) 
+		    SerializationUtils.fromByteArray(res);
+	    } catch (MessageSecurityException mex) {
+		throw new CommFailureException(mex);
+	    } catch (java.io.IOException iox) {
+		// What would this mean?
+	    } catch (ClassNotFoundException cnf) {
+		// What would this mean?
+	    }
+	    return attrs;
 	} else {
 	    return super.doForwarding(remote, message);
 	}

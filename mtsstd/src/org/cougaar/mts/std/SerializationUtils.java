@@ -31,45 +31,30 @@ import java.io.IOException;
 public class SerializationUtils
 {
 
-    public static byte[] toByteArray(Object data) {
+    public static byte[] toByteArray(Object data) 
+	throws java.io.IOException
+    {
 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	ObjectOutputStream oos = null;
 
-	try {
-	    oos = new ObjectOutputStream(baos);
-	    oos.writeObject(data);
-	} catch (IOException ioe) {
-	    return null;
-	}
-
-	try {
-	    oos.close();
-	} catch (IOException ioe2) {
-	}
-
+	oos = new ObjectOutputStream(baos);
+	oos.writeObject(data);
+	oos.close();
 	return baos.toByteArray();
     }
 
 
-    public static Object fromByteArray(byte[] data) {
+    public static Object fromByteArray(byte[] data) 
+	throws java.io.IOException, ClassNotFoundException
+    {
 	ByteArrayInputStream bais = new ByteArrayInputStream(data);
 	ObjectInputStream ois = null;
 	Object udata = null;
 
-	try {
-	    ois = new ObjectInputStream(bais);
-	    udata = ois.readObject();
-	} catch (IOException ioe) {
-	    return null;
-	} catch (ClassNotFoundException cnf) {
-	    return null;
-	}
+	ois = new ObjectInputStream(bais);
+	udata = ois.readObject();
 	
-	try {
-	    ois.close();
-	} catch (IOException ioe2) {
-	}
-
+	ois.close();
 	return udata;
     }
 

@@ -154,7 +154,9 @@ public class RMILinkProtocol
 
     protected MessageAttributes doForwarding(MT remote, 
 					     AttributedMessage message) 
-	throws MisdeliveredMessageException, java.rmi.RemoteException
+	throws MisdeliveredMessageException, 
+	       CommFailureException,
+	       java.rmi.RemoteException
     {
 	return remote.rerouteMessage(message);
     }
@@ -162,6 +164,35 @@ public class RMILinkProtocol
 
     protected Boolean usesEncryptedSocket() {
 	return Boolean.FALSE;
+    }
+
+
+    // Standard RMI handling of security exceptions. Subclasses may
+    // need to do something different (see CORBALinkProtocol).
+    //
+    // If the argument itself is a MarshalException whose cause is a
+    // MessageSecurityException, a local security error has occured.
+    //
+    // If the argument is some other RemoteException whose cause is an
+    // UnmarshalException whose cause in turn is a MessageSecurityEx,
+    // a remote security error has occured.
+    //
+    // Otherwise this is some other kind of remote error.
+    protected void handleSecurityException(Exception ex) 
+	throws CommFailureException
+    {
+	System.err.println(ex);
+	Throwable cause = ex.getCause();
+	if (ex instanceof java.rmi.MarshalException) {
+	    if (cause instanceof MessageSecurityException) {
+		throw new CommFailureException((Exception) cause);
+	    }
+	} else if (cause instanceof java.rmi.UnmarshalException) {
+	    Throwable remote_cause = cause.getCause();
+	    if (remote_cause instanceof MessageSecurityException) {
+		throw new CommFailureException((Exception) remote_cause);
+	    }
+	} 
     }
 
     private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
@@ -359,26 +390,21 @@ public class RMILinkProtocol
 		remote = null;
 		throw mis;
 	    }
-	    catch (java.rmi.RemoteException ex) {
-		Throwable cause = ex.getCause();
-		if (cause instanceof java.rmi.UnmarshalException) {
-		    Throwable specific_cause = cause.getCause();
-		    if (specific_cause instanceof MessageSecurityException) {
-			// Remote security exception.  Wrap the
-			// UnmarshalException, rather than the
-			// original RemoteException, in a CommFailure
-			throw new CommFailureException((Exception) cause);
-		    }
-		}
-		// Assume anything else is an ordinary comm failure
+	    catch (CommFailureException cfe) {
 		// force recache of remote
 		remote = null;
+		throw cfe;
+	    }
+	    catch (java.rmi.RemoteException ex) {
 		if (Debug.isErrorEnabled(loggingService,COMM)) 
 		    loggingService.error(null, ex);
+		handleSecurityException(ex);
+		// If we get here it wasn't a security exception
+		remote = null;
 		throw new CommFailureException(ex);
 	    }
 	    catch (Exception ex) {
-		// force recache of remote
+		// Ordinary comm failure.  Force recache of remote
 		if (Debug.isErrorEnabled(loggingService,COMM)) 
 		    loggingService.error(null, ex);
 		remote = null;

@@ -147,14 +147,7 @@ final class DestinationQueueImpl
 		if (Debug.isErrorEnabled(loggingService,COMM)) 
 		    loggingService.error(null, lookup_error);
 	    } catch (CommFailureException comm_failure) {
-		Exception exception = comm_failure.getException();
-		Throwable cause = exception.getCause();
-		// A local security exception will be wrapped in a
-		// MarshalException.  A remote security exception will
-		// be wrapped in am UnmarshalException.  The
-		// DestinationLink is responsible for the latter.  See
-		// RMILinkProtcol for an example.
-		//
+		Exception cause = comm_failure.getException();
 		if (cause instanceof MessageSecurityException) {
 		    // Always log these.
 		    String tag = "Security Exception " 

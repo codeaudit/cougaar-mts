@@ -39,12 +39,27 @@ public class SerializedMTImpl extends MTImpl
     }
 
     public byte[] rerouteMessage(byte[] messageBytes) 
-	throws MisdeliveredMessageException
+	throws MisdeliveredMessageException, MessageSecurityException
     {
-	AttributedMessage message = 
-	    (AttributedMessage) SerializationUtils.fromByteArray(messageBytes);
+	AttributedMessage message = null;
+	try {
+	    message = (AttributedMessage)
+		SerializationUtils.fromByteArray(messageBytes);
+	} catch (MessageSecurityException mex) {
+	    throw mex;
+	} catch (java.io.IOException deser_ex) {
+	} catch (ClassNotFoundException cnf) {
+	}
+
 	MessageAttributes meta = super.rerouteMessage(message);
-	return SerializationUtils.toByteArray(meta);
+	byte[] result = null;
+	try {
+	    result = SerializationUtils.toByteArray(meta);
+	} catch (MessageSecurityException mex) {
+	    throw mex;
+	} catch (java.io.IOException ser_ex) {
+	}
+	return result;
     }
 
 }

@@ -391,6 +391,20 @@ public class AttributedMessage
 		String msg = "Receiver Security Exception " +src+ "->" +dst;
 		loggingService.error(msg, ex);
 	    }
+
+	    // There's a problem here.  If we throw the exception
+	    // right away, the sender might still be streaming the
+	    // data.  In that case it will see a SocketClosed error,
+	    // which it won't recognize as a security exception, and
+	    // it will retry the send.  There's no good solution to
+	    // this, so use a bad solution: give the sender a second
+	    // to get the rest of the data out.  If that's not long
+	    // enough, we lose.  In addition, preserialized
+	    // notification will be delayed for a second for no
+	    // reason.  Bad,
+	    try { Thread.sleep(1000); } 
+	    catch (InterruptedException xxx) {}
+
 	    throw new MessageSecurityException(ex);
 	}
     }
