@@ -160,7 +160,9 @@ public class RMILinkProtocol
     }
 
 
-
+    protected Boolean usesEncryptedSocket() {
+	return Boolean.FALSE;
+    }
 
     private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
 	throws Exception 
@@ -373,6 +375,15 @@ public class RMILinkProtocol
 	    return remoteRefs.get(target);
 	}
 
+	public void addMessageAttributes(MessageAttributes attrs) {
+	    attrs.addValue(MessageAttributes.IS_STREAMING_ATTRIBUTE,
+			   Boolean.TRUE);
+	    
+
+	    attrs.addValue(MessageAttributes.ENCRYPTED_SOCKET_ATTRIBUTE,
+			   usesEncryptedSocket());
+
+	}
 
     }
 

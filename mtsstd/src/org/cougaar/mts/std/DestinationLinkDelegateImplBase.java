@@ -66,4 +66,10 @@ abstract public class DestinationLinkDelegateImplBase
 	return link.getRemoteReference();
     }
 
+
+    public void addMessageAttributes(MessageAttributes attrs) {
+	link.addMessageAttributes(attrs);
+    }
+
+
 }

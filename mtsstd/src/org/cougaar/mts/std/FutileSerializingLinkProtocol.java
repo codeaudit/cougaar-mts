@@ -151,6 +151,12 @@ class FutileSerializingLinkProtocol
 	    return null;
 	}
 
+	public void addMessageAttributes(MessageAttributes attrs) {
+	    
+	}
+
+	
+
     }
 
 }

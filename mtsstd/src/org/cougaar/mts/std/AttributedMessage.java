@@ -21,6 +21,10 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.MessageProtectionService;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -102,6 +106,7 @@ public class AttributedMessage
     }
 
 
+
     /**
      * Returns the raw (unattributed) message.
      */
@@ -146,6 +151,40 @@ public class AttributedMessage
 
 
 
+    private void sendAttributes(ObjectOutput out) 
+	throws java.io.IOException
+    {
+ 	MessageProtectionService svc =
+	    MessageTransportServiceProvider.getMessageProtectionService(this);
+ 	ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	ObjectOutputStream oos = new ObjectOutputStream(bos);
+ 	oos.writeObject(attributes);
+
+ 	byte[] bytes = svc.encryptHeader(bos.toByteArray(), 
+ 					 getOriginator(),
+ 					 getTarget());
+ 	out.writeObject(bytes);
+ 	oos.close();
+    }
+
+    private void readAttributes(ObjectInput in) 
+	throws java.io.IOException, ClassNotFoundException
+
+    {
+ 	MessageProtectionService svc =
+	    MessageTransportServiceProvider.getMessageProtectionService(this);
+
+ 	byte[] rawData = (byte[]) in.readObject();
+ 	byte[] data  = svc.decryptHeader(rawData, 
+  					 getOriginator(),
+  					 getTarget());
+ 	ByteArrayInputStream bis = new ByteArrayInputStream(data);
+	ObjectInputStream ois = new ObjectInputStream(bis);
+ 	attributes = (MessageAttributes) ois.readObject();
+ 	ois.close();
+    }
+
+
 
 
     // Externalizable interface
@@ -164,14 +203,21 @@ public class AttributedMessage
 	throws java.io.IOException
     {
 	try {
-	    MessageStreamsFactory factory =  MessageStreamsFactory.getFactory();
+	    // Source and Destination MUST be in the clear
+	    rawOut.writeObject(getOriginator());
+	    rawOut.writeObject(getTarget());
+
+
+
+	    MessageStreamsFactory factory =  
+		MessageStreamsFactory.getFactory();
 	    ArrayList aspectNames = 
 		(ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
 	    MessageWriter writer = factory.getMessageWriter(aspectNames);
 	
 	    writer.finalizeAttributes(this);
 
-	    rawOut.writeObject(attributes);
+	    sendAttributes(rawOut);
 
 	    writer.preProcess();
 
@@ -185,8 +231,6 @@ public class AttributedMessage
 		object_out = new ObjectOutputStream(out);
 
 
-	    object_out.writeObject(getOriginator());
-	    object_out.writeObject(getTarget());
 	    object_out.writeObject(contents);
 
 	    writer.finishOutput();
@@ -218,7 +262,11 @@ public class AttributedMessage
 	throws java.io.IOException, ClassNotFoundException
     {
 	try {
-	    attributes = (MessageAttributes) rawIn.readObject();
+	    setOriginator((MessageAddress) rawIn.readObject());
+	    setTarget((MessageAddress) rawIn.readObject());
+
+	    readAttributes(rawIn);
+
 
 	    ArrayList aspectNames = (ArrayList)
 		attributes.getAttribute(FILTERS_ATTRIBUTE);
@@ -235,8 +283,6 @@ public class AttributedMessage
 	    else
 		object_in = new ObjectInputStream(in);
 
-	    setOriginator((MessageAddress) object_in.readObject());
-	    setTarget((MessageAddress) object_in.readObject());
 	    contents = (Message) object_in.readObject();
 
 	    reader.finishInput();

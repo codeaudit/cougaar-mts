@@ -25,18 +25,20 @@ import java.io.Serializable;
 
 public interface MessageAttributes extends Serializable
 {
-    String FILTERS_ATTRIBUTE = "Filters";
+    public String FILTERS_ATTRIBUTE = "Filters";
+    public String IS_STREAMING_ATTRIBUTE = "IsStreaming";
+    public String ENCRYPTED_SOCKET_ATTRIBUTE = "EncryptedSocket";
 
-    String DELIVERY_ATTRIBUTE = "DeliveryStatus";
-    String DELIVERY_STATUS_DELIVERED = "Delivered";
-    String DELIVERY_STATUS_CLIENT_ERROR = 
+    public String DELIVERY_ATTRIBUTE = "DeliveryStatus";
+    public String DELIVERY_STATUS_DELIVERED = "Delivered";
+    public String DELIVERY_STATUS_CLIENT_ERROR = 
 	"ClientException";
-    String DELIVERY_STATUS_DROPPED_DUPLICATE = 
+    public String DELIVERY_STATUS_DROPPED_DUPLICATE = 
 	"DroppedDuplicate";
-    String DELIVERY_STATUS_HELD = "Held";
-    String DELIVERY_STATUS_STORE_AND_FORWARD  =
+    public String DELIVERY_STATUS_HELD = "Held";
+    public String DELIVERY_STATUS_STORE_AND_FORWARD  =
 	"Store&Forward";
-    String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
+    public String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
 
     Object getAttribute(String attribute);
     void setAttribute(String attribute, Object value);

@@ -48,4 +48,9 @@ public class SSLRMILinkProtocol extends RMILinkProtocol
     }
 
 
+    protected Boolean usesEncryptedSocket() {
+	return Boolean.TRUE;
+    }
+
+
 }

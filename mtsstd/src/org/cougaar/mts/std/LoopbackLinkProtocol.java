@@ -114,6 +114,12 @@ class LoopbackLinkProtocol
 	    return null;
 	}
 
+	public void addMessageAttributes(MessageAttributes attrs) {
+	    
+	}
+
+	
+
     }
 
 }

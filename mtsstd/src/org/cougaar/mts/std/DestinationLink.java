@@ -69,4 +69,6 @@ public interface DestinationLink
      * has one (rmi server stub, smtp url, CORBA ior, etc) */
     Object getRemoteReference();
 
+    void addMessageAttributes(MessageAttributes attrs);
+
 }
