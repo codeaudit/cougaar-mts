@@ -457,6 +457,7 @@ public class RMILinkProtocol
 	private boolean lookup_pending = false;
 	private URI lookup_result = null;
 	private Object lookup_lock = new Object();
+	private Object remote_lock = new Object();
 	private long incarnation;
 	private Callback lookup_cb = new WPCallback(this);
 
@@ -489,7 +490,9 @@ public class RMILinkProtocol
 
 
 	private void decache() {
-	    remote = null;
+	    synchronized (remote_lock) {
+		remote = null;
+	    }
 	    synchronized (lookup_lock) {
 		if (!lookup_pending) lookup_result = null;
 	    }
@@ -571,6 +574,11 @@ public class RMILinkProtocol
 	    }
 	}
 
+	// NB: Intentionally not synchronized on remote_lock because a
+	// network invocation can happen in lookupRMIObject().  Worst
+	// case scenario: normal return (no exception) but 'remote' has
+	// been reset to null in the meantime.  The two callers
+	// (isValid and forwardMessage) deal with this case.
 	private void cacheRemote() 
 	    throws NameLookupException, UnregisteredNameException
 	{
@@ -603,7 +611,9 @@ public class RMILinkProtocol
 	public boolean isValid() {
 	    try {
 		cacheRemote();
-		return true;
+		synchronized (remote_lock) {
+		    return remote != null;
+		}
 	    }
 	    catch (NameLookupException name_ex) {
 		return false;
@@ -619,10 +629,12 @@ public class RMILinkProtocol
 	}
 
 	public int cost(AttributedMessage message) {
-	    if (remote == null)
-		return Integer.MAX_VALUE;
-	    else
-		return computeCost(message);
+	    synchronized (remote_lock) {
+		if (remote == null)
+		    return Integer.MAX_VALUE;
+		else
+		    return computeCost(message);
+	    }
 	}
 
 	public MessageAddress getDestination() {
@@ -636,9 +648,9 @@ public class RMILinkProtocol
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
+	    cacheRemote();
 	    MT committed_mt = null;
-	    synchronized (lookup_lock) {
-		cacheRemote();
+	    synchronized (remote_lock) {
 		if (remote == null) {
 		    Exception cause = 
 			new Exception("Inconsistent remote reference cache");
