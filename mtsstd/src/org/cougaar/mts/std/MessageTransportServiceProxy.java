@@ -47,7 +47,13 @@ public class MessageTransportServiceProxy
     }
 
 
-
+    void release() {
+	registry = null;
+	sendQ = null;
+	client = null;
+	addr = null;
+	droppedMessages = null;
+    }
     
 
     /**

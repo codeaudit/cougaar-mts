@@ -63,6 +63,7 @@ public class MessageTransportServiceProvider
     private WatcherAspect watcherAspect;
 
     private String id;
+    private HashMap rawProxies;
     private HashMap proxies;
 
 
@@ -77,6 +78,7 @@ public class MessageTransportServiceProvider
     public MessageTransportServiceProvider(String id) {
         this.id = id;
 	proxies = new HashMap();
+	rawProxies = new HashMap();
 	aspects = new ArrayList();
 	aspects_table = new HashMap();
 
@@ -196,6 +198,7 @@ public class MessageTransportServiceProvider
 	Object proxy = proxies.get(addr);
 	if (proxy != null) return proxy;
 	proxy = new MessageTransportServiceProxy(client,registry,sendQ);
+	rawProxies.put(addr, proxy);
 	proxy = AspectFactory.attachAspects(aspects, proxy, 
 					    MessageTransportService.class,
 					    null);
@@ -239,11 +242,15 @@ public class MessageTransportServiceProvider
 		MessageTransportClient client = 
 		    (MessageTransportClient) requestor;
 		MessageAddress addr = client.getMessageAddress();
-		Object proxy = proxies.get(addr);
-		if (proxy != service) return; // ???
+		MessageTransportService svc = 
+		    (MessageTransportService) proxies.get(addr);
+		MessageTransportServiceProxy proxy =
+		    (MessageTransportServiceProxy) rawProxies.get(addr);
+		if (svc != service) return; // ???
 		proxies.remove(addr);
-		MessageTransportService svc = (MessageTransportService) proxy;
+		rawProxies.remove(addr);
 		svc.unregisterClient(client);
+		proxy.release();
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
 	    // TO BE DONE
