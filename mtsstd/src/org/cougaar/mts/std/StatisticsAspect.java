@@ -52,7 +52,9 @@ public class StatisticsAspect
     private long totalElapsedTime = 0L;
     private long totalQueueLength = 0L;
 
-
+    public StatisticsAspect() {
+	messageLengthHistogram = new long[MessageStatistics.NBINS];
+    }
 
     public synchronized MessageStatistics.Statistics 
 	getMessageStatistics(boolean reset) 
@@ -177,13 +179,12 @@ public class StatisticsAspect
 	int byteCount = 0;
 	public StatisticsStreamWrapper(OutputStream wrapped) {
 	    this.wrapped = wrapped;
-	    if (messageLengthHistogram == null) {
-		messageLengthHistogram = new long[MessageStatistics.NBINS];
-	    }
 	}
+
 	public void close() throws IOException {
 	    wrapped.close();
 	}
+
 	public void flush() throws IOException {
 	    wrapped.flush();
 	    int bin = 0;
@@ -199,18 +200,21 @@ public class StatisticsAspect
 
 	    byteCount = 0;
 	}
+
 	public void write(int b) throws IOException {
 	    wrapped.write(b);
 	    synchronized (StatisticsAspect.this) {
 		byteCount += 1;
 	    }
 	}
+
 	public void write(byte[] b) throws IOException {
 	    wrapped.write(b);
 	    synchronized (StatisticsAspect.this) {
 		byteCount += b.length;
 	    }
 	}
+
 	public void write(byte[] b, int o, int len) throws IOException {
 	    wrapped.write(b, o, len);
 	    synchronized (StatisticsAspect.this) {
