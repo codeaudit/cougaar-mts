@@ -155,23 +155,16 @@ public class StatisticsAspect
 
 
 
-    private class StatisticsSocket extends Socket {
-	private Socket socket;
+    private class StatisticsSocket extends DelegatingSocket {
 	private StatisticsSocket(Socket socket) {
-	    this.socket = socket;
-	}
-
-	public InputStream getInputStream() 
-	    throws IOException 
-	{
-	    return socket.getInputStream();
+	    super(socket);
 	}
 
 
 	public OutputStream getOutputStream() 
 	    throws IOException 
 	{
-	    OutputStream s = socket.getOutputStream();
+	    OutputStream s = super.getOutputStream();
 	    return (s == null) ? null : new StatisticsStreamWrapper(s);
 	}
 
