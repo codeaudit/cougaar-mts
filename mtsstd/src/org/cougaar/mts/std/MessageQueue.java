@@ -25,6 +25,7 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.ThreadServiceProvider;
+import org.cougaar.core.thread.Schedulable;
 import org.cougaar.util.CircularQueue;
 
 /**
@@ -38,7 +39,7 @@ abstract class MessageQueue
 {
 
     private CircularQueue queue;
-    private Thread thread;
+    private Schedulable thread;
     private String name;
 
 

@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 
 
 import java.io.BufferedInputStream;
@@ -66,7 +67,7 @@ public class SerializationAspect extends StandardAspect
 	PipedOutputStream piped_os;
 	ObjectInputStream reader;
 	ObjectOutputStream writer;
-	Thread thread;
+	Schedulable thread;
 
 	SerializingDestinationLink(DestinationLink link) {
 	    super(link);

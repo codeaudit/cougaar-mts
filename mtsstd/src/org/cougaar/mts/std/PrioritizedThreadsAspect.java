@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.ThreadListenerService;
 import org.cougaar.core.service.ThreadControlService;
+import org.cougaar.core.thread.Schedulable;
 import org.cougaar.core.thread.ThreadListener;
 
 import java.io.FileInputStream;
@@ -123,7 +124,7 @@ public class PrioritizedThreadsAspect
     
 
     // ThreadListener
-    public void threadPending(Thread thread, Object consumer) {
+    public void threadPending(Schedulable thread, Object consumer) {
 	if (consumer instanceof DestinationQueue) {
 	    // Note the thread's priority just before it goes on the
 	    // queue.  The comparator will use this later. 
@@ -134,10 +135,10 @@ public class PrioritizedThreadsAspect
 	}
     }
 
-    public void threadStarted(Thread thread, Object consumer) {
+    public void threadStarted(Schedulable thread, Object consumer) {
     }
 
-    public void threadStopped(Thread thread, Object consumer) {
+    public void threadStopped(Schedulable thread, Object consumer) {
     }
 
 }
