@@ -338,7 +338,7 @@ public class AttributedMessage
 	    writer.finishOutput();
 	    writer.postProcess();
 	} catch (GeneralSecurityException ex) {
-	    throw new MessageSecurityException(ex, this);
+	    throw new MessageSecurityException(ex);
 	}
     }
 
@@ -391,7 +391,7 @@ public class AttributedMessage
 		String msg = "Receiver Security Exception " +src+ "->" +dst;
 		loggingService.error(msg, ex);
 	    }
-	    throw new MessageSecurityException(ex, this);
+	    throw new MessageSecurityException(ex);
 	}
     }
 }

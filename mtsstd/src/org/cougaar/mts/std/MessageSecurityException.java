@@ -29,27 +29,15 @@ public class MessageSecurityException
 {
     
     private GeneralSecurityException cause;
-    private String source;
-    private String destination;
 
-    MessageSecurityException(GeneralSecurityException cause, 
-			     AttributedMessage msg) 
+    MessageSecurityException(GeneralSecurityException cause) 
     {
 	this.cause = cause;
-	this.source = msg.getOriginator().getAddress();
-	this.destination = msg.getTarget().getAddress();
     }
 
     public Throwable getCause() {
 	return cause;
     }
 
-    public String getSource() {
-	return source;
-    }
-
-    public String getDestination() {
-	return destination;
-    }
 
 }

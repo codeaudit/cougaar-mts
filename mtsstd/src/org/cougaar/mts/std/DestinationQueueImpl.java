@@ -173,13 +173,11 @@ final class DestinationQueueImpl
 		}
 		if (cause instanceof MessageSecurityException) {
 		    // Always log these.
-		    MessageSecurityException mse = (MessageSecurityException)
-			cause;
-		    String src = mse.getSource();
-		    String dst = mse.getDestination();
-		    String msg = remote ? "Remote " : "Local ";
-		    msg += "Security Exception " +src+ "->" +dst;
-		    loggingService.error(msg, mse.getCause());
+		    String tag = remote ? "Remote " : "Local ";
+		    tag += "Security Exception " 
+			+message.getOriginator()+ "->" 
+			+message.getTarget();
+		    loggingService.error(tag, cause.getCause());
 
 		    // Act as if the message has gone through.
 		    resetState();
