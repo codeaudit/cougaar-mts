@@ -42,8 +42,8 @@ import org.cougaar.core.society.Node;
  * factories, each of which is described elsewhere.  The only
  * interesting local functions are those required for
  * ServiceBrokers.
- * @property org.cougaar.message.transport.policy Sets the message transport policy.
- * @property org.cougaar.core.mts.StatisticsAspect Sets the statics aspect to use.
+ * @property org.cougaar.message.transport.policy Sets the message
+ * transport policy to instance o the specified class.
  */
 
 public class MessageTransportServiceProvider 

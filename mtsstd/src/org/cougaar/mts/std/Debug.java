@@ -23,16 +23,15 @@ package org.cougaar.core.mts;
 import java.util.StringTokenizer;
 
 /** 
- * MTS debugging support, controlled by the property
- * org.cougaar.message.transport.debug.  If specified, may be
- * "aspects","flush", "comm", "multicast", "policy", "security",
+ * MTS debugging support.
+ * 
+ * @property org.cougaar.message.transport.debug  If specified, may
+ * be "aspects","flush", "comm", "multicast", "policy", "security",
  * "service", "statistics", "watcher", or a comma-separated list of
  * these options.  Case is not considered. The values "true" and "all"
  * enable all options.  The values "false" and "none" disable all
  * options.
  *
- * @property org.cougaar.message.transport.debug Enables various MTS
- * debugging options.  See the class description for information.
  **/
 public class Debug implements DebugFlags
 {

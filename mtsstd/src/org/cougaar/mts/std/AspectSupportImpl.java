@@ -32,7 +32,8 @@ import org.cougaar.core.component.ServiceBroker;
 
 /**
  * This is utility class which supports loading aspects
- * @property org.cougaar.message.transport.aspects Lists the MTS aspects to be loaded.
+ * @property org.cougaar.message.transport.aspects A comma-seperated
+ * list of the MTS aspect classes to be instantiated.
  */
 public final class AspectSupportImpl 
     implements AspectSupport, DebugFlags
