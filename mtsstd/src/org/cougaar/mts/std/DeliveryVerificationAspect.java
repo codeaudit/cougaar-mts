@@ -179,7 +179,7 @@ public class DeliveryVerificationAspect
 				  " has been pending for "+
 				  deltaT + "ms (Pending Messages=" +
 				  pendingMessages.size()+")" );
-		    else if (deltaT >= infoTime)
+		    else if (deltaT >= infoTime && lsvc.isInfoEnabled())
 			lsvc.info(msg.logString() +
 				  " has been pending for "+
 				  deltaT + "ms (Pending Messages=" +
