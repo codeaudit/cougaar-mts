@@ -286,8 +286,14 @@ public class StatisticsAspect
 	    //but before it is garbage collected
 	    msg.setAttribute(MESSAGE_BYTES_ATTRIBUTE, new Integer(byteCount));
 
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("byteCount = " + byteCount);
+	    if (loggingService.isDebugEnabled()) {
+		int headerBytes=0;
+		Object attr= msg.getAttribute(HEADER_BYTES_ATTRIBUTE);
+		if (attr!=null && (attr instanceof Number) )
+		    headerBytes=((Number) attr).intValue();
+		loggingService.debug("MessageLength = " + byteCount +
+				     " HeaderLength = " + headerBytes);
+	    }
 	}
 
     }
