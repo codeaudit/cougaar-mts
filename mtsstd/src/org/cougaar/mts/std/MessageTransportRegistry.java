@@ -204,10 +204,12 @@ class MessageTransportRegistry
     void registerClient(MessageTransportClient client) {
 	addLocalClient(client);
 	registerClientWithSociety(client);
+	nameSupport.addToTopology(client.getMessageAddress());
     }
 
 
     void unregisterClient(MessageTransportClient client) {
+	nameSupport.removeFromTopology(client.getMessageAddress());
 	unregisterClientWithSociety(client);
 	removeLocalClient(client);
     }

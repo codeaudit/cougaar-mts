@@ -25,6 +25,7 @@ import org.cougaar.core.society.MulticastMessageAddress;
 import org.cougaar.core.society.MessageAddress;
 
 import java.util.Iterator;
+import javax.naming.directory.Attributes;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -32,21 +33,35 @@ import java.util.Iterator;
 public interface NameSupport {
     public static final String MTS_DIR =  "MessageTransports";
     public static final String AGENT_DIR =  "Agents";
+    public static final String TOPOLOGY_DIR = "Topology";
 
-    MessageAddress  getNodeMessageAddress();
+    public static final String STATUS_ATTR = "Status";
+    public static final String HOST_ATTR = "Host";
+    public static final String NODE_ATTR = "Node";
+    public static final String AGENT_ATTR = "Agent";
+    public static final String REGISTERED_STATUS = "registered";
+    public static final String UNREGISTERED_STATUS = "unregistered";
 
-    void registerAgentInNameServer(Object proxy, 
-                                   MessageAddress address, 
-                                   String transportType);
+    public MessageAddress  getNodeMessageAddress();
 
-    void unregisterAgentInNameServer(Object proxy, 
-				     MessageAddress address, 
-				     String transportType);
+    public void registerAgentInNameServer(Object proxy, 
+					  MessageAddress address, 
+					  String transportType);
 
-    void registerMTS(MessageAddress address);
+    public void unregisterAgentInNameServer(Object proxy, 
+					    MessageAddress address, 
+					    String transportType);
 
-    Object lookupAddressInNameServer(MessageAddress address, 
-                                     String transportType);
+    public void registerMTS(MessageAddress address);
 
-    Iterator lookupMulticast(MulticastMessageAddress address);
+    public Object lookupAddressInNameServer(MessageAddress address, 
+					    String transportType);
+
+    public Iterator lookupMulticast(MulticastMessageAddress address);
+
+    public void addToTopology(MessageAddress addr);
+    public void removeFromTopology(MessageAddress addr);
+    public Iterator lookupInTopology(Attributes match, String attribute);
+    public Iterator lookupInTopology(Attributes match, String[] ret_attr);
+
 }

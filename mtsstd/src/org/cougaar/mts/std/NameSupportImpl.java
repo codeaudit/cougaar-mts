@@ -47,6 +47,7 @@ public final class NameSupportImpl implements NameSupport
     private static final String MTS_ATTR = "MTS";
     private static final String ADDRESS_ATTR = "Address";
 
+
     // Singleton
     private static NameSupport instance;
 
@@ -67,11 +68,19 @@ public final class NameSupportImpl implements NameSupport
 
     private NamingService namingService;
     private MessageAddress myNodeAddress;
+    private String id;
+    private String hostname;
 
     private NameSupportImpl(String id, NamingService namingService) {
+	this.id = id;
 	myNodeAddress = new MessageAddress(id+"(Node)");
         this.namingService = namingService;
-    }
+ 	try {
+	    hostname = java.net.InetAddress.getLocalHost().getHostAddress();
+	} catch (java.net.UnknownHostException ex) {
+	    ex.printStackTrace();
+	}
+   }
 
     public MessageAddress  getNodeMessageAddress() {
 	return myNodeAddress;
@@ -231,8 +240,14 @@ public final class NameSupportImpl implements NameSupport
 	    try {
 		SearchResult result = (SearchResult) e.next();
 		Attributes attrs = result.getAttributes();
-		Attribute attr = attrs.get(attribute);
-                return attr != null ? attr.get() : null;
+		if (attribute == null) {
+		    // No specific attribute requested, return the
+		    // whole set.
+		    return attrs;
+		} else {
+		    Attribute attr = attrs.get(attribute);
+		    return attr != null ? attr.get() : null;
+		}
 	    } catch (NamingException ex) {
 		ex.printStackTrace();
 		return null;
@@ -263,5 +278,64 @@ public final class NameSupportImpl implements NameSupport
 	}
     }
   
+
+
+
+    public void addToTopology(MessageAddress addr) {
+	BasicAttributes attr = new BasicAttributes();
+	attr.put(STATUS_ATTR, REGISTERED_STATUS);
+	attr.put(HOST_ATTR, hostname);
+	attr.put(NODE_ATTR, id);
+	attr.put(AGENT_ATTR, addr);
+	String key = TOPOLOGY_DIR + NS.DirSeparator + addr;
+	try {
+	    _registerWithSociety(key, addr, attr);
+	} catch (NamingException ex) {
+	    ex.printStackTrace();
+	}
+    }
+
+    public void removeFromTopology(MessageAddress addr) {
+	// This should find the old object and change the attribute
+	BasicAttributes attr = new BasicAttributes();
+	attr.put(STATUS_ATTR, UNREGISTERED_STATUS);
+	attr.put(AGENT_ATTR, addr);
+	String key = TOPOLOGY_DIR + NS.DirSeparator + addr;
+	try {
+	    _registerWithSociety(key, addr, attr);
+	} catch (NamingException ex) {
+	    ex.printStackTrace();
+	}
+    }
+
+    public Iterator lookupInTopology(Attributes match, String attribute) {
+	String[] ret_attr = { attribute };
+	try {
+	    DirContext ctx = namingService.getRootContext();
+	    NamingEnumeration e = 
+		ctx.search(TOPOLOGY_DIR, match, ret_attr);
+	    // Return an Iterator instead of the messy NamingEnumeration
+            return new NamingIterator(e, attribute);
+	} catch (NamingException ne) {
+	    ne.printStackTrace();
+	    return null;
+	}
+    }
+
+
+    public Iterator lookupInTopology(Attributes match, String[] ret_attr) {
+	try {
+	    DirContext ctx = namingService.getRootContext();
+	    NamingEnumeration e = 
+		ctx.search(TOPOLOGY_DIR, match, ret_attr);
+	    // Return an Iterator instead of the messy NamingEnumeration
+            return new NamingIterator(e, null);
+	} catch (NamingException ne) {
+	    ne.printStackTrace();
+	    return null;
+	}
+    }
+
+
 
 }

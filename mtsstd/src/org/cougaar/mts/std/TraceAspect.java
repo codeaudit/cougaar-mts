@@ -29,6 +29,7 @@ import org.cougaar.core.society.MulticastMessageAddress;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.util.Iterator;
+import javax.naming.directory.Attributes;
 
 /**
  * This is a very simple aspect which is mostly for demonstration
@@ -133,6 +134,26 @@ public class TraceAspect
 	public Iterator lookupMulticast(MulticastMessageAddress address) {
 	    return server.lookupMulticast(address);
 	}
+
+	public void addToTopology(MessageAddress addr) {
+	    server.addToTopology(addr);
+	}
+
+
+	public void removeFromTopology(MessageAddress addr) {
+	    server.removeFromTopology(addr);
+	}
+
+
+	public Iterator lookupInTopology(Attributes match, String attribute) {
+	    return server.lookupInTopology(match, attribute);
+	}
+
+	public Iterator lookupInTopology(Attributes match, String[] attributes)
+	{
+	    return server.lookupInTopology(match, attributes);
+	}
+
 
     }
 
