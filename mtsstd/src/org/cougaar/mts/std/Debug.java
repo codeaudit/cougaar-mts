@@ -25,12 +25,14 @@ import java.util.StringTokenizer;
 /** 
  * MTS debugging support, controlled by the property
  * org.cougaar.message.transport.debug.  If specified, may be
- * "aspects","flush", "multicast", "security", "service",
- * "statistics", or "watcher".  A comma-separated list of the options
- * may also be specified, and "true" is interpreted as all of the
- * options enabled.
- * @property org.cougaar.message.transport.debug Enables various MTS debugging options.  
- * See the class description for information.
+ * "aspects","flush", "comm", "multicast", "policy", "security",
+ * "service", "statistics", "watcher", or a comma-separated list of
+ * these options.  Case is not considered. The values "true" and "all"
+ * enable all options.  The values "false" and "none" disable all
+ * options.
+ *
+ * @property org.cougaar.message.transport.debug Enables various MTS
+ * debugging options.  See the class description for information.
  **/
 public class Debug implements DebugFlags
 {
@@ -44,34 +46,43 @@ public class Debug implements DebugFlags
 	String debug = 
 	    System.getProperty("org.cougaar.message.transport.debug");
 	if (debug != null) {
-	    if (debug.equalsIgnoreCase("true")) {
-		Flags = -1;
-	    } else {
-		StringTokenizer tk = new StringTokenizer(debug, ",");
-		while (tk.hasMoreTokens()) {
-		    String dbg = tk.nextToken();
-		    if (dbg.equalsIgnoreCase("aspects")) 
-			Flags |= ASPECTS;
-		    else if (dbg.equalsIgnoreCase("flush")) 
-			Flags |= FLUSH;
-		    else if (dbg.equalsIgnoreCase("comm")) 
-			Flags |= COMM;
-		    else if (dbg.equalsIgnoreCase("multicast")) 
-			Flags |= MULTICAST;
-		    else if (dbg.equalsIgnoreCase("policy")) 
-			Flags |= POLICY;
-		    else if (dbg.equalsIgnoreCase("security")) 
-			Flags |= SECURITY;
-		    else if (dbg.equalsIgnoreCase("service")) 
-			Flags |= SERVICE;
-		    else if (dbg.equalsIgnoreCase("statistics")) 
-			Flags |= STATISTICS;
-                    else if (dbg.equalsIgnoreCase("traffic_masking_generator"))
-                        Flags |= TRAFFIC_MASKING_GENERATOR;
-		    else if (dbg.equalsIgnoreCase("watcher")) 
-			Flags |= WATCHER;
-		    else
-			System.err.println("### Unknown MTS debug key " + dbg);
+	    StringTokenizer tk = new StringTokenizer(debug, ",");
+	    while (tk.hasMoreTokens()) {
+		String dbg = tk.nextToken();
+		if (dbg.equalsIgnoreCase("true")) {
+		    Flags = -1;
+		    break;
+		} else if (dbg.equalsIgnoreCase("all")) {
+		    Flags = -1;
+		    break;
+		} else if (dbg.equalsIgnoreCase("false")) {
+		    Flags = 0;
+		    break;
+		} else if (dbg.equalsIgnoreCase("none")) {
+		    Flags = 0;
+		    break;
+		} else if (dbg.equalsIgnoreCase("aspects")) {
+		    Flags |= ASPECTS;
+		} else if (dbg.equalsIgnoreCase("flush")) {
+		    Flags |= FLUSH;
+		} else if (dbg.equalsIgnoreCase("comm")) {
+		    Flags |= COMM;
+		} else if (dbg.equalsIgnoreCase("multicast")) {
+		    Flags |= MULTICAST;
+		} else if (dbg.equalsIgnoreCase("policy")) {
+		    Flags |= POLICY;
+		} else if (dbg.equalsIgnoreCase("security")) {
+		    Flags |= SECURITY;
+		} else if (dbg.equalsIgnoreCase("service")) {
+		    Flags |= SERVICE;
+		} else if (dbg.equalsIgnoreCase("statistics")) {
+		    Flags |= STATISTICS;
+		} else if (dbg.equalsIgnoreCase("traffic_masking_generator")) {
+		    Flags |= TRAFFIC_MASKING_GENERATOR;
+		} else if (dbg.equalsIgnoreCase("watcher")) {
+		    Flags |= WATCHER;
+		} else {
+		    System.err.println("Ignoring unknown MTS debug key " + dbg);
 		}
 	    }
 	}
