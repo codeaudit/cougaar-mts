@@ -74,7 +74,7 @@ final class MessageTransportRegistry
 	private String name;
 	private HashMap receiveLinks = new HashMap(89);
 	private ArrayList linkProtocols = new ArrayList();
-	private ReceiveLinkService receiveLinkFactory;
+	private ReceiveLinkProviderService receiveLinkProvider;
 	private NameSupport nameSupport;
 	private ServiceBroker sb;
 
@@ -95,14 +95,17 @@ final class MessageTransportRegistry
 	}
 
 
-	private ReceiveLinkService receiveLinkFactory() {
-	    if (receiveLinkFactory == null) {
-		receiveLinkFactory =
-		    (ReceiveLinkService) sb.getService(this, 
-						       ReceiveLinkService.class,
-						       null);
+	private ReceiveLink makeReceiveLink(MessageTransportClient client) {
+	    if (receiveLinkProvider == null) {
+		receiveLinkProvider =
+		    (ReceiveLinkProviderService) 
+		    sb.getService(this, 
+				  ReceiveLinkProviderService.class,
+				  null);
 	    }
-	    return receiveLinkFactory;
+	    ReceiveLink link = receiveLinkProvider.getReceiveLink(client);
+	    receiveLinks.put(client.getMessageAddress(), link);
+	    return link;
 	}
 
 
@@ -134,8 +137,7 @@ final class MessageTransportRegistry
 		synchronized (this) {
 		    ReceiveLink link = findLocalReceiveLink(key);
 		    if (link == null) {
-			link = receiveLinkFactory().getReceiveLink(client);
-			receiveLinks.put(key, link);
+			link = makeReceiveLink(client);
 		    }
 		}
 	    } catch (Exception e) {

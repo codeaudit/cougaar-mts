@@ -21,11 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
 import org.cougaar.core.component.Service;
 
-public interface DestinationQueueService extends Service
+public interface DestinationQueueProviderService extends Service
 {
     public DestinationQueue getDestinationQueue(MessageAddress destination);
 }
-

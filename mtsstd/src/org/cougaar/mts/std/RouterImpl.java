@@ -30,12 +30,12 @@ import org.cougaar.core.component.ServiceBroker;
  * each message's target, and enqueues the outgoing message there.  */
 class RouterImpl implements Router
 {
-    private DestinationQueueService destQService;
+    private DestinationQueueProviderService destQService;
 
     RouterImpl(ServiceBroker sb)
     {
-	destQService = (DestinationQueueService)
-	    sb.getService(this, DestinationQueueService.class, null);
+	destQService = (DestinationQueueProviderService)
+	    sb.getService(this, DestinationQueueProviderService.class, null);
     }
 
     /** Find or make a DestinationQueue for this message, then add the

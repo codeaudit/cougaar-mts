@@ -34,7 +34,7 @@ import org.cougaar.core.component.ServiceProvider;
  * attached to a ReceiveLink when it's first instantiated.  */
 public class ReceiveLinkFactory 
     extends AspectFactory
-    implements ReceiveLinkService, ServiceProvider
+    implements ReceiveLinkProviderService, ServiceProvider
 {
     ReceiveLinkFactory(ServiceBroker sb) {
 	super(sb);
@@ -46,7 +46,7 @@ public class ReceiveLinkFactory
 			     Class serviceClass) 
     {
 	// Could restrict this request to the registry
-	if (serviceClass == ReceiveLinkService.class) {
+	if (serviceClass == ReceiveLinkProviderService.class) {
 	    if (requestor instanceof MessageTransportRegistry.ServiceImpl) {
 		return this;
 	    } else {

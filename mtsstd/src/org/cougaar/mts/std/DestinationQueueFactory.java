@@ -33,7 +33,7 @@ import java.util.HashMap;
  * attached to a DestinationQueue when it's first instantiated.  */
 public class DestinationQueueFactory 
     extends  AspectFactory
-    implements DestinationQueueService, ServiceProvider
+    implements DestinationQueueProviderService, ServiceProvider
 {
     private HashMap queues;
 
@@ -74,12 +74,13 @@ public class DestinationQueueFactory
 			     Class serviceClass) 
     {
 	// Could restrict this request to the Router
-	if (serviceClass == DestinationQueueService.class) {
+	if (serviceClass == DestinationQueueProviderService.class) {
 	    if (requestor instanceof RouterImpl) {
 		return this;
 	    } else {
-		System.err.println("Ilegal request for DestinationQueueService"
-				   +  " from " +requestor);
+		System.err.println("Ilegal request for " +
+				   "DestinationQueueProviderService from " 
+				   +requestor);
 		return null;
 	    }
 	} else {

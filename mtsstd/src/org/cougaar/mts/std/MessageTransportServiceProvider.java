@@ -149,7 +149,7 @@ public final class MessageTransportServiceProvider
 	ServiceBroker sb = getServiceBroker();
 
 	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory(sb);
-	sb.addService(ReceiveLinkService.class, receiveLinkFactory);
+	sb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
 
 	LinkProtocolFactory protocolFactory = 
 	    new LinkProtocolFactory(this, sb);
@@ -165,7 +165,7 @@ public final class MessageTransportServiceProvider
 	
 	DestinationQueueFactory	destQFactory = 
 	    new DestinationQueueFactory(sb);
-	sb.addService(DestinationQueueService.class, destQFactory);
+	sb.addService(DestinationQueueProviderService.class, destQFactory);
 
 	// Router and SendQueue are singletons, though produced by
 	// factories.

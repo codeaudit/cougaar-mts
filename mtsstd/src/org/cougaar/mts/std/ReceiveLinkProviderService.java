@@ -23,8 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
 
-public interface ReceiveLinkService extends Service
+public interface ReceiveLinkProviderService extends Service
 {
-    ReceiveLink getReceiveLink(MessageTransportClient client);
+    public ReceiveLink getReceiveLink(MessageTransportClient client);
 }
-
