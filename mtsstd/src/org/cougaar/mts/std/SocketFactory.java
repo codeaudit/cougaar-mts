@@ -44,7 +44,11 @@ import javax.net.ssl.SSLServerSocket;
  * RMISocketFactory with aspectizable streams.
  *
  * Instantiating this class creates the socket factory and makes it
- * the default.
+ * the default.  
+ * @property org.cougaar.core.naming.useSSL Boolean-valued property
+ * which controls whether or not ssl is used in communication to the
+ * NameServer.  Defaults to 'false'.
+
  */
 public class SocketFactory  
     extends RMISocketFactory
