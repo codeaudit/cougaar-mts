@@ -70,7 +70,6 @@ public class MessageTransportServiceProvider
 
     // Assuming one policy per provider, but could also be one per
     // sender
-    private LinkSelectionPolicy selectionPolicy;
     private Router router;
     private SendQueue sendQ;
     private MessageDeliverer deliverer;
@@ -91,25 +90,20 @@ public class MessageTransportServiceProvider
     }
  
 
-    private NameSupport createNameSupport(String id) {
+    private void createNameSupport(String id) {
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
 	Object svc = sb.getService(this, NamingService.class, null);
         Object ns = NameSupportImpl.makeInstance(id, (NamingService) svc);
 	ns = aspectSupport.attachAspects(ns, NameSupport.class, null);
-	return (NameSupport) ns;
+	nameSupport = (NameSupport) ns;
+	registry.setNameSupport(nameSupport);
     }
 
-    public void initialize() {
+
+    private void createAspectSupport() {
 	ServiceBroker sb = getServiceBroker();
- 	
-	registry = MessageTransportRegistry.makeRegistry(id, this);
-
 	aspectSupport = new AspectSupportImpl(sb);
-
-        nameSupport = createNameSupport(id);
-	registry.setNameSupport(nameSupport);
-
 	//Watcher Aspect is special because the MTServicer interface
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
@@ -121,7 +115,9 @@ public class MessageTransportServiceProvider
 
 	// Multicast Aspect is always required.
 	aspectSupport.addAspect(new MulticastAspect());
+    }
 
+    private void createFactories() {
 	protocolFactory = 
 	    new LinkProtocolFactory(id, registry, nameSupport, aspectSupport);
 	receiveLinkFactory = new ReceiveLinkFactory(aspectSupport);
@@ -129,41 +125,10 @@ public class MessageTransportServiceProvider
 	registry.setReceiveLinkFactory(receiveLinkFactory);
 	registry.setProtocolFactory(protocolFactory);
 
-	wireComponents(id);
-
-	protocolFactory.setDeliverer(deliverer);
-	// force transports to be created here
-	protocolFactory.getProtocols();
-
-	registry.registerMTS();
-
-        super.initialize();
-    }
-
-    private void getSelectionPolicy() {
-	String policy_classname = System.getProperty(POLICY_PROPERTY);
-	if (policy_classname == null) {
-	    selectionPolicy = new MinCostLinkSelectionPolicy();
-	} else {
-	    try {
-		Class policy_class = Class.forName(policy_classname);
-		selectionPolicy = 
-		    (LinkSelectionPolicy) policy_class.newInstance();
-		System.out.println("Created " +  policy_classname);
-	    } catch (Exception ex) {
-		ex.printStackTrace();
-		selectionPolicy = new MinCostLinkSelectionPolicy();
-	    }
-	}	       
-    }
-
-
-
-    private void wireComponents(String id) {
-	getSelectionPolicy();
 	delivererFactory = new MessageDelivererFactory(registry,aspectSupport);
 	deliverer = delivererFactory.getMessageDeliverer(id+"/Deliverer");
 
+	LinkSelectionPolicy selectionPolicy = createSelectionPolicy();
 
 	
 	destQFactory = 
@@ -179,6 +144,27 @@ public class MessageTransportServiceProvider
 	sendQFactory = new SendQueueFactory(registry, aspectSupport);
 	sendQ = sendQFactory.getSendQueue(id+"/OutQ", router);
 
+	protocolFactory.setDeliverer(deliverer);
+	// force transports to be created here
+	protocolFactory.getProtocols();
+    }
+
+    private LinkSelectionPolicy createSelectionPolicy() {
+	String policy_classname = System.getProperty(POLICY_PROPERTY);
+	if (policy_classname == null) {
+	    return new MinCostLinkSelectionPolicy();
+	} else {
+	    try {
+		Class policy_class = Class.forName(policy_classname);
+		LinkSelectionPolicy selectionPolicy = 
+		    (LinkSelectionPolicy) policy_class.newInstance();
+		System.out.println("Created " +  policy_classname);
+		return selectionPolicy;
+	    } catch (Exception ex) {
+		ex.printStackTrace();
+		return new MinCostLinkSelectionPolicy();
+	    }
+	}	       
     }
 
 
@@ -200,6 +186,18 @@ public class MessageTransportServiceProvider
 	return proxy;
 
     }
+
+
+
+    public void initialize() {
+	registry = MessageTransportRegistry.makeRegistry(id, this);
+	createAspectSupport();
+        createNameSupport(id);
+	createFactories();
+	registry.registerMTS();
+        super.initialize();
+    }
+
 
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
