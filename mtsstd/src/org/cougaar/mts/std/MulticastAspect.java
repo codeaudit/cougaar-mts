@@ -27,6 +27,8 @@ public class MulticastAspect extends StandardAspect
 	registry = MessageTransportRegistry.getRegistry();
     }
 
+
+
     public Object getDelegate(Object delegate, Class type) {
 	if (type == MessageTransportService.class) {
 	    return new ServiceDelegate((MessageTransportService) delegate);
@@ -39,8 +41,23 @@ public class MulticastAspect extends StandardAspect
 
 
 
-    public class ServiceDelegate implements MessageTransportService
-    {
+    private static class MulticastMessageEnvelope extends Message {
+    
+	private Message contents;
+
+	MulticastMessageEnvelope(Message message, MessageAddress destination) {
+	    super(message.getOriginator(), destination);
+	    this.contents = message;
+	}
+
+	Message getContents() {
+	    return contents;
+	}
+    
+    }
+
+
+    public class ServiceDelegate implements MessageTransportService {
 	private MessageTransportService server;
 	
 	public ServiceDelegate (MessageTransportService server) {
@@ -86,7 +103,7 @@ public class MulticastAspect extends StandardAspect
 	    server.unregisterClient(client);
 	}
 	
-	public java.util.ArrayList flushMessages() {
+	public ArrayList flushMessages() {
 	    return server.flushMessages();
 	}
 
@@ -102,8 +119,7 @@ public class MulticastAspect extends StandardAspect
 
 
 
-    public class DelivererDelegate implements MessageDeliverer
-    {
+    public class DelivererDelegate implements MessageDeliverer {
 	private MessageDeliverer server;
 	
 	public DelivererDelegate (MessageDeliverer server)
