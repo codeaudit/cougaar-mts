@@ -12,8 +12,6 @@ package org.cougaar.core.mts;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.StringTokenizer;
 
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ContainerSupport;
@@ -39,8 +37,6 @@ public class MessageTransportServiceProvider
     implements ContainerAPI, ServiceProvider
 {
 
-    private final static String ASPECTS_PROPERTY = 
-	"org.cougaar.message.transport.aspects";
     private final static String POLICY_PROPERTY =
 	"org.cougaar.message.transport.policy";
     private final static String STATISTICS_ASPECT = 
@@ -59,6 +55,8 @@ public class MessageTransportServiceProvider
     // Singletons
     private NameSupport nameSupport;
     private MessageTransportRegistry registry;
+    private AspectSupport aspectSupport;
+    private ArrayList aspects;
     // Assuming one policy per provider, but could also be one per
     // sender
     private LinkSelectionPolicy selectionPolicy;
@@ -72,48 +70,14 @@ public class MessageTransportServiceProvider
     private HashMap proxies;
 
 
-    private static ArrayList aspects;
-    private static HashMap aspects_table;
-    
-    public static MessageTransportAspect findAspect(String classname) {
-	return (MessageTransportAspect) aspects_table.get(classname);
-    }
-
 
     public MessageTransportServiceProvider(String id) {
         this.id = id;
 	proxies = new HashMap();
 	rawProxies = new HashMap();
-	aspects = new ArrayList();
-	aspects_table = new HashMap();
 
     }
-
-
-    private void readAspects() {
-	String classes = System.getProperty(ASPECTS_PROPERTY);
-
-	if (classes == null) return;
-
-        ServiceBroker sb = getServiceBroker();
-	StringTokenizer tokenizer = new StringTokenizer(classes, ",");
-	while (tokenizer.hasMoreElements()) {
-	    String classname = tokenizer.nextToken();
-	    try {
-		Class aspectClass = Class.forName(classname);
-		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) aspectClass.newInstance();
-		aspects.add(aspect);
-		aspects_table.put(classname, aspect);
-		
-		aspect.setServiceBroker(sb);
-	    }
-	    catch (Exception ex) {
-		ex.printStackTrace();
-		// System.err.println(ex);
-	    }
-	}
-    }
+ 
 
     private NameSupport createNameSupport(String id) {
         ServiceBroker sb = getServiceBroker();
@@ -125,8 +89,13 @@ public class MessageTransportServiceProvider
     }
 
     public void initialize() {
+	
 	registry = MessageTransportRegistry.makeRegistry(id, this);
-	readAspects();
+
+	aspectSupport = new AspectSupportImpl(getServiceBroker());
+	aspectSupport.readAspects();
+	aspects = aspectSupport.getAspects();
+
         nameSupport = createNameSupport(id);
 	registry.setNameSupport(nameSupport);
 
@@ -134,10 +103,10 @@ public class MessageTransportServiceProvider
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
 	watcherAspect =  new WatcherAspect();
-	aspects.add(watcherAspect);
+	aspectSupport.add(watcherAspect);
 
 	// Multicast Aspect is always required.
-	aspects.add(new MulticastAspect());
+	aspectSupport.add(new MulticastAspect());
 
 	protocolFactory = 
 	    new LinkProtocolFactory(id, registry, nameSupport, aspects);
@@ -229,7 +198,7 @@ public class MessageTransportServiceProvider
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
 	    StatisticsAspect aspect = 
-		(StatisticsAspect) findAspect(STATISTICS_ASPECT);
+		(StatisticsAspect) aspectSupport.findAspect(STATISTICS_ASPECT);
 	    return aspect;
 	} else if (serviceClass == MessageWatcherService.class) {
 	    return new MessageWatcherServiceImpl(watcherAspect);
