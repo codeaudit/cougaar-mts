@@ -31,4 +31,5 @@ public interface StepModel
     public boolean isStepping();
     public void setStepping(boolean mode);
     public void step();
+    public MessageAddress getDestination();
 }

@@ -96,6 +96,10 @@ public class StepController
 
     }
 
+    public StepModel getModel() {
+	return model;
+    }
+
     public void pause() {
 	if (!pause.isSelected()) {
 	    pause.setSelected(true);

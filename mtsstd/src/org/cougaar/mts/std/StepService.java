@@ -21,11 +21,14 @@
 
 package org.cougaar.core.mts;
 
-/**
- * This interface represents a collection of StepControllers. */
-public interface StepManager
+import org.cougaar.core.component.Service;
+
+public interface StepService extends Service
 {
-    public void close();
-    public void addController(StepController controller);
-    public StepService getService();
+    public void pauseAll();
+    public void resumeAll();
+    public void stepAll();
+    public void pause(MessageAddress destination);
+    public void resume(MessageAddress destination);
+    public void step(MessageAddress destination);
 }

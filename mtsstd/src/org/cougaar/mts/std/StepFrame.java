@@ -60,21 +60,21 @@ public class StepFrame
 	JButton pauseAll = new JButton("Pause All");
 	pauseAll.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-		    manager.pauseAll();
+		    manager.getService().pauseAll();
 		}});
 	buttons.add(pauseAll);
 
 	JButton resumeAll = new JButton("Resume All");
 	resumeAll.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-		    manager.resumeAll();
+		    manager.getService().resumeAll();
 		}});
 	buttons.add(resumeAll);
 
 	JButton stepAll = new JButton("Step All");
 	stepAll.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-		    manager.stepAll();
+		    manager.getService().stepAll();
 		}});
 	buttons.add(stepAll);
 

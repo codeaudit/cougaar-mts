@@ -22,8 +22,9 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -38,8 +39,79 @@ public class StepperAspect
 {
 
     private StepFrame frame;
-    private ArrayList controllers;
+    private HashMap controllers;
     private ThreadService threadService;
+    private StepService service;
+
+
+    private class StepServiceProvider implements ServiceProvider {
+	public Object getService(ServiceBroker sb, 
+				 Object requestor, 
+				 Class serviceClass) 
+	{
+	    //  Restrict access?
+	    if (serviceClass == StepService.class) {
+		return service;
+	    }
+	    return null;
+	}
+
+	public void releaseService(ServiceBroker sb, 
+				   Object requestor, 
+				   Class serviceClass, 
+				   Object service)
+	{
+	}
+    }
+
+
+    private class StepServiceImpl implements StepService {
+	public void pause(MessageAddress destination) {
+	    StepController controller =  
+		(StepController) controllers.get(destination);
+	    if (controller != null) controller.pause();
+	}
+
+	public void resume(MessageAddress destination) {
+	    StepController controller =  
+		(StepController) controllers.get(destination);
+	    if (controller != null) controller.resume();
+	}
+
+	public void step(MessageAddress destination) {
+	    StepController controller =  
+		(StepController) controllers.get(destination);
+	    if (controller != null) controller.step();
+	}
+
+
+	public synchronized void pauseAll() {
+	    Iterator i = controllers.values().iterator();
+	    while(i.hasNext()) {
+		StepController controller = (StepController) i.next();
+		controller.pause();
+	    }
+	}
+
+
+	public synchronized void resumeAll() {
+	    Iterator i = controllers.values().iterator();
+	    while(i.hasNext()) {
+		StepController controller = (StepController) i.next();
+		controller.resume();
+	    }
+	}
+
+
+	public synchronized void stepAll() {
+	    Iterator i = controllers.values().iterator();
+	    while(i.hasNext()) {
+		StepController controller = (StepController) i.next();
+		controller.step();
+	    }
+	}
+
+    }
 
 
     private ThreadService threadService() {
@@ -50,23 +122,15 @@ public class StepperAspect
 	return threadService;
     }
 
-    public Object getDelegate(Object delegatee, Class type) 
-    {
-	if (type == DestinationQueue.class) {
-	    return new DestinationQueueDelegate((DestinationQueue) delegatee);
-	} else {
-	    return null;
-	}
-    }
 
     private StepFrame ensureFrame() {
 	synchronized (this) {
 	    if (frame == null) {
 		frame = new StepFrame(this, getRegistry().getIdentifier());
 		if (controllers == null) {
-		    controllers = new ArrayList();
+		    controllers = new HashMap();
 		} else {
-		    Iterator i = controllers.iterator();
+		    Iterator i = controllers.values().iterator();
 		    while(i.hasNext()) {
 			StepController controller = (StepController) i.next();
 			frame.addControllerWidget(controller);
@@ -79,44 +143,44 @@ public class StepperAspect
     }
 
 
+
+
+
+    // Component
+    public void load() {
+	super.load();
+	service = new StepServiceImpl();
+	ServiceProvider provider = new StepServiceProvider();
+	getServiceBroker().addService(StepService.class, provider);
+    }
+
+
+    // Aspect
+    public Object getDelegate(Object delegatee, Class type) 
+    {
+	if (type == DestinationQueue.class) {
+	    return new DestinationQueueDelegate((DestinationQueue) delegatee);
+	} else {
+	    return null;
+	}
+    }
+
+
     // StepManager
+    public StepService getService() {
+	return service;
+    }
 
     public synchronized void close() {
-	stepAll();
+	service.stepAll();
 	frame.dispose();
 	frame = null;
     }
 
     public synchronized void addController(StepController controller) {
-	controllers.add(controller);
+	controllers.put(controller.getModel().getDestination(), controller);
     }
 
-
-    public synchronized void pauseAll() {
-	Iterator i = controllers.iterator();
-	while(i.hasNext()) {
-	    StepController controller = (StepController) i.next();
-	    controller.pause();
-	}
-    }
-
-
-    public synchronized void resumeAll() {
-	Iterator i = controllers.iterator();
-	while(i.hasNext()) {
-	    StepController controller = (StepController) i.next();
-	    controller.resume();
-	}
-    }
-
-
-    public synchronized void stepAll() {
-	Iterator i = controllers.iterator();
-	while(i.hasNext()) {
-	    StepController controller = (StepController) i.next();
-	    controller.step();
-	}
-    }
 
 
 
@@ -139,7 +203,9 @@ public class StepperAspect
 	}
 	
 
+
 	// StepModel
+
 	public boolean isStepping() {
 	    return stepping;
 	}
