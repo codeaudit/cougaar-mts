@@ -55,7 +55,6 @@ public class GossipAspect
     private GossipKeyDistributionService keyService;
     private GossipQualifierService qualifierService;
     private GossipUpdateService updateService;
-    private GossipStatisticsService statsService;
     private WhitePagesService wpService;
 
     // Local data we'd like to get via gossip.
@@ -100,13 +99,6 @@ public class GossipAspect
 	}
     }
 
-    private synchronized void ensureStatsService() {
-	if (statsService == null) {
-	    ServiceBroker sb = getServiceBroker();
-	    statsService = (GossipStatisticsService)
-		sb.getService(this, GossipStatisticsService.class, null);
-	}
-    }
 
     public void load() {
 	super.load();
