@@ -26,15 +26,15 @@ import org.cougaar.core.society.MessageAddress;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
 
 public class ForwardMessageLoggingAspect extends StandardAspect
 {
 
-    private static final String LOG_FILE_PROPERTY =
-	"org.cougaar.forward.message.logfile";
     private static final char SEPR = '\t';
 
     private PrintStream log;
@@ -42,14 +42,14 @@ public class ForwardMessageLoggingAspect extends StandardAspect
     public ForwardMessageLoggingAspect() {
 	super();
 	log = System.out;  // default PrintStream
-	String logfile = System.getProperty(LOG_FILE_PROPERTY);
-	if (logfile != null) {
-	    try {
-		FileOutputStream fos = new FileOutputStream(logfile);
-		log = new PrintStream(fos, true);
-	    } catch (java.io.FileNotFoundException fnf) {
-		fnf.printStackTrace();
-	    }
+	String logfile = 
+	    MessageTransportRegistry.getRegistry().getIdentifier() + 
+	    "_MessageForwarding.log";
+	try {
+	    FileOutputStream fos = new FileOutputStream(logfile);
+	    log = new PrintStream(fos);
+	} catch (java.io.FileNotFoundException fnf) {
+	    fnf.printStackTrace();
 	}
     }
 
@@ -63,6 +63,50 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	}
     }
 
+    private String extractInetAddr(String raw) {
+	int i = 0;
+	while (i<raw.length()) {
+	    if (Character.isDigit(raw.charAt(i++))) {
+		try {
+		    // found a digit
+		    String sub = raw.substring(i-1);
+		    StringTokenizer tk1 = new StringTokenizer(sub, " ,]})>");
+		    if (tk1.hasMoreTokens()) {
+			String data = tk1.nextToken();
+			// Now verify it's a.b.c.d:e
+			StringTokenizer tk2 = new StringTokenizer(data, ".");
+			if (tk2.countTokens() == 4) {
+			    Integer.parseInt(tk2.nextToken());
+			    Integer.parseInt(tk2.nextToken());
+			    Integer.parseInt(tk2.nextToken());
+			    // three valid ints (should check 0-255)
+
+			    StringTokenizer tk3 = 
+				new StringTokenizer(tk2.nextToken(), ":");
+			    if (tk3.countTokens() == 2) {
+				Integer.parseInt(tk3.nextToken());
+				Integer.parseInt(tk3.nextToken());
+
+				// Done!
+				return data;
+			    } else {
+				// System.out.println("#### More than two tokens");
+			    }
+			} else {
+			    //System.out.println("#### More than four tokens");
+			}
+		    } else {
+			//System.out.println("#### No tokens");
+		    }
+		} catch (NumberFormatException ex) {
+		    // wrong format (most likely not an integer)
+		    // ex.printStackTrace();
+		}
+	    }
+	}
+	return null;
+    }
+
     private void logMessage(Message msg, String tag, DestinationLink link) {
 	MessageAddress src = msg.getOriginator();
 	MessageAddress dst = msg.getTarget();
@@ -71,6 +115,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	LinkProtocol protocol = null;
 	long now = System.currentTimeMillis();
 	Object remote = null;
+	String remoteIP = null;
 
 	Attributes match = new BasicAttributes(NameSupport.AGENT_ATTR, dst);
 	String attr = NameSupport.NODE_ATTR;
@@ -87,12 +132,17 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    }
 	}
 
-	// Protocols not derived from RMI will have to do something
-	// else here
-	if (protocol instanceof RMILinkProtocol) {
-	    RMILinkProtocol rmi_proto = (RMILinkProtocol) protocol;
-	    try { remote = rmi_proto.lookupRMIObject(dst, false); }
-	    catch (Exception ex) {}
+	if (protocol != null) {
+	    Class[] parameters = { MessageAddress.class } ;
+	    Object [] args = { dst };
+	    try {
+		Method meth = pclass.getMethod("getRemoteReference", 
+					       parameters);
+		if (meth != null) remote = meth.invoke(protocol, args);
+		remoteIP = extractInetAddr(remote.toString());
+	    } catch (Exception ex) {
+		// ignore errors
+	    }
 	}
 
 	synchronized(this) {
@@ -108,7 +158,10 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    log.print(SEPR);
 	    log.print(pclass.getName());
 	    log.print(SEPR);
+	    log.print(remoteIP);
+	    log.print(SEPR);
 	    log.println(remote);
+	    log.flush();
 	}
     }
 

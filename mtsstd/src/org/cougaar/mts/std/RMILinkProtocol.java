@@ -61,12 +61,13 @@ public class RMILinkProtocol
 
     // private MessageAddress myAddress;
     private MT myProxy;
-    private HashMap links;
+    private HashMap links, remoteRefs;
     private SocketFactory socfac;
 
     public RMILinkProtocol(String id, AspectSupport aspectSupport) {
 	super(aspectSupport); 
 	links = new HashMap();
+	remoteRefs = new HashMap();
 	socfac = getSocketFactory();
     }
 
@@ -103,12 +104,13 @@ public class RMILinkProtocol
 
 
 
-    // Not private because FWAspect wants to use it
-    MT lookupRMIObject(MessageAddress address, boolean getProxy) 
+    private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
 	throws Exception 
     {
 	Object object = 
 	    nameSupport.lookupAddressInNameServer(address, getProtocolType());
+
+	remoteRefs.put(address, object);
 
 	if (object == null || !getProxy) return (MT) object;
 
@@ -200,6 +202,10 @@ public class RMILinkProtocol
 	return link;
     }
 
+    // new pseudo-interface method
+    public Object getRemoteReference(MessageAddress address) {
+	return remoteRefs.get(address);
+    }
 
 
     // Hook to attach aspects to the client-side stub for the remote
@@ -230,6 +236,7 @@ public class RMILinkProtocol
 	{
 	    this.target = destination;
 	}
+
 
 	private void cacheRemote() 
 	    throws NameLookupException, UnregisteredNameException
