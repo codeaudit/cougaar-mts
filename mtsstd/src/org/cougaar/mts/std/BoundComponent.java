@@ -24,6 +24,7 @@ import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.Component;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.util.GenericStateModelAdapter;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
@@ -40,6 +41,7 @@ abstract public class BoundComponent
     private MessageTransportRegistryService registry;
     private NameSupport nameSupport;
     private AspectSupport aspectSupport;
+    private ServiceBroker sb;
 
     protected LoggingService loggingService;
     protected ThreadService threadService;
@@ -115,11 +117,12 @@ abstract public class BoundComponent
 
     public final void setBindingSite(BindingSite bs) {
 	this.bindingSite = bs;
+	this.sb = new PropagatingServiceBroker(bs);
     }
 
 
     public ServiceBroker getServiceBroker() {
-	return bindingSite.getServiceBroker();
+	return sb;
     }
 
 

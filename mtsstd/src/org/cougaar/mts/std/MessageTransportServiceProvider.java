@@ -31,11 +31,13 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.StateObject;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.ThreadControlService;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.core.thread.ThreadServiceProvider;
+import org.cougaar.core.thread.PercentageLatencyPolicy;
 import org.cougaar.core.node.Node;
 
 import java.util.ArrayList;
@@ -223,6 +225,18 @@ public final class MessageTransportServiceProvider
 
 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
 	tsp.provideServices(sb);
+	
+	if (Boolean.getBoolean("org.cougaar.message.transport.threadtest")) {
+	    String filename = 
+		System.getProperty("org.cougaar.message.transport.percentages");
+	    if (filename != null) {
+		ThreadControlService tcs = (ThreadControlService)
+		    sb.getService(this, ThreadControlService.class, null);
+		PercentageLatencyPolicy policy =
+		    new PercentageLatencyPolicy(filename);
+		tcs.setTimeSlicePolicy(policy);
+	    }
+	}
 
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);

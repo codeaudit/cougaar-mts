@@ -23,7 +23,8 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-
+import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.util.CircularQueue;
 
 /**
@@ -48,7 +49,24 @@ abstract class MessageQueue
 
 
 
+    public void load() {
+	super.load();
 
+	if (Boolean.getBoolean("org.cougaar.message.transport.threadtest")) {
+	    // Each queue Component has its own ThreadService.  These are
+	    // children of the MTS ThreadService.
+	    ServiceBroker sb = getServiceBroker();
+	    ThreadServiceProvider tsp = new ThreadServiceProvider(sb, name);
+	    tsp.provideServices(sb);
+	
+	    ThreadService old = threadService;
+	    // Force a recache of the threadService instance variable,
+	    // since it's pointing at the parent as a result of
+	    // super.load().
+	    threadService = (ThreadService) 
+		sb.getService(this, ThreadService.class,  null);
+	}
+    }
 
     String getName() {
 	return name;
