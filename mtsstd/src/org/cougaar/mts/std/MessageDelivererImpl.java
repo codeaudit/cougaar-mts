@@ -54,6 +54,7 @@ public class MessageDelivererImpl implements MessageDeliverer
 		while (i.hasNext()) {
 		    ReceiveLink link = (ReceiveLink) i.next();
 		    link.deliverMessage(message);
+                    System.out.println("!!!!! Delivering multicast to " + link);
 		}
 	    }
 	} else {	

@@ -92,16 +92,15 @@ public class MessageTransportServiceProxy
 	    Iterator itr = registry.findRemoteMulticastTransports(dst);
 	    MulticastMessageEnvelope envelope;
 	    MessageAddress addr;
-	    int count = 0;
 	    while (itr.hasNext()) {
 		addr = (MessageAddress) itr.next();
+                System.out.println("!!!!!! next address =" + addr);
 		envelope = new MulticastMessageEnvelope(message, addr);
 		sendQ.sendMessage(envelope);
-		count++;
-	    }
-	    synchronized (this) { 
-		outstandingMessages += count;
-		if (Debug.DEBUG_FLUSH) showPending(count + " messages queued");
+                synchronized (this) { 
+                    ++outstandingMessages; 
+                    if (Debug.DEBUG_FLUSH) showPending("Message queued");
+                }
 	    }
 	} else if (checkMessage(message)) {
 	    if (destination.equals(MessageAddress.LOCAL)) {

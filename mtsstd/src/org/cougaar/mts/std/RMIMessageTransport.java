@@ -47,8 +47,7 @@ import java.util.HashMap;
 public class RMIMessageTransport 
     extends MessageTransport
 {
-    public static final String TRANSPORT_TYPE = NS.DirSeparator + "simpleRMI";
-    
+    public static final String TRANSPORT_TYPE = "-simpleRMI";
 
     private MessageAddress myAddress;
     private HashMap links;

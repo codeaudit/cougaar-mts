@@ -23,6 +23,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.SearchControls;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
 
@@ -194,8 +195,9 @@ public class NameSupportImpl implements NameSupport
 	public Object next() {
 	    try {
 		SearchResult result = (SearchResult) e.next();
-		Attributes attr = result.getAttributes();
-		return attr.get(attribute);
+		Attributes attrs = result.getAttributes();
+		Attribute attr = attrs.get(attribute);
+                return attr.get();
 	    } catch (NamingException ex) {
 		ex.printStackTrace();
 		return null;
@@ -211,11 +213,16 @@ public class NameSupportImpl implements NameSupport
     public Iterator lookupMulticast(MulticastMessageAddress address) {
 	try {
 	    DirContext ctx = namingService.getRootContext();
-	    String name = "";
-	    String filter = "MTS=true";
-	    SearchControls cons = new SearchControls();
-	    cons.setSearchScope(SearchControls.SUBTREE_SCOPE);
-	    return new NamingItr(ctx.search(name, filter, cons), "Address");
+	    // String name = "";
+	    // String filter = "MTS=true";
+	    // SearchControls cons = new SearchControls();
+	    // cons.setSearchScope(SearchControls.SUBTREE_SCOPE);
+	    // return new NamingItr(ctx.search(name, filter, cons), "Address");
+            String name = "MessageTransports";
+            Attributes match = new BasicAttributes("MTS", Boolean.TRUE);
+            String attr = "Address";
+            String[] retattr = { attr };
+            return new NamingItr(ctx.search(name, match, retattr), attr);
 	} catch (NamingException ne) {
 	    ne.printStackTrace();
 	    return null;
