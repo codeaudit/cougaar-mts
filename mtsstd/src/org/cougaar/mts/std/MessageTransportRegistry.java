@@ -28,12 +28,10 @@ class MessageTransportRegistry
     private static MessageTransportRegistry instance;
 
     public static synchronized MessageTransportRegistry 
-	makeRegistry(String name, 
-		     NameSupport nameSupport,
-		     MessageTransportServiceProvider server)
+	makeRegistry(String name, MessageTransportServiceProvider server)
     {
 	if (instance == null) {
-	    instance = new MessageTransportRegistry(name, nameSupport, server);
+	    instance = new MessageTransportRegistry(name, server);
 	    return instance;
 	} else {
 	    System.err.println("##### Attempt to make a second MessageTransportRegistry!");
@@ -63,13 +61,15 @@ class MessageTransportRegistry
     private Object lock;
 
     private MessageTransportRegistry(String name, 
-				     NameSupport nameSupport,
-				     MessageTransportServiceProvider serviceProvider)
+				     MessageTransportServiceProvider provider)
     {
 	this.name = name;
-	this.serviceProvider = serviceProvider;
-	this.nameSupport = nameSupport;
+	this.serviceProvider = provider;
 	this.lock = new Object();
+    }
+
+    void setNameSupport(NameSupport nameSupport) {
+	this.nameSupport = nameSupport;
     }
 
     void setTransportFactory(MessageTransportFactory transportFactory) {

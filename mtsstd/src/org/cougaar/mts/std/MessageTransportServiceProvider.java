@@ -119,15 +119,16 @@ public class MessageTransportServiceProvider
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
 	Object svc = sb.getService(this, NamingService.class, null);
-        return new NameSupportImpl(id, (NamingService) svc);
+        Object ns = new NameSupportImpl(id, (NamingService) svc);
+	ns = AspectFactory.attachAspects(aspects, ns, NameSupport.class, null);
+	return (NameSupport) ns;
     }
 
     public void initialize() {
-
-        nameSupport = createNameSupport(id);
-	registry = MessageTransportRegistry.makeRegistry(id, nameSupport,this);
-
+	registry = MessageTransportRegistry.makeRegistry(id, this);
 	readAspects();
+        nameSupport = createNameSupport(id);
+	registry.setNameSupport(nameSupport);
 
 	//Watcher Aspect is special because the MTServicer interace
 	//needs it.  So we have to make the Watcher Aspect all the

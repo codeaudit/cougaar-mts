@@ -12,10 +12,12 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.society.MulticastMessageAddress;
 
 
 import java.io.PrintWriter;
 import java.io.FileWriter;
+import java.util.Iterator;
 
 /**
  * This is a very simple aspect which is mostly for demonstration
@@ -57,9 +59,7 @@ public class TraceAspect
     }
 
     public Object getDelegate(Object delegate, Class type) {
-	if (type == MessageTransportService.class) {
-	    return new ServiceProxyDelegate((MessageTransportService) delegate);
-	} else if (type == SendQueue.class) {
+	if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) delegate);
 	} else if (type == Router.class) {
 	    return new RouterDelegate((Router) delegate);
@@ -71,45 +71,61 @@ public class TraceAspect
 	    return new MessageDelivererDelegate((MessageDeliverer) delegate);
 	} else if (type == ReceiveLink.class) {
 	    return new ReceiveLinkDelegate((ReceiveLink) delegate);
+	} else if (type == NameSupport.class) {
+	    return new NameSupportDelegate((NameSupport) delegate);
 	} else {
 	    return null;
 	}
     }
 
-
-    public class ServiceProxyDelegate implements MessageTransportService
-    {
-	private MessageTransportService server;
+    public class NameSupportDelegate implements NameSupport {
+	private NameSupport server;
 	
-	public ServiceProxyDelegate (MessageTransportService server) {
+	public NameSupportDelegate (NameSupport server) {
 	    this.server = server;
 	}
 
-	public void sendMessage(Message message) {
-	    server.sendMessage(message);
+	public MessageAddress  getNodeMessageAddress() {
+	    return server.getNodeMessageAddress();
 	}
 
-	public void registerClient(MessageTransportClient client) {
-	    server.registerClient(client);
+	public void registerAgentInNameServer(Object proxy, 
+					      MessageTransportClient client, 
+					      String type)
+	{
+	    log("NameSupport", "Register Agent" + proxy);
+	    server.registerAgentInNameServer(proxy, client, type);
 	}
 
-	public void unregisterClient(MessageTransportClient client) {
-	    server.unregisterClient(client);
+	public void unregisterAgentInNameServer(Object proxy, 
+						MessageTransportClient client, 
+						String type) 
+	{
+	    log("NameSupport", "Unregister Agent " + proxy);
+	    server.unregisterAgentInNameServer(proxy, client, type);
 	}
 
-	public java.util.ArrayList flushMessages() {
-	    return server.flushMessages();
+	public void registerNodeInNameServer(Object proxy, 
+					     String type)
+	{
+	    log("NameSupport", "Register Node " + proxy);
+	    server.registerNodeInNameServer(proxy, type);
 	}
 
-	public String getIdentifier() {
-	    return server.getIdentifier();
+	public Object lookupAddressInNameServer(MessageAddress address, 
+						String type)
+	{
+	    Object res = server.lookupAddressInNameServer(address, type);
+	    log("NameSupport", "Lookup of " + address + " returned " + res);
+	    return res;
 	}
 
-	public boolean addressKnown(MessageAddress address) {
-	    return server.addressKnown(address);
+	public Iterator lookupMulticast(MulticastMessageAddress address) {
+	    return server.lookupMulticast(address);
 	}
-	
+
     }
+
 
 
     public class SendQueueDelegate implements SendQueue
