@@ -44,7 +44,7 @@ public final class RMIRemoteObjectDecoder {
    */
   public static Object decode(URI uri) throws Exception {
     MyObjectInput lrIn = new MyObjectInput(uri);
-    LiveRef lr = LiveRef.read(lrIn, false);
+    LiveRef lr = LiveRef.read(lrIn, lrIn.has_csf);
     final RemoteRef rr = new UnicastRef(lr);
     Class cl = Class.forName(lrIn.clname);
     Constructor cons = cl.getConstructor(new Class[] {RemoteRef.class});
@@ -63,6 +63,9 @@ public final class RMIRemoteObjectDecoder {
     public final long uid_time;
     public final short uid_count;
     public final long oid_num;
+      public boolean has_csf;
+      public boolean use_ssl;
+      public boolean use_aspects;
 
     private int state = 0;
 
@@ -95,7 +98,19 @@ public final class RMIRemoteObjectDecoder {
         j = s.indexOf('_', i);
         this.uid_count = Short.parseShort(s.substring(i,j), 16);
         i=j+1;
-        this.oid_num = Long.parseLong(s.substring(i));
+	j = s.indexOf('/', i);
+        this.oid_num = Long.parseLong(s.substring(i, j));
+	i=j+1;
+	if (i < s.length()) {
+	    // the ref has a socket factory
+	    has_csf = true;
+	    char ssl_flag = s.charAt(i);
+	    char aspect_flag = s.charAt(i+1);
+	    use_ssl = ssl_flag == '1';
+	    use_aspects = aspect_flag == '1';
+	} else {
+	    has_csf = false;
+	}
       } catch (Exception e) {
         throw new RuntimeException("Invalid URI: "+uri, e);
       }
@@ -128,6 +143,37 @@ public final class RMIRemoteObjectDecoder {
       if (state == 7) return ref_remote;
       die(); return false;
     }
+
+      // Handle socket factories
+
+    public byte readByte() {
+	// Should only be called if has_csf is true and is only used
+	// in this object to return a flag indicating that fact.  So
+	// always return 1 (or die if no csf).
+	if (!has_csf) die();
+	return 1;
+    }
+
+
+    public Object readObject() {
+	// Should only be called if has_csf is true.  This is used to
+	// get the csf itself.  For simpler backward compatibility,
+	// don't increment the state.
+	if (has_csf && state == 2) {
+	    // HACK: hardwire the creation of a SocketFactory!
+	    // Later we might want to share the factory rather than
+	    // creating a new one for each remote ref.
+	    return new SocketFactory(use_ssl, use_aspects);
+	} else {
+	    die();
+	    return null;
+	}
+    }
+	
+
+
+
+
     // die:
     private void die() {
       throw new RuntimeException(
@@ -137,7 +183,6 @@ public final class RMIRemoteObjectDecoder {
     public void readFully(byte b[]) {die();}
     public void readFully(byte b[], int off, int len) {die();}
     public int skipBytes(int n) {die(); return -1;}
-    public byte readByte() {die(); return -1;}
     public int readUnsignedByte() {die(); return -1;}
     public int readUnsignedShort() {die(); return -1;}
     public char readChar() {die(); return (char)-1;}
@@ -145,7 +190,6 @@ public final class RMIRemoteObjectDecoder {
     public double readDouble() {die(); return -1;}
     public String readLine() {die(); return null;}
     // ObjectInput:
-    public Object readObject() {die(); return null;}
     public int read() {die(); return -1;}
     public int read(byte b[]) {die(); return -1;}
     public int read(byte b[], int off, int len) {die(); return -1;}

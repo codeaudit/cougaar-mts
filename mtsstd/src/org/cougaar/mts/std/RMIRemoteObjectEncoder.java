@@ -73,93 +73,134 @@ public final class RMIRemoteObjectEncoder {
     RemoteRef ref = ro.getRef();
     MyObjectOutput oo = new MyObjectOutput();
     ((UnicastRef) ref).writeExternal(oo);
-    String uri =
-        "rmi://"+
-        oo.tcp_host+":"+
-        oo.tcp_port+"/"+
-        clname+"/"+
-        ((forceRemote || oo.ref_remote)?"1":"0")+"_"+
-        Integer.toString(oo.uid_unique,16)+"_"+
-        Long.toString(oo.uid_time,16)+"_"+
-        Integer.toString(oo.uid_count,16)+"_"+
-        oo.oid_num;
-    return new URI(uri);
+    // Later add the two csf flags use_ssl and use_aspects
+    StringBuffer buf = new StringBuffer();
+    buf.append("rmi://");
+    buf.append(oo.tcp_host);
+    buf.append(':');
+    buf.append(oo.tcp_port);
+    buf.append('/');
+    buf.append(clname);
+    buf.append('/');
+    buf.append((forceRemote || oo.ref_remote)?"1":"0");
+    buf.append('_');
+    buf.append(Integer.toString(oo.uid_unique,16));
+    buf.append('_');
+    buf.append(Long.toString(oo.uid_time,16));
+    buf.append('_');
+    buf.append(Integer.toString(oo.uid_count,16));
+    buf.append('_');
+    buf.append(oo.oid_num);
+    buf.append('/');
+    if (oo.has_csf) {
+	buf.append(oo.use_ssl ? "1" : "0");
+	buf.append(oo.use_aspects ? "1" : "0");
+    }
+    return new URI(buf.toString());
   }
 
   /** custom object output, exactly matching UnicastRef */
   private static class MyObjectOutput implements ObjectOutput {
 
-    public String tcp_host;
-    public int tcp_port;
-    public long oid_num;
-    public int uid_unique;
-    public long uid_time;
-    public short uid_count;
-    public boolean ref_remote;
+      public String tcp_host;
+      public int tcp_port;
+      public long oid_num;
+      public int uid_unique;
+      public long uid_time;
+      public short uid_count;
+      public boolean ref_remote;
+      public boolean has_csf;
+      public boolean use_ssl;
+      public boolean use_aspects;
 
-    private int state = 0;
-    public void writeInt(int v) {
-      ++state;
-      if (state == 2) {
-        tcp_port=v;
-      } else if (state == 4) {
-        uid_unique=v;
-      } else {
-        die();
+      private int state = 0;
+
+      private int state() {
+	  return has_csf ? state-1 : state;
       }
-    }
-    public void writeLong(long v) {
-      ++state;
-      if (state == 3) {
-        oid_num=v;
-      } else if (state == 5) {
-        uid_time=v;
-      } else {
-        die();
+
+      public void writeInt(int v) {
+	  ++state;
+	  if (state() == 2) {
+	      tcp_port=v;
+	  } else if (state() == 4) {
+	      uid_unique=v;
+	  } else {
+	      die();
+	  }
       }
-    }
-    public void writeShort(int v) {
-      ++state;
-      if (state == 6) {
-        uid_count=(short)v;
-      } else {
-        die();
+      public void writeLong(long v) {
+	  ++state;
+	  if (state() == 3) {
+	      oid_num=v;
+	  } else if (state() == 5) {
+	      uid_time=v;
+	  } else {
+	      die();
+	  }
       }
-    }
-    public void writeUTF(String str) {
-      ++state;
-      if (state == 1) {
-        tcp_host=str;
-      } else {
-        die();
+      public void writeShort(int v) {
+	  ++state;
+	  if (state() == 6) {
+	      uid_count=(short)v;
+	  } else {
+	      die();
+	  }
       }
-    }
-    public void writeBoolean(boolean v) {
-      ++state;
-      if (state == 7) {
-        ref_remote=v;
-      } else {
-        die();
+      public void writeUTF(String str) {
+	  ++state;
+	  if (state() == 1) {
+	      tcp_host=str;
+	  } else {
+	      die();
+	  }
       }
-    }
-    // die:
-    private void die() {
-      throw new RuntimeException(
-          "RemoteObject writer has changed (state="+state+")");
-    }
-    // DataOutput:
-    public void write(int b) {die();}
-    public void write(byte b[]) {die();}
-    public void write(byte b[], int off, int len) {die();}
-    public void writeByte(int v) {die();}
-    public void writeChar(int v) {die();}
-    public void writeFloat(float v) {die();}
-    public void writeDouble(double v) {die();}
-    public void writeBytes(String s) {die();}
-    public void writeChars(String s) {die();}
-    // ObjectOutput:
-    public void writeObject(Object obj) {die();}
-    public void flush() {die();}
-    public void close() {die();}
+      public void writeBoolean(boolean v) {
+	  ++state;
+	  if (state() == 7) {
+	      ref_remote=v;
+	  } else {
+	      die();
+	  }
+      }
+
+      public void writeByte(int v) {
+	  // Only called if the object has a csf
+	  ++state;
+	  if (state == 1) {
+	      has_csf = true;
+	  } else {
+	      die();
+	  }
+      }
+
+
+      public void writeObject(Object obj) {
+	  if (!has_csf) die();
+	  if (!(obj instanceof SocketFactory)) die();
+	  if (state != 3) die();
+	  SocketFactory csf = (SocketFactory) obj;
+	  use_ssl = csf.use_ssl;
+	  use_aspects = csf.use_aspects;
+      }
+
+      // die:
+      private void die() {
+
+	  throw new RuntimeException(
+				     "RemoteObject writer has changed (state="+state+")");
+      }
+      // DataOutput:
+      public void write(int b) {die();}
+      public void write(byte b[]) {die();}
+      public void write(byte b[], int off, int len) {die();}
+      public void writeChar(int v) {die();}
+      public void writeFloat(float v) {die();}
+      public void writeDouble(double v) {die();}
+      public void writeBytes(String s) {die();}
+      public void writeChars(String s) {die();}
+      // ObjectOutput:
+      public void flush() {die();}
+      public void close() {die();}
   }
 }

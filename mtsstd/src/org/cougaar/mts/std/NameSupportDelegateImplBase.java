@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import java.net.URI;
 import java.util.Iterator;
 
 abstract public class NameSupportDelegateImplBase implements NameSupport 
@@ -36,28 +37,28 @@ abstract public class NameSupportDelegateImplBase implements NameSupport
 	return nameSupport.getNodeMessageAddress();
     }
 
-    public void registerAgentInNameServer(Object proxy, 
+    public void registerAgentInNameServer(URI reference, 
 					  MessageAddress address, 
-					  String transportType)
+					  String protocol)
     {
-	nameSupport.registerAgentInNameServer(proxy, address, transportType);
+	nameSupport.registerAgentInNameServer(reference, address, protocol);
     }
 
-    public void unregisterAgentInNameServer(Object proxy, 
+    public void unregisterAgentInNameServer(URI reference, 
 					    MessageAddress address, 
-					    String transportType)
+					    String protocol)
     {
-	nameSupport.unregisterAgentInNameServer(proxy, address, transportType);
+	nameSupport.unregisterAgentInNameServer(reference, address, protocol);
     }
 
     public void registerMTS(MessageAddress address) {
 	nameSupport.registerMTS(address);
     }
 
-    public Object lookupAddressInNameServer(MessageAddress address, 
-					    String transportType)
+    public URI lookupAddressInNameServer(MessageAddress address, 
+					    String protocol)
     {
-	return nameSupport.lookupAddressInNameServer(address, transportType);
+	return nameSupport.lookupAddressInNameServer(address, protocol);
     }
 
 

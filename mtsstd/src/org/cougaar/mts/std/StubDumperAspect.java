@@ -21,6 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import java.net.URI;
+
 import org.cougaar.core.service.LoggingService;
 
 public class StubDumperAspect extends StandardAspect
@@ -50,25 +52,25 @@ public class StubDumperAspect extends StandardAspect
 	}
 	
 
-	public void registerAgentInNameServer(Object proxy, 
+	public void registerAgentInNameServer(URI reference, 
 					      MessageAddress address, 
-					      String transportType)
+					      String protocol)
 	{
-	    super.registerAgentInNameServer(proxy, address, transportType);
+	    super.registerAgentInNameServer(reference, address, protocol);
 
 	    loggingService.info("\nRegistering " + address +
-				     " for "+ transportType +
-				     " = [" +proxy+ "]");
+				     " for "+ protocol +
+				     " = [" +reference+ "]");
 	}
 
-	public Object lookupAddressInNameServer(MessageAddress address, 
-						String transportType)
+	public URI lookupAddressInNameServer(MessageAddress address, 
+					     String protocol)
 	{
-	    Object result = super.lookupAddressInNameServer(address,
-							    transportType);
+	    URI result = super.lookupAddressInNameServer(address,
+							 protocol);
 	    loggingService.info("\nLookup " + address +
-				     " for "+ transportType +
-				     " = [" +result+ "]");
+				" for "+ protocol +
+				" = [" +result+ "]");
 	    return result;
 	}
 

@@ -173,7 +173,7 @@ public class SocketFactory
     // definitely don't want to include the AspectSupport when that
     // happens.  Instead, the aspect delegation will be handled by a
     // special static call.
-    private boolean use_ssl, use_aspects;
+    boolean use_ssl, use_aspects;
 
     public SocketFactory(boolean use_ssl, boolean use_aspects) {
 	this.use_ssl = use_ssl;

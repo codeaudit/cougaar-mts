@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import java.rmi.RemoteException;
 import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
+import java.rmi.server.RemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,7 +38,7 @@ import org.cougaar.core.service.LoggingService;
  * them in anyway, for documentation if nothing else.1
  **/
 
-public class MTImpl extends UnicastRemoteObject implements MT 
+public class MTImpl extends RemoteObject implements MT 
 {
     private static transient MessageAttributes DummyReturn;
     static {
@@ -60,7 +61,8 @@ public class MTImpl extends UnicastRemoteObject implements MT
 		  SocketFactory socfac) 
 	throws RemoteException 
     {
-	super(0, socfac, socfac);
+	// super(0, socfac, socfac);
+	super();
 	this.socfac = socfac;
 	this.sb = sb;
 	this.address = addr;

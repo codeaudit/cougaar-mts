@@ -21,11 +21,14 @@
 
 package org.cougaar.core.mts;
 
+import java.net.URI;
 import java.rmi.MarshalException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.ServiceRevokedListener;
@@ -63,6 +66,7 @@ public class RMILinkProtocol
 
     // private MessageAddress myAddress;
     private MT myProxy;
+    private URI ref;
     private HashMap links, remoteRefs;
     private SocketFactory socfac;
     private RMISocketControlService controlService;
@@ -199,8 +203,18 @@ public class RMILinkProtocol
     private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
 	throws Exception 
     {
-	Object object = 
-	    getNameSupport().lookupAddressInNameServer(address, getProtocolType());
+	URI ref =  
+	    getNameSupport().lookupAddressInNameServer(address, 
+						       getProtocolType());
+
+	if (ref == null) return null;
+
+	Object object = null;
+	try {
+	    object = RMIRemoteObjectDecoder.decode(ref);
+	} catch (Exception ex) {
+	    loggingService.error(null, ex);
+	}
 
 	remoteRefs.put(address, object);
 
@@ -210,7 +224,6 @@ public class RMILinkProtocol
 	    controlService.setReferenceAddress((Remote) object, address);
 	
 
-	object = getClientSideProxy(object);
 	if (object instanceof MT) {
 	    return (MT) object;
 	} else {
@@ -225,20 +238,26 @@ public class RMILinkProtocol
     private synchronized void findOrMakeMT() {
 	if (myProxy != null) return;
 	try {
-	    MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
-	    MTImpl impl = makeMTImpl(myAddress, socfac);
-	    myProxy = getServerSideProxy(impl);
+	    MessageAddress myAddress = 
+		getNameSupport().getNodeMessageAddress();
+	    myProxy = makeMTImpl(myAddress, socfac);
+	    Remote remote
+		= UnicastRemoteObject.exportObject(myProxy, 0, socfac, socfac);
+	    ref =  RMIRemoteObjectEncoder.encode(remote);
 	} catch (java.rmi.RemoteException ex) {
 	    loggingService.error(null, ex);
+	} catch (Exception other) {
+	    loggingService.error(null, other);
 	}
     }
+
+
 
     public final void registerMTS(MessageAddress addr) {
 	findOrMakeMT();
 	try {
-	    Object proxy = myProxy;
-	    getNameSupport().registerAgentInNameServer(proxy,addr,
-						  getProtocolType());
+	    getNameSupport().registerAgentInNameServer(ref,addr,
+						       getProtocolType());
 	} catch (Exception e) {
 	    if (loggingService.isErrorEnabled())
 		loggingService.error("Error registering Protocol",
@@ -250,10 +269,9 @@ public class RMILinkProtocol
 	findOrMakeMT();
 	try {
 	    // Assume node-redirect
-	    Object proxy = myProxy;
 	    MessageAddress addr = client.getMessageAddress();
-	    getNameSupport().registerAgentInNameServer(proxy,addr,
-						  getProtocolType());
+	    getNameSupport().registerAgentInNameServer(ref,addr,
+						       getProtocolType());
 	} catch (Exception e) {
 	    if (loggingService.isErrorEnabled())
 		loggingService.error("Error registering client", e);
@@ -264,10 +282,9 @@ public class RMILinkProtocol
     public final void unregisterClient(MessageTransportClient client) {
 	try {
 	    // Assume node-redirect
-	    Object proxy = myProxy;
 	    MessageAddress addr = client.getMessageAddress();
-	    getNameSupport().unregisterAgentInNameServer(proxy,addr,
-						    getProtocolType());
+	    getNameSupport().unregisterAgentInNameServer(ref,addr,
+							 getProtocolType());
 	} catch (Exception e) {
 	    if (loggingService.isErrorEnabled())
 		loggingService.error("Error unregistering client", e);
@@ -299,22 +316,7 @@ public class RMILinkProtocol
 
 
 
-    // Hook to attach aspects to the client-side stub for the remote
-    // MT.
-    private MT getClientSideProxy(Object object) {
-	return (MT) attachAspects(object, MT.class);
-    }
 
-
-    // Hook to attach aspects to the MT server object.  The class tag
-    // here is MTImpl to distinguish it from the client side proxy,
-    // above.  The final object itself only needs to match the MT
-    // interface, it doesn't have to be an MTImpl.
-    private MT getServerSideProxy(Object object) 
-	throws RemoteException
-    {
-	return (MT) attachAspects(object, MTImpl.class);
-    }
 
 
     class Link implements DestinationLink

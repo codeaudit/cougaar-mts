@@ -21,7 +21,9 @@
 
 package org.cougaar.core.mts;
 
+import java.net.URI;
 import java.util.Iterator;
+
 import org.cougaar.core.component.Service;
 
 /**
@@ -29,23 +31,20 @@ import org.cougaar.core.component.Service;
  * NameServers from the rest of the message transport subsystem.  */
 public interface NameSupport extends Service
 {
-    String MTS_DIR =  "MessageTransports";
-    String AGENT_DIR =  "Agents";
-
     MessageAddress  getNodeMessageAddress();
 
-    void registerAgentInNameServer(Object proxy, 
-					  MessageAddress address, 
-					  String transportType);
+    void registerAgentInNameServer(URI reference, 
+				   MessageAddress address, 
+				   String protocol);
 
-    void unregisterAgentInNameServer(Object proxy, 
-					    MessageAddress address, 
-					    String transportType);
+    void unregisterAgentInNameServer(URI reference, 
+				     MessageAddress address, 
+				     String protocol);
 
     void registerMTS(MessageAddress address);
 
-    Object lookupAddressInNameServer(MessageAddress address, 
-					    String transportType);
+    URI lookupAddressInNameServer(MessageAddress address, 
+				  String transportType);
 
     Iterator lookupMulticast(MulticastMessageAddress address);
 

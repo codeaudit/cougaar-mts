@@ -24,6 +24,8 @@ package org.cougaar.core.mts;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.net.URI;
+
 import org.cougaar.core.service.LoggingService;
 
 /**
@@ -93,20 +95,20 @@ public class TraceAspect
 	    return super.getNodeMessageAddress();
 	}
 
-	public void registerAgentInNameServer(Object proxy, 
+	public void registerAgentInNameServer(URI reference, 
 					      MessageAddress addr, 
-					      String type)
+					      String protocol)
 	{
-	    log("NameSupport", "Register Agent " + addr + " " + proxy);
-	    super.registerAgentInNameServer(proxy, addr, type);
+	    log("NameSupport", "Register Agent " + addr + " " + reference);
+	    super.registerAgentInNameServer(reference, addr, protocol);
 	}
 
-	public void unregisterAgentInNameServer(Object proxy, 
+	public void unregisterAgentInNameServer(URI reference, 
 						MessageAddress addr, 
-						String type) 
+						String protocol) 
 	{
-	    log("NameSupport", "Unregister Agent " + addr + " " + proxy);
-	    super.unregisterAgentInNameServer(proxy, addr, type);
+	    log("NameSupport", "Unregister Agent " + addr + " " + reference);
+	    super.unregisterAgentInNameServer(reference, addr, protocol);
 	}
 
 	public void registerMTS(MessageAddress addr)
@@ -115,10 +117,10 @@ public class TraceAspect
 	    super.registerMTS(addr);
 	}
 
-	public Object lookupAddressInNameServer(MessageAddress address, 
-						String type)
+	public URI lookupAddressInNameServer(MessageAddress address, 
+					     String protocol)
 	{
-	    Object res = super.lookupAddressInNameServer(address, type);
+	    URI res = super.lookupAddressInNameServer(address, protocol);
 	    log("NameSupport", "Lookup of " + address + " returned " + res);
 	    return res;
 	}
