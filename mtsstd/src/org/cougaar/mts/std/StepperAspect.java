@@ -362,7 +362,13 @@ public final class StepperAspect
 	// Should these use SwingUtilities,invokeLater?
 	private void messageWait(final AttributedMessage msg) {
 	    send.setEnabled(true);
-	    messageWindow.setText(msg.toString());
+	    StringBuffer buf = new StringBuffer();
+	    buf.append(msg.logString());
+	    buf.append("\nAttributes: ");
+	    buf.append(msg.getAttributesAsString());
+	    buf.append("\nBody: ");
+	    buf.append(msg.getRawMessage().toString());
+	    messageWindow.setText(buf.toString());
 	}
 
 	private void clearMessage() {
