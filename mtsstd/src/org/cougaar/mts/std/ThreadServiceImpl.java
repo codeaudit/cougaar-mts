@@ -49,7 +49,7 @@ class ThreadServiceImpl
     private static final int MaxPoolSizeDefault = 64;
     private static final String MaxRunningCountProp =
 	"org.cougaar.thread.running.max";
-    private static final int MaxRunningCountDefault = 5;
+    private static final int MaxRunningCountDefault = Integer.MAX_VALUE;
 
 
 
@@ -158,6 +158,15 @@ class ThreadServiceImpl
 	    }
 	}
 
+	public int maxRunningThreadCount(ThreadService svc) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		return proxy.maxRunningThreadCount();
+	    } else {
+		return -1;
+	    }
+	}
+
 	public int runningThreadCount(ThreadService svc) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
@@ -166,6 +175,7 @@ class ThreadServiceImpl
 		return -1;
 	    }
 	}
+
 
 	public int activeThreadCount(ThreadService svc) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
@@ -248,8 +258,10 @@ class ThreadServiceImpl
 
 
 
-	// Several of the methods below should probably be
-	// synchronized.
+
+	private int maxRunningThreadCount() {
+	    return maxRunningThreads;
+	}
 
 	private void setMaxRunningThreadCount(int count) {
 	    boolean more = false;
@@ -307,13 +319,17 @@ class ThreadServiceImpl
 	}
 
 	private void removeRunningThread(Thread thread) {
-	    synchronized (this) { --runningThreadCount; }
+	    synchronized (this) { 
+		--runningThreadCount; 
+	    }
 	    proxy.notifyEnd(thread);
 	    runNextPendingThread();
 	}
 
 	private void startRunningThread(Thread thread) {
-	    synchronized (this) { ++runningThreadCount; }
+	    synchronized (this) {
+		++runningThreadCount; 
+	    }
 	    proxy.notifyStart(thread);
 	}
 
@@ -396,6 +412,10 @@ class ThreadServiceImpl
 
 	private void setMaxRunningThreadCount(int count) {
 	    threadPool.setMaxRunningThreadCount(count);
+	}
+
+	private int maxRunningThreadCount() {
+	    return threadPool.maxRunningThreadCount();
 	}
 
 	private int runningThreadCount() {

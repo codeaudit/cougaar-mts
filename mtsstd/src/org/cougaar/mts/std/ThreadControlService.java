@@ -29,5 +29,6 @@ public interface ThreadControlService extends Service
     int runningThreadCount(ThreadService proxy);
     int pendingThreadCount(ThreadService proxy);
     int activeThreadCount(ThreadService proxy);
+    int maxRunningThreadCount(ThreadService proxy);
     void setMaxRunningThreadCount(ThreadService proxy, int count);
 }
