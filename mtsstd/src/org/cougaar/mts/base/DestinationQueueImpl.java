@@ -28,6 +28,7 @@ import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.service.ThreadService;
 import org.cougaar.util.PropertyParser;
 
 /**
@@ -75,6 +76,9 @@ final class DestinationQueueImpl
 
     }
 
+    int getLane() {
+	return ThreadService.WILL_BLOCK_LANE;
+    }
   
     public MessageAddress getDestination() {
 	return destination;

@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.cougaar.core.component.Container;
+import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.util.UnaryPredicate;
 import org.cougaar.mts.std.AttributedMessage;
@@ -62,10 +63,13 @@ abstract class MessageQueue
 
 
 
+    int getLane() {
+	return ThreadService.BEST_EFFORT_LANE;
+    }
 
     public void load() {
 	super.load();
-	thread = threadService.getThread(this, this, name);
+	thread = threadService.getThread(this, this, name, getLane());
     }
 
 
