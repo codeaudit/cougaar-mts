@@ -25,23 +25,14 @@
  */
 
 package org.cougaar.mts.base;
-import java.net.InetAddress;
+
 import java.net.URI;
 import java.rmi.Remote;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.core.service.IncarnationService;
-import org.cougaar.core.service.wp.AddressEntry;
-import org.cougaar.core.service.wp.Callback;
-import org.cougaar.core.service.wp.Response;
-import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.mts.std.RMISocketControlService;
@@ -72,41 +63,21 @@ import org.cougaar.mts.std.RMISocketControlService;
  * the RMI pieces of Alp.
  * */
 public class RMILinkProtocol 
-    extends LinkProtocol
+    extends RPCLinkProtocol
 {
 
     // private MessageAddress myAddress;
     private MT myProxy;
-    private URI ref;
-    private HashMap links;
     private SocketFactory socfac;
     private RMISocketControlService controlService;
-    private Object ipAddrLock = new Object();
-    private ArrayList clients = new ArrayList();
-    private IncarnationService incarnationService;
-    private WhitePagesService wpService;
 
     public RMILinkProtocol() {
 	super(); 
-	links = new HashMap();
 	socfac = getSocketFactory();
     }
 
 
 
-    // Just for testing -- an example of supplying a service from a
-    // LinkProtocol.
-
-    public interface Service extends LinkProtocolService {
-	// RMI-specific methods would go here.
-    }
-
-    private class ServiceProxy 
-	extends LinkProtocol.ServiceProxy 
-	implements Service
-    {
-
-    }
 
     // If LinkProtocols classes want to define this method, eg in
     // order to provide a service, they should not in general invoke
@@ -115,48 +86,13 @@ public class RMILinkProtocol
     // use super_load(), defined in LinkProtocol, which runs the
     // standard load() method without running any intervening ones.
     public void load() {
-	super_load();
+	super.load();
 	ServiceBroker sb = getServiceBroker();
-	sb.addService(Service.class, this);
 
 	// RMISocketControlService could be null
 	controlService = (RMISocketControlService)
 	    sb.getService(this, RMISocketControlService.class, null);
-
-	incarnationService = (IncarnationService)
-	    sb.getService(this, IncarnationService.class, null);
-	if (incarnationService == null && loggingService.isWarnEnabled())
-	    loggingService.warn("Couldn't load IncarnationService");
-
-	wpService = (WhitePagesService)
-	    sb.getService(this, WhitePagesService.class, null);
-	if (wpService == null && loggingService.isWarnEnabled())
-	    loggingService.warn("Couldn't load WhitePagesService");
     }
-
-
-    public Object getService(ServiceBroker sb,
-			     Object requestor, 
-			     Class serviceClass)
-    {
-	if (serviceClass == Service.class) {
-	    return new ServiceProxy();
-	} else {
-	    return null;
-	}
-    }
-
-    public void releaseService(ServiceBroker sb,
-			       Object requestor,
-			       Class serviceClass,
-			       Object service)
-    {
-
-	if (serviceClass == Service.class) {
-	    // no-op for this example
-	}
-    }
-
 
 
 
@@ -218,7 +154,7 @@ public class RMILinkProtocol
 	MessageAttributes result = null;
 	try {
 	    SchedulableStatus.beginNetIO("RMI call");
-	    result = remote.rerouteMessage(message);
+	    result = remote.rerouteMessage(message); // **** RMI-specific
 	} catch (java.rmi.RemoteException remote_ex) {
 	    Throwable cause = remote_ex.getCause();
 	    checkForMisdelivery(cause, message);
@@ -238,6 +174,12 @@ public class RMILinkProtocol
     protected Boolean usesEncryptedSocket() {
 	return Boolean.FALSE;
     }
+
+    protected DestinationLink createDestinationLink(MessageAddress address)
+    {
+	return new RMILink(address);
+    }
+
 
 
     // Standard RMI handling of security and other cougaar-specific io
@@ -283,8 +225,7 @@ public class RMILinkProtocol
 	} 
     }
 
-    // caller synchronizes on ipAddrLock
-    private void findOrMakeMT() {
+    protected void findOrMakeNodeServant() {
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = 
@@ -292,7 +233,7 @@ public class RMILinkProtocol
 	    myProxy = makeMTImpl(myAddress, socfac);
 	    Remote remote
 		= UnicastRemoteObject.exportObject(myProxy, 0, socfac, socfac);
-	    ref =  RMIRemoteObjectEncoder.encode(remote);
+	    setNodeURI(RMIRemoteObjectEncoder.encode(remote));
 	} catch (java.rmi.RemoteException ex) {
 	    loggingService.error(null, ex);
 	} catch (Exception other) {
@@ -302,231 +243,41 @@ public class RMILinkProtocol
 
 
 
-    // Unregister all current clients (inform the WP); close the RMI
-    // listener; remake the RMI impl; re-register clients (WP).
-    public void ipAddressChanged()
+    protected void remakeNodeServant()
     {
-	synchronized (ipAddrLock) {
-	    // update hostname property
-	    try {
-		InetAddress local = InetAddress.getLocalHost();
-		String hostaddr = local.getHostAddress();
-		System.setProperty("java.rmi.server.hostname", hostaddr);
-	    } catch (java.net.UnknownHostException ex) {
-		// log something
-		if (loggingService.isWarnEnabled())
-		    loggingService.warn("Couldn't get localhost: " 
-					+ ex.getMessage());
-	    }
-	    NameSupport ns = getNameSupport();
-	    String type = getProtocolType();
-	    MessageTransportClient client;
-	    for (int i=0; i<clients.size(); i++) {
-		client = (MessageTransportClient) clients.get(i);
-		ns.unregisterAgentInNameServer(ref, client.getMessageAddress(),
-					       type);
-	    }
-	    try {
-		UnicastRemoteObject.unexportObject(myProxy, true);
-	    } catch (java.rmi.NoSuchObjectException ex) {
-		// don't care
-	    }
-	    myProxy = null;
-	    findOrMakeMT();
-	    for (int i=0; i<clients.size(); i++) {
-		client = (MessageTransportClient) clients.get(i);
-		ns.registerAgentInNameServer(ref, client.getMessageAddress(),
-					     type);
-	    }
+	try {
+	    UnicastRemoteObject.unexportObject(myProxy, true); 
+	} catch (java.rmi.NoSuchObjectException ex) {
+	    // don't care
 	}
-    }
-
-    public final void registerClient(MessageTransportClient client) {
-	synchronized (ipAddrLock) {
-	    findOrMakeMT();
-	    try {
-		// Assume node-redirect
-		MessageAddress addr = client.getMessageAddress();
-		getNameSupport().registerAgentInNameServer(ref,addr,
-							   getProtocolType());
-		clients.add(client);
-	    } catch (Exception e) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error("Error registering client", e);
-	    }
-	}
-    }
-
-
-    public final void unregisterClient(MessageTransportClient client) {
-	synchronized (ipAddrLock) {
-	    try {
-		// Assume node-redirect
-		MessageAddress addr = client.getMessageAddress();
-		getNameSupport().unregisterAgentInNameServer(ref,addr,
-							     getProtocolType());
-		clients.remove(client);
-	    } catch (Exception e) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error("Error unregistering client", e);
-	    }
-	}
+	myProxy = null;
+	findOrMakeNodeServant();
     }
 
 
 
-    public boolean addressKnown(MessageAddress address) {
-	if (loggingService.isErrorEnabled())
-	    loggingService.error("The addressKnown method of RMILinkProtocol is no longer supported");
-	Link link =  (Link) links.get(address);
-	return link != null && link.remote != null;
-    }
-
-
-    // Factory methods:
-
-    public DestinationLink getDestinationLink(MessageAddress address) {
-	DestinationLink link = null;
-	synchronized (links) {
-	    link = (DestinationLink) links.get(address);
-	    if (link == null) {
-		link = new Link(address); // attach aspects
-		link = (DestinationLink) 
-		    attachAspects(link, DestinationLink.class);
-		links.put(address, link);
-	    }
-	}
-
-	return link;
-    }
-
-    private class WPCallback 
-	implements Callback
-    {
-	Link link;
-
-	WPCallback(Link link)
-	{
-	    this.link = link;
-	}
-
-	private long extractIncarnation(Map entries) 
-	{
-	    // parse "(.. type=version uri=version:///1234/blah)"
-	    if (entries == null) return 0;
-
-	    AddressEntry ae = (AddressEntry) entries.get("version");
-	    if (ae == null) return 0;
-
-	    try {
-		String path = ae.getURI().getPath();
-		int end = path.indexOf('/', 1);
-		String incn_str = path.substring(1, end);
-		return Long.parseLong(incn_str);
-	    } catch (Exception e) {
-		if (loggingService.isDetailEnabled()) {
-		    loggingService.detail("ignoring invalid version entry: "
-					  +ae);
-		}
-		return 0;
-	    }
-	}
-					    
-	public void execute(Response response) {
-	    Response.GetAll rg = (Response.GetAll) response;
-	    Map entries = rg.getAddressEntries();
-	    AddressEntry entry = null;
-	    long incn = 0;
-	    if (entries != null) {
-		entry = (AddressEntry) entries.get(getProtocolType());
-		incn = extractIncarnation(entries);
-	    }
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("Brand spanking new WP callback: " 
-				     +entry+ 
-				     " incarnation = " +incn);
-	    link.handleWPCallback(entry, incn);
-	}
-    }
-
-    class Link implements DestinationLink,  IncarnationService.Callback
+    protected class RMILink extends Link
     {
 	
-	private MessageAddress target;
-	private MT remote;
-	private boolean lookup_pending = false;
-	private URI lookup_result = null;
-	private Object lookup_lock = new Object();
-	private Object remote_lock = new Object();
-	private long incarnation;
-	private Callback lookup_cb = new WPCallback(this);
 
-
-	protected Link(MessageAddress destination)
+	protected RMILink(MessageAddress destination)
 	{
-	    this.target = destination;
-	    // subscribe to IncarnationService
-	    if (incarnationService != null) {
-		incarnation = incarnationService.getIncarnation(target);
-		incarnationService.subscribe(destination, this);
-	    }
-	}
-
-	// WP callback
-	private void handleWPCallback(AddressEntry entry, long incn)
-	{
-	    synchronized (lookup_lock) {
-		lookup_pending = false;
-		if (incn > incarnation) {
-		    // tell the incarnation service
-		    incarnationService.updateIncarnation(target, incn);
-		    incarnation = incn;
-		}
-		lookup_result =
-		    (entry != null && incn == incarnation)
-		    ? entry.getURI() : null;
-	    }
+	    super(destination);
 	}
 
 
-	private void decache() {
-	    synchronized (remote_lock) {
-		remote = null;
-	    }
-	    synchronized (lookup_lock) {
-		if (!lookup_pending) lookup_result = null;
-	    }
-	}
-
-	private MT lookupRMIObject() 
+	protected Object decodeRemoteRef(URI ref) 
 	    throws Exception 
 	{
+	    MessageAddress target = getDestination();
 	    if (getRegistry().isLocalClient(target)) {
 		// myself as an RMI stub
 		return myProxy;
 	    }
 
-	    URI ref = null;
+	    if (ref == null) return null;
+
 	    Object object = null;
-
-	    synchronized (lookup_lock) {
-		if (lookup_result != null) {
-		    ref = lookup_result;
-		} else if (lookup_pending) {
-		    return  null;
-		} else {
-		    lookup_pending = true;
-		    wpService.getAll(target.getAddress(), lookup_cb);
-		    // The results may have arrived as part of
-		    // registering callback
-		    if (lookup_result != null) {
-			ref = lookup_result;
-		    } else {
-			return null;
-		    }
-		}
-	    }
-
 	    try {
 		// This call can block in net i/o
 		SchedulableStatus.beginNetIO("RMI reference decode");
@@ -555,122 +306,24 @@ public class RMILinkProtocol
 
 
 
-
-	// IncarnationService callback
-	public void incarnationChanged(MessageAddress addr, long incn) {
-	    synchronized (lookup_lock) {
-		if (incn > incarnation) {
-		    // newer value -- decache the stub
-		    incarnation = incn;
-		    decache();
-		} else if (incn < incarnation) {
-		    // out-of-date info
-		    if (loggingService.isWarnEnabled())
-			loggingService.warn("Incarnation service callback has out of date incarnation number " 
-					    +incn+
-					    " for " 
-					    +addr);
-		}
-	    }
-	}
-
-	// NB: Intentionally not synchronized on remote_lock because a
-	// network invocation can happen in lookupRMIObject().  Worst
-	// case scenario: normal return (no exception) but 'remote' has
-	// been reset to null in the meantime.  The two callers
-	// (isValid and forwardMessage) deal with this case.
-	private void cacheRemote() 
-	    throws NameLookupException, UnregisteredNameException
-	{
-	    if (remote == null) {
-		try {
-		    remote = lookupRMIObject();
-		}
-		catch (Exception lookup_failure) {
-		    throw new  NameLookupException(lookup_failure);
-		}
-
-		if (remote == null) 
-		    throw new UnregisteredNameException(target);
-
-	    }
-	}
-
-	public boolean retryFailedMessage(AttributedMessage message,
-					  int retryCount) 
-	{
-	    return true;
-	}
-
     
 	public Class getProtocolClass() {
 	    return RMILinkProtocol.this.getClass();
 	}
 	
 
-	public boolean isValid() {
-	    try {
-		cacheRemote();
-		// Ordinarily cacheRemote either throws an Exception
-		// or caches a non-null reference.  But with the
-		// addition of the IncarnationService callback, the
-		// reference can now be clobbered subsequently by
-		// another thread.  Deal with that here.
-		synchronized (remote_lock) {
-		    return remote != null;
-		}
-	    }
-	    catch (NameLookupException name_ex) {
-		return false;
-	    }
-	    catch (UnregisteredNameException unknown_ex) {
-		// still waiting?
-		return false;
-	    }
-	    catch (Throwable th) {
-		loggingService.error("Can't compute RMI cost", th);
-		return false;
-	    }
-	}
-
-	public int cost(AttributedMessage message) {
-	    synchronized (remote_lock) {
-		if (remote == null)
-		    return Integer.MAX_VALUE;
-		else
-		    return computeCost(message);
-	    }
-	}
-
-	public MessageAddress getDestination() {
-	    return target;
-	}
 
 
-	public MessageAttributes forwardMessage(AttributedMessage message) 
+	protected MessageAttributes forwardByProtocol(Object remote_ref,
+						      AttributedMessage message)
+						      
 	    throws NameLookupException, 
 		   UnregisteredNameException, 
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    MT committed_mt = null;
-	    cacheRemote();
-	    // Ordinarily cacheRemote either throws an Exception or
-	    // caches a non-null reference.  But with the addition of
-	    // the IncarnationService callbacks, the reference can now
-	    // be clobbered subsequently by another thread.  Deal with
-	    // that here.
-	    synchronized (remote_lock) {
-		if (remote == null) {
-		    Exception cause = 
-			new Exception("Inconsistent remote reference cache");
-		    throw new NameLookupException(cause);
-		} else {
-		   committed_mt  = remote;
-		}
-	    }
 	    try {
-		return doForwarding(committed_mt, message);
+		return doForwarding((MT) remote_ref, message);
 	    } 
 	    catch (MisdeliveredMessageException mis) {
 		// force recache of remote
@@ -701,22 +354,6 @@ public class RMILinkProtocol
 		//  Ordinary comm failure
 		throw new CommFailureException(ex);
 	    }
-	}
-
-
-
-	public Object getRemoteReference() {
-	    return remote;
-	}
-
-	public void addMessageAttributes(MessageAttributes attrs) {
-	    attrs.addValue(MessageAttributes.IS_STREAMING_ATTRIBUTE,
-			   Boolean.TRUE);
-	    
-
-	    attrs.addValue(MessageAttributes.ENCRYPTED_SOCKET_ATTRIBUTE,
-			   usesEncryptedSocket());
-
 	}
 
     }
