@@ -126,6 +126,13 @@ public class AttributedMessage
     }
 
 
+    AttributedMessage(Message contents, SimpleMessageAttributes attributes) {
+	super(contents == null ? null : contents.getOriginator(), 
+	      contents == null ? null : contents.getTarget());
+	this.contents = contents;
+	this.attributes = new SimpleMessageAttributes(attributes);
+    }
+
     synchronized void snapshotAttributes() {
 	snapshot = new SimpleMessageAttributes(attributes);
     }

@@ -64,6 +64,22 @@ public class MessageTransportServiceProxy
 	}
     }
 
+
+    public void sendMessage(Message rawMessage, MessageAttributes attributes) {
+	if (attributes instanceof SimpleMessageAttributes) {
+	    SimpleMessageAttributes attrs = (SimpleMessageAttributes) 
+		attributes;
+	    AttributedMessage message=new AttributedMessage(rawMessage, attrs);
+	    if (link.okToSend(message)) {
+		link.sendMessage(message);
+	    }
+	} else {
+	    System.err.println(attributes+ " is not a SimpleMessageAttributes instance");
+	    sendMessage(rawMessage);
+	}
+    }
+
+
     /**
      * Wait for all queued messages for our client to be either
      * delivered or dropped. 
