@@ -159,6 +159,12 @@ public class PreserializingStreamsAspect extends StandardAspect
 		object_in = new ObjectInputStream(raw_is);
 	    byte[] bytes = (byte []) object_in.readObject();
 
+// 	    for (int i=0; i<bytes.length; i++) {
+// 		System.out.print(' ');
+// 		System.out.print(Integer.toHexString(0xFF & bytes[i]));
+// 	    }
+// 	    System.out.println("");
+
 	    System.err.println("Read " +bytes.length+ " bytes");
 
 	    return new ByteArrayInputStream(bytes);

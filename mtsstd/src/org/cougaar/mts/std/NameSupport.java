@@ -24,7 +24,6 @@ package org.cougaar.core.mts;
 import org.cougaar.core.component.Service;
 
 import java.util.Iterator;
-import javax.naming.directory.Attributes;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -50,14 +49,5 @@ public interface NameSupport extends Service
 					    String transportType);
 
     Iterator lookupMulticast(MulticastMessageAddress address);
-
-    /** @deprecated replaced by the topology services */
-    void addToTopology(MessageAddress addr, String category);
-    /** @deprecated replaced by the topology services */
-    void removeFromTopology(MessageAddress addr);
-    /** @deprecated replaced by the topology services */
-    Iterator lookupInTopology(Attributes match, String attribute);
-    /** @deprecated replaced by the topology services */
-    Iterator lookupInTopology(Attributes match, String[] ret_attr);
 
 }

@@ -24,8 +24,6 @@ package org.cougaar.core.mts;
 
 import java.io.PrintWriter;
 import java.io.FileWriter;
-import java.util.Iterator;
-import javax.naming.directory.Attributes;
 
 /**
  * This is a very simple aspect which is mostly for demonstration

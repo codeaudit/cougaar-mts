@@ -23,9 +23,10 @@ package org.cougaar.core.mts;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.Iterator;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttributes;
+
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.service.TopologyEntry;
+import org.cougaar.core.service.TopologyReaderService;
 
 public class ForwardMessageLoggingAspect extends StandardAspect
 {
@@ -34,7 +35,14 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 
     private PrintStream log;
     private boolean madeLog;
+    private TopologyReaderService topologySvc;
 
+    public void load() {
+	super.load();
+	ServiceBroker sb = getServiceBroker();
+	topologySvc = (TopologyReaderService)
+	    sb.getService(this, TopologyReaderService.class, null);
+    }
 
     private synchronized void ensureLog() {
 	if (madeLog) return;
@@ -136,14 +144,14 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	ensureLog();
 	MessageAddress src = msg.getOriginator();
 	MessageAddress dst = msg.getTarget();
-	String dst_node = null;
 	Class pclass = link.getProtocolClass();
 	LinkProtocol protocol = null;
 	long now = System.currentTimeMillis();
 	Object remote = link.getRemoteReference();
 	String remoteIP = 
 	    remote == null ? null : extractInetAddr(remote.toString());
-        //dst_node = getTopologyReaderService().getNodeForAgent(dst.getAddress());
+	TopologyEntry entry = topologySvc.getEntryForAgent(dst.getAddress());
+        String dst_node = entry != null ? entry.getNode() : null;
 
 	synchronized(this) {
 	    log.print(now);

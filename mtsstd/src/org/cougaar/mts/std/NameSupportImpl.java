@@ -322,38 +322,6 @@ public final class NameSupportImpl implements ServiceProvider
 	}
   
 
-        //
-        // These methods should be removed, along with the related
-        // NameSupport methods and delegating implementations.
-        //
-
-	public void addToTopology(MessageAddress addr, String category) {
-          logRemovedTopologyUse();
-	}
-
-	public void removeFromTopology(MessageAddress addr) {
-          logRemovedTopologyUse();
-	}
-
-	public Iterator lookupInTopology(Attributes match, String attribute) {
-          logRemovedTopologyUse();
-          return Collections.EMPTY_LIST.iterator();
-	}
-
-
-	public Iterator lookupInTopology(Attributes match, String[] ret_attr) {
-          logRemovedTopologyUse();
-          return Collections.EMPTY_LIST.iterator();
-	}
-
-        private void logRemovedTopologyUse() {
-          if (loggingService.isErrorEnabled()) {
-            loggingService.error(
-                "MTS topology access has been disabled",
-                (new Exception("Topology client trace")));
-          }
-        }
-
     }
 
 }

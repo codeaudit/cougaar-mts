@@ -29,7 +29,6 @@ import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.MessageAddress;
 
 import java.util.Iterator;
-import javax.naming.directory.Attributes;
 
 abstract public class NameSupportDelegateImplBase implements NameSupport 
 {
@@ -73,20 +72,5 @@ abstract public class NameSupportDelegateImplBase implements NameSupport
 	return nameSupport.lookupMulticast(address);
     }
 
-    public void addToTopology(MessageAddress addr, String category) {
-	nameSupport.addToTopology(addr, category);
-    }
-
-    public void removeFromTopology(MessageAddress addr) {
-	nameSupport.removeFromTopology(addr);
-    }
-
-    public Iterator lookupInTopology(Attributes match, String attribute) {
-	return nameSupport.lookupInTopology(match, attribute);
-    }
-
-    public Iterator lookupInTopology(Attributes match, String[] ret_attr) {
-	return nameSupport.lookupInTopology(match, ret_attr);
-    }
 
 }

@@ -64,28 +64,29 @@ public class ChecksumStreamsAspect extends StandardAspect
     }
 
 
-    void writeLong(OutputStream stream, long x) throws IOException  {
-	byte[] bytes = new byte[8];
-	for (int i=7; i>=0; i--) {
-	    bytes[i] = (byte) (x & 0xFF);
-	    x = x >>> 8;
-	}
-	stream.write(bytes);
-    }
+    // Raw i/o of a long.  Not used anymore
+//     void writeLong(OutputStream stream, long x) throws IOException  {
+// 	byte[] bytes = new byte[8];
+// 	for (int i=7; i>=0; i--) {
+// 	    bytes[i] = (byte) (x & 0xFF);
+// 	    x = x >>> 8;
+// 	}
+// 	stream.write(bytes);
+//     }
 
-    long readLong(InputStream stream) throws IOException {
+//     long readLong(InputStream stream) throws IOException {
 
-	byte[] bytes = new byte[8];
-	int count = stream.read(bytes);
-	long result = 0;
-	for (int i=0; i<8; i++) {
-	    result = result << 8;
-	    // watch out for sign-extension
-	    result = result | (((long) bytes[i]) & 0xFF);
-	}
-	return result;
+// 	byte[] bytes = new byte[8];
+// 	int count = stream.read(bytes);
+// 	long result = 0;
+// 	for (int i=0; i<8; i++) {
+// 	    result = result << 8;
+// 	    // watch out for sign-extension
+// 	    result = result | (((long) bytes[i]) & 0xFF);
+// 	}
+// 	return result;
 
-    }
+//     }
 
 
 
@@ -137,7 +138,7 @@ public class ChecksumStreamsAspect extends StandardAspect
     private class ChecksumMessageWriter
 	extends MessageWriterDelegateImplBase
     {
-	private OutputStream stream;
+	private ObjectOutputStream stream;
 	private long checksum = 0;
 
 	private class ChecksumOutputStream extends FilterOutputStream {
@@ -182,7 +183,7 @@ public class ChecksumStreamsAspect extends StandardAspect
 	    throws java.io.IOException
 	{
 	    OutputStream raw_os = super.getObjectOutputStream(out);
-	    stream = new ChecksumOutputStream(raw_os);
+	    stream = new ObjectOutputStream(new ChecksumOutputStream(raw_os));
 	    return stream;
 	}
 
@@ -191,7 +192,8 @@ public class ChecksumStreamsAspect extends StandardAspect
 	{
 	    //Send the Checksum as a tailer
 	    try {
-		writeLong(stream, checksum);
+		// writeLong(stream, checksum);
+		stream.writeObject(new Long(checksum));
 	    } catch (java.io.IOException iox) {
 		iox.printStackTrace();
 		throw iox;
@@ -209,7 +211,7 @@ public class ChecksumStreamsAspect extends StandardAspect
     private class ChecksumMessageReader
 	extends MessageReaderDelegateImplBase
     {
-	InputStream stream;
+	ObjectInputStream stream;
 	AttributedMessage msg;
 	private long checksum = 0;
 
@@ -266,7 +268,7 @@ public class ChecksumStreamsAspect extends StandardAspect
 	    throws java.io.IOException, ClassNotFoundException
 	{
 	    InputStream raw_is = super.getObjectInputStream(in);
-	    stream = new ChecksumInputStream(raw_is);
+	    stream = new ObjectInputStream(new ChecksumInputStream(raw_is));
 	    return stream;
 	}
 
@@ -278,7 +280,12 @@ public class ChecksumStreamsAspect extends StandardAspect
 	    // computed by the sender.  So grab the computed value
 	    // before reading the remote value.
 	    long sum = checksum; 
-	    long checksum_as_read = readLong(stream);
+	    long checksum_as_read = 0; // readLong(stream);
+	    try {
+		checksum_as_read = ((Long) stream.readObject()).longValue();
+	    } catch (ClassNotFoundException cnf) {
+		cnf.printStackTrace();
+	    }
  	    System.out.println("Read checksum=" +  checksum_as_read +
  			       "  Computed checksum=" + sum);
 
