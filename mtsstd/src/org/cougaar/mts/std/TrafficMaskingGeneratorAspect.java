@@ -29,6 +29,17 @@ import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.*;
 
+/** Generate Message Traffic to mask real cougaar message traffic patterns
+ *  @property org.cougaar.message.trafficGenerator.requestPeriod
+ *    Used to turn on traffic masking by defining a time period between
+ *    fake messages being sent (in ms).  This should only be used without the 
+ *    traffic controller.
+ *
+ *  @property org.cougaar.message.trafficGenerator.replyThinkTime
+ *    Used to define an average think time for fake reply messages 
+ *    being generated in response to the fake request messages.  Value
+ *    should represent a time in ms.  Default is 333ms.
+ **/
 public class TrafficMaskingGeneratorAspect extends StandardAspect 
   implements TrafficMaskingGeneratorService, StateObject 
 {
