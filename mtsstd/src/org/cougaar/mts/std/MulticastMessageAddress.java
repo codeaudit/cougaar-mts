@@ -44,6 +44,24 @@ public class MulticastMessageAddress extends MessageAddress
 	super( CLASS_TAG + clientClass.getName() );
     }
 
+
+    public MulticastMessageAddress(MessageAttributes attrs) {
+	super(attrs);
+    }
+
+    public MulticastMessageAddress(MessageAttributes attrs, String address) {
+	super(attrs, address);
+    }
+
+
+    public MulticastMessageAddress(MessageAttributes attrs, Class clientClass){
+	super(attrs, CLASS_TAG + clientClass.getName() );
+    }
+
+
+
+
+
     public boolean hasReceiverClass() {
 	return getAddress().startsWith(CLASS_TAG);
     }

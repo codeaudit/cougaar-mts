@@ -58,19 +58,12 @@ public class MessageTransportServiceProxy
     /**
      * Redirects the sendMessage to the SendQueue. */
     public void sendMessage(Message rawMessage) {
-	AttributedMessage message = new AttributedMessage(rawMessage);
-	if (link.okToSend(message)) {
-	    link.sendMessage(message);
-	}
+	MessageAttributes attrs = rawMessage.getTarget().getQosAttributes();
+	AttributedMessage message = new AttributedMessage(rawMessage, attrs);
+	if (link.okToSend(message)) link.sendMessage(message);
     }
 
 
-    public void sendMessage(Message rawMessage, MessageAttributes attrs) {
-	AttributedMessage message=new AttributedMessage(rawMessage, attrs);
-	if (link.okToSend(message)) {
-	    link.sendMessage(message);
-	}
-    }
 
 
     /**

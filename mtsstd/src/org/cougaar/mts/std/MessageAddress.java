@@ -40,6 +40,7 @@ public class MessageAddress implements Externalizable {
   protected transient byte[] addressBytes;
   protected transient int _hc = 0;
   protected transient String _as = null;
+    private transient MessageAttributes qosAttributes;
 
   // don't allow subclasses access to default constructor
   public MessageAddress() {}
@@ -49,6 +50,25 @@ public class MessageAddress implements Externalizable {
     _as = address.intern();
     _hc = _as.hashCode();
   }
+
+    public MessageAddress(MessageAttributes qosAttributes,
+			  String address)
+    {
+	this(address);
+	this.qosAttributes = qosAttributes;
+    }
+
+    public MessageAddress(MessageAttributes qosAttributes)
+    {
+	this();
+	this.qosAttributes = qosAttributes;
+    }
+
+
+    public final MessageAttributes getQosAttributes() {
+	return qosAttributes;
+    }
+
 
   /** @return The address of a society member.  This is Society-centric and
    * may not be human readable or parsable.

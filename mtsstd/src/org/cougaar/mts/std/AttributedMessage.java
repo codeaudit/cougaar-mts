@@ -82,6 +82,18 @@ public class AttributedMessage
 	attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
     }
 
+    AttributedMessage(Message contents, MessageAttributes initialAttributes) 
+    {
+	super(contents == null ? null : contents.getOriginator(), 
+	      contents == null ? null : contents.getTarget());
+	this.contents = contents;
+	if (initialAttributes != null)
+	    attributes = initialAttributes.cloneAttributes();
+	else
+	    attributes = new SimpleMessageAttributes();
+	attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
+    }
+
 
     /**
      * Make an AttributedMessage whose content, source and destination
@@ -125,13 +137,6 @@ public class AttributedMessage
 	attributes = initialAttributes.attributes.cloneAttributes();
     }
 
-
-    AttributedMessage(Message contents, MessageAttributes attributes) {
-	super(contents == null ? null : contents.getOriginator(), 
-	      contents == null ? null : contents.getTarget());
-	this.contents = contents;
-	this.attributes = attributes.cloneAttributes();
-    }
 
     synchronized void snapshotAttributes() {
 	snapshot = attributes.cloneAttributes();
