@@ -482,5 +482,17 @@ public class AttributedMessage
 	    " Id: " + getContentsId()+
 	    ">";
     }
+
+    public String toString() {
+      String s = getClass().getName();
+      s = s.substring(s.lastIndexOf('.')+1);
+      return 
+	"("+s+
+        " from="+ getOriginator().getAddress()+
+	" to=" + getTarget().getAddress()+
+        " content="+contents+
+        " attributes="+attributes+
+        ")";
+    }
 }
 
