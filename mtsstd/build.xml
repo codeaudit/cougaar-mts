@@ -169,7 +169,7 @@
     
     <!-- jarfiles required by this module, relative to various other paths -->
     <!-- WARNING: Only relative paths work here. -->
-    <property name="compile.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.sys}/log4j.jar,${target.sys}/servlet.jar"/>
+    <property name="compile.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.lib}/webserver.jar,${target.sys}/log4j.jar,${target.sys}/servlet.jar"/>
     <!-- Put absolute paths on this list, in the form of a path. -->
     <property name="compile.abs.jarlist" value=""/>
 
@@ -178,7 +178,7 @@
 
     <!-- Extra jars needed at run / unit-test time. -->
     <!-- WARNING: Only relative paths work here. -->
-    <property name="run.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.sys}/log4j.jar,${target.sys}/servlet.jar"/>
+    <property name="run.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.lib}/webserver.jar,${target.sys}/log4j.jar,${target.sys}/servlet.jar"/>
     <!-- Put absolute paths on this list, in the form of a path. -->
     <property name="run.abs.jarlist" value=""/>
     
@@ -425,7 +425,7 @@
     <!-- ========================================================== -->
     <!-- Compiles the Module Code			                -->
     <!-- ========================================================== -->	
-    <target name="compile" depends="prepare, defrunner, really-compile, rmic-source"
+    <target name="compile" depends="prepare, defrunner, custom.codegen, really-compile, rmic-source"
 	    description="Compile the source Code"> </target>
 
     <!-- See if the jarfile needs recompiling -->
@@ -475,6 +475,12 @@
     </target>
     <target name="really.install" depends="install.jar, install.lib">
     </target>
+    <target name="custom.codegen" if="has.custom.xml">
+      <ant antfile="${custom.xml}" dir="${MODSOURCE}" target="codegen" inheritAll="true"/>
+    </target>
+    <target name="custom.clean" if="has.custom.xml">
+      <ant antfile="${custom.xml}" dir="${MODSOURCE}" target="clean" inheritAll="true"/>
+    </target>
     <target name="pre.install" if="has.custom.xml">
       <ant antfile="${custom.xml}" dir="${MODSOURCE}" target="pre.install" inheritAll="true"/>
     </target>
@@ -505,7 +511,7 @@
     <!-- ========================================================== -->
     <!-- Clean up all built code                    	-->
     <!-- ========================================================== -->
-    <target name="clean" depends="clean-gencode" description="Delete compiled code">
+    <target name="clean" depends="clean-gencode, custom.clean" description="Delete compiled code">
       <delete dir="${module.classes}" />
       <delete>
 	<fileset dir="${target.dir}" includes="**/${module.jar}" />
