@@ -37,7 +37,6 @@ import org.cougaar.core.service.LoggingService;
 public class SequenceAspect extends StandardAspect
 { 
 
-    private static int  count=1;
     private static final String SEQ = 
 	"org.cougaar.message.transport.sequencenumber";
     private static final String SEQ_SEND_MAP_ATTR =
@@ -52,9 +51,7 @@ public class SequenceAspect extends StandardAspect
     private static Comparator comparator = new MessageComparator();
 
     public SequenceAspect() {
-	
     }
-
 
     public Object getDelegate(Object delegate, Class type) 
     {
@@ -65,7 +62,6 @@ public class SequenceAspect extends StandardAspect
 	}
     }
 
-
     public Object getReverseDelegate(Object delegate, Class type) 
     {
 	if (type == ReceiveLink.class) {
@@ -74,7 +70,6 @@ public class SequenceAspect extends StandardAspect
 	    return null;
 	}
     }
-
 
     private static int getSequenceNumber(Object message) {
 	AttributedMessage m = (AttributedMessage) message;
@@ -89,7 +84,6 @@ public class SequenceAspect extends StandardAspect
 	private SequencedSendLink(SendLink link) {
 	    super(link);
 	}
-
 
 	// This can't be done in the constructor, since that runs when
 	// the client first requests the MessageTransportService (too
@@ -223,7 +217,6 @@ public class SequenceAspect extends StandardAspect
 		return meta;
 	    }
 	}
-
 
     private class SequencedReceiveLink extends ReceiveLinkDelegateImplBase {
 	HashMap conversationState;

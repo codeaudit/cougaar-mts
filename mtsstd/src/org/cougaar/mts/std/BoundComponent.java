@@ -44,7 +44,6 @@ abstract public class BoundComponent
     private NameSupport nameSupport;
     private AspectSupport aspectSupport;
     private ServiceBroker sb;
-    private Properties parameters;
 
     protected LoggingService loggingService;
     protected ThreadService threadService;

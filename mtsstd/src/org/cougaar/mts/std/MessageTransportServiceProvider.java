@@ -216,7 +216,6 @@ implements ServiceProvider
     public void loadHighPriorityComponents() {
 	super.loadHighPriorityComponents();
 
-	ServiceBroker sb = getServiceBroker();
 	ServiceBroker csb = getChildServiceBroker();
 
 	AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);

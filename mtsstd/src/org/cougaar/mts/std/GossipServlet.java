@@ -63,9 +63,9 @@ public class GossipServlet
     public void printPage(HttpServletRequest request,
 			  PrintWriter out)
     {
-	String reset_string = request.getParameter("reset");
-	boolean reset = reset_string != null && 
-	    reset_string.equalsIgnoreCase("true");
+// 	String reset_string = request.getParameter("reset");
+// 	boolean reset = reset_string != null && 
+// 	    reset_string.equalsIgnoreCase("true");
 
 	GossipTrafficRecord stats = null;
 	if (statisticsService!=null) {

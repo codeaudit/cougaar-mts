@@ -197,7 +197,6 @@ public class CompressingStreamsAspect extends StandardAspect
 	    throws java.io.IOException, ClassNotFoundException
 	{
 	    InputStream raw_is = super.getObjectInputStream(in);
-	    Inflater inflator = new Inflater();
 	    inf_in = new InflaterInputStream(raw_is);
 	    return inf_in;
 	}

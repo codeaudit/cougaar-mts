@@ -150,7 +150,6 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	MessageAddress dst = msg.getTarget();
 	String dst_agent = dst.getAddress();
 	Class pclass = link.getProtocolClass();
-	LinkProtocol protocol = null;
 	long now = System.currentTimeMillis();
 	Object remote = link.getRemoteReference();
 	String remoteIP = 

@@ -69,7 +69,6 @@ public class MetricsTestAspect
 	long now = System.currentTimeMillis();
 	long updateDelta = now-lastUpdate;
 	long value = ((Metric) arg).longValue();
-	long valueDelta = value;
 	    
 	System.out.println("Update Time=" +updateDelta +
 			   " Value =" + arg);

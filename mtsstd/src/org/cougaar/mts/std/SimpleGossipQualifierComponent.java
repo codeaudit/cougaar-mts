@@ -94,7 +94,6 @@ public class SimpleGossipQualifierComponent
 
 	public MetricNotificationQualifier getNotificationQualifier(String key)
 	{
-	    String classname = null;
 	    if (key.matches("^Agent_.*_((Spoke)|(Heard))Time$")) {
 		// These values are milliseconds.
 		return new DeltaValueQualifier(5000.0);
