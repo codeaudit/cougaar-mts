@@ -92,9 +92,11 @@ class MessageTransportRegistry
     }
 
     private void removeLocalClient(MessageTransportClient client) {
+	MessageAddress key = client.getMessageAddress();
 	synchronized (lock) {
 	    try {
-		myClients.remove(client.getMessageAddress());
+		myClients.remove(key);
+		receiveLinks.remove(key);
 	    } catch (Exception e) {}
 	}
     }
