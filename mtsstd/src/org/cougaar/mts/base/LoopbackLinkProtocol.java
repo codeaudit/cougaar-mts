@@ -90,7 +90,7 @@ public class LoopbackLinkProtocol
 	
 
 	public boolean isValid() {
-	    return true;
+	    return getRegistry().isLocalClient(address);
 	}
 
 	public MessageAttributes forwardMessage(AttributedMessage message) 

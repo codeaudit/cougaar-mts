@@ -75,20 +75,22 @@ final class DestinationQueueImpl
 	    while (position < destinationLinks.size()) {
 		next = (DestinationLink) destinationLinks.get(position);
 		if (next.isValid()) {
-		    if (loggingService.isInfoEnabled())
-			loggingService.info("Link " +next.getProtocolClass()+
+		    if (loggingService.isDebugEnabled())
+			loggingService.debug("Link " +next.getProtocolClass()+
 					    " [" +position+
-					    "] is valid");
+					    "] for " 
+					    +next.getDestination()+
+					    " is valid");
 		    return;
 		}
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("Link " +next.getProtocolClass()+
+		if (loggingService.isDebugEnabled())
+		    loggingService.debug("Link " +next.getProtocolClass()+
 					" [" +position+
-					"] is not valid");
+					"] for " 
+					+next.getDestination()+
+					" is not valid");
 		++position;
 	    }
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("No more valid links");
 	    next = null;
 	}
 
@@ -195,60 +197,65 @@ final class DestinationQueueImpl
 	}
 
 	Iterator links = new LinkIterator();
-	DestinationLink link = 
-	    selectionPolicy.selectLink(links, message, previous,
-				       retryCount, lastException);
-	if (link != null) {
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("To Agent="+destination+
-				     " Selected Protocol " +
-				     link.getProtocolClass());
-	    try {
-		link.addMessageAttributes(message);
-		link.forwardMessage(message);
-		resetState();
-		return;
-	    } catch (UnregisteredNameException no_name) {
-		lastException = no_name;
-		// nothing to say here
-	    } catch (NameLookupException lookup_error) {
-		lastException = lookup_error;
-		if (loggingService.isErrorEnabled()) 
-		    loggingService.error(null, lookup_error);
-	    } catch (CommFailureException comm_failure) {
-		Exception cause = (Exception) comm_failure.getCause();	
-                if (loggingService.isWarnEnabled()) {
-		  String msg = "Failure in communication, message " +message+
-		      " caused by \n" +cause;
-                  loggingService.warn(msg);
-                  if (loggingService.isInfoEnabled()) {
-                      loggingService.info("", cause);
-                  }
-                }
-		if (cause instanceof DontRetryException) {
-		    // Act as if the message has gone through.
+	if (!links.hasNext()) {
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("No valid links to " +destination);
+	} else {
+	    DestinationLink link = 
+		selectionPolicy.selectLink(links, message, previous,
+					   retryCount, lastException);
+	    if (link != null) {
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("To Agent="+destination+
+					 " Selected Protocol " +
+					 link.getProtocolClass());
+		try {
+		    link.addMessageAttributes(message);
+		    link.forwardMessage(message);
 		    resetState();
 		    return;
-		} else {
-		    // This is some other kind of CommFailure, not
-		    // related to security.  Retry.
-		    lastException = comm_failure;
+		} catch (UnregisteredNameException no_name) {
+		    lastException = no_name;
+		    // nothing to say here
+		} catch (NameLookupException lookup_error) {
+		    lastException = lookup_error;
+		    if (loggingService.isErrorEnabled()) 
+			loggingService.error(null, lookup_error);
+		} catch (CommFailureException comm_failure) {
+		    Exception cause = (Exception) comm_failure.getCause();	
+		    if (loggingService.isWarnEnabled()) {
+			String msg = "Failure in communication, message " 
+			    +message+
+			    " caused by \n" +cause;
+			loggingService.warn(msg);
+			if (loggingService.isInfoEnabled()) {
+			    loggingService.info("", cause);
+			}
+		    }
+		    if (cause instanceof DontRetryException) {
+			// Act as if the message has gone through.
+			resetState();
+			return;
+		    } else {
+			// This is some other kind of CommFailure, not
+			// related to security.  Retry.
+			lastException = comm_failure;
+		    }
+		} catch (MisdeliveredMessageException misd) {
+		    lastException = misd;
+		    if (loggingService.isDebugEnabled()) 
+			loggingService.debug(misd.toString());
 		}
-	    } catch (MisdeliveredMessageException misd) {
-		lastException = misd;
-		if (loggingService.isDebugEnabled()) 
-		    loggingService.debug(misd.toString());
-	    }
 
-	    if (!link.retryFailedMessage(message, retryCount)) {
-		resetState();
-		return;
+		if (!link.retryFailedMessage(message, retryCount)) {
+		    resetState();
+		    return;
+		}
+	    } else if (loggingService.isInfoEnabled()) {
+		loggingService.info("No Protocol selected for Agent" +
+				     message.getTarget());
 	    }
-	} else if (loggingService.isDebugEnabled()) {
-	    loggingService.debug("No Protocol selected for Agent" +
-				 message.getTarget());
 	}
-
 
 	retryCount++;
 	previous = new AttributedMessage(message);
