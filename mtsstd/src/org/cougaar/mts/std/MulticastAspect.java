@@ -127,26 +127,23 @@ public class MulticastAspect extends StandardAspect
 	    this.server = server;
 	}
 	
-	public void deliverMessage(Message msg) 
+	public void deliverMessage(Message msg, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
 	    if (msg instanceof MulticastMessageEnvelope) {
 		msg = ((MulticastMessageEnvelope) msg).getContents();
-		MulticastMessageAddress addr = 
-		    (MulticastMessageAddress) msg.getTarget();
-		Object lock = registry.getLock();
-		synchronized (lock) {
-		    Iterator i = registry.findLocalMulticastReceiveLinks(addr);
-		    while (i.hasNext()) {
-			ReceiveLink link = (ReceiveLink) i.next();
-			link.deliverMessage(msg);
-			if (Debug.debugMulticast())
-			    System.out.println("### MCAST: Delivering to "
-					       + link);
-		    }
+		dest = msg.getTarget();
+		MulticastMessageAddress addr = (MulticastMessageAddress) dest;
+		Iterator i = registry.findLocalMulticastReceivers(addr);
+		while (i.hasNext()) {
+		    dest = (MessageAddress) i.next();
+		    server.deliverMessage(msg, dest);
+		    if (Debug.debugMulticast())
+			System.out.println("### MCAST: Delivering to "
+					   + dest);
 		}
 	    } else {	
-		server.deliverMessage(msg);
+		server.deliverMessage(msg, dest);
 	    }
 	}
 	

@@ -11,6 +11,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
+import org.cougaar.core.society.MessageAddress;
 
 
 /**
@@ -27,7 +28,7 @@ import org.cougaar.core.society.Message;
 
 public interface MessageDeliverer
 {
-    public void deliverMessage(Message message)
+    public void deliverMessage(Message message, MessageAddress dest)
 	throws MisdeliveredMessageException;
     public boolean matches(String name);
 

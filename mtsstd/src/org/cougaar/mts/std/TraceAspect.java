@@ -237,11 +237,11 @@ public class TraceAspect
 	    this.server = server;
 	}
 	
-	public void deliverMessage(Message message) 
+	public void deliverMessage(Message message, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
 	    log("MessageDeliverer", message.toString());
-	    server.deliverMessage(message);
+	    server.deliverMessage(message, dest);
 	}
 	
 	public boolean matches(String name) {

@@ -40,20 +40,20 @@ public class MessageDelivererImpl implements MessageDeliverer
      * Forward the message on to the appropriate ReceiveLink, or links
      * in the case of a MulticastMessageAddress.  The lookup is
      * handled by the MessageTransportRegistry. */
-    public void deliverMessage(Message message) 
+    public void deliverMessage(Message message, MessageAddress addr) 
 	throws MisdeliveredMessageException
     {
 	if (message == null) return;
-	MessageAddress addr = message.getTarget();
-	Object lock = registry.getLock();
-	synchronized (lock) {
+	synchronized (registry) {
+	    // This is locked to prevent the receiver from
+	    // unregistering between the lookup and the delivery.
 	    ReceiveLink link = registry.findLocalReceiveLink(addr);
 	    if (link != null) {
 		link.deliverMessage(message);
-	    } else {
-		throw new MisdeliveredMessageException(message);
+		return;
 	    }
 	}
+	throw new MisdeliveredMessageException(message);
     }
 
 

@@ -58,14 +58,12 @@ class MessageTransportRegistry
     private MessageTransportFactory transportFactory;
     private ReceiveLinkFactory receiveLinkFactory;
     private NameSupport nameSupport;
-    private Object lock;
 
     private MessageTransportRegistry(String name, 
 				     MessageTransportServiceProvider provider)
     {
 	this.name = name;
 	this.serviceProvider = provider;
-	this.lock = new Object();
     }
 
     void setNameSupport(NameSupport nameSupport) {
@@ -105,7 +103,7 @@ class MessageTransportRegistry
     private void addLocalClient(MessageTransportClient client) {
 	MessageAddress key = client.getMessageAddress();
 	try {
-	    synchronized (lock) {
+	    synchronized (this) {
 		ReceiveLink link = receiveLinkFactory.getReceiveLink(client);
 		receiveLinks.put(key, link);
 	    }
@@ -116,7 +114,7 @@ class MessageTransportRegistry
 
     private void removeLocalClient(MessageTransportClient client) {
 	MessageAddress key = client.getMessageAddress();
-	synchronized (lock) {
+	synchronized (this) {
 	    try {
 		receiveLinks.remove(key);
 	    } catch (Exception e) {}
@@ -124,7 +122,7 @@ class MessageTransportRegistry
     }
 
     boolean isLocalClient(MessageAddress id) {
-	synchronized (lock) {
+	synchronized (this) {
 	    return receiveLinks.get(id) != null ||
 		id.equals(MessageAddress.LOCAL);
 	}
@@ -142,22 +140,20 @@ class MessageTransportRegistry
 
     // this is a slow implementation, as it conses a new set each time.
     // Better alternatives surely exist.
-    Iterator findLocalMulticastReceiveLinks(MulticastMessageAddress addr)
+    Iterator findLocalMulticastReceivers(MulticastMessageAddress addr)
     {
-	return new ArrayList(receiveLinks.values()).iterator();
+	return new ArrayList(receiveLinks.keySet()).iterator();
     }
+
+
+
+
 
 
     Iterator findRemoteMulticastTransports(MulticastMessageAddress addr)
     {
 	return nameSupport.lookupMulticast(addr);
     }
-
-
-    Object getLock() {
-	return lock;
-    }
-
 
 
 

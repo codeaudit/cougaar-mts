@@ -11,6 +11,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
+import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.MessageSecurityManager;
 import org.cougaar.core.society.SecureMessage;
 
@@ -140,10 +141,10 @@ public class SecurityAspect extends StandardAspect
 	    this.deliverer = deliverer;
 	}
 
-	public void deliverMessage(Message m) 
+	public void deliverMessage(Message m, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    deliverer.deliverMessage(unsecure(m));
+	    deliverer.deliverMessage(unsecure(m), dest);
 	}
 
 	public boolean matches(String name) {

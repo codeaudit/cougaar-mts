@@ -11,6 +11,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
+import org.cougaar.core.society.MessageAddress;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -101,10 +102,10 @@ public class WatcherAspect
 	    this.server = server;
 	}
 	
-	public void deliverMessage(Message message) 
+	public void deliverMessage(Message message, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    server.deliverMessage(message);
+	    server.deliverMessage(message, dest);
 	    notifyWatchersOfReceive(message);
 	}
 	

@@ -33,10 +33,10 @@ public class MTImpl extends UnicastRemoteObject implements MT
 	this.deliverer = deliverer;
     }
 
-    public void rerouteMessage(Message m) 
+    public void rerouteMessage(Message message) 
 	throws MisdeliveredMessageException
     {
-	deliverer.deliverMessage(m);
+	deliverer.deliverMessage(message, message.getTarget());
     }
 
     public MessageAddress getMessageAddress() {

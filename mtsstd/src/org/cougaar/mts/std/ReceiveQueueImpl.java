@@ -36,6 +36,16 @@ public class ReceiveQueueImpl extends MessageQueue implements ReceiveQueue
     }
 
 
+    private void sendOne(Message message, MessageAddress dest) {
+	ReceiveLink link = registry.findLocalReceiveLink(dest);
+	if (link != null) {
+	    link.deliverMessage(message);
+	} else {
+	    throw new RuntimeException("Misdelivered message "
+				       + message +
+				       " sent to "+this);
+	}
+    }
 
     /**
      * Forward the message on to the appropriate ReceiveLink, or links
@@ -43,26 +53,16 @@ public class ReceiveQueueImpl extends MessageQueue implements ReceiveQueue
      * handled by the MessageTransportRegistry. */
     private void sendMessageToClient(Message message) {
 	if (message == null) return;
-	try {
-	    MessageAddress addr = message.getTarget();
-	    if (addr instanceof MulticastMessageAddress) {
-		Iterator i = registry.findLocalMulticastReceiveLinks((MulticastMessageAddress)addr); 
-		while (i.hasNext()) {
-		    ReceiveLink link = (ReceiveLink) i.next();
-		    link.deliverMessage(message);
-		}
-	    } else {
-		ReceiveLink link = registry.findLocalReceiveLink(addr);
-		if (link != null) {
-		    link.deliverMessage(message);
-		} else {
-		    throw new RuntimeException("Misdelivered message "
-					       + message +
-					       " sent to "+this);
-		}
+	MessageAddress addr = message.getTarget();
+	if (addr instanceof MulticastMessageAddress) {
+	    Iterator i = registry.findLocalMulticastReceivers((MulticastMessageAddress)addr); 
+	    while (i.hasNext()) {
+		MessageAddress dest = (MessageAddress) i.next();
+		sendOne(message, dest);
 	    }
-	} catch (Exception e) {
-		e.printStackTrace();
+
+	} else {
+	    sendOne(message, addr);
 	}
     }
 

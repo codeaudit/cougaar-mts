@@ -73,7 +73,7 @@ class LoopbackMessageTransport
     public void forwardMessage(Message message) 
 	throws MisdeliveredMessageException
     {
-	deliverer.deliverMessage(message);
+	deliverer.deliverMessage(message, message.getTarget());
     }
 
 
