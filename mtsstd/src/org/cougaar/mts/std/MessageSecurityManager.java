@@ -31,7 +31,7 @@ public interface MessageSecurityManager {
   /** Returns a message which has been cryptologically secured.
    * Implementations may destructively modify the original message
    * in order to actually send the original message.
-   * @returns a SecureMessage marked Message
+   * @return a SecureMessage marked Message
    **/
   Message secureMessage(Message m);
 
