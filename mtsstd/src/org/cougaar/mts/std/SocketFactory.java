@@ -123,7 +123,6 @@ public class SocketFactory
 	    return SSLSocketFactory.getDefault();
 	}
 
-	System.out.println("#### Using NAI's socket factory"); 
 	try {
 	    Method meth = cls.getMethod("getDefault", FORMALS);
 	    return (javax.net.SocketFactory) meth.invoke(cls, ACTUALS);
