@@ -48,10 +48,7 @@ abstract class MessageQueue
     // Simplified queue
     private static class SimpleQueue extends LinkedList {
 	Object next() {
-	    if (isEmpty()) return null;
-	    Object x = getFirst();
-	    removeFirst();
-	    return x;
+	    return removeFirst();
 	}
     }
 
