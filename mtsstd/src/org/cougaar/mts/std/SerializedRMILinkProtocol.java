@@ -61,7 +61,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	    byte[] messageBytes = null;
 	    try {
 		messageBytes = SerializationUtils.toByteArray(message);
-	    } catch (MessageSecurityException mex) {
+	    } catch (DontRetryException mex) {
 		throw new CommFailureException(mex);
 	    } catch (java.io.IOException iox) {
 		// What would this mean?
@@ -70,7 +70,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	    byte[] res = null;
 	    try {
 		res = ((SerializedMT) remote).rerouteMessage(messageBytes);
-	    } catch (MessageSecurityException mex) {
+	    } catch (DontRetryException mex) {
 		throw new CommFailureException(mex);
 	    }
 
@@ -78,7 +78,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	    try {
 		attrs = (MessageAttributes) 
 		    SerializationUtils.fromByteArray(res);
-	    } catch (MessageSecurityException mex) {
+	    } catch (DontRetryException mex) {
 		throw new CommFailureException(mex);
 	    } catch (java.io.IOException iox) {
 		// What would this mean?

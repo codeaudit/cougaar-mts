@@ -337,8 +337,10 @@ public class AttributedMessage
 
 	    writer.finishOutput();
 	    writer.postProcess();
-	} catch (GeneralSecurityException ex) {
-	    throw new MessageSecurityException(ex);
+	} catch (java.io.NotSerializableException ex1) {
+	    throw new MessageSerializationException(ex1);
+	} catch (GeneralSecurityException ex2) {
+	    throw new MessageSecurityException(ex2);
 	}
     }
 
@@ -384,11 +386,20 @@ public class AttributedMessage
 
 	    reader.finishInput();
 	    reader.postProcess();
-	} catch (GeneralSecurityException ex) {
+	} catch (java.io.NotSerializableException ex1) {
+	    throwDelayedException(new MessageSerializationException(ex1));
+	} catch (GeneralSecurityException ex2) {
+	    throwDelayedException(new MessageSecurityException(ex2));
+	}
+    }
+
+    private void throwDelayedException(java.io.IOException ex) 
+	throws java.io.IOException
+    {
 	    if (loggingService != null) {
 		MessageAddress src = getOriginator();
 		MessageAddress dst = getTarget();
-		String msg = "Receiver Security Exception " +src+ "->" +dst;
+		String msg = "Receiver Exception " +src+ "->" +dst;
 		loggingService.error(msg, ex);
 	    }
 
@@ -405,8 +416,7 @@ public class AttributedMessage
 	    try { Thread.sleep(1000); } 
 	    catch (InterruptedException xxx) {}
 
-	    throw new MessageSecurityException(ex);
-	}
+	    throw ex;
     }
 }
 

@@ -21,13 +21,13 @@
 
 package org.cougaar.core.mts;
 
-public class MessageSecurityException 
+public class MessageSerializationException 
     extends DontRetryException
     implements java.io.Serializable
 {
     
 
-    MessageSecurityException(Exception cause) 
+    MessageSerializationException(Exception cause) 
     {
 	super(cause);
     }

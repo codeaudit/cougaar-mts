@@ -148,11 +148,12 @@ final class DestinationQueueImpl
 		    loggingService.error(null, lookup_error);
 	    } catch (CommFailureException comm_failure) {
 		Exception cause = comm_failure.getException();
-		if (cause instanceof MessageSecurityException) {
+		if (cause instanceof DontRetryException) {
 		    // Always log these.
-		    String tag = "Security Exception " 
+		    String tag = "DontRetryException <Message " 
 			+message.getOriginator()+ "->" 
-			+message.getTarget();
+			+message.getTarget()+ " "
+			+Integer.toString(message.hashCode())+ ">";
 		    loggingService.error(tag, cause.getCause());
 
 		    // Act as if the message has gone through.

@@ -183,12 +183,12 @@ public class RMILinkProtocol
     {
 	Throwable cause = ex.getCause();
 	if (ex instanceof java.rmi.MarshalException) {
-	    if (cause instanceof MessageSecurityException) {
+	    if (cause instanceof DontRetryException) {
 		throw new CommFailureException((Exception) cause);
 	    }
 	} else if (cause instanceof java.rmi.UnmarshalException) {
 	    Throwable remote_cause = cause.getCause();
-	    if (remote_cause instanceof MessageSecurityException) {
+	    if (remote_cause instanceof DontRetryException) {
 		throw new CommFailureException((Exception) remote_cause);
 	    }
 	} 
