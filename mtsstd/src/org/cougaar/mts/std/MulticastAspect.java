@@ -60,9 +60,6 @@ public class MulticastAspect extends StandardAspect
 	    super(message, message.getOriginator(), destination);
 	}
 
-	protected Message getContents() {
-	    return super.getContents();
-	}
     
     }
 
