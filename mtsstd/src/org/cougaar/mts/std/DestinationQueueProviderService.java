@@ -25,5 +25,5 @@ import org.cougaar.core.component.Service;
 
 public interface DestinationQueueProviderService extends Service
 {
-    public DestinationQueue getDestinationQueue(MessageAddress destination);
+    DestinationQueue getDestinationQueue(MessageAddress destination);
 }

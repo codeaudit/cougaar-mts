@@ -25,10 +25,10 @@ import org.cougaar.core.component.Service;
 
 public interface StepService extends Service
 {
-    public void pauseAll();
-    public void resumeAll();
-    public void stepAll();
-    public void pause(MessageAddress destination);
-    public void resume(MessageAddress destination);
-    public void step(MessageAddress destination);
+    void pauseAll();
+    void resumeAll();
+    void stepAll();
+    void pause(MessageAddress destination);
+    void resume(MessageAddress destination);
+    void step(MessageAddress destination);
 }

@@ -37,16 +37,16 @@ public interface MessageTransportRegistryService extends Service
     // public void setNameSupport(NameSupport nameSupport);
     // public void setReceiveLinkFactory(ReceiveLinkFactory receiveLinkFactory);
 
-    public void addLinkProtocol(LinkProtocol lp);
-    public String getIdentifier();
-    public boolean isLocalClient(MessageAddress id);
-    public ReceiveLink findLocalReceiveLink(MessageAddress id);
-    public Iterator findLocalMulticastReceivers(MulticastMessageAddress addr);
-    public Iterator findRemoteMulticastTransports(MulticastMessageAddress addr);
-    public MessageAddress getLocalAddress();
-    public void registerClient(MessageTransportClient client);
-    public void unregisterClient(MessageTransportClient client);
-    public void registerMTS(MessageTransportClient client);
-    public boolean addressKnown(MessageAddress address);
-    public ArrayList getDestinationLinks(MessageAddress destination);
+    void addLinkProtocol(LinkProtocol lp);
+    String getIdentifier();
+    boolean isLocalClient(MessageAddress id);
+    ReceiveLink findLocalReceiveLink(MessageAddress id);
+    Iterator findLocalMulticastReceivers(MulticastMessageAddress addr);
+    Iterator findRemoteMulticastTransports(MulticastMessageAddress addr);
+    MessageAddress getLocalAddress();
+    void registerClient(MessageTransportClient client);
+    void unregisterClient(MessageTransportClient client);
+    void registerMTS(MessageTransportClient client);
+    boolean addressKnown(MessageAddress address);
+    ArrayList getDestinationLinks(MessageAddress destination);
 }
