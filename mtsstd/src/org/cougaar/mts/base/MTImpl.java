@@ -98,9 +98,6 @@ public class MTImpl extends RemoteObject implements MT
 		if (next instanceof RMILinkProtocol.Link) {
 		    RMILinkProtocol.Link link = (RMILinkProtocol.Link) next;
 		    if (link.getDestination().equals(sender)) {
-			if (loggingService.isDebugEnabled())
-			    loggingService.debug("Decaching reference for " +
-						 sender);
 			link.incarnationChanged();
 			return;
 		    }
@@ -118,17 +115,23 @@ public class MTImpl extends RemoteObject implements MT
 	    message.getAttribute(AttributeConstants.INCARNATION_ATTRIBUTE);
 	Long old = (Long) incarnation_numbers.get(sender_string);
 	if (incarnation == null) {
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("No incarnation number on message " +
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("No incarnation number in message " +
 				     message);
-	    
 	} else if (old == null || old.longValue() < incarnation.longValue()) {
 	    // First message from this sender or new incarnation 
+	    if (old != null && loggingService.isInfoEnabled())
+		loggingService.info("Detected new incarnation number " 
+				     +incarnation+ " in message " +message);
 	    incarnation_numbers.put(sender_string, incarnation);
 	    decacheDestinationLink(sender);
 	} else if (old.longValue() > incarnation.longValue()) {
 	    // Bogus message from old incarnation.  Pretend normal
 	    // delivery but don't process it.
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("Detected obsolete incarnation number " 
+				     +incarnation+ " in message " +message+
+				    "\nShould be " +old);
 	    return DummyReturn;
 	}
 	return deliverer.deliverMessage(message, message.getTarget());
