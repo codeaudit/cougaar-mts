@@ -81,11 +81,9 @@ public class DestinationQueueFactory
 		System.err.println("Ilegal request for " +
 				   "DestinationQueueProviderService from " 
 				   +requestor);
-		return null;
 	    }
-	} else {
-	    return null;
-	}
+	} 
+	return null;
     }
 
     public void releaseService(ServiceBroker sb, 

@@ -71,10 +71,13 @@ public class LinkSelectionPolicyServiceProvider
 			     Class serviceClass) 
     {
 	if (serviceClass == LinkSelectionPolicy.class) {
-	    return policy;
-	} else {
-	    return null;
+	    if (requestor instanceof DestinationQueueImpl)
+		return policy;
+	    else
+		System.err.println("Illegal request for LinkSelectionPolicy from "
+				   + requestor);
 	}
+	return null;
     }
 
 

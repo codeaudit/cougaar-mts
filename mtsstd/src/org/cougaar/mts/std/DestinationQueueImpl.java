@@ -38,7 +38,7 @@ import java.util.Set;
  * including link selection, continuosly, gradually increasing the
  * delay between retries.  Once the message has been successfully
  * forwared, the ServiceProxy will be notified. */
-class DestinationQueueImpl 
+final class DestinationQueueImpl 
     extends MessageQueue 
     implements DestinationQueue, DebugFlags
 {

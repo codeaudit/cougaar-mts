@@ -28,7 +28,7 @@ import org.cougaar.core.component.ServiceBroker;
  * The default, and for now only, implementation of Router.  The
  * <strong>routeMesageMethod</strong> finds the DestinationQueue for
  * each message's target, and enqueues the outgoing message there.  */
-class RouterImpl implements Router
+final class RouterImpl implements Router
 {
     private DestinationQueueProviderService destQService;
 

@@ -26,7 +26,7 @@ import org.cougaar.core.component.ServiceBroker;
 
 import java.util.ArrayList;
 
-public class SendLinkImpl
+final public class SendLinkImpl
     implements SendLink
 {
 

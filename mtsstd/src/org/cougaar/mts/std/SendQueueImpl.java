@@ -34,7 +34,7 @@ import org.cougaar.core.mts.Message;
  * off the queue (see MessageQueue).  This, in turn, requests the
  * Router to route the message to the appropriate DestinationQueue.
  * */
-class SendQueueImpl extends MessageQueue implements SendQueue
+final class SendQueueImpl extends MessageQueue implements SendQueue
 {
     private Router router;
     private MessageTransportRegistryService registry;

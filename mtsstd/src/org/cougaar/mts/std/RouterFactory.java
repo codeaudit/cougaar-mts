@@ -53,11 +53,9 @@ public class RouterFactory
 	    } else {
 		System.err.println("Ilegal request for Router"
 				   +  " from " +requestor);
-		return null;
 	    }
-	} else {
-	    return null;
-	}
+	} 
+	return null;
     }
 
     public void releaseService(ServiceBroker sb, 

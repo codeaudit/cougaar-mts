@@ -52,11 +52,9 @@ public class SendQueueFactory
 	    } else {
 		System.err.println("Ilegal request for SendQueue"
 				   +  " from " +requestor);
-		return null;
 	    }
-	} else {
-	    return null;
 	}
+	return null;
     }
 
     public void releaseService(ServiceBroker sb, 

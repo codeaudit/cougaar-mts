@@ -56,10 +56,13 @@ public class MessageDelivererFactory
     {
 	// Could restrict this request to LinkProtocols
 	if (serviceClass == MessageDeliverer.class) {
-	    return deliverer;
-	} else {
-	    return null;
-	}
+	    if (requestor instanceof LinkProtocol)
+		return deliverer;
+	    else
+		System.err.println("Illegal request for MessageDeliverer from "
+				   + requestor);
+	} 
+	return null;
     }
 
     public void releaseService(ServiceBroker sb, 

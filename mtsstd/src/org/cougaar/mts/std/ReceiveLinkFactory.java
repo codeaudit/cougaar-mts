@@ -52,11 +52,9 @@ public class ReceiveLinkFactory
 	    } else {
 		System.err.println("Ilegal request for ReceiveLinkService " +
 				   " from " +requestor);
-		return null;
 	    }
-	} else {
-	    return null;
-	}
+	} 
+	return null;
     }
 
     public void releaseService(ServiceBroker sb, 
