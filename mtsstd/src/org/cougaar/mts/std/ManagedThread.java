@@ -21,10 +21,7 @@
 
 package org.cougaar.core.mts;
 
-public interface Prioritized
+public interface ManagedThread extends Prioritized
 {
-    public int getCougaarPriority();
-    public void setCougaarPriority(int priority);
-    public void resetCougaarPriority();
-    public long getTimestamp();
+    public void start();
 }

@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 
 public interface ThreadListener
 {
-    void threadStarted(Thread thread, Object consumer);
-    void threadStopped(Thread thread, Object consumer);
+    void threadPending(ManagedThread thread, Object consumer);
+    void threadStarted(ManagedThread thread, Object consumer);
+    void threadStopped(ManagedThread thread, Object consumer);
 }

@@ -144,11 +144,13 @@ class ThreadServiceImpl
 	ThreadController() {
 	}
 
-	public void setPriority(ThreadService svc, int priority) {
-	    if (svc != null && svc instanceof ThreadServiceProxy) {
-		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		proxy.setPriority(priority);
-	    }
+	public void setCougaarPriority(ManagedThread thread, int priority) {
+	    thread.setCougaarPriority(priority);
+	}
+
+
+	public int getCougaarPriority(ManagedThread thread) {
+	    return thread.getCougaarPriority();
 	}
 
 	public void setMaxRunningThreadCount(ThreadService svc, int count) {
@@ -252,11 +254,26 @@ class ThreadServiceImpl
 	}
 
 
+
 	protected ReusableThread constructReusableThread() {
-	    return new ControllableThread(this);
+	    ControllableThread thread = new ControllableThread(this);
+	    ManagedThread mThread = new ManagedControllableThread(thread);
+	    return thread;
 	}
 
+	private ManagedThread getManagedThread(Runnable runnable, 
+					       String name)
+	{
+	    ControllableThread rawThread = 
+		(ControllableThread) getThread(runnable, name);
+	    return rawThread.mThread;
+	}
 
+	private ManagedThread getManagedThread(Runnable runnable) {
+	   ControllableThread rawThread = 
+	       (ControllableThread) getThread(runnable);
+	   return rawThread.mThread;
+	}
 
 
 	private int maxRunningThreadCount() {
@@ -294,10 +311,10 @@ class ThreadServiceImpl
 	}
 
 	private void runNextPendingThread() {
-	    ControllableThread thread = null;
+	    ManagedThread thread = null;
 	    synchronized (this) {
 		if (!pendingThreads.isEmpty()) {
-		    thread =(ControllableThread) pendingThreads.next();
+		    thread = (ManagedThread) pendingThreads.next();
 		}
 	    }
 	    if (thread != null) thread.start();
@@ -305,11 +322,11 @@ class ThreadServiceImpl
 
 
 	private void runMoreThreads() {
-	    ControllableThread thread = null;
+	    ManagedThread thread = null;
 	    while (true) {
 		synchronized (this) {
 		    if (!pendingThreads.isEmpty()  && canStartThread()) {
-			thread = (ControllableThread) pendingThreads.next();
+			thread = (ManagedThread) pendingThreads.next();
 		    } else {
 			return;
 		    }
@@ -322,7 +339,7 @@ class ThreadServiceImpl
 	    synchronized (this) { 
 		--runningThreadCount; 
 	    }
-	    proxy.notifyEnd(thread);
+	    proxy.notifyEnd(thread.mThread);
 	    runNextPendingThread();
 	}
 
@@ -330,16 +347,58 @@ class ThreadServiceImpl
 	    synchronized (this) {
 		++runningThreadCount; 
 	    }
-	    proxy.notifyStart(thread);
+	    proxy.notifyStart(thread.mThread);
 	}
-
+ 
 	private synchronized void addPendingThread(ControllableThread thread) {
-	    thread.timestamp = System.currentTimeMillis();
-	    pendingThreads.add(thread);
+	    ManagedControllableThread mThread = thread.mThread;
+	    mThread.timestamp = System.currentTimeMillis();
+	    proxy.notifyPending(mThread);
+	    pendingThreads.add(mThread);
 	}
 
     }
 
+
+    private static class ManagedControllableThread
+	implements ManagedThread
+    {
+	private static final int DEFAULT_COUGAAR_PRIORITY = 5;
+	private ControllableThread rawThread;
+	private long timestamp;
+	private int priority;
+
+	ManagedControllableThread(ControllableThread rawThread) 
+	{
+	    this.rawThread = rawThread;
+	    rawThread.setManagedThread(this);
+
+	    priority = DEFAULT_COUGAAR_PRIORITY;
+	}
+
+	// Prioritized
+	public int getCougaarPriority() {
+	    return priority;
+	}
+
+	public void setCougaarPriority(int priority) {
+	    this.priority = priority;
+	}
+
+
+	public void resetCougaarPriority() {
+	    priority = DEFAULT_COUGAAR_PRIORITY;
+	}
+
+	public long getTimestamp() {
+	    return timestamp;
+	}
+
+	public void start() {
+	    rawThread.start();
+	}
+    }
+	
 
     /**
      * A special kind of ReusableThread which will notify listeners at
@@ -347,10 +406,9 @@ class ThreadServiceImpl
      */
     private static class ControllableThread
 	extends ReusableThread 
-	implements Prioritized
     {
 	private ControllablePool pool;
-	private long timestamp;
+	ManagedControllableThread mThread;
 
 	ControllableThread(ControllablePool pool) 
 	{
@@ -358,23 +416,9 @@ class ThreadServiceImpl
 	    this.pool = pool;
 	}
 
-
-	// Prioritized
-	public int getCougaarPriority() {
-	    // For now just return the Thread priority
-	    return getPriority();
-	}
-
-	public long getTimestamp() {
-	    return timestamp;
-	}
-
-	public void start() throws IllegalThreadStateException {
-	    if (pool.canStartThread()) {
-		super.start();
-	    } else {
-		pool.addPendingThread(this);
-	    }
+	
+	void setManagedThread(ManagedControllableThread mThread) {
+	    this.mThread = mThread;
 	}
 
 	protected void claim() {
@@ -386,7 +430,16 @@ class ThreadServiceImpl
 	protected void reclaim() {
 	    // thread is done
 	    pool.removeRunningThread(this);
+	    mThread.resetCougaarPriority();
 	    super.reclaim();
+	}
+
+	public void start() throws IllegalThreadStateException {
+	    if (pool.canStartThread()) {
+		super.start();
+	    } else {
+		pool.addPendingThread(this);
+	    }
 	}
 
     }
@@ -419,10 +472,6 @@ class ThreadServiceImpl
 					      maxSize);
 	}
 
-	private void setPriority(int priority) {
-	    // TBD
-	}
-
 
 	private void setMaxRunningThreadCount(int count) {
 	    threadPool.setMaxRunningThreadCount(count);
@@ -444,16 +493,27 @@ class ThreadServiceImpl
 	    return threadPool.activeThreadCount();
 	}
 
-	private Thread consumeThread(Thread thread, Object consumer) {
+	private ManagedThread consumeThread(ManagedThread thread, 
+					    Object consumer) 
+	{
 	    consumers.put(thread, consumer);
 	    return thread;
 	}
 
-	private Object threadConsumer(Thread thread) {
+	private Object threadConsumer(ManagedThread thread) {
 	    return consumers.get(thread);
 	}
 
-	synchronized void notifyStart(Thread thread) {
+	synchronized void notifyPending(ManagedThread thread) {
+	    Object consumer = threadConsumer(thread);
+ 	    Iterator itr = listeners.iterator();
+	    while (itr.hasNext()) {
+		ThreadListener listener = (ThreadListener) itr.next();
+		listener.threadPending(thread, consumer);
+	    }
+	}
+
+	synchronized void notifyStart(ManagedThread thread) {
 	    Object consumer = threadConsumer(thread);
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -462,7 +522,7 @@ class ThreadServiceImpl
 	    }
 	}
 
-	synchronized void notifyEnd(Thread thread) {
+	synchronized void notifyEnd(ManagedThread thread) {
 	    Object consumer = threadConsumer(thread);
   	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -484,15 +544,16 @@ class ThreadServiceImpl
 	}
 
 
-	public Thread getThread(Object consumer, Runnable runnable) {
-	    return consumeThread(threadPool.getThread(runnable), consumer);
+	public ManagedThread getThread(Object consumer, Runnable runnable) {
+	    return consumeThread(threadPool.getManagedThread(runnable), 
+				 consumer);
 	}
 
-	public Thread getThread(Object consumer, 
-				Runnable runnable, 
-				String name) 
+	public ManagedThread getThread(Object consumer, 
+				       Runnable runnable, 
+				       String name) 
 	{
-	    return consumeThread(threadPool.getThread(runnable, name), 
+	    return consumeThread(threadPool.getManagedThread(runnable, name), 
 				 consumer);
 	}
     }

@@ -37,7 +37,7 @@ abstract class MessageQueue
 {
 
     private CircularQueue queue;
-    private Thread thread;
+    private ManagedThread thread;
     private String name;
 
 
