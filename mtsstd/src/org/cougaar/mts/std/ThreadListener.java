@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 2001 BBNT Solutions, LLC
+ *  Copyright 1997-2001 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -18,41 +18,12 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
+
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.BindingSite;
-import org.cougaar.core.component.ServiceBroker;
 
-public class SharedThreadServiceBrokerWithAspects
-    extends  SharedThreadServiceBroker
+public interface ThreadListener
 {
-
-    private AspectSupport aspectSupport;
-
-    public SharedThreadServiceBrokerWithAspects(BindingSite bs) {
-	super(bs);
-    }
-
-    public SharedThreadServiceBrokerWithAspects(ServiceBroker sb) {
-	super(sb);
-    }
-
-
-    protected String getGroupTag() {
-	return "MTS";
-    }
-
-    protected synchronized Object getThreadService() {
-	Object svc = super.getThreadService();
-	if (aspectSupport == null) {
-	    aspectSupport = (AspectSupport)
-		super.getService(this, AspectSupport.class, null);
-	}
-	return aspectSupport.attachAspects(svc, ThreadService.class);
-    }
-
-
-
-
+    void threadStarted(Thread thread, Object consumer);
+    void threadStopped(Thread thread, Object consumer);
 }
-

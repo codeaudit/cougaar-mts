@@ -57,18 +57,16 @@ abstract class MessageQueue
     public void run() {
 	while (true) {
 	    Message m;
-	    // wait for a message to handle
 	    synchronized (queue) {
-		while (queue.isEmpty()) {
+		if (queue.isEmpty()) {
 		    thread = null;
 		    return;
 		}
 		m = (Message) queue.next(); // from top
 	    }
 
-	    if (m != null) {
-		dispatch(m);
-	    }
+
+	    if (m != null) dispatch(m);
 	}
     }
 
@@ -78,7 +76,7 @@ abstract class MessageQueue
 	synchronized (queue) {
 	    queue.add(m);
 	    if (thread == null) {
-		thread = threadService.getThread(this);
+		thread = threadService.getThread(this, this);
 		thread.start();
 	    }
 	}

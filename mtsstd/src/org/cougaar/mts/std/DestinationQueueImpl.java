@@ -115,7 +115,7 @@ final class DestinationQueueImpl
 					  link.getProtocolClass());
 		try {
 		    link.forwardMessage(message);
-		    break;
+		    return;
 		} catch (UnregisteredNameException no_name) {
 		    lastException = no_name;
 		    // nothing to say here

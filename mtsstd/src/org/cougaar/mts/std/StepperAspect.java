@@ -386,7 +386,7 @@ public final class StepperAspect
 	// block Swing.
 	private void step() {
 	    // lockStep();
-	    threadService().getThread(oneStep).start();
+	    threadService().getThread(this, oneStep).start();
 	}
 
 	private void lockStep() {

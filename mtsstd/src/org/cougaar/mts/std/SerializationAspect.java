@@ -74,7 +74,7 @@ public class SerializationAspect extends StandardAspect
 	    ThreadService service =
 		(ThreadService) sb.getService(this, ThreadService.class, null);
 	    String name = "SerializingDestinationLink " + link;
-	    thread = service.getThread(this, name);
+	    thread = service.getThread(this, this, name);
 	    // thread.setDaemon(true);
 
 	    try {

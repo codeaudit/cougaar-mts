@@ -21,62 +21,89 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.util.PropertyParser;
 import org.cougaar.util.ReusableThreadPool;
 import org.cougaar.util.ReusableThread;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
+/**
+ * This class creates and registers the ServiceProvider for the
+ * ThreadService and ThreadControlService.  The provider class itself,
+ * as well as the service proxy classes, are private and are not
+ * directly accessible from anywhere else.
+ */
 class ThreadServiceImpl
 {
-    private HashMap proxies;
-
     ThreadServiceImpl(ServiceBroker sb) {
-	proxies = new HashMap();
-	ServiceProvider sp = new ThreadServiceProvider();
-	sb.addService(ThreadService.class, sp);
-	sb.addService(ThreadControlService.class, sp);
+	ThreadServiceProvider provider = new ThreadServiceProvider();
+	sb.addService(ThreadService.class, provider);
+	sb.addService(ThreadControlService.class, provider);
     }
 
-    private synchronized Object getProxyForClient(Object client) {
-	return proxies.get(client);
-    }
 
-    private synchronized Object findOrMakeProxyForClient (ThreadServiceClient client) 
-    {
-	Object p = proxies.get(client);
-	if (p == null) {
-	    p =  new ThreadPoolServer(client);
-	    proxies.put(client, p);
+
+    /**
+     * The ServiceProvider for ThreadService and ThreadControlService.
+     * The former is only available to ThreadServiceClients, which
+     * should only be SharedThreadServiceBrokers.  This ensure proper
+     * thread grouping and control, but there's probably no way to
+     * enforce this. We're still in the process of determining who
+     * should have access to the ThreadControlService.
+     */
+    private static class ThreadServiceProvider implements ServiceProvider {
+
+	private HashMap proxies;
+	private LoggingService log;
+
+	ThreadServiceProvider() {
+	    proxies = new HashMap();
 	}
-	return p;
-    }
 
-    private synchronized void removeProxyForClient(Object client, Object svc) {
-	if (proxies.get(client) == svc) proxies.remove(client);
-    }
+	private synchronized Object getProxyForClient(Object client) {
+	    return proxies.get(client);
+	}
+
+	private synchronized Object findOrMakeProxyForClient (Object client) {
+	    Object p = proxies.get(client);
+	    if (p == null) {
+		p =  new ThreadServiceProxy((ThreadServiceClient)client);
+		proxies.put(client, p);
+	    }
+	    return p;
+	}
+
+	private synchronized void removeProxyForClient(Object client, 
+						       Object svc) 
+	{
+	    if (proxies.get(client) == svc) proxies.remove(client);
+	}
 
 
 
-    private class ThreadServiceProvider implements ServiceProvider {
-
-    
 	public Object getService(ServiceBroker sb, 
 				 Object requestor, 
 				 Class serviceClass) 
 	{
 	    if (serviceClass == ThreadService.class) {
 		if (requestor instanceof ThreadServiceClient) {
-		    return findOrMakeProxyForClient((ThreadServiceClient) requestor);
+		    return findOrMakeProxyForClient(requestor);
 		} else {
-		    System.err.println(requestor + " is not a ThreadServiceClient");
+		    if (log == null) {
+			log = (LoggingService)
+			    sb.getService(this, LoggingService.class, null);
+		    }
+		    log.error(requestor + " is not a ThreadServiceClient");
 		    return null;
 		}
 	    } else if (serviceClass == ThreadControlService.class) {
 		// Later this will be tightly restricted
-		return new ThreadController();
+		return new ThreadController(this);
 	    } else {
 		return null;
 	    }
@@ -95,51 +122,174 @@ class ThreadServiceImpl
  
     }
 
-    private class ThreadController implements ThreadControlService {
+
+    /**
+     * The proxy implementation of ThreadControlService.
+     */
+    private static class ThreadController implements ThreadControlService {
+
+	private ThreadServiceProvider provider;
+
+	ThreadController(ThreadServiceProvider provider) {
+	    this.provider = provider;
+	}
 
 	public void setClientPriority(Object client, int priority) {
-	    Object raw = getProxyForClient(client);
-	    if (raw != null && raw instanceof ThreadPoolServer) {
-		ThreadPoolServer svc = (ThreadPoolServer) raw;
+	    Object raw = provider.getProxyForClient(client);
+	    if (raw != null && raw instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) raw;
 		// etc
 	    }
+	}
+
+
+    }
+
+
+
+
+    /**
+     * A special kind of ReusableThreadPool which makes
+     * ControllableThreads.
+     */
+    private static class ControllablePool extends ReusableThreadPool {
+	private ThreadServiceProxy proxy;
+	public ControllablePool(ThreadServiceProxy proxy, int init, int max) {
+	    super(init,max);
+	    this.proxy = proxy;
+	}
+
+	public ControllablePool(ThreadServiceProxy proxy,
+				ThreadGroup group, 
+				int init, int max) 
+	{
+	    super(group, init, max);
+	    this.proxy = proxy;
+	}
+
+	protected ReusableThread constructReusableThread() {
+	    return new ControllableThread(this);
+	}
+    }
+
+
+    /**
+     * A special kind of ReusableThread which will notify listeners at
+     * the beginning and end of the internal run method of the thread.
+     */
+    private static class ControllableThread extends ReusableThread {
+	private ControllablePool pool;
+
+	ControllableThread(ControllablePool pool) 
+	{
+	    super(pool);
+	    this.pool = pool;
+	}
+
+
+	protected void claim() {
+	    // thread has started or restarted
+	    pool.proxy.notifyStart(this);
+	    super.claim();
+	}
+
+	protected void reclaim() {
+	    // thread is done
+	    super.reclaim();
+	    pool.proxy.notifyEnd(this);
 	}
 
     }
 
 
-    private class ThreadPoolServer implements ThreadService {
-	private final ReusableThreadPool threadPool;
+    /**
+     * The proxy implementation of Thread Service.
+     */
+    private static class ThreadServiceProxy implements ThreadService {
+	private static final String InitialPoolSizeProp =
+	    "org.cougaar.ReusableThread.initialPoolSize";
+	private static final int InitialPoolSizeDefault = 32;
+	private static final String MaxPoolSizeProp =
+	    "org.cougaar.ReusableThread.maximumPoolSize";
+	private static final int MaxPoolSizeDefault = 64;
 
-	private ThreadPoolServer(ThreadServiceClient client) {
-	    int initialSize = 
-		PropertyParser.getInt("org.cougaar.ReusableThread.initialPoolSize", 
-				      32);
-	    int maxSize = 
-		PropertyParser.getInt("org.cougaar.ReusableThread.maximumPoolSize",
-				      64);
 
-	    ThreadGroup group = client.getGroup();
+	private ControllablePool threadPool;
+	private HashMap consumers;
+	private ArrayList listeners;
+	private ThreadGroup group;
+
+	private ThreadServiceProxy(ThreadServiceClient client) {
+	    listeners = new ArrayList();
+	    consumers = new HashMap();
+	    group = client.getGroup();
+
+	    int initialSize = PropertyParser.getInt(InitialPoolSizeProp, 
+						    InitialPoolSizeDefault);
+	    int maxSize = PropertyParser.getInt(MaxPoolSizeProp, 
+						MaxPoolSizeDefault);
+
 	    if (group != null)
-		threadPool = new ReusableThreadPool(group, initialSize, maxSize);
+		threadPool = new ControllablePool(this,
+						  group, 
+						  initialSize,
+						  maxSize);
 	    else
-		threadPool = new ReusableThreadPool(initialSize, maxSize);
+		threadPool = new ControllablePool(this,
+						  initialSize, 
+						  maxSize);
 	}
 
-	public Thread getThread() {
-	    return threadPool.getThread();
+	private Thread consumeThread(Thread thread, Object consumer) {
+	    consumers.put(thread, consumer);
+	    return thread;
 	}
 
-	public Thread getThread(String name) {
-	    return threadPool.getThread(name);
+	private Object threadConsumer(Thread thread) {
+	    return consumers.get(thread);
 	}
 
-	public Thread getThread(Runnable runnable) {
-	    return threadPool.getThread(runnable);
+	synchronized void notifyStart(Thread thread) {
+	    Object consumer = threadConsumer(thread);
+ 	    Iterator itr = listeners.iterator();
+	    while (itr.hasNext()) {
+		ThreadListener listener = (ThreadListener) itr.next();
+		listener.threadStarted(thread, consumer);
+	    }
 	}
 
-	public Thread getThread(Runnable runnable, String name) {
-	    return threadPool.getThread(runnable, name);
+	synchronized void notifyEnd(Thread thread) {
+	    Object consumer = threadConsumer(thread);
+  	    Iterator itr = listeners.iterator();
+	    while (itr.hasNext()) {
+		ThreadListener listener = (ThreadListener) itr.next();
+		listener.threadStopped(thread, consumer);
+	    }
+	}
+
+
+
+
+	public synchronized void addListener(ThreadListener listener) {
+	    listeners.add(listener);
+	}
+
+
+	public synchronized void removeListener(ThreadListener listener) {
+	    listeners.remove(listener);
+	}
+
+
+	public Thread getThread(Object consumer, Runnable runnable) {
+	    return consumeThread(threadPool.getThread(runnable), consumer);
+	}
+
+	public Thread getThread(Object consumer, 
+				Runnable runnable, 
+				String name) 
+	{
+	    return consumeThread(threadPool.getThread(runnable, name), 
+				 consumer);
 	}
     }
 

@@ -323,7 +323,7 @@ public final class MessageTransportServiceProvider
 
     public final void setBindingSite(BindingSite bs) {
         super.setBindingSite(bs);
-        setChildServiceBroker(new SharedThreadServiceBrokerWithAspects(bs));
+        setChildServiceBroker(new SharedThreadServiceBroker("MTS", bs));
     }
 
 
