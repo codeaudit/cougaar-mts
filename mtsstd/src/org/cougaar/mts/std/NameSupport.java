@@ -10,19 +10,18 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.naming.NS;
 import org.cougaar.core.society.MulticastMessageAddress;
 import org.cougaar.core.society.MessageAddress;
 
-import java.rmi.RemoteException;
 import java.util.Iterator;
 
 /**
  * This is utility class which hides the grimy details of dealing with
  * NameServers from the rest of the message transport subsystem.  */
 public interface NameSupport {
-    public static final String CLUSTERDIR = "clusters" + NS.DirSeparator;
-    public static final String MTDIR = "MessageTransports" + NS.DirSeparator;
+    public static final String MTS_DIR =  "MessageTransports";
+    public static final String CLUSTER_DIR =  "clusters";
+
     MessageAddress  getNodeMessageAddress();
 
     void registerAgentInNameServer(Object proxy, 

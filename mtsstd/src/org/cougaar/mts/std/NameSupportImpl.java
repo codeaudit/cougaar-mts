@@ -13,6 +13,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.society.MulticastMessageAddress;
 import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.naming.NamingService;
+import org.cougaar.core.naming.NS;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -32,6 +33,9 @@ import javax.naming.directory.SearchResult;
  * NameServers from the rest of the message transport subsystem.  */
 public class NameSupportImpl implements NameSupport 
 {
+    private static final String MTS_ATTR = "MTS";
+    private static final String ADDRESS_ATTR = "Address";
+
     private NamingService namingService;
     private MessageAddress myNodeAddress;
 
@@ -42,6 +46,13 @@ public class NameSupportImpl implements NameSupport
 
     public MessageAddress  getNodeMessageAddress() {
 	return myNodeAddress;
+    }
+
+    private String makeName(String directory, 
+			    MessageAddress address, 
+			    String suffix) 
+    {
+	return directory + NS.DirSeparator + address.getAddress() + suffix;
     }
 
     private final void _registerWithSociety(String key, 
@@ -81,7 +92,7 @@ public class NameSupportImpl implements NameSupport
     {	
 	MessageAddress addr = client.getMessageAddress();
 	try {
-	    String key = CLUSTERDIR + addr + transportType;
+	    String key = makeName(CLUSTER_DIR, addr, transportType);
 	    _registerWithSociety(key, proxy);
 	} catch (Exception e) {
 	    System.err.println("Failed to add Client "+ addr + 
@@ -96,7 +107,7 @@ public class NameSupportImpl implements NameSupport
     {	
 	MessageAddress addr = client.getMessageAddress();
 	try {
-	    String key = CLUSTERDIR + addr + transportType;
+	    String key = makeName(CLUSTER_DIR, addr, transportType);
 	    _registerWithSociety(key, null);
 	} catch (Exception e) {
 	    System.err.println("Failed to remove Client "+ addr + 
@@ -109,19 +120,18 @@ public class NameSupportImpl implements NameSupport
     public void registerNodeInNameServer(Object proxy, 
 					 String transportType) 
     {
-	String addr = myNodeAddress.getAddress();
-	String name = MTDIR+addr+transportType;
+	String name = makeName(MTS_DIR, myNodeAddress, transportType);
 	try {
 	    BasicAttributes mts_attr = new BasicAttributes();
-	    mts_attr.put("MTS", Boolean.TRUE);
-	    mts_attr.put("Address", myNodeAddress);
+	    mts_attr.put(MTS_ATTR, Boolean.TRUE);
+	    mts_attr.put(ADDRESS_ATTR, myNodeAddress);
 	    _registerWithSociety(name, proxy, mts_attr);
 	} catch (Exception e) {
 	    System.err.println("Failed to register " +  name);
 	    e.printStackTrace();
 	}
 
-	name = CLUSTERDIR+addr+transportType;
+	name = makeName(CLUSTER_DIR, myNodeAddress, transportType);
 	try {
 	    _registerWithSociety(name, proxy);
 	} catch (Exception e) {
@@ -134,7 +144,7 @@ public class NameSupportImpl implements NameSupport
 					    String transportType)
     {
 	MessageAddress addr = address;
-	String key = CLUSTERDIR + addr.getAddress() + transportType ;
+	String key = makeName(CLUSTER_DIR, addr, transportType);
 	Object object;
 	DirContext ctx = null;
        
@@ -159,7 +169,7 @@ public class NameSupportImpl implements NameSupport
 
 	// If we get here the lookup returned an address.  Use it as a
 	// forwarding pointer.
-	key = CLUSTERDIR + addr.getAddress() + transportType ;
+	key = makeName(CLUSTER_DIR, addr, transportType);
 	try {
 	    object = ctx.lookup(key);
 	    if (object instanceof MessageAddress) {
@@ -210,19 +220,17 @@ public class NameSupportImpl implements NameSupport
 
     }
 
+    // Fixed for all time...
+    private static final Attributes MC_MATCH = 
+	new BasicAttributes(MTS_ATTR, Boolean.TRUE);
+    private static final String[] MC_RETATTR = { ADDRESS_ATTR };
+
+
     public Iterator lookupMulticast(MulticastMessageAddress address) {
 	try {
 	    DirContext ctx = namingService.getRootContext();
-	    // String name = "";
-	    // String filter = "MTS=true";
-	    // SearchControls cons = new SearchControls();
-	    // cons.setSearchScope(SearchControls.SUBTREE_SCOPE);
-	    // return new NamingItr(ctx.search(name, filter, cons), "Address");
-            String name = "MessageTransports";
-            Attributes match = new BasicAttributes("MTS", Boolean.TRUE);
-            String attr = "Address";
-            String[] retattr = { attr };
-            return new NamingItr(ctx.search(name, match, retattr), attr);
+	    NamingEnumeration e = ctx.search(MTS_DIR, MC_MATCH, MC_RETATTR);
+            return new NamingItr(e, ADDRESS_ATTR);
 	} catch (NamingException ne) {
 	    ne.printStackTrace();
 	    return null;
