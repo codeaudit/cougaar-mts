@@ -52,6 +52,11 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This test Aspect preserializes messages into a byte array, sends
+ * the array instead of the message over the RMI stream, and then
+ * deserializes on the other end.
+ */
 public class PreserializingStreamsAspect extends StandardAspect 
 {
 

@@ -38,6 +38,14 @@ import org.cougaar.mts.base.SendQueue;
 import org.cougaar.mts.base.SendQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This test Aspect queries and updates the metric service on every
+ * message send.  The query is as given by @property
+ * "org.cougaar.metrics.query.  The update key is as given
+ * by @property org.cougaar.metrics.key.  If @property
+ * org.cougaar.metrics.callback is supplied it will also subscribe to
+ * the specified formula.
+ */
 public class MetricsTestAspect 
     extends StandardAspect 
     implements Observer

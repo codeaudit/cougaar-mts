@@ -36,6 +36,10 @@ import org.cougaar.core.qos.metrics.MetricsUpdateService;
 
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This test Aspect throws lots of data into the metrics service and
+ * subscrobes to a formula which uses that data.
+ */ 
 public class MetricsBlastTestAspect 
     extends StandardAspect 
     implements Observer

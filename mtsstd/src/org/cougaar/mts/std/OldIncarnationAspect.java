@@ -46,6 +46,10 @@ import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.UnregisteredNameException;
 
 
+/**
+ * This Aspect assists in the detection of out-of-date incarnations of
+ * Agents. 
+ */
 public class OldIncarnationAspect extends StandardAspect
 {
 

@@ -24,6 +24,7 @@
  */ 
 package org.cougaar.mts.http;
 
+import org.cougaar.core.service.ServletService; // javadoc only
 import org.cougaar.lib.web.service.RootServletService;
 import org.cougaar.mts.base.LinkProtocol; // javadoc only
 import org.cougaar.mts.std.AttributedMessage;

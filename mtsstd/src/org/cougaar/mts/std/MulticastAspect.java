@@ -46,6 +46,9 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This Aspect provides support for multicast messages.
+ */
 public class MulticastAspect extends StandardAspect
 {
 
