@@ -55,7 +55,7 @@ class MessageTransportRegistry
     private HashMap receiveLinks = new HashMap(89);
     private HashMap serviceProxies = new HashMap(89);
     private MessageTransportServiceProvider serviceProvider;
-    private MessageTransportFactory transportFactory;
+    private LinkProtocolFactory protocolFactory;
     private ReceiveLinkFactory receiveLinkFactory;
     private NameSupport nameSupport;
 
@@ -70,8 +70,8 @@ class MessageTransportRegistry
 	this.nameSupport = nameSupport;
     }
 
-    void setTransportFactory(MessageTransportFactory transportFactory) {
-	this.transportFactory = transportFactory;
+    void setProtocolFactory(LinkProtocolFactory factory) {
+	this.protocolFactory = factory;
     }
 
     void setReceiveLinkFactory(ReceiveLinkFactory receiveLinkFactory) {
@@ -160,20 +160,20 @@ class MessageTransportRegistry
 
     private void registerClientWithSociety(MessageTransportClient client) {
 	// register with each component transport
-	Iterator transports = transportFactory.getTransports().iterator();
-	while (transports.hasNext()) {
-	    MessageTransport mt = (MessageTransport) transports.next();
-	    mt.registerClient(client);
+	Iterator protocols = protocolFactory.getProtocols().iterator();
+	while (protocols.hasNext()) {
+	    LinkProtocol protocol = (LinkProtocol) protocols.next();
+	    protocol.registerClient(client);
 	}
     }
 
 
     private void unregisterClientWithSociety(MessageTransportClient client) {
 	// register with each component transport
-	Iterator transports = transportFactory.getTransports().iterator();
-	while (transports.hasNext()) {
-	    MessageTransport mt = (MessageTransport) transports.next();
-	    mt.unregisterClient(client);
+	Iterator protocols = protocolFactory.getProtocols().iterator();
+	while (protocols.hasNext()) {
+	    LinkProtocol protocol = (LinkProtocol) protocols.next();
+	    protocol.unregisterClient(client);
 	}
     }
 
@@ -196,10 +196,10 @@ class MessageTransportRegistry
 
 
     boolean addressKnown(MessageAddress address) {
-	Iterator transports = transportFactory.getTransports().iterator();
-	while (transports.hasNext()) {
-	    MessageTransport mt = (MessageTransport) transports.next();
-	    if (mt.addressKnown(address)) return true;
+	Iterator protocols = protocolFactory.getProtocols().iterator();
+	while (protocols.hasNext()) {
+	    LinkProtocol protocol = (LinkProtocol) protocols.next();
+	    if (protocol.addressKnown(address)) return true;
 	}
 	return false;
     }

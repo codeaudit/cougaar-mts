@@ -23,18 +23,15 @@ public class DestinationQueueFactory extends  AspectFactory
 {
     private HashMap queues;
     private MessageTransportRegistry registry;
-    private MessageTransportFactory transportFactory;
     private LinkSenderFactory linkSenderFactory;
     
     DestinationQueueFactory(MessageTransportRegistry registry,
-			    MessageTransportFactory transportFactory,
 			    LinkSenderFactory linkSenderFactory,
 			    java.util.ArrayList aspects) 
     {
 	super(aspects);
 	queues = new HashMap();
 	this.registry = registry;
-	this.transportFactory = transportFactory;
 	this.linkSenderFactory = linkSenderFactory;
     }
 

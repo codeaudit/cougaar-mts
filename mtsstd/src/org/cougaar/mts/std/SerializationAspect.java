@@ -40,8 +40,8 @@ public class SerializationAspect extends StandardAspect
     }
     
 
-    public boolean rejectTransport(MessageTransport transport, Class type) {
-	return (!(transport instanceof LoopbackMessageTransport));
+    public boolean rejectProtocol(LinkProtocol protocol, Class type) {
+	return (!(protocol instanceof LoopbackLinkProtocol));
     }
 
     private class SerializingDestinationLink 

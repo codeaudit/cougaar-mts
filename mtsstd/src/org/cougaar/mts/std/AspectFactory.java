@@ -35,14 +35,14 @@ abstract public class AspectFactory
     public static Object attachAspects (ArrayList aspects,
 					Object delegate, 
 					Class type, 
-					MessageTransport transport)
+					LinkProtocol protocol)
     {
 	if (aspects != null) {
 	    Iterator itr = aspects.iterator();
 	    while (itr.hasNext()) {
 		MessageTransportAspect aspect = 
 		    (MessageTransportAspect) itr.next();
-		if (transport != null && aspect.rejectTransport(transport, type))
+		if (protocol != null && aspect.rejectProtocol(protocol, type))
 		    continue; //skip it
 
 		Object candidate = aspect.getDelegate(delegate, type);
@@ -65,9 +65,9 @@ abstract public class AspectFactory
 
     public Object attachAspects(Object delegate, 
 				Class type, 
-				MessageTransport transport)
+				LinkProtocol protocol)
     {
-	return attachAspects(aspects, delegate, type, transport);
+	return attachAspects(aspects, delegate, type, protocol);
     }
 
 

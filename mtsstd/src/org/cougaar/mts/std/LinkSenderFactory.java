@@ -19,15 +19,15 @@ import org.cougaar.core.society.MessageAddress;
 public class LinkSenderFactory 
 {
     private MessageTransportRegistry registry;
-    private MessageTransportFactory transportFactory;
+    private LinkProtocolFactory protocolFactory;
     private LinkSelectionPolicy selectionPolicy;
 	
     LinkSenderFactory(MessageTransportRegistry registry,
-		      MessageTransportFactory transportFactory,
+		      LinkProtocolFactory protocolFactory,
 		      LinkSelectionPolicy selectionPolicy)
     {
 	this.registry = registry;
-	this.transportFactory = transportFactory;
+	this.protocolFactory = protocolFactory;
 	this.selectionPolicy = selectionPolicy;
     }
 
@@ -40,7 +40,7 @@ public class LinkSenderFactory
 					
     {
 	return new LinkSender(destination.toString(), destination,
-			      registry, transportFactory, 
+			      registry, protocolFactory, 
 			      queue, queue_lock,
 			      selectionPolicy);
     }

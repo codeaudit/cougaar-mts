@@ -47,7 +47,7 @@ public class MessageTransportServiceProvider
 	"org.cougaar.core.mts.StatisticsAspect";
 
     // Factories
-    private MessageTransportFactory transportFactory;
+    private LinkProtocolFactory protocolFactory;
     private SendQueueFactory sendQFactory;
     private MessageDelivererFactory delivererFactory;
     private DestinationQueueFactory destQFactory;
@@ -139,19 +139,19 @@ public class MessageTransportServiceProvider
 	// Multicast Aspect is always required.
 	aspects.add(new MulticastAspect());
 
-	transportFactory = 
-	    new MessageTransportFactory(id, registry, nameSupport, aspects);
+	protocolFactory = 
+	    new LinkProtocolFactory(id, registry, nameSupport, aspects);
 	receiveLinkFactory = new ReceiveLinkFactory(registry,
 						    aspects);
 
 	registry.setReceiveLinkFactory(receiveLinkFactory);
-	registry.setTransportFactory(transportFactory);
+	registry.setProtocolFactory(protocolFactory);
 
 	wireComponents(id);
 
-	transportFactory.setDeliverer(deliverer);
+	protocolFactory.setDeliverer(deliverer);
 	// force transports to be created here
-	transportFactory.getTransports();
+	protocolFactory.getProtocols();
         super.initialize();
     }
 
@@ -181,11 +181,10 @@ public class MessageTransportServiceProvider
 
 
 	linkSenderFactory =
-	    new LinkSenderFactory(registry, transportFactory, selectionPolicy);
+	    new LinkSenderFactory(registry, protocolFactory, selectionPolicy);
 	
 	destQFactory = 
 	    new DestinationQueueFactory(registry, 
-					transportFactory, 
 					linkSenderFactory,
 					aspects);
 	routerFactory =

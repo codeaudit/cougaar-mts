@@ -28,7 +28,7 @@ public class LinkSender implements Runnable
 {
     private static final int MAX_DELAY = 60 * 1000; // 1 minute
     private MessageAddress destination;
-    private MessageTransportFactory transportFactory;
+    private LinkProtocolFactory protocolFactory;
     private MessageTransportRegistry registry;
     private Thread thread;
     private DestinationQueue queue;
@@ -39,7 +39,7 @@ public class LinkSender implements Runnable
     LinkSender(String name, 
 	       MessageAddress destination, 
 	       MessageTransportRegistry registry,
-	       MessageTransportFactory transportFactory,
+	       LinkProtocolFactory protocolFactory,
 	       DestinationQueue queue,
 	       Object queueLock,
 	       LinkSelectionPolicy selectionPolicy) 
@@ -47,7 +47,7 @@ public class LinkSender implements Runnable
 	this.destination = destination;
 	this.queue = queue;
 	this.queueLock = queueLock;
-	this.transportFactory = transportFactory;
+	this.protocolFactory = protocolFactory;
 	this.registry = registry;
 	this.selectionPolicy = selectionPolicy;
 
@@ -69,12 +69,12 @@ public class LinkSender implements Runnable
      * message. */
     private void getDestinationLinks() 
     {
-	Iterator itr = transportFactory.getTransports().iterator();
+	Iterator itr = protocolFactory.getProtocols().iterator();
 	DestinationLink link;
 	while (itr.hasNext()) {
-	    MessageTransport tpt = (MessageTransport) itr.next();
-	    Class tpt_class = tpt.getClass();
-	    link = tpt.getDestinationLink(destination);
+	    LinkProtocol lp = (LinkProtocol) itr.next();
+	    // Class lp_class = lp.getClass();
+	    link = lp.getDestinationLink(destination);
 	    destinationLinks.add(link);
 	}
     }

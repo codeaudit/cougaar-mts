@@ -15,18 +15,18 @@ import org.cougaar.core.society.MessageAddress;
 
 
 /**
- * This transport handles all intra-node message traffic.  It can act
+ * This protocol handles all intra-node message traffic.  It can act
  * as its own DestinationLink, since this transport only sees traffic
  * for one destination.  The cost function is minimal (0) for local
  * traffic, and maximal (Integer.MAX_VALUE) for any other traffic. */
-class LoopbackMessageTransport 
-    extends MessageTransport
+class LoopbackLinkProtocol 
+    extends LinkProtocol
     implements DestinationLink
 {
 
     private DestinationLink link;
 
-    public LoopbackMessageTransport(String id, java.util.ArrayList aspects) {
+    public LoopbackLinkProtocol(String id, java.util.ArrayList aspects) {
 	super(aspects);
     }
 

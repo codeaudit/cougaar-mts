@@ -52,8 +52,8 @@ public class SecurityAspect extends StandardAspect
 	enabled = ensure_msm() != null;
     }
 
-    public boolean rejectTransport(MessageTransport transport, Class type) {
-	return (transport instanceof LoopbackMessageTransport);
+    public boolean rejectProtocol(LinkProtocol protocol, Class type) {
+	return (protocol instanceof LoopbackLinkProtocol);
     }
 
     public boolean isEnabled() {

@@ -24,7 +24,7 @@ abstract public class StandardAspect
 	this.sb = sb;
     }
 
-    public boolean rejectTransport(MessageTransport transport, Class type) {
+    public boolean rejectProtocol(LinkProtocol protocol, Class type) {
 	// Accept any transport at any cut point by default
 	return false;
     }

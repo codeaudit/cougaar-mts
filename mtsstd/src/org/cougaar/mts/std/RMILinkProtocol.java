@@ -44,16 +44,16 @@ import java.util.HashMap;
  * nameserver.  QuO uses these two new aspects to add qos support to
  * the RMI pieces of Alp.
  * */
-public class RMIMessageTransport 
-    extends MessageTransport
+public class RMILinkProtocol 
+    extends LinkProtocol
 {
-    public static final String TRANSPORT_TYPE = "-simpleRMI";
+    public static final String PROTOCOL_TYPE = "-RMI";
 
     private MessageAddress myAddress;
     private HashMap links;
 
 
-    public RMIMessageTransport(String id, java.util.ArrayList aspects) {
+    public RMILinkProtocol(String id, java.util.ArrayList aspects) {
 	super(aspects); 
 	links = new HashMap();
 	RMISocketFactory socfac = RMISocketFactory.getSocketFactory();
@@ -71,7 +71,7 @@ public class RMIMessageTransport
 
     private MT lookupRMIObject(MessageAddress address) throws Exception {
 	Object object = 
-	    nameSupport.lookupAddressInNameServer(address, TRANSPORT_TYPE);
+	    nameSupport.lookupAddressInNameServer(address, PROTOCOL_TYPE);
 
 	if (object == null) {
 	    return null;
@@ -96,7 +96,7 @@ public class RMIMessageTransport
 		myAddress = nameSupport.getNodeMessageAddress();
 		MTImpl impl = new MTImpl(myAddress, deliverer);
 		MT proxy = getServerSideProxy(impl);
-		nameSupport.registerNodeInNameServer(proxy, TRANSPORT_TYPE);
+		nameSupport.registerNodeInNameServer(proxy, PROTOCOL_TYPE);
 	    }
 	}
     }
@@ -110,7 +110,7 @@ public class RMIMessageTransport
 
 	    // Assume node-redirect
 	    Object proxy = myAddress;
-	    nameSupport.registerAgentInNameServer(proxy,client,TRANSPORT_TYPE);
+	    nameSupport.registerAgentInNameServer(proxy,client,PROTOCOL_TYPE);
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
 	    e.printStackTrace();
@@ -122,7 +122,7 @@ public class RMIMessageTransport
 	try {
 	    // Assume node-redirect
 	    Object proxy = myAddress;
-	    nameSupport.unregisterAgentInNameServer(proxy,client,TRANSPORT_TYPE);
+	    nameSupport.unregisterAgentInNameServer(proxy,client,PROTOCOL_TYPE);
 	} catch (Exception e) {
 	    System.err.println("Error unregistering MessageTransport:");
 	    e.printStackTrace();

@@ -21,6 +21,6 @@ import org.cougaar.core.component.ServiceBroker;
 public interface MessageTransportAspect
 {
     public Object getDelegate(Object delegate, Class type);
-    public boolean rejectTransport(MessageTransport transport, Class type);
+    public boolean rejectProtocol(LinkProtocol protocol, Class type);
     public void setServiceBroker(ServiceBroker sb);
 }
