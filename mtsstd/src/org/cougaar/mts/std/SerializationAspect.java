@@ -57,18 +57,18 @@ public class SerializationAspect extends StandardAspect
     
 
     private class SerializingDestinationLink 
-	implements DestinationLink, Runnable
+	extends DestinationLinkDelegateImplBase
+	implements Runnable
 	
     {
 	PipedInputStream piped_is;
 	PipedOutputStream piped_os;
 	ObjectInputStream reader;
 	ObjectOutputStream writer;
-	DestinationLink link;
 	Thread thread;
 
 	SerializingDestinationLink(DestinationLink link) {
-	    this.link = link;
+	    super(link);
 	    thread = new Thread(this, "SerializingDestinationLink " + link);
 	    thread.setDaemon(true);
 	    try {
@@ -134,9 +134,6 @@ public class SerializationAspect extends StandardAspect
 	    }
 	}
 
-	public int cost(Message message) {
-	    return link.cost(message);
-	}
     }
 
 

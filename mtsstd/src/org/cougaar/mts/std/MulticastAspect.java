@@ -70,11 +70,10 @@ public class MulticastAspect extends StandardAspect
     }
 
 
-    public class ServiceDelegate implements MessageTransportService {
-	private MessageTransportService server;
+    public class ServiceDelegate extends DelegatingServiceProxy {
 	
-	public ServiceDelegate (MessageTransportService server) {
-	    this.server = server;
+	public ServiceDelegate (MessageTransportService service) {
+	    super(service);
 	}
 	
 
@@ -85,7 +84,7 @@ public class MulticastAspect extends StandardAspect
 		    if (Debug.debugMulticast())
 			System.out.println("### MCAST: Local multicast");
 		    msg = new MulticastMessageEnvelope(msg,  destination);
-		    server.sendMessage(msg);
+		    service.sendMessage(msg);
 		} else {
 		    if (Debug.debugMulticast())
 			System.out.println("### MCAST: Remote multicast");
@@ -100,44 +99,22 @@ public class MulticastAspect extends StandardAspect
 			    System.out.println("### MCAST: next address = " 
 					       + addr);
 			envelope = new MulticastMessageEnvelope(msg, addr);
-			server.sendMessage(envelope);
+			service.sendMessage(envelope);
 		    }
 		}
 	    } else {
-		server.sendMessage(msg);
+		service.sendMessage(msg);
 	    }
-	}
-
-	public void registerClient(MessageTransportClient client) {
-	    server.registerClient(client);
-	}
-
-	public void unregisterClient(MessageTransportClient client) {
-	    server.unregisterClient(client);
-	}
-	
-	public ArrayList flushMessages() {
-	    return server.flushMessages();
-	}
-
-	public String getIdentifier() {
-	    return server.getIdentifier();
-	}
-
-	public boolean addressKnown(MessageAddress addr) {
-	    return server.addressKnown(addr);
 	}
 
     }
 
 
 
-    public class DelivererDelegate implements MessageDeliverer {
-	private MessageDeliverer server;
-	
-	public DelivererDelegate (MessageDeliverer server)
-	{
-	    this.server = server;
+    public class DelivererDelegate extends MessageDelivererDelegateImplBase {
+
+	public DelivererDelegate (MessageDeliverer deliverer) {
+	    super(deliverer);
 	}
 	
 	public void deliverMessage(Message msg, MessageAddress dest) 
@@ -150,19 +127,16 @@ public class MulticastAspect extends StandardAspect
 		Iterator i = registry.findLocalMulticastReceivers(addr);
 		while (i.hasNext()) {
 		    dest = (MessageAddress) i.next();
-		    server.deliverMessage(msg, dest);
+		    deliverer.deliverMessage(msg, dest);
 		    if (Debug.debugMulticast())
 			System.out.println("### MCAST: Delivering to "
 					   + dest);
 		}
 	    } else {	
-		server.deliverMessage(msg, dest);
+		deliverer.deliverMessage(msg, dest);
 	    }
 	}
 	
-	public boolean matches(String name) {
-	    return server.matches(name);
-	}
     }
 
 }

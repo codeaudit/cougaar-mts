@@ -22,13 +22,12 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import org.cougaar.core.society.MessageAddress;
 
 
 /**
- * The fourth stop for outgoing messages. Each transport has its own
- * implementation class.  DestinationLinks are made directly by the
- * transports, without the use of factories.  */
+ * The fourth stop for outgoing messages. Each LinkProtocol has its
+ * own DestinationLink implementation class.  DestinationLinks are
+ * made by the protocols, acting as factories.  */
 public interface DestinationLink
 {
 
@@ -36,15 +35,29 @@ public interface DestinationLink
      * This method is used to request the associated transport to do
      * its thing with the given message.  Only called during
      * processing of messages in DestinationQueueImpl.  */
-  void forwardMessage(Message message) 
+    public void forwardMessage(Message message) 
 	throws UnregisteredNameException, 
-	       NameLookupException, 
-	       CommFailureException,
-	       MisdeliveredMessageException;
+	NameLookupException, 
+	CommFailureException,
+	MisdeliveredMessageException;
 
     /**
      * This method returns a simple measure of the cost of sending the
      * given message via the associated transport. Only called during
      * processing of messages in DestinationQueueImpl. */
-  int cost(Message message);
+    public int cost(Message message);
+
+    
+    /**
+     * @return the class of corresponding LinkProtocol.
+     */
+    public Class getProtocolClass();
+
+
+    /**
+     * Ask Link whether or not further retries should be attempted.
+     */
+    public boolean retryFailedMessage(Message message, int retryCount);
+
+
 }

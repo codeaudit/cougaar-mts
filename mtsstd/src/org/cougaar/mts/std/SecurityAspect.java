@@ -122,11 +122,11 @@ public class SecurityAspect extends StandardAspect
     
 
 
-    private class SecureDestinationLink implements DestinationLink {
-	private DestinationLink link;
-
+    private class SecureDestinationLink 
+	extends DestinationLinkDelegateImplBase 
+    {
 	private SecureDestinationLink(DestinationLink link) {
-	    this.link = link;
+	    super(link);
 	}
 
 	public void forwardMessage(Message message) 
@@ -138,20 +138,14 @@ public class SecurityAspect extends StandardAspect
 	    link.forwardMessage(secure(message));
 	}
 
-	public int cost(Message message) {
-	    // does signing add cost?
-	    return link.cost(message);
-	}
 
     }
 
 
 
-    private class SecureDeliverer implements MessageDeliverer {
-	private MessageDeliverer deliverer;
-
+    private class SecureDeliverer extends MessageDelivererDelegateImplBase {
 	private SecureDeliverer(MessageDeliverer deliverer) {
-	    this.deliverer = deliverer;
+	    super(deliverer);
 	}
 
 	public void deliverMessage(Message m, MessageAddress dest) 
@@ -160,8 +154,5 @@ public class SecurityAspect extends StandardAspect
 	    deliverer.deliverMessage(unsecure(m), dest);
 	}
 
-	public boolean matches(String name) {
-	    return deliverer.matches(name);
-	}
     }
 }

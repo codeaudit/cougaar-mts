@@ -21,13 +21,18 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.Message;
-import java.util.Iterator;
 
-public interface LinkSelectionPolicy
+import org.cougaar.core.society.Message;
+
+abstract public class RouterDelegateImplBase implements Router
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+    protected Router router;
+
+    protected RouterDelegateImplBase(Router router) {
+	this.router = router;
+    }
+
+    public void routeMessage(Message message) {
+	router.routeMessage(message);
+    }
 }

@@ -92,48 +92,34 @@ public class WatcherAspect
     }
 
 
-    public class SendQueueDelegate implements SendQueue
+    public class SendQueueDelegate extends SendQueueDelegateImplBase
     {
-	private SendQueue server;
-	
-	public SendQueueDelegate (SendQueue server)
-	{
-	    this.server = server;
+	public SendQueueDelegate (SendQueue queue) {
+	    super(queue);
 	}
 	
 	public void sendMessage(Message message) {
-	    server.sendMessage(message);
+	    queue.sendMessage(message);
 	    notifyWatchersOfSend(message);
 	}
 	
-	public boolean matches(String name){
-	    return server.matches(name);
-	}
-	public int size() {
-	    return server.size();
-	}
     }
 
 
-    public class MessageDelivererDelegate implements MessageDeliverer
+    public class MessageDelivererDelegate 
+	extends MessageDelivererDelegateImplBase
     {
-	private MessageDeliverer server;
-	
-	public MessageDelivererDelegate (MessageDeliverer server)
-	{
-	    this.server = server;
+	public MessageDelivererDelegate (MessageDeliverer deliverer) {
+	    super(deliverer);
 	}
 	
 	public void deliverMessage(Message message, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    server.deliverMessage(message, dest);
+	    deliverer.deliverMessage(message, dest);
 	    notifyWatchersOfReceive(message);
 	}
 	
-	public boolean matches(String name) {
-	    return server.matches(name);
-	}
 
     }
 }

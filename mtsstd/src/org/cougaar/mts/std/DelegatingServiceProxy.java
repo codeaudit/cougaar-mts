@@ -22,12 +22,42 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import java.util.Iterator;
+import org.cougaar.core.society.MessageAddress;
 
-public interface LinkSelectionPolicy
+import java.util.ArrayList;
+
+abstract public class DelegatingServiceProxy implements MessageTransportService
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+
+    protected MessageTransportService service;
+
+    protected DelegatingServiceProxy(MessageTransportService service) {
+	this.service = service;
+    }
+
+    public void sendMessage(Message message) {
+	service.sendMessage(message);
+    }
+
+    public void registerClient(MessageTransportClient client) {
+	service.registerClient(client);
+    }
+
+    public void unregisterClient(MessageTransportClient client) {
+	service.unregisterClient(client);
+    }
+
+    public ArrayList flushMessages() {
+	return service.flushMessages();
+    }
+
+    public String getIdentifier() {
+	return service.getIdentifier();
+    }
+
+    public boolean addressKnown(MessageAddress address) {
+	return service.addressKnown(address);
+    }
+
 }
+

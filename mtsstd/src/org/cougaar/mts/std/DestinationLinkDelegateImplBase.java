@@ -22,12 +22,39 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import java.util.Iterator;
 
-public interface LinkSelectionPolicy
+
+/**
+ * Convenience class for aspects which define DestinationLink delegate
+ * classes. */
+abstract public class DestinationLinkDelegateImplBase
+    implements DestinationLink
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+    protected DestinationLink link;
+
+    protected DestinationLinkDelegateImplBase(DestinationLink link) {
+	this.link = link;
+    }
+
+    public void forwardMessage(Message message) 
+	throws UnregisteredNameException, 
+	NameLookupException, 
+	CommFailureException,
+	MisdeliveredMessageException
+    {
+	link.forwardMessage(message);
+    }
+
+    public int cost(Message message) {
+	return link.cost(message);
+    }
+
+    public Class getProtocolClass() {
+	return link.getProtocolClass();
+    }
+
+    public boolean retryFailedMessage(Message message, int retryCount) {
+	return true;
+    }
+
 }

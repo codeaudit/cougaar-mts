@@ -29,7 +29,10 @@ import java.util.Iterator;
 public class MinCostLinkSelectionPolicy implements LinkSelectionPolicy
 {
 
-    public DestinationLink selectLink (Iterator links, Message message)
+    public DestinationLink selectLink (Iterator links, 
+				       Message message,
+				       int retryCount,
+				       Exception lastException)
     {
 	int min_cost = -1;
 	DestinationLink cheapest = null;

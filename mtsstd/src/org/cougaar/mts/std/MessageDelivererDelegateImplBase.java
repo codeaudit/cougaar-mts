@@ -22,12 +22,25 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import java.util.Iterator;
+import org.cougaar.core.society.MessageAddress;
 
-public interface LinkSelectionPolicy
+abstract public class MessageDelivererDelegateImplBase
+    implements MessageDeliverer
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+    protected MessageDeliverer deliverer;
+
+    protected MessageDelivererDelegateImplBase(MessageDeliverer deliverer) {
+	this.deliverer = deliverer;
+    }
+
+    public void deliverMessage(Message message, MessageAddress dest)
+	throws MisdeliveredMessageException
+    {
+	deliverer.deliverMessage(message, dest);
+    }
+
+    public boolean matches(String name) {
+	return deliverer.matches(name);
+    }
+
 }

@@ -22,12 +22,31 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import java.util.Iterator;
+import org.cougaar.core.society.MessageAddress;
 
-public interface LinkSelectionPolicy
+
+abstract public class DestinationQueueDelegateImplBase 
+    implements DestinationQueue 
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+    protected DestinationQueue queue;
+
+    protected DestinationQueueDelegateImplBase(DestinationQueue queue) {
+	this.queue = queue;
+    }
+
+    public void holdMessage(Message message) {
+	queue.holdMessage(message);
+    }
+
+    public void dispatchNextMessage(Message message) {
+	queue.dispatchNextMessage(message);
+    }
+
+    public boolean matches(MessageAddress address) {
+	return queue.matches(address);
+    }
+
+    public int size() {
+	return queue.size();
+    }
 }

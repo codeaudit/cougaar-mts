@@ -93,15 +93,14 @@ public class TraceAspect
 	}
     }
 
-    public class NameSupportDelegate implements NameSupport {
-	private NameSupport server;
+    public class NameSupportDelegate extends NameSupportDelegateImplBase {
 	
-	public NameSupportDelegate (NameSupport server) {
-	    this.server = server;
+	public NameSupportDelegate (NameSupport nameSupport) {
+	    super(nameSupport);
 	}
 
 	public MessageAddress  getNodeMessageAddress() {
-	    return server.getNodeMessageAddress();
+	    return nameSupport.getNodeMessageAddress();
 	}
 
 	public void registerAgentInNameServer(Object proxy, 
@@ -109,7 +108,7 @@ public class TraceAspect
 					      String type)
 	{
 	    log("NameSupport", "Register Agent" + proxy);
-	    server.registerAgentInNameServer(proxy, addr, type);
+	    nameSupport.registerAgentInNameServer(proxy, addr, type);
 	}
 
 	public void unregisterAgentInNameServer(Object proxy, 
@@ -117,129 +116,84 @@ public class TraceAspect
 						String type) 
 	{
 	    log("NameSupport", "Unregister Agent " + proxy);
-	    server.unregisterAgentInNameServer(proxy, addr, type);
+	    nameSupport.unregisterAgentInNameServer(proxy, addr, type);
 	}
 
 	public void registerMTS(MessageAddress addr)
 	{
 	    log("NameSupport", "Register MTS " + addr);
-	    server.registerMTS(addr);
+	    nameSupport.registerMTS(addr);
 	}
 
 	public Object lookupAddressInNameServer(MessageAddress address, 
 						String type)
 	{
-	    Object res = server.lookupAddressInNameServer(address, type);
+	    Object res = nameSupport.lookupAddressInNameServer(address, type);
 	    log("NameSupport", "Lookup of " + address + " returned " + res);
 	    return res;
 	}
 
-	public Iterator lookupMulticast(MulticastMessageAddress address) {
-	    return server.lookupMulticast(address);
-	}
-
-	public void addToTopology(MessageAddress addr) {
-	    server.addToTopology(addr);
-	}
-
-
-	public void removeFromTopology(MessageAddress addr) {
-	    server.removeFromTopology(addr);
-	}
-
-
-	public Iterator lookupInTopology(Attributes match, String attribute) {
-	    return server.lookupInTopology(match, attribute);
-	}
-
-	public Iterator lookupInTopology(Attributes match, String[] attributes)
-	{
-	    return server.lookupInTopology(match, attributes);
-	}
-
-
     }
 
 
 
-    public class SendQueueDelegate implements SendQueue
+    public class SendQueueDelegate 
+	extends SendQueueDelegateImplBase
     {
-	private SendQueue server;
-	
-	public SendQueueDelegate (SendQueue server)
-	{
-	    this.server = server;
+	public SendQueueDelegate (SendQueue queue) {
+	    super(queue);
 	}
 	
 	public void sendMessage(Message message) {
 	    log("SendQueue", message.toString()+" ("+size()+")");
-	    server.sendMessage(message);
-	}
-	public int size() {
-	    return server.size();
-	}
-	
-	public boolean matches(String name){
-	    return server.matches(name);
+	    queue.sendMessage(message);
 	}
     }
 
 
 
-    public class RouterDelegate implements Router
+    public class RouterDelegate extends RouterDelegateImplBase
     {
-	private Router server;
-	
-	public RouterDelegate (Router server)
-	{
-	    this.server = server;
+	public RouterDelegate (Router router) {
+	    super(router);
 	}
 	
 	public void routeMessage(Message message) {
 	    log("Router", message.getTarget().toString());
-	    server.routeMessage(message);
+	    router.routeMessage(message);
 	}
 
     }
 
 
 
-    public class DestinationQueueDelegate implements DestinationQueue
+    public class DestinationQueueDelegate 
+	extends DestinationQueueDelegateImplBase
     {
-	private DestinationQueue server;
-	
-	public DestinationQueueDelegate (DestinationQueue server)
-	{
-	    this.server = server;
+	public DestinationQueueDelegate (DestinationQueue queue) {
+	    super(queue);
 	}
 	
-	public int size() {
-	    return server.size();
-	}
 
 	public void holdMessage(Message message) {
 	    log("DestinationQueue", message.toString());
-	    server.holdMessage(message);
+	    queue.holdMessage(message);
 	}
 
 	public void dispatchNextMessage(Message message) {
 	    log("DestinationQueue dispatch", message.toString());
-	    server.dispatchNextMessage(message);
+	    queue.dispatchNextMessage(message);
 	}
 	
-	public boolean matches(MessageAddress addr){
-	    return server.matches(addr);
-	}
     }
 
 
-    public class DestinationLinkDelegate implements DestinationLink
+    public class DestinationLinkDelegate 
+	extends DestinationLinkDelegateImplBase
     {
-	private DestinationLink server;
-	
-	public DestinationLinkDelegate (DestinationLink server)
+	public DestinationLinkDelegate (DestinationLink link)
 	{
-	    this.server = server;
+	    super(link);
 	}
 	
 	public void forwardMessage(Message message) 
@@ -250,48 +204,38 @@ public class TraceAspect
 
 	{
 	    log("DestinationLink", message.toString());
-	    server.forwardMessage(message);
+	    link.forwardMessage(message);
 	}
 	
-	public int cost(Message message){
-	    return server.cost(message);
-	}
     }
 
 
-    public class MessageDelivererDelegate implements MessageDeliverer
+    public class MessageDelivererDelegate 
+	extends MessageDelivererDelegateImplBase
     {
-	private MessageDeliverer server;
-	
-	public MessageDelivererDelegate (MessageDeliverer server)
-	{
-	    this.server = server;
+	public MessageDelivererDelegate (MessageDeliverer deliverer) {
+	    super(deliverer);
 	}
 	
 	public void deliverMessage(Message message, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
 	    log("MessageDeliverer", message.toString());
-	    server.deliverMessage(message, dest);
+	    deliverer.deliverMessage(message, dest);
 	}
 	
-	public boolean matches(String name) {
-	    return server.matches(name);
-	}
     }
 
-    public class ReceiveLinkDelegate implements ReceiveLink
+    public class ReceiveLinkDelegate 
+	extends ReceiveLinkDelegateImplBase
     {
-	private ReceiveLink server;
-	
-	public ReceiveLinkDelegate (ReceiveLink server)
-	{
-	    this.server = server;
+	public ReceiveLinkDelegate (ReceiveLink link) {
+	    super(link);
 	}
 	
 	public void deliverMessage(Message message) {
 	    log("ReceiveLink", message.toString());
-	    server.deliverMessage(message);
+	    link.deliverMessage(message);
 	}
 
     }

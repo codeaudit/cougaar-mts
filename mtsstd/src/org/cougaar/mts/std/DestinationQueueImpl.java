@@ -104,9 +104,11 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 	DestinationLink link;
 	MessageTransportServiceProxy serviceProxy =
 	    registry.findServiceProxy(message.getOriginator());
+	int retryCount = 0;
+	Exception lastException = null;
 	while (true) {
 	    links = destinationLinks.iterator();
-	    link = selectionPolicy.selectLink(links, message);
+	    link = selectionPolicy.selectLink(links, message, retryCount, lastException);
 	    if (link != null) {
 		try {
 		    link.forwardMessage(message);
@@ -114,12 +116,16 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 			serviceProxy.messageDelivered(message);
 		    break;
 		} catch (UnregisteredNameException no_name) {
+		    lastException = no_name;
 		    // nothing to say here
 		} catch (NameLookupException lookup_error) {
+		    lastException = lookup_error;
 		    lookup_error.printStackTrace();
 		} catch (CommFailureException comm_failure) {
+		    lastException = comm_failure;
 		    comm_failure.printStackTrace();
 		} catch (MisdeliveredMessageException misd) {
+		    lastException = misd;
 		    System.err.println(misd);
 		}
 	    }
@@ -127,6 +133,7 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 	    if (serviceProxy != null)
 		if (serviceProxy.messageFailed(message)) break;
 
+	    retryCount++;
 	    try { Thread.sleep(delay);}
 	    catch (InterruptedException ex){}
 	    if (delay < MAX_DELAY) delay += delay;

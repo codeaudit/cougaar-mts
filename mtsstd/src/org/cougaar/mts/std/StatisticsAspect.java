@@ -107,12 +107,13 @@ public class StatisticsAspect
     }
 
 
-    private class StatisticsDestinationQueue implements DestinationQueue {
-	DestinationQueue queue;
+    private class StatisticsDestinationQueue 
+	extends DestinationQueueDelegateImplBase
+    {
 	long then = System.currentTimeMillis();
 
 	StatisticsDestinationQueue(DestinationQueue queue) {
-	    this.queue = queue;
+	    super(queue);
 	}
 
 	void accumulateStatistics() {
@@ -144,13 +145,6 @@ public class StatisticsAspect
 	}
 
 
-	public boolean matches(MessageAddress addr) {
-	    return queue.matches(addr);
-	}
-
-	public int size() {
-	    return queue.size();
-	}
     }
 
 

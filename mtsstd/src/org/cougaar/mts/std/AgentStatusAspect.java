@@ -74,13 +74,12 @@ public class AgentStatusAspect
     }
 
 
-    public class AgentStatusDestinationLink implements DestinationLink
+    public class AgentStatusDestinationLink 
+	extends DestinationLinkDelegateImplBase
     {
-	private DestinationLink server;
-	
-	public AgentStatusDestinationLink(DestinationLink server)
+	public AgentStatusDestinationLink(DestinationLink link)
 	{
-	    this.server = server;
+	    super(link);
 	}
 	
 	public void forwardMessage(Message message) 
@@ -95,7 +94,7 @@ public class AgentStatusAspect
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
-		server.forwardMessage(message);
+		link.forwardMessage(message);
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
 		long latency = endTime - startTime;
@@ -140,17 +139,13 @@ public class AgentStatusAspect
 	    }
 	}
 	
-	public int cost(Message message){
-	    return server.cost(message);
-	}
     }
-    public class SendQueueDelegate implements SendQueue
+
+    public class SendQueueDelegate 
+	extends SendQueueDelegateImplBase
     {
-	private SendQueue server;
-	
-	public SendQueueDelegate (SendQueue server)
-	{
-	    this.server = server;
+	public SendQueueDelegate (SendQueue queue) {
+	    super(queue);
 	}
 	
 	public void sendMessage(Message message) {
@@ -159,16 +154,9 @@ public class AgentStatusAspect
 	    synchronized (state) {
 		state.sendCount++;
 	    }	
-	    server.sendMessage(message);
+	    queue.sendMessage(message);
 	}
 	
-	public boolean matches(String name){
-	    return server.matches(name);
-	}
-
-	public int size() {
-	    return server.size();
-	}
     }
 
 }

@@ -22,12 +22,18 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import java.util.Iterator;
 
-public interface LinkSelectionPolicy
+
+abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+    protected ReceiveLink link;
+
+    protected ReceiveLinkDelegateImplBase(ReceiveLink link) {
+	this.link = link;
+    }
+
+    public void deliverMessage(Message message) {
+	link.deliverMessage(message);
+    }
+
 }

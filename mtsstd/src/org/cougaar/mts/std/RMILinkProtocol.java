@@ -224,6 +224,16 @@ public class RMILinkProtocol
 	    }
 	}
 
+	public boolean retryFailedMessage(Message message, int retryCount) {
+	    return true;
+	}
+
+    
+	public Class getProtocolClass() {
+	    return RMILinkProtocol.class;
+	}
+	
+
 	public int cost (Message message) {
 	    try {
 		cacheRemote();

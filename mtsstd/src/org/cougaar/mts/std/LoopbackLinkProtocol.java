@@ -91,6 +91,14 @@ class LoopbackLinkProtocol
 	deliverer.deliverMessage(message, message.getTarget());
     }
 
+    public boolean retryFailedMessage(Message message, int retryCount) {
+	return true;
+    }
+
+    
+    public Class getProtocolClass() {
+	return LoopbackLinkProtocol.class;
+    }
 
 
 }

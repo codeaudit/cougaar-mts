@@ -22,12 +22,25 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
-import java.util.Iterator;
 
-public interface LinkSelectionPolicy
+abstract public class SendQueueDelegateImplBase implements SendQueue 
 {
-    DestinationLink selectLink (Iterator links, 
-				Message msg, 
-				int retryCount,
-				Exception lastException);
+    protected SendQueue queue;
+
+    protected SendQueueDelegateImplBase(SendQueue queue) {
+	this.queue = queue;
+    }
+
+    public void sendMessage(Message message) {
+	queue.sendMessage(message);
+    }
+
+    public boolean matches(String name) {
+	return queue.matches(name);
+    }
+
+    public int size() {
+	return queue.size();
+    }
+
 }
