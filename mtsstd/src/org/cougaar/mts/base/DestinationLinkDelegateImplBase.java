@@ -50,6 +50,10 @@ abstract public class DestinationLinkDelegateImplBase
 	return link.forwardMessage(message);
     }
 
+    public boolean isValid() {
+	return link.isValid();
+    }
+
     public int cost(AttributedMessage message) {
 	return link.cost(message);
     }

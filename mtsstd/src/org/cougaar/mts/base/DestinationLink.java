@@ -87,6 +87,18 @@ public interface DestinationLink
 
 
     /**
+     * Is this link currently legitimate and functional?  The default
+     * is true for loopback and would ordinarily be true for remote
+     * calls if the stub (or whatever) is accessible.  Aspects can
+     * alter this behavior, for example to disable unencrypted rmi.
+     * This method in invoked on every loaded link before the link
+     * selection policy is run; the policy will not see invalid links
+     * at all.  As a side-effect, cost() will not always be run (as
+     * it was before 11_0).
+     */
+    boolean isValid();
+
+    /**
      * Ask Link whether or not further retries should be attempted.
      */
     boolean retryFailedMessage(AttributedMessage message, int retryCount);

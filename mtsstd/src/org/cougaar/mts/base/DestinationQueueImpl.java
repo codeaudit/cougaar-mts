@@ -57,8 +57,60 @@ final class DestinationQueueImpl
     private MessageAddress destination;
     private LinkSelectionPolicy selectionPolicy;
     private DestinationQueue delegate;
-
     private ArrayList destinationLinks;
+
+    private class LinkIterator implements Iterator
+    {
+	int position;
+	DestinationLink next;
+	
+	LinkIterator()
+	{
+	    position = 0;
+	    findNextValidLink();
+	}
+
+	private void findNextValidLink()
+	{
+	    while (position < destinationLinks.size()) {
+		next = (DestinationLink) destinationLinks.get(position);
+		if (next.isValid()) {
+		    if (loggingService.isInfoEnabled())
+			loggingService.info("Link " +next.getProtocolClass()+
+					    " [" +position+
+					    "] is valid");
+		    return;
+		}
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("Link " +next.getProtocolClass()+
+					" [" +position+
+					"] is not valid");
+		++position;
+	    }
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("No more valid links");
+	    next = null;
+	}
+
+	public boolean hasNext()
+	{
+	    return next != null;
+	}
+
+	public Object next() 
+	{
+	    DestinationLink link = next;
+	    ++position;
+	    findNextValidLink();
+	    return link;
+	}
+
+	public void remove() 
+	{
+	    throw new RuntimeException ("Cannot remove link");
+	}
+
+    }
 
     DestinationQueueImpl(MessageAddress destination, Container container)
     {
@@ -70,8 +122,7 @@ final class DestinationQueueImpl
     public void load() {
 	super.load();
 	ServiceBroker sb = getServiceBroker();
-	selectionPolicy =
-	(LinkSelectionPolicy)
+	selectionPolicy = (LinkSelectionPolicy)
 	    sb.getService(this, LinkSelectionPolicy.class, null);
 
 	this.delegate = this;
@@ -143,7 +194,7 @@ final class DestinationQueueImpl
 		loggingService.debug("Retrying " +message);
 	}
 
-	Iterator links = destinationLinks.iterator();
+	Iterator links = new LinkIterator();
 	DestinationLink link = 
 	    selectionPolicy.selectLink(links, message, previous,
 				       retryCount, lastException);

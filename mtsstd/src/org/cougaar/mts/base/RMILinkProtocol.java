@@ -473,21 +473,30 @@ public class RMILinkProtocol
 	}
 	
 
-	public int cost (AttributedMessage message) {
+	public boolean isValid() {
 	    try {
 		cacheRemote();
-		return computeCost(message);
+		return true;
 	    }
-	    catch (Exception ex) {
-		// not found, fail silently
-		return Integer.MAX_VALUE;
+	    catch (NameLookupException name_ex) {
+		return false;
+	    }
+	    catch (UnregisteredNameException unknown_ex) {
+		// still waiting?
+		return false;
 	    }
 	    catch (Throwable th) {
 		loggingService.error("Can't compute RMI cost", th);
-		return Integer.MAX_VALUE;
+		return false;
 	    }
 	}
 
+	public int cost(AttributedMessage message) {
+	    if (remote == null)
+		return Integer.MAX_VALUE;
+	    else
+		return computeCost(message);
+	}
 
 	public MessageAddress getDestination() {
 	    return target;

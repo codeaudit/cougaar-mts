@@ -95,6 +95,10 @@ class FutileSerializingLinkProtocol
 	}
 
 
+	public boolean isValid() {
+	    return true;
+	}
+
 	public int cost(AttributedMessage msg) {
 	    if (lastMessage != msg) {
 		lastMessage = msg;

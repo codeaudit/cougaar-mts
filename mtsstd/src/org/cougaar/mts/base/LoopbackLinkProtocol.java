@@ -89,6 +89,9 @@ public class LoopbackLinkProtocol
 	}
 	
 
+	public boolean isValid() {
+	    return true;
+	}
 
 	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws MisdeliveredMessageException
