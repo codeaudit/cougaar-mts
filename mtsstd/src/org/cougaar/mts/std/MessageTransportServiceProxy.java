@@ -124,7 +124,8 @@ public class MessageTransportServiceProxy
 
     /**
      * Wait for all queued messages for our client to be either
-     * delivered or dropped.  Return the list of dropped messages.
+     * delivered or dropped. 
+     * @return the list of dropped messages, which could be null.
      */
     public synchronized ArrayList flushMessages() {
 	flushing = true;

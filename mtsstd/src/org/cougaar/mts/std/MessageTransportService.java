@@ -45,7 +45,8 @@ public interface MessageTransportService extends Service
 
 
     /**
-     * Block until all queued messages have been sent (or dropped).  */
+     * Block until all queued messages have been sent (or dropped).
+     * @return The list of dropped messages (could be null). */
     java.util.ArrayList flushMessages();
 
     /**
