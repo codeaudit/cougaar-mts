@@ -20,9 +20,13 @@
  */
 
 package org.cougaar.mts.base;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.cougaar.core.agent.Agent;
+import org.cougaar.core.component.ComponentDescription;
 import org.cougaar.core.component.ComponentDescriptions;
 import org.cougaar.core.component.ContainerSupport;
 import org.cougaar.core.component.ServiceBroker;
@@ -60,19 +64,9 @@ public final class MessageTransportServiceProvider
 extends ContainerSupport
 implements ServiceProvider
 {
-
     // Some special aspect classes
-    private final static String STATISTICS_ASPECT = 
-	"org.cougaar.mts.std.StatisticsAspect";
-
-    private final static String NOT_A_CLIENT =
-	"Requestor is not a MessageTransportClient";
-
-    private final static String USE_NEW_FLUSH =
-      "org.cougaar.message.transport.new_flush";
-
-    // MTS address
-    private MessageAddress address;
+    private static final String STATISTICS_ASPECT = 
+        "org.cougaar.mts.std.StatisticsAspect";
 
     // Services we use (more than once)
     private AspectSupport aspectSupport;
@@ -81,279 +75,274 @@ implements ServiceProvider
     private WatcherAspect watcherAspect;
     private AgentStatusAspect agentStatusAspect;
 
-
     private String id;
     private final HashMap proxies = new HashMap();
 
-
-
-
-    public MessageTransportServiceProvider() {
-        super();
+    protected String specifyContainmentPoint() {
+        return Agent.INSERTION_POINT + ".MessageTransport";
     }
- 
 
-    
+    public void load() {
+        transitState("load()", UNLOADED, LOADED);
+
+        beforeConfig();
+
+        addAll(readConfig());
+
+        afterConfig();
+    }
+
+    // disable super load sequence
+    protected void loadHighPriorityComponents() {}
+    protected void loadInternalPriorityComponents() {}
+    protected void loadBinderPriorityComponents() {}
+    protected void loadComponentPriorityComponents() {}
+    protected void loadLowPriorityComponents() {}
+    protected ComponentDescriptions findInitialComponentDescriptions() { return null; }
+    protected ComponentDescriptions findExternalComponentDescriptions() { return null; }
+
+    // components that must be loaded before the config's components
+    private void beforeConfig() {
+        ServiceBroker csb = getChildServiceBroker();
+
+        NodeIdentificationService nis = (NodeIdentificationService)
+            csb.getService(this, NodeIdentificationService.class, null);
+        id = nis.getMessageAddress().toString();
+        loggingService = 
+            (LoggingService) csb.getService(this, LoggingService.class, null);
+
+        AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
+        csb.addService(AspectSupport.class, impl);
+
+        // Do the standard set first, since they're assumed to be more
+        // generic than the user-specified set.
+
+        // Drop Stale messages
+        // Needs loaded first so all other aspets have a chance the
+        // process the message before it gets dropped)
+        add(new MessageTimeoutAspect());
+
+        // For the MessageWatcher service
+        watcherAspect = new WatcherAspect();
+        add(watcherAspect);
+
+        // Keep track of Agent state
+        agentStatusAspect = new AgentStatusAspect();
+        add(agentStatusAspect);
+
+        // Handling multicast messages
+        add(new MulticastAspect());
+
+        // Handling flushMessage();
+        add(new FlushAspect());
+
+        // Could use a ComponentDescription
+        ThreadServiceProvider tsp = new ThreadServiceProvider();
+        tsp.setParameter("name=MTS");
+        add(tsp);
+
+        MessageTransportRegistry reg = new MessageTransportRegistry(id, csb);
+        csb.addService(MessageTransportRegistryService.class, reg);
+
+        LinkSelectionProvision lsp = new LinkSelectionProvision();
+        csb.addService(LinkSelectionProvisionService.class, lsp);
+
+        SocketControlProvision scp = new SocketControlProvision();
+        csb.addService(SocketControlProvisionService.class, scp);
+        // SocketFactory has no access to services, so set it manually
+        // in a static.
+        SocketFactory.configureProvider(csb);
+    }
+
+    // components specified in the config files
+    private List readConfig() {
+        ComponentDescriptions descs;
+        if (loadState instanceof ComponentDescriptions) {
+            // rehydration
+            descs = (ComponentDescriptions) loadState;
+            loadState = null;
+        } else {
+            // read config
+            ServiceBroker csb = getChildServiceBroker();
+            ComponentInitializerService cis = (ComponentInitializerService) 
+                csb.getService(this, ComponentInitializerService.class, null);
+            try {
+                String cp = specifyContainmentPoint();
+                descs = new ComponentDescriptions(cis.getComponentDescriptions(id,cp));
+            } catch (ComponentInitializerService.InitializerException cise) {
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("\nUnable to add "+id+"'s plugins ",cise);
+                }
+                descs = null;
+            } finally {
+                csb.releaseService(this, ComponentInitializerService.class, cis);
+            }
+        }
+
+        // flatten
+        List l = new ArrayList();
+        if (descs != null) {
+            // ubug 13451:
+            l.addAll(descs.selectComponentDescriptions(
+                        ComponentDescription.PRIORITY_INTERNAL));
+            // typical Aspects/LinkProtocols/etc
+            l.addAll(descs.selectComponentDescriptions(
+                        ComponentDescription.PRIORITY_COMPONENT));
+        }
+        return l;
+    }
+
+    // components that must be loaded after the config's components
+    private void afterConfig() {
+        // backward compatibility for -D option
+        loadAspects(); 
+
+        // The rest of the services depend on aspects.
+        createNameSupport(id);
+        createFactories();
+
+        ServiceBroker csb = getChildServiceBroker();
+        NodeControlService ncs = (NodeControlService)
+            csb.getService(this, NodeControlService.class, null);
+
+        ServiceBroker rootsb = ncs.getRootServiceBroker();
+        rootsb.addService(MessageTransportService.class, this);
+        rootsb.addService(MessageStatisticsService.class, this);
+        rootsb.addService(MessageWatcherService.class, this);
+        rootsb.addService(AgentStatusService.class, this);
+    }
 
     private void createNameSupport(String id) {
         ServiceBroker csb = getChildServiceBroker();
-        if (csb == null) throw new RuntimeException("No child service broker");
-
-	NameSupportImpl impl = new NameSupportImpl(id, csb);
-
-	csb.addService(NameSupport.class, impl);
+        NameSupportImpl impl = new NameSupportImpl(id, csb);
+        csb.addService(NameSupport.class, impl);
     }
-
 
     private void loadAspects() {
         ServiceBroker csb = getChildServiceBroker();
-        if (csb == null) throw new RuntimeException("No child service broker");
-
-	aspectSupport = 
-	    (AspectSupport) csb.getService(this, AspectSupport.class, null);
-	aspectSupport.readAspects();
+        aspectSupport = 
+            (AspectSupport) csb.getService(this, AspectSupport.class, null);
+        aspectSupport.readAspects();
     }
 
     private void createFactories() {
-	ServiceBroker csb = getChildServiceBroker();
-
-	MessageStreamsFactory msgFactory = MessageStreamsFactory.makeFactory();
-	add(msgFactory);
-
-	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory();
-	add(receiveLinkFactory);
-	csb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
-	
-
-	LinkSelectionPolicyServiceProvider lspsp =
-	    new LinkSelectionPolicyServiceProvider(csb, this);
-	csb.addService(LinkSelectionPolicy.class, lspsp);
-	
-	DestinationQueueFactory	destQFactory = 
-	    new DestinationQueueFactory(this);
-	add(destQFactory);
-	csb.addService(DestinationQueueProviderService.class, destQFactory);
-	csb.addService(DestinationQueueMonitorService.class, destQFactory);
-
-	//  Singletons, though produced by factories.
-	MessageDelivererFactory delivererFactory = 
-	    new MessageDelivererFactory(id);
-	add(delivererFactory);
-	csb.addService(MessageDeliverer.class, delivererFactory);
-
-	RouterFactory routerFactory =  new RouterFactory();
-	add(routerFactory);
-	csb.addService(Router.class, routerFactory);
-
-	SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
-	add(sendQFactory);
-	csb.addService(SendQueue.class, sendQFactory);
-	csb.addService(SendQueueImpl.class, sendQFactory);
-
-
-	// load LinkProtocols
-	new LinkProtocolFactory(this, csb);
-    }
-
-
-    private Object findOrMakeProxy(Object requestor) {
-	MessageTransportClient client = (MessageTransportClient) requestor;
-	MessageAddress addr = client.getMessageAddress();
-	Object proxy = proxies.get(addr);
-	if (proxy != null) return proxy;
-	
-	// Make SendLink and attach aspect delegates
-	SendLink link = new SendLinkImpl(addr, getChildServiceBroker());
-	Class c = SendLink.class;
-	Object raw = aspectSupport.attachAspects(link, c);
-	link = (SendLink) raw;
-
-	// Make proxy
-	proxy = new MessageTransportServiceProxy(client, link);
-	proxies.put(addr, proxy);
-	if (loggingService.isDebugEnabled())
-	    loggingService.debug("Created MessageTransportServiceProxy for " 
-				      +requestor+
-				      " with address "
-				      +client.getMessageAddress());
-	return proxy;
-
-    }
-
-    protected String specifyContainmentPoint() {
- 	return Agent.INSERTION_POINT + ".MessageTransport";
-    }
-
-    protected ComponentDescriptions findInitialComponentDescriptions() {
-	ServiceBroker sb = getServiceBroker();
-	NodeIdentificationService nis = (NodeIdentificationService)
-	    sb.getService(this, NodeIdentificationService.class, null);
- 	id = nis.getMessageAddress().toString();
-	loggingService = 
-	    (LoggingService) sb.getService(this, LoggingService.class, null);
-	ComponentInitializerService cis = (ComponentInitializerService) 
-	    sb.getService(this, ComponentInitializerService.class, null);
-	try {
-	    String cp = specifyContainmentPoint();
- 	    // Want only items _below_. Could filter (not doing so now)
-	    return new ComponentDescriptions(cis.getComponentDescriptions(id,cp));
-	} catch (ComponentInitializerService.InitializerException cise) {
-	    if (loggingService.isInfoEnabled()) {
-		loggingService.info("\nUnable to add "+id+"'s plugins ",cise);
-	    }
-	    return null;
-	} finally {
-	    sb.releaseService(this, ComponentInitializerService.class, cis);
-	}
-    }
-
-    public void loadHighPriorityComponents() {
-	super.loadHighPriorityComponents();
-
-	ServiceBroker csb = getChildServiceBroker();
-
-	AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
-	csb.addService(AspectSupport.class, impl);
-
-	// Do the standard set first, since they're assumed to be more
-	// generic than the user-specified set.
-
-	// Drop Stale messages
-	// Needs loaded first so all other aspets have a chance the
-	// process the message before it gets dropped)
-	add(new MessageTimeoutAspect());
-
-	// For the MessageWatcher service
-	watcherAspect =  new WatcherAspect();
-	add(watcherAspect);
-
-	// Keep track of Agent state
-	agentStatusAspect =  new AgentStatusAspect();
-	add(agentStatusAspect);
-
-	// Handling multicast messages
-	add(new MulticastAspect());
-
-	// Handling flushMessage();
-        if ("false".equalsIgnoreCase(
-              System.getProperty(USE_NEW_FLUSH, "true")))
-	    add(new FlushAspect());
-
-	// Could use a ComponentDescription
-	ThreadServiceProvider tsp = new ThreadServiceProvider();
-	tsp.setParameter("name=MTS");
-	add(tsp);
-
-
-	MessageTransportRegistry reg = new MessageTransportRegistry(id, csb);
-	csb.addService(MessageTransportRegistryService.class, reg);
-
-	LinkSelectionProvision lsp = new LinkSelectionProvision();
-	csb.addService(LinkSelectionProvisionService.class, lsp);
-
-	SocketControlProvision scp = new SocketControlProvision();
-	csb.addService(SocketControlProvisionService.class, scp);
-	// SocketFactory has no access to services, so set it manually
-	// in a static.
-	SocketFactory.configureProvider(csb);
-   }
-
-    // CSMART Aspects (INTERNAL priority) will load between
-    // HighPriority and ComponentPriority.  CSMART LinkProtocols and
-    // LinkSelectionPolicys (COMPONENT priority) will load in the
-    // super.loadComponentPriorityComponents
-
-    public void loadComponentPriorityComponents() {
-	// CSMART LinkProtocols will be loaded in the super,
-        super.loadComponentPriorityComponents();
-
-	// backward compatibility for -D option
-	loadAspects(); 
-
-	// The rest of the services depend on aspects.
-        createNameSupport(id);
-	createFactories();
-
-        ServiceBroker sb = getServiceBroker();
         ServiceBroker csb = getChildServiceBroker();
 
-	NameSupport nameSupport = 
-	    (NameSupport) 
-	    csb.getService(this, NameSupport.class, null);
-	address = nameSupport.getNodeMessageAddress();
+        MessageStreamsFactory msgFactory = MessageStreamsFactory.makeFactory();
+        add(msgFactory);
 
-	// MessageTransportService isn't available at this point, so
-	// do the calls manually (ugh).
-//	What's the point of getting a service and never using it?
-//      MessageTransportRegistryService registry = 
-//	    (MessageTransportRegistryService)
-//	    csb.getService(this, MessageTransportRegistryService.class,  null);
+        ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory();
+        add(receiveLinkFactory);
+        csb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
 
+        LinkSelectionPolicyServiceProvider lspsp =
+            new LinkSelectionPolicyServiceProvider(csb, this);
+        csb.addService(LinkSelectionPolicy.class, lspsp);
 
-	NodeControlService ncs = (NodeControlService)
-	    sb.getService(this, NodeControlService.class, null);
-	ServiceBroker rootsb = ncs.getRootServiceBroker();
-	rootsb.addService(MessageTransportService.class, this);
-	rootsb.addService(MessageStatisticsService.class, this);
-	rootsb.addService(MessageWatcherService.class, this);
-	rootsb.addService(AgentStatusService.class, this);
+        DestinationQueueFactory destQFactory = 
+            new DestinationQueueFactory(this);
+        add(destQFactory);
+        csb.addService(DestinationQueueProviderService.class, destQFactory);
+        csb.addService(DestinationQueueMonitorService.class, destQFactory);
+
+        //  Singletons, though produced by factories.
+        MessageDelivererFactory delivererFactory = 
+            new MessageDelivererFactory(id);
+        add(delivererFactory);
+        csb.addService(MessageDeliverer.class, delivererFactory);
+
+        RouterFactory routerFactory = new RouterFactory();
+        add(routerFactory);
+        csb.addService(Router.class, routerFactory);
+
+        SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
+        add(sendQFactory);
+        csb.addService(SendQueue.class, sendQFactory);
+        csb.addService(SendQueueImpl.class, sendQFactory);
+
+        // load LinkProtocols
+        new LinkProtocolFactory(this, csb);
     }
 
+    private Object findOrMakeProxy(Object requestor) {
+        MessageTransportClient client = (MessageTransportClient) requestor;
+        MessageAddress addr = client.getMessageAddress();
+        Object proxy = proxies.get(addr);
+        if (proxy != null) return proxy;
+
+        // Make SendLink and attach aspect delegates
+        SendLink link = new SendLinkImpl(addr, getChildServiceBroker());
+        Class c = SendLink.class;
+        Object raw = aspectSupport.attachAspects(link, c);
+        link = (SendLink) raw;
+
+        // Make proxy
+        proxy = new MessageTransportServiceProxy(client, link);
+        proxies.put(addr, proxy);
+        if (loggingService.isDebugEnabled())
+            loggingService.debug(
+                    "Created MessageTransportServiceProxy for "+
+                    requestor+
+                    " with address "+
+                    client.getMessageAddress());
+        return proxy;
+
+    }
 
     // ServiceProvider
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == MessageTransportService.class) {
-	    if (requestor instanceof MessageTransportClient) {
-		return findOrMakeProxy(requestor);
-	    } else {
-		throw new IllegalArgumentException(NOT_A_CLIENT);
-	    }
-	} else if (serviceClass == MessageStatisticsService.class) {
-	    StatisticsAspect aspect = 
-		(StatisticsAspect) aspectSupport.findAspect(STATISTICS_ASPECT);
-	    return aspect;
-	} else if (serviceClass == MessageWatcherService.class) {
-	    return new MessageWatcherServiceImpl(watcherAspect);
-	} else if (serviceClass == AgentStatusService.class) {
-	    return agentStatusAspect;
-	} else {
-	    return null;
-	}
+    public Object getService(
+            ServiceBroker sb, 
+            Object requestor, 
+            Class serviceClass) {
+        if (serviceClass == MessageTransportService.class) {
+            if (requestor instanceof MessageTransportClient) {
+                return findOrMakeProxy(requestor);
+            } else {
+                throw new IllegalArgumentException(
+                        "Requestor is not a MessageTransportClient");
+            }
+        } else if (serviceClass == MessageStatisticsService.class) {
+            StatisticsAspect aspect = 
+                (StatisticsAspect) aspectSupport.findAspect(STATISTICS_ASPECT);
+            return aspect;
+        } else if (serviceClass == MessageWatcherService.class) {
+            return new MessageWatcherServiceImpl(watcherAspect);
+        } else if (serviceClass == AgentStatusService.class) {
+            return agentStatusAspect;
+        } else {
+            return null;
+        }
     }
 
-
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
-	if (serviceClass == MessageTransportService.class) {
-	    if (requestor instanceof MessageTransportClient) {
-		MessageTransportClient client = 
-		    (MessageTransportClient) requestor;
-		MessageAddress addr = client.getMessageAddress();
-		MessageTransportService svc = 
-		    (MessageTransportService) proxies.get(addr);
-		MessageTransportServiceProxy proxy =
-		    (MessageTransportServiceProxy) proxies.get(addr);
-		if (svc != service) return; // ???
-		proxies.remove(addr);
-		proxy.release();
-	    }
-	} else if (serviceClass == MessageStatisticsService.class) {
-	    // The only resource used here is the StatisticsAspect,
-	    // which stays around.  
-	} else if (serviceClass == AgentStatusService.class) {
-	    // The only resource used here is the aspect, which stays
-	    // around.
-	} else if (serviceClass == MessageWatcherService.class) {
-	    if (service instanceof MessageWatcherServiceImpl) {
-		((MessageWatcherServiceImpl) service).release();
-	    }
-	} 
+    public void releaseService(
+            ServiceBroker sb, 
+            Object requestor, 
+            Class serviceClass, 
+            Object service) {
+        if (serviceClass == MessageTransportService.class) {
+            if (requestor instanceof MessageTransportClient) {
+                MessageTransportClient client = 
+                    (MessageTransportClient) requestor;
+                MessageAddress addr = client.getMessageAddress();
+                MessageTransportService svc = 
+                    (MessageTransportService) proxies.get(addr);
+                MessageTransportServiceProxy proxy =
+                    (MessageTransportServiceProxy) proxies.get(addr);
+                if (svc != service) return; // ???
+                proxies.remove(addr);
+                proxy.release();
+            }
+        } else if (serviceClass == MessageStatisticsService.class) {
+            // The only resource used here is the StatisticsAspect,
+            // which stays around.  
+        } else if (serviceClass == AgentStatusService.class) {
+            // The only resource used here is the aspect, which stays
+            // around.
+        } else if (serviceClass == MessageWatcherService.class) {
+            if (service instanceof MessageWatcherServiceImpl) {
+                ((MessageWatcherServiceImpl) service).release();
+            }
+        } 
     }
 }
