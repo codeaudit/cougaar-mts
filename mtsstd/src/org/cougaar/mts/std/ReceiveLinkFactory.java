@@ -20,10 +20,9 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.MessageTransportClient;
 
 /**
  * A factory which makes ReceiveLinks.  The caching for ReceiveLinks

@@ -20,25 +20,16 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.HashMap;
+
 import org.cougaar.core.agent.Agent;
-import org.cougaar.core.component.Binder;
-import org.cougaar.core.component.BinderFactory;
-import org.cougaar.core.component.BinderFactorySupport;
-import org.cougaar.core.component.BinderSupport;
-import org.cougaar.core.component.BindingSite;
-import org.cougaar.core.component.ComponentDescription;
 import org.cougaar.core.component.ComponentDescriptions;
-import org.cougaar.core.component.Container;
-import org.cougaar.core.component.ContainerAPI;
 import org.cougaar.core.component.ContainerSupport;
-import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.component.ServiceRevokedListener;
-import org.cougaar.core.component.StateObject;
+import org.cougaar.core.mts.AgentStatusService;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.node.ComponentInitializerService;
 import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.node.NodeIdentificationService;

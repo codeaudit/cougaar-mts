@@ -20,20 +20,15 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -45,13 +40,12 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.thread.Schedulable;
 
 public final class StepperAspect 
     extends StandardAspect

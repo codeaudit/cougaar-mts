@@ -20,17 +20,13 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;

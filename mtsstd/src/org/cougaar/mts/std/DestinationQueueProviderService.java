@@ -20,12 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 
-import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.Service;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.util.UnaryPredicate;
 
 public interface DestinationQueueProviderService extends Service
 {

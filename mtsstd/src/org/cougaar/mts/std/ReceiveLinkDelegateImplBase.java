@@ -20,7 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 
 
 abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink

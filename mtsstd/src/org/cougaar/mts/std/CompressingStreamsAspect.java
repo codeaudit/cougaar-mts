@@ -26,7 +26,6 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
-import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import org.cougaar.core.mts.MessageAddress;

@@ -20,10 +20,9 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
 
 /**

@@ -20,7 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 
 
 abstract public class MessageDelivererDelegateImplBase

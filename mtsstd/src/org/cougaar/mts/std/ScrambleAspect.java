@@ -20,10 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 
 /**

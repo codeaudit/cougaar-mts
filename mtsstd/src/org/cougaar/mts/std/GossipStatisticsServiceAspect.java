@@ -20,12 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.node.NodeControlService;
-import org.cougaar.core.qos.metrics.Metric;
 
 final public class GossipStatisticsServiceAspect
     extends StandardAspect

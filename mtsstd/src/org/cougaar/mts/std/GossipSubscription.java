@@ -20,17 +20,16 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import org.cougaar.core.qos.metrics.Metric;
-import org.cougaar.core.qos.metrics.MetricNotificationQualifier;
-import org.cougaar.core.qos.metrics.MetricsService;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.qos.metrics.Metric;
+import org.cougaar.core.qos.metrics.MetricNotificationQualifier;
+import org.cougaar.core.qos.metrics.MetricsService;
 
 class GossipSubscription
 {

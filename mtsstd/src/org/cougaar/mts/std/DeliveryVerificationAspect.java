@@ -20,17 +20,17 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 
 public class DeliveryVerificationAspect 

@@ -20,14 +20,13 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
-import org.cougaar.core.service.LoggingService;
+
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 
 /**
  * Debugging aid - fails by design after serializing.

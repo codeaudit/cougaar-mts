@@ -20,14 +20,12 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.net.URI;
 
-import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 
 /**
  * This is a very simple aspect which is mostly for demonstration

@@ -20,9 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import org.cougaar.core.qos.metrics.Metric;
 
 public interface GossipStatisticsService
 {

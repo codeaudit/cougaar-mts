@@ -20,14 +20,13 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
-import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.util.PropertyParser;
 
 /**

@@ -20,9 +20,7 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.util.Random;
+import org.cougaar.core.mts.MessageAttributes;
 
 /**
  * This is a debugging aspect.  By attaching it in a single-node

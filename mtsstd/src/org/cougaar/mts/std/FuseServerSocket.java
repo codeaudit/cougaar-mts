@@ -20,10 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.IOException;
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;

@@ -20,17 +20,16 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.service.SocketFactoryService;
-import org.cougaar.core.component.*;
-
 import java.rmi.server.RMISocketFactory;
-import javax.net.ServerSocketFactory;
-// import javax.net.SocketFactory; FIXME bug 2494
+import java.util.Map;
+
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import java.util.Map;
+import org.cougaar.core.component.ComponentSupport;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.service.SocketFactoryService;
 
 /**
  * Provide SocketFactoryService via the std (aspected) MTS for the rest of the world.

@@ -20,21 +20,15 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.net.URI;
-import java.rmi.MarshalException;
 import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.component.ServiceRevokedListener;
-//import org.cougaar.mts.std.RMILinkProtocol.Service;
-import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;

@@ -20,12 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.net.URI;
 import java.util.Iterator;
 
 import org.cougaar.core.component.Service;
+import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.wp.Callback;
 
 /**

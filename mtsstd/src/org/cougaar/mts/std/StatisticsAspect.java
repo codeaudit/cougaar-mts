@@ -20,16 +20,16 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
-import org.cougaar.core.service.LoggingService;
+
+import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageStatistics;
 import org.cougaar.core.service.MessageStatisticsService;
 
 /**

@@ -20,12 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.ObjectOutput;
 import java.net.URI;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.RemoteRef;
+
 import sun.rmi.server.UnicastRef;
 
 /**

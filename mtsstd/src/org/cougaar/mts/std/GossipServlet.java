@@ -20,15 +20,12 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.PrintWriter;
-import java.text.DecimalFormat;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.servlet.ServletFrameset;
-import org.cougaar.core.service.MessageStatisticsService;
 
 public class GossipServlet 
     extends ServletFrameset

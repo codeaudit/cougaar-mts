@@ -20,7 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
 
 
 abstract public class RouterDelegateImplBase implements Router

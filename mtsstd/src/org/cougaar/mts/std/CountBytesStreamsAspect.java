@@ -20,16 +20,14 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
-import java.io.PrintStream;
+
+import org.cougaar.core.mts.MessageAttributes;
 
 public class CountBytesStreamsAspect extends StandardAspect 
 {

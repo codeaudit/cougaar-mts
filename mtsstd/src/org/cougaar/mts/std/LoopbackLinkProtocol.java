@@ -20,9 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.HashMap;
+
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 
 /**
  * This protocol handles all intra-node message traffic.   */

@@ -20,10 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.IOException;
-import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.SerializationUtils;
 
 /**
  * This is a debugging aspect.  By attaching it in a single-node

@@ -20,16 +20,15 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.util.UnaryPredicate;
 
 /**
  * A factory which makes DestinationQueues.  It uses the standard

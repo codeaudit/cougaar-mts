@@ -20,15 +20,15 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 
-import org.cougaar.util.PropertyParser;
-import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
+import org.cougaar.util.PropertyParser;
+import org.cougaar.util.UnaryPredicate;
 
 /**
  * Aspect to throw out a timed out message. Necessary for MsgLog et. al. 

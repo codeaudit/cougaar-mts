@@ -20,8 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

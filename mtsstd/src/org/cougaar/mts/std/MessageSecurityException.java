@@ -20,9 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.Serializable;
 
 public class MessageSecurityException 
     extends DontRetryException

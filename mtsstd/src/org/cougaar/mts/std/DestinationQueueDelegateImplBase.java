@@ -20,7 +20,7 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
+import org.cougaar.core.mts.MessageAddress;
 
 
 abstract public class DestinationQueueDelegateImplBase 

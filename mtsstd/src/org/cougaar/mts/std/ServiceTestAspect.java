@@ -20,12 +20,9 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
-//import org.cougaar.mts.std.RMILinkProtocol.Service;
-import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 
 /**
  *  Just for testing access to LinkProtocol services.

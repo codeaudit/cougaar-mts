@@ -20,13 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import org.cougaar.core.qos.metrics.Metric;
-import org.cougaar.core.qos.metrics.GossipUpdateService;
-
 import java.util.Iterator;
 import java.util.Map;
+
+import org.cougaar.core.qos.metrics.GossipUpdateService;
+import org.cougaar.core.qos.metrics.Metric;
 
 class ValueGossip 
     extends Gossip

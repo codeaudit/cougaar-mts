@@ -20,23 +20,20 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.qos.metrics.GossipKeyDistributionService;
 import org.cougaar.core.qos.metrics.GossipUpdateService;
 import org.cougaar.core.qos.metrics.MetricsService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.WhitePagesService;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 public class GossipAspect 
     extends StandardAspect

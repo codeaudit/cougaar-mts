@@ -20,9 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
+
+import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageTransportClient;
 
 /**
  * SendLink is the first station after the MessageTransportService

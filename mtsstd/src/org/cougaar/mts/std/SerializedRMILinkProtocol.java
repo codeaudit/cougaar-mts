@@ -20,11 +20,9 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.IOException;
-import java.rmi.RemoteException;
-import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.SerializationUtils;
 
 /**
  * Simple extension to RMILinkProtocol which uses pre-serialization.

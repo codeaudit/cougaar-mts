@@ -20,10 +20,10 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import org.cougaar.core.mts.MessageTransportWatcher;
 import org.cougaar.core.service.MessageWatcherService;
 
 class MessageWatcherServiceImpl

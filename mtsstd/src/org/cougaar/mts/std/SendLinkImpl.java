@@ -20,16 +20,17 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 
-import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.WhitePagesService;
+import org.cougaar.util.UnaryPredicate;
 
 
 final public class SendLinkImpl

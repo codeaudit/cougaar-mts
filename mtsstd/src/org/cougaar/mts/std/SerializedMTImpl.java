@@ -20,12 +20,12 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.IOException;
-import java.rmi.server.UnicastRemoteObject; // not used but needed by ANT
 import java.rmi.RemoteException;
+
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.SerializationUtils;
 
 /** actual RMI remote object providing the implementation of MessageTransport client
  **/

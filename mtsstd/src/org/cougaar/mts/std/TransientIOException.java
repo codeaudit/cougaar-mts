@@ -20,7 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 

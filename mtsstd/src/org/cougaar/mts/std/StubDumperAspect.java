@@ -20,11 +20,9 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.net.URI;
 
-import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.mts.MessageAddress;
 
 public class StubDumperAspect extends StandardAspect
 {

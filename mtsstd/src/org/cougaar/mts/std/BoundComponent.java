@@ -20,7 +20,6 @@
  */
 
 package org.cougaar.mts.std;
-import java.util.Properties;
 
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ParameterizedComponent;

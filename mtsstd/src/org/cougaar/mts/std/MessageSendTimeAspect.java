@@ -20,9 +20,7 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import org.cougaar.util.PropertyParser;
+import org.cougaar.core.mts.AttributeConstants;
 
 /**
  * Aspect that tags all messages with a "send time" attribute when

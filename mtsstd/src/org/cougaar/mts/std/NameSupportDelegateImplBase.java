@@ -20,11 +20,10 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.net.URI;
 import java.util.Iterator;
 
+import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.wp.Callback;
 
 abstract public class NameSupportDelegateImplBase implements NameSupport 

@@ -20,10 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 
 /** actual RMI remote interface for MessageTransport clients (clusters).
  **/

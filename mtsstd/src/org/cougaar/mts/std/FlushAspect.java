@@ -20,11 +20,12 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-import org.cougaar.core.service.LoggingService;
+
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 
 public class FlushAspect extends StandardAspect
 {

@@ -20,17 +20,13 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.Container;
-import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
-import org.cougaar.core.thread.Schedulable;
+import org.cougaar.util.UnaryPredicate;
 
 /**
  * An abstract class which manages a circular queue of messages, and

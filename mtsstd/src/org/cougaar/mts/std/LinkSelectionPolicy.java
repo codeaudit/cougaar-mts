@@ -20,9 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.Iterator;
+
 import org.cougaar.core.component.Component;
 import org.cougaar.core.component.Service;
 

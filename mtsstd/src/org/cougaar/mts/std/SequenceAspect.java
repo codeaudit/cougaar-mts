@@ -20,13 +20,17 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
+
+import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
+import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.LoggingService;
 
 /**

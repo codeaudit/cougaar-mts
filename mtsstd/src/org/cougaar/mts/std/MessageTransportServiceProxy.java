@@ -20,10 +20,14 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.MessageTransportService;
 
 /**

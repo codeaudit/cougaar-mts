@@ -20,25 +20,21 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.util.log.Logger;
-import org.cougaar.util.log.Logging;
-
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
+
 import javax.net.ServerSocketFactory;
-// import javax.net.SocketFactory; FIXME bug 2494
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
+
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
 /**
  * This is not really a factory, it just needs to use AspectFactory's
