@@ -181,7 +181,6 @@ public class RMILinkProtocol
     protected void handleSecurityException(Exception ex) 
 	throws CommFailureException
     {
-	System.err.println(ex);
 	Throwable cause = ex.getCause();
 	if (ex instanceof java.rmi.MarshalException) {
 	    if (cause instanceof MessageSecurityException) {
