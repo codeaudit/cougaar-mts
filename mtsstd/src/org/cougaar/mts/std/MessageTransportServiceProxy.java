@@ -57,6 +57,13 @@ public class MessageTransportServiceProxy
 
 
 
+    private void showPending(String text) {
+	String msgs = 
+	    outstandingMessages == 1 ? " message" : " messages";
+	System.out.println("%%% " + addr + ": " + text +
+			   ", "  + outstandingMessages +  msgs +
+			   " now pending");
+    }
 
     /**
      * Redirects the sendMessage to the SendQueue. */
@@ -73,12 +80,7 @@ public class MessageTransportServiceProxy
 	    sendQ.sendMessage(m);
 	    synchronized (this) { 
 		++outstandingMessages; 
-		if (Debug.DEBUG_FLUSH) {
-		    System.out.println("%%% " + addr +
-				       ": Message sent, " 
-				       + outstandingMessages + 
-				       " messages pending");
-		}
+		if (Debug.DEBUG_FLUSH) showPending("Message queued");
 	    }
 	} else {
 	    System.err.println("**** Malformed message: "+m);
@@ -96,12 +98,7 @@ public class MessageTransportServiceProxy
      */
     synchronized void messageDelivered(Message m) {
 	--outstandingMessages;
-	if (Debug.DEBUG_FLUSH) {
-	    System.out.println("%%% " + addr + 
-			       ": Message delivered, " 
-			       + outstandingMessages + 
-			       " messages pending");
-	}
+	if (Debug.DEBUG_FLUSH) showPending("Message delivered");
 	if (outstandingMessages <= 0) notify();
     }
 
@@ -116,12 +113,7 @@ public class MessageTransportServiceProxy
 	if (!flushing) return false; // do nothing in this case
 
 	--outstandingMessages;
-	if (Debug.DEBUG_FLUSH) {
-	    System.out.println("%%% " + addr + 
-			       ": Message dropped, " 
-			       + outstandingMessages + 
-			       " messages pending");
-	}
+	if (Debug.DEBUG_FLUSH) showPending("Message dropped");
 	if (droppedMessages == null) droppedMessages = new ArrayList();
 	droppedMessages.add(message);
 	if (outstandingMessages <= 0) notify();
