@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>MTS Configuration</title>
+</head>
+
+<body>
+
+<h2> MTS Configuration</h2>
+
+<h5>Loading Aspects</h5>
+<p>Aspects should be loaded as a components using the insertion point</p>
+
+<pre>Node.AgentManager.Agent.MessageTransport.Aspect </pre>
+
+<h5>Loading Link Protocols</h5>
+
+<p>LinkProtocols should be loaded as components using the insertion
+point</p>
+
+<pre>Node.AgentManager.Agent.MessagTransport.Component </pre>
+
+<p>If no LinkProtocol components are specified, RMI and Loopback will be loaded 
+    as defaults. </p>
+
+<h4>Single-Node MTS</h4>
+
+<p> A single-node MTS implementation was created for performance
+characterization and MTS overhead computation, which resides in
+org.cougaar.core.mts.singlenode.  It is a very lightweight version of
+the MTS whereby a single node is run without the overhead of costly
+services (naming,wp,etc.) It provides the developer with an easy
+stripped testcase for performance characterization. </p>
+
+<h5>Configuring a Single-Node MTS at Runtime</h5>
+
+<p> All that is required to run a Single-Node MTS society is to
+specify one machine with one or multiple agents, one node, and an
+argument sepcifying the desired Single-Node MTS implementation: </p>
+
+<pre>   -Dorg.cougaar.core.mts.singlenode=true</pre>
+
+
+
+
+</body> </html>

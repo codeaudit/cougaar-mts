@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>MTS Aspects</title>
+</head>
+
+<body>
+
+<h4>MTS Aspects</h4>
+
+<p> The principles of Aspect Oriented Programming (AOP) provide a
+perfect mechanism for extending and adapting the basic structure of
+the MTS, since the nature of such extensions is generally a <i>cut</i>
+across two or more structural components. In order to facilitate this
+use of AOP without depending on third-party code generators, the MTS
+includes a simple, limited implementation directly in Java that uses
+aspect instances to provide delegates for the various station
+interfaces. This implementation centers on classes, which implement
+the interface MessageTransportAspect, in particular, subclasses of
+StandardAspect. All the aspects described below are sublcasses of
+StandardAspect. Aspects are Cougaar Components and are loaded in the
+usual way. Some Aspects are also created explicitly in code. </p>
+
+<p> The application of aspects to station and other instances is
+handled by the AspectSupport Service, available to all MTS
+Components. The order of aspects is important and will always follow
+the Component loading order. The explicitly created aspects always
+come before the aspects loaded as Components. </p>
+
+<p> The application of aspects follows a simple pattern, using the
+MessageTransportAspect method getDelegate. After any
+&quot;aspectizable&quot; instance is created, whether by a factory or
+by any other means, each aspect in turn is given an opportunity to
+provide a delegate for that instance. The delegate, which will of
+course match the same interface as the original instance, will then
+take the place of the original instance or the previous delegate in
+the application of aspects. The final result is a nested series of
+objects matching the original interface whose innermost object is the
+original instance. The earlier an aspect appears in the global list of
+all aspects, the closer any delegate it provides will be to the raw
+instance for which the delegates are being provided. </p>
+
+<p> One extra complication has arisen in the use of aspects. In some
+cases, proper nesting of send code with matching receive code requires
+that the order of aspects be reversed in the latter. In order to
+handle this, aspects are actually given two chances to provide
+delegates: once in the original aspect order, then again in the
+reversed order. The first opportunity is getAspect, described
+above. The second is getReverseAspect. In the second case, later
+aspect delegates will be closer the raw instance. </p>
+
+<p> The following interfaces support aspects, in the sense that
+instances of these interfaces will always have aspect delegates
+attached immediately after instantiation: DestinationLink,
+DestinationQueue, MessageDeliverer, NameSupport, Router, SendLink,
+SendQueue. In addition, the RMILinkProtocol provides two other places
+in which aspects can be attached: the RMI server object; and the
+client-side stub for remote MT objects. These two present a problem
+for the getDelegate and getReverseDelegate calls, since in both cases
+the relevant delegate interface is MT.class. In order to distinguish
+these two, we use MTImpl.class in the getDelegate and
+getReverseDelegate calls on for the RMI server object, even though the
+delegates themselves need only match the interface MT.&nbsp; Finally,
+aspect delegates may be attached indirectly to serialization streams,
+which has the effect of converting a direct tcp connection into a
+series of Filter Streams (see org.cougaar.core.mts.MessageWriter and
+org.cougaar.core.mts.MessageReader).</p>
+
+<p> Since most aspect delegates only want to provide a few methods of
+the given interface, rather than a complete reimplementation, we
+provide trivial delegating implementations for each of the station
+interfaces. In all cases, the names have the form {interface}
+DelegateImplBase. The aspect delegate classes should extend these and
+only have to provide the methods that are relevant to that
+aspect. </p>
+
+<p> Here is a partial list of aspects in the Core MTS. The following
+figure depicts a few aspects and where they get attached to the
+message stations.</p>
+
+<p class=GraphicBigNoBorder><img width=577 height=326
+src="gifs/multiple-aspects.gif"></p>
+
+<p class=MsoCaption>Figure 3-10: Message Transport 
+    Aspects Cross Cut Multiple Stations</p>
+
+<h5>AgentFlowAspect</h5>
+
+<p>Collects message information for use in building a Traffic Matrix. </p>
+
+<h5>AgentStatusAspect</h5>
+
+<p>Collects Agent State information.</p>
+
+<h5>DeliveryVerificationAspect</h5>
+
+<p> Logs warnings if a message has been pending for too long.(default
+is 10 seconds) </p>
+
+<h5>MessageProtectionAspect</h5>
+
+<p> Provides an example of adding trailers to serialized
+AttributedMessages.  Stores a message attribute reflecting the
+validity of the message bytecount.</p>
+
+<h5>MessageSendTimeAspect</h5>
+
+<p>Tags all messages with a &quot;send time&quot; attribute when they enter 
+    the MTS SendLink.</p>
+
+<h5>MessageTimeoutAspect</h5>
+
+<p> Aspect to throw out a timed out message. Necessary for MsgLog
+et. al. Checks every thread in MTS for timed out attributes on a
+message: SendLink, Router, DestinationLink, ReceiveLink</p>
+
+<h5>MessageTraceAspect</h5>
+
+<p> Debugging and testing Aspect - logs a successful or failed message
+entry per stage of the MTS. This entry contains useful information
+about the message as well as time deltas between stages. Use BBN
+Adaptive Robustness's csmart/rules/debug_rules/messageTrace.rule.  Or,
+simply configure the society configuration to include the
+MessageSendTimeAspect, MessageProtectionAspect, and the
+MessageTraceAspect along with this argument: </p>
+
+<pre>   -Dorg.cougaar.core.logging.log4j.appender.MessageTrace.File = #{cip}/workspace/log4jlogs/#{node.name}.trace</pre>
+
+<h5>RMISocketControlAspect</h5>
+
+<p>This aspect adds simple statistics gathering to the client side OutputStream 
+    of RMI connections.</p>
+
+<h5>WatcherAspect</h5>
+
+<p>Implements the message watching functionality by attaching delegates to SendQueue 
+    and MessageDeliverer objects.</p>
+
+<h5>MulticastAspect</h5>
+
+<p>Multicast in the MTS is handled by this aspect.</p>
+
+<h5>FlushAspect</h5>
+
+<p>Handles the call to flush forcing all pending message either to be delivered 
+    or dropped. The flush functionality isused in Agent mobility </p>
+
+<h5>ForwardMessageLoggingAspect</h5>
+
+<p>Logs interesting fields of received messages, in tab-separated format; used 
+    for debugging Link Protocols</p>
+
+<h5>SecurityAspect</h5>
+
+<p>Provides a simple form of message-level security by enabling message signing.&nbsp; 
+    This is more of an example than a functional aspect.</p>
+
+<h5>SerializationAspect</h5>
+
+<p>Forces the LoopbackLinkProtocol to serialize all messages; used to debug 
+    serialization error.</p>
+
+<h5>StatisticsAspect</h5>
+
+<p>Collects message transport statistics. This is used by the metric services 
+    PSP.</p>
+
+<h5>TraceAspect</h5>
+
+<p>Logs data about messages as they move through the message transport
+stations.  This is used for debugging the message transport.</p>
+
+<h5>ScrambleAspect</h5>
+
+<p>Scrambles a message sequence; used to debug message transport.</p>
+
+<h5>SequenceAspect</h5>
+
+<p>Ensures that messages are delivered in right sequence.</p>
+
+<h5>StubDumperAspect</h5>
+
+<p>Displays information about LinkProtocol addresses; used to debug LinkProtocols.</p>
+
+<h5>StepperAspect</h5>
+
+<p>Provides a gui for &quot;single-stepping&quot; the sending of messages.</p>
+
+<h5>ChecksumStreamsAspect</h5>
+
+<p>An example of using FilterStreams in RMI.&nbsp; This particular example adds 
+    a checksum to the end of the message. Adding trailers onto message serialization 
+    could also be used to sign a message.</p>
+
+<h5>CompressingStreamsAspect</h5>
+
+<p>Another example of using FilterStreams in RMI.&nbsp; This example compresses 
+    and decompresses message data on the fly.</p>
+
+
+
+</body> </html>

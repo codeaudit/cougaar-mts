@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>MTS Design and Architecture</title>
+</head>
+
+<body>
+
+<h2>MTS Design and Architecture</h2>
+
+  <h4>MTS Structural Components</h4>
+
+<p> The core of the MTS is implemented using classical OOP
+techniques. The classes are described in more detail in this
+section. The intention of the overall MTS design is that the core
+structural components will remain as is, without addition (except for
+new Link Protocols) or modification (except for bug fixes).  Rather
+than modifying the core to add new behaviors or modify existing ones,
+those additions and changes will be implemented as Aspects, described
+in more detail in the <a href="aspects.html">Aspects</a> section. </p>
+  
+<p> The backbone of the MTS consists of a series of interfaces that
+define the flow of a message from the source Agent to the destination
+Agent, and a collection of Link Protocols that handle the various
+kinds of message delivery (e.g.  local, remote-via-RMI,
+remote-via-CORBA, email). The flow interfaces are known as
+<i>stations</i>, since messages pass through them in a well-defined
+order.  The stations and their implementation and factory classes,
+along with the Link Protocols and a few key utility classes,
+constitute the structural core of the MTS and are described in more
+detail in the <a href="stations.html">Stations</a> section</p>
+
+<h4>Packages and organization</h4>
+
+<p> The Message Transport Service remains as service, and as such
+should be organized as any other service. To this end, MTS was
+refactored in 11.0 into its own module, with its own corresponding
+jar, for ease of developer understanding and use, and more easily
+facilitates other pluggable messaging options. The logic of the
+refactor focused on separation of base MTS implementation from Aspect
+code, used by outside developers. What was necessary to core remained,
+including the basic MessageTransportService interface. The rest was
+refactored into two corresponding packages: </p>
+
+
+<p><b>org.cougaar.mts.base</b> </p>
+
+<ul type=disc>
+<li>Aspect-oriented implementation of minimal MTS including stations, data 
+      structures and standard Link Protocols</li>
+<li>Offers all the hooks for aspects to add adaptivity</li>
+<li>Should export NO services at the Node layer, except MessageTransportService 
+    </li>
+</ul>
+
+<p><b>org.cougaar.mts.std</b> </p>
+  <ul type=disc>
+    <li>Contains extensions, aspects local services and their required data structures</li>
+    <li>May export Node-level service</li>
+  </ul>
+
+
+</body> </html>

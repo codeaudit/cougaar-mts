@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>MTS Stations</title>
+</head>
+
+<body>
+
+<h4>MTS Station backbone</h4>
+
+ <p>The basic stations are described below (Figure 3-8) and also depicted 
+    in the &quot;top view&quot; diagram.</p>
+
+ <p class=GraphicBigNoBorder><img width=583 height=374
+src="gifs/station-flow.gif"></p>
+
+ <p class=MsoCaption>Figure 
+    3-8: Componentization of Message Transport (“top view”). This figure diagrammatically 
+    enumerates all the Message Stations. </p>
+
+  
+ <p> When a message is sent from the sending Agent to the receiving
+  Agent, it flows through a predefined series of stations, described
+  below in the &quot;side view&quot; of the Services (see Figure
+  3-9). A message flows from the sending Agent through a per-Agent
+  Send Link, associated with the Agent's Message Transport Service
+  Proxy, into a shared Send Queue. The act of dropping the message in
+  the Send Queue terminates the invoking call. The Send Queue's
+  dedicated thread then passes the each message to the Router, which
+  picks a Destination Queue for that message. Each Destination Queue
+  has its own thread and is responsible for delivering messages to the
+  corresponding receiving Agent, even if that Agents isn't active at
+  the time. The Destination Queues select the &quot;best&quot;
+  LinkProtocol for each message and hand it off to a DestinationLink
+  created by the LinkProtocol. The Destination Link then moves the
+  message to the MessageDeliverer on the destination Node, using the
+  given protocol (eg RMI, email, nttp, loopback, CORBA, or raw
+  sockets). The MessageDeliverer finds the corresponding ReceiveLink
+  for the message, which in turn hands the message off to the
+  destination Agent.  If the receiving Agent is no longer local, the
+  MessageDeliverer will throw an exception back to the
+  DestinationQueue in the sending Node</p>
+
+
+ <p class=GraphicBigNoBorder><img width=577 height=346
+src="gifs/insert-aspect.gif"></p>
+
+ <p class=MsoCaption>Figure 
+ 3-9: The “side view” shows the flow of messages through the stations. 
+ </p>
+
+ <h5>MessageTransportService </h5>
+
+ <p> This interface specifies the Service itself, as seen by the
+Agent. The implementation class is MessageTransportServiceProxy,
+exactly one of which is created for each Agent which requests the
+MessageTransportService. The MessageTransportServiceProvider makes
+MessageTransportServiceProxy instances on demand. The implementation
+class does very little work itself. Most of the work is handled by a
+SendLinkImpl, which is created for the MessageTransportServiceProxy by
+the MessageTransportServiceProvider.  </p>
+
+<h5>SendLink </h5>
+
+<p>
+This is the first functional MTS station. The SendLink handles
+client registration, decides whether or not a given message can be
+sent, and in most circumstances starts the message on its way by
+placing it on the SendQueue. In ordinary message traffic, the calling
+thread of a message-send operation returns once the SendLink has
+placed the message on the SendQueue. SendLinkImpl, one of which is
+made for each MessageTransportServiceProxy by the
+MessageTransportServiceProvider, implements SendLink. </p>
+
+<h5>SendQueue </h5>
+
+<p> The SendQueue has two purposes: it keeps messages in order, and it
+prevents the calling thread of the sending Agent from blocking. As
+such the queue itself is simply a holding place for
+messages. SendQueueImpl, instances of which are created by the
+SendQueueFactory, implements the SendQueue interface. In the current
+design, SendQueueFactory is ServiceProvider for the SendQueue
+service. SendQueueImpl is a sublcass of MessageQueue and as such has
+an associated thread. In this case the thread pulls Messages off the
+queue and forwards them to the Router. </p>
+
+<h5>Router </h5>
+
+<p> The Router has the job of sorting Messages by target (destination)
+and passing them to the corresponding DestinationQueue for that
+target. It uses the DestinationQueueProviderService, which will find
+or make at most one DestinationQueue for any given target.
+RouterImpl, instances of which are created by the RouterFactory,
+implements the Router interface. In the current design, RouterFactory
+is a ServiceProvider for the Router service. </p>
+
+<h5>DestinationQueue </h5>
+
+<p> The DestinationQueues have the job of selecting the
+&quot;best&quot; LinkProtocol for any given message, and delivering
+the message, in the correct order, to a DestinationLink provided by
+that LinkProtocol. The selection itself is handled indirectly, via the
+LinkSelectionPolicy (see below). DestinationQueueImpl, instances of
+which are created by the DestinationQueueFactory, implements the
+DestinationQueue interface. One DestinationQueueImpl is made for each
+referenced destination MessageAddress by the
+DestinationQueueProviderService.  DestinationQueueImpl is a subclass
+of MessageQueue and as such has an associated thread. In this case the
+thread pulls Messages off the queue and attempts to dispatch them to a
+DestinationLink, which can deliver them. For any given Message these
+attempts will continue until the Message is successfully delivered.
+</p>
+
+<h5>DestinationLink </h5>
+
+<p> DestinationLinks do the protocol-specific work of getting the
+message from the sender's Node to the receiver's Node. The
+DestinationLink implementation classes are specific to their
+corresponding LinkProtocol and are typically defined as inner classes
+of the protocol classes. See the LinkProtocol section for more
+details. </p>
+
+  <h5>MessageDeliverer </h5>
+
+<p> The MessageDeliverer has the job of finding the right ReceiveLink
+for each Message, and passing the Message off to that link once it's
+been found. MessageDeliverer is an MTS-level service, provided by the
+MessageDelivererFactory and implemented in the current design by a
+singleton MessageDelivererImpl instance. </p>
+
+<h5>ReceiveLink </h5>
+
+<p> ReceiveLinks simply accept Messages from the MessageDeliverer and
+hands them off to the ultimate recipient. ReceiveLinkImpl, instances
+of which are created by the ReceiveLinkFactory, implements the
+ReceiveLink interface. The MessageTransportRegistryService makes
+requests for instantiation on demand via the
+ReceiveLinkProviderService.  </p>
+
+<h5>Link Protocols</h5>
+
+<p> As the side-view diagram (Figure 3-9) makes clear, message flow is
+divided into two parts, send and receive, with the linkage between the
+two left unspecified. There are a number of ways in which this linkage
+might be handled: it could be direct (for local messages), it could
+use an RMI or CORBA call, it could use email or news, it could use
+sockets, etc. The MTS implements these various kinds of linkages as
+instantiable subclasses of the abstract class LinkProtocol. These
+instantiable subclasses have full responsibility for getting a Message
+from the sender's Node to the receiver's Node. Some of these Link
+Protocols are part of the Cougaar 'core' module, some are from other
+modules supported by BBN, and some are from other developers. The
+BBN-supported Link Protocols are described here. Defining new
+LinkProtocol classes is one of two primary hooks through which the MTS
+can be extended (aspects are the other).</p>
+
+<p> Link Protocols are connected to the message flow by the
+DestinationLink station.  DestinationLinks can be thought of as
+destination-specific front ends to Link Protocols and are ordinarily
+defined as inner classes of LinkProtocol classes.  The protocol itself
+is responsible for the real work of moving Messages, and also acts as
+the &quot;factory&quot; for its DestinationLinks.</p>
+
+<p> LinkProtocol instances are Components of the MTS and have access
+to all MTS Services, as well as Node-level Services. They are also
+Service Providers and may define protocol-specific services in the MTS
+Service Broker.</p>
+
+<h5>LoopbackLinkProtocol </h5>
+
+<p> This protocol handles intra-Node traffic. It's effectively a
+direct call from the DestinationLink to the MessageDeliverer. </p>
+
+<h5>RMILinkProtocol </h5>
+
+<p> This protocol provides the default implementation for handling
+inter-Node traffic, by using RMI calls to remote objects of type MT
+(implemented by MTImpl).  The structure of RMILinkProtocol is general
+enough to support other forms of remote method invocation. Subclasses
+need only provide alternate implementations of one or more of a small
+set of protected methods. Three examples follow.  </p>
+
+<h5>SSLRMILinkProtocol </h5>
+
+<p> This subclass of RMILinkProtocol uses ssl encryption for the RMI
+communication by overriding RMILinkProtocol's getSocketFactory
+method. </p>
+
+<h5>SerializedRMILinkProtocol </h5>
+
+<p> This subclass of RMILinkProtocol pre-serializes Message into byte
+arrays by overriding RMILinkProtocol's doForwarding method. It defines
+a new kind of MTImpl, which will handle the deserialization on the
+server side, and creates these new server objects by overriding
+RMILinkProtocol's make MTImpl method.  </p>
+
+  <h5>CorbaLinkProtocol </h5>
+
+<p> This subclass of RMILinkProtocol sends Messages via CORBA instead
+of RMI.  This class is in Ultralog Robustness UC#3 , and is in the
+java package org.cougaar.robustness.dos.quo.  </p>
+
+<p> The LinkProtocolFactory creates the LinkProtocol instances when
+the MTS starts up. By default, it will create a LoopbackLinkProtocol
+and an RMILinkProtocol.  If the org.cougaar.message.protocol.classes
+system property is defined, the LinkProtocolFactory will create
+instances of the listed classes instead of the default classes. </p>
+
+<h5>Link Selection Policy</h5>
+
+<p> When more than one LinkProtocol is defined, the DestinationQueues
+need to pick one for each queued Message. The LinkSelectionPolicy, a
+service created by the MessageTransportServiceProvider, handles the
+job of selecting the best protocol for any given message. The default
+implementation class for this interface is
+MinCostLinkSelectionPolicy. A different class can be specified with
+the org.cougaar.message.transport.policy system property.&nbsp;
+LinkSelectionPolicy is an MTS-level service.</p>
+
+<p> The MinCostLinkSelectionPolicy does what its name implies: it
+selects the cheapest DestinationLink. The DestinationLinks, in turn,
+compute a cost by asking their enclosing LinkProtocol class. </p>
+
+<h5>Naming and Registration </h5>
+
+<p> Two forms of name registration are managed by the MTS. One, the
+MessageTransportRegistryService, handles local Agent registration by
+keeping a map from Agent addresses to the Agent's ReceiveLink
+representation. This simple map is used in the final step of Message
+delivery. The NameSupport Service represents the second naming class
+in the MTS. NameSupport provides a high-level front-end to the basic
+Cougaar naming services (eg WhitePages). NameSupport and
+MessageTransportRegistryService are available as Services to all MTS
+Components. </p>
+
+<h4>AOP is Not a Magic Bullet</h4>
+
+<p> By combining OOP and AOP, a simple and easily maintainable core
+design for message transport can be easily extended, either to provide
+new sorts of behavior altogether (e.g., new ,) or to adapt existing
+behavior in smart and dynamic ways (e.g. new Aspects), without
+compromising the simplicity of the core design.  This is a significant
+win in every way. But the use of AOP in the MTS design is not a magic
+bullet: it won't eliminate every design problem that might ever arise,
+even if it greatly reduces the overall complexity. </p>
+
+<p> In particular, considerable care is required when combining
+Aspects in previously untested ways. Aspects should usually be
+orthogonal to one another, and most of the current Aspects are. But
+even in this case, Aspect order can be very important. The user of a
+given set of Aspects needs to understand them well enough to choose a
+reasonable order at runtime. </p>
+
+<p> When Aspects are not orthogonal, the interactions will of course
+become even trickier to handle properly (though not remotely as
+complicated as managing the same interactions would be in a monolithic
+design). In such situations, the lack of orthogonality needs to be
+examined very closly, since it may simply be an artifact of confused
+Aspect design. Non-orthogonal Aspects should be quite unusual, and as
+such can reasonably be expected to require special-case handling. </p>
+
+</body> </html>
