@@ -28,7 +28,6 @@ import java.rmi.server.RMISocketFactory;
  */
 public class SocketFactory 
     extends RMISocketFactory
-    implements MessageTransportCutpoints
 {
 
     private AspectFactory aspectFactory;
@@ -67,7 +66,8 @@ public class SocketFactory
 	{
 	    OutputStream s = super.getOutputStream();
 	    if (s == null) return null;
-	    return (OutputStream) aspectFactory.attachAspects(s, RmiClientOutputStream);
+	    s = (OutputStream) aspectFactory.attachAspects(s, OutputStream.class);
+	    return s;
 	}
 
 	public InputStream getInputStream() 
@@ -75,7 +75,7 @@ public class SocketFactory
 	{
 	    InputStream s = super.getInputStream();
 	    if (s == null) return null;
-	    return (InputStream) aspectFactory.attachAspects(s, RmiClientInputStream);
+	    return (InputStream) aspectFactory.attachAspects(s, InputStream.class);
 	}
 
     }
@@ -91,7 +91,7 @@ public class SocketFactory
 	{
 	    OutputStream s = super.getOutputStream();
 	    if (s == null) return null;
-	    return (OutputStream) aspectFactory.attachAspects(s, RmiServerOutputStream);
+	    return (OutputStream) aspectFactory.attachAspects(s, OutputStream.class);
 	}
 
 	public InputStream getInputStream() 
@@ -99,7 +99,7 @@ public class SocketFactory
 	{
 	    InputStream s = super.getInputStream();
 	    if (s == null) return null;
-	    return (InputStream) aspectFactory.attachAspects(s, RmiServerInputStream);
+	    return (InputStream) aspectFactory.attachAspects(s, InputStream.class);
 	}
 
     }

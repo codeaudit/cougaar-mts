@@ -23,7 +23,7 @@ import java.lang.reflect.Constructor;
  * aspect, if it wishes to attach one for a given factory
  * interface. */
 abstract public class AspectFactory 
-    implements MessageTransportCutpoints, Debug
+    implements Debug
 {
     private ArrayList aspects;
 
@@ -35,7 +35,7 @@ abstract public class AspectFactory
      * factory, is returned.  */
     public static Object attachAspects (ArrayList aspects,
 					Object delegate, 
-					int cutpoint, 
+					Class type, 
 					MessageTransport transport)
     {
 	if (aspects != null) {
@@ -43,10 +43,10 @@ abstract public class AspectFactory
 	    while (itr.hasNext()) {
 		MessageTransportAspect aspect = 
 		    (MessageTransportAspect) itr.next();
-		if (transport != null && aspect.rejectTransport(transport, cutpoint))
+		if (transport != null && aspect.rejectTransport(transport, type))
 		    continue; //skip it
 
-		Object candidate = aspect.getDelegate(delegate, cutpoint);
+		Object candidate = aspect.getDelegate(delegate, type);
 		if (candidate != null) delegate = candidate;
 		if (DEBUG_TRANSPORT) System.out.println("======> " + delegate);
 	    }
@@ -58,16 +58,16 @@ abstract public class AspectFactory
 	this.aspects = aspects;
     }
 
-    public Object attachAspects(Object delegate, int cutpoint) {
-	return attachAspects(aspects, delegate, cutpoint, null);
+    public Object attachAspects(Object delegate, Class type) {
+	return attachAspects(aspects, delegate, type, null);
     }
 
 
     public Object attachAspects(Object delegate, 
-				int cutpoint, 
+				Class type, 
 				MessageTransport transport)
     {
-	return attachAspects(aspects, delegate, cutpoint, transport);
+	return attachAspects(aspects, delegate, type, transport);
     }
 
 

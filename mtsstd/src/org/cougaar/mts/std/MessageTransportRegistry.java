@@ -51,8 +51,7 @@ class MessageTransportRegistry
     }
 
     private String name;
-    private HashMap myClients = new HashMap(89);
-    private HashMap receiveLinks = new HashMap();
+    private HashMap receiveLinks = new HashMap(89);
     private MessageTransportServiceProvider serviceProvider;
     private MessageTransportFactory transportFactory;
     private ReceiveLinkFactory receiveLinkFactory;
@@ -82,7 +81,6 @@ class MessageTransportRegistry
 	MessageAddress key = client.getMessageAddress();
 	try {
 	    synchronized (lock) {
-		myClients.put(key, client);
 		ReceiveLink link = receiveLinkFactory.getReceiveLink(client);
 		receiveLinks.put(key, link);
 	    }
@@ -95,27 +93,16 @@ class MessageTransportRegistry
 	MessageAddress key = client.getMessageAddress();
 	synchronized (lock) {
 	    try {
-		myClients.remove(key);
 		receiveLinks.remove(key);
 	    } catch (Exception e) {}
 	}
     }
 
-    MessageTransportClient findLocalClient(MessageAddress id) {
+    boolean isLocalClient(MessageAddress id) {
 	synchronized (lock) {
-	    return (MessageTransportClient) myClients.get(id);
+	    return receiveLinks.get(id) != null;
 	}
     }
-
-    // this is a slow implementation, as it conses a new set each time.
-    // Better alternatives surely exist.
-    Iterator findLocalMulticastClients(MulticastMessageAddress addr)
-    {
-	synchronized (lock) {
-	    return new ArrayList(myClients.values()).iterator();
-	}
-    }
-
 
 
 

@@ -30,15 +30,12 @@ public class WatcherAspect
     }
 
 
-    public Object getDelegate(Object delegate, int cutpoint) {
-	switch (cutpoint) {
-	case SendQueue:
+    public Object getDelegate(Object delegate, Class type) {
+	if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) delegate);
-
-	case ReceiveQueue:
+	} else if (type == ReceiveQueue.class) {
 	    return new ReceiveQueueDelegate((ReceiveQueue) delegate);
-
-	default:
+	} else {
 	    return null;
 	}
     }

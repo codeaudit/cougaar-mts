@@ -31,19 +31,16 @@ public class SerializationAspect implements MessageTransportAspect
     public SerializationAspect() {
     }
     
-    public Object getDelegate(Object object, int cutpoint) {
-	switch (cutpoint) {
-	case DestinationLink:
+    public Object getDelegate(Object object, Class type) {
+	if (type == DestinationLink.class) {
 	    return new SerializingDestinationLink((DestinationLink) object);
-	    
-
-	default:
+	} else {
 	    return null;
 	}
     }
     
 
-    public boolean rejectTransport(MessageTransport transport, int cutpoint) {
+    public boolean rejectTransport(MessageTransport transport, Class type) {
 	return (!(transport instanceof LoopbackMessageTransport));
     }
 

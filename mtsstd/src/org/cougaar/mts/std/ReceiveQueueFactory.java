@@ -45,7 +45,7 @@ public class ReceiveQueueFactory extends AspectFactory
 	}
 	// No match, make a new one
 	ReceiveQueue queue = new ReceiveQueueImpl(name, registry);
-	queue = (ReceiveQueue) attachAspects(queue, ReceiveQueue);
+	queue = (ReceiveQueue) attachAspects(queue, ReceiveQueue.class);
 	queues.add(queue);
 	return queue;
     }

@@ -15,8 +15,8 @@ package org.cougaar.core.mts;
  * subsystem.  An aspect is only required to perform one job: return
  * an aspect delegate for a given object of a given interface, or null
  * if the aspect prefers not to deal with that interface. */
-public interface MessageTransportAspect extends MessageTransportCutpoints
+public interface MessageTransportAspect
 {
-    public Object getDelegate(Object delegate, int cutpoint);
-    public boolean rejectTransport(MessageTransport transport, int cutpoint);
+    public Object getDelegate(Object delegate, Class type);
+    public boolean rejectTransport(MessageTransport transport, Class type);
 }

@@ -56,30 +56,22 @@ public class TraceAspect
 	getLog().println(id+"\t"+System.currentTimeMillis()+"\t"+key+"\t"+info);
     }
 
-    public Object getDelegate(Object delegate, int cutpoint) {
-	switch (cutpoint) {
-	case ServiceProxy:
+    public Object getDelegate(Object delegate, Class type) {
+	if (type == MessageTransportService.class) {
 	    return new ServiceProxyDelegate((MessageTransportService) delegate);
-
-	case SendQueue:
+	} else if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) delegate);
-
-	case Router:
+	} else if (type == Router.class) {
 	    return new RouterDelegate((Router) delegate);
-
-	case DestinationQueue:
+	} else if (type == DestinationQueue.class) {
 	    return new DestinationQueueDelegate((DestinationQueue) delegate);
-
-	case DestinationLink:
+	} else if (type == DestinationLink.class) {
 	    return new DestinationLinkDelegate((DestinationLink) delegate);
-
-	case ReceiveQueue:
+	} else if (type == ReceiveQueue.class) {
 	    return new ReceiveQueueDelegate((ReceiveQueue) delegate);
-
-	case ReceiveLink:
+	} else if (type == ReceiveLink.class) {
 	    return new ReceiveLinkDelegate((ReceiveLink) delegate);
-
-	default:
+	} else {
 	    return null;
 	}
     }

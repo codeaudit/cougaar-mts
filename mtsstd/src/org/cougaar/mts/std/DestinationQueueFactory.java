@@ -50,7 +50,8 @@ public class DestinationQueueFactory extends  AspectFactory
 	DestinationQueue q = (DestinationQueue) queues.get(destination);
 	if (q == null) {
 	    DestinationQueueImpl qimpl = new DestinationQueueImpl(destination);
-	    q = (DestinationQueue) attachAspects(qimpl, DestinationQueue);
+	    q = (DestinationQueue) attachAspects(qimpl, 
+						 DestinationQueue.class);
 	    linkSenderFactory.getLinkSender(destination, qimpl, q);
 	    queues.put(destination, q);
 	}

@@ -36,7 +36,7 @@ public class RouterFactory extends AspectFactory
      * RouterImpl itself if there are no aspects.  */
     Router getRouter() {
 	Router router = new RouterImpl(registry, destQFactory);
-	router = (Router) attachAspects(router, Router);
+	router = (Router) attachAspects(router, Router.class);
 	return router;
     }
 }

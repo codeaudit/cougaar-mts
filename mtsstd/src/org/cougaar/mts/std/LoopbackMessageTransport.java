@@ -33,7 +33,8 @@ class LoopbackMessageTransport
     // NB:  No aspects here!  Is that the right thing to do?
     public DestinationLink getDestinationLink(MessageAddress address) {
 	if (link == null) {
-	    link = (DestinationLink) attachAspects(this, DestinationLink, this);
+	    link = (DestinationLink) attachAspects(this, DestinationLink.class,
+						   this);
 	}
 	return link;
     }
@@ -41,7 +42,7 @@ class LoopbackMessageTransport
     // DestinationLink interface
     public int cost(Message msg) {
 	MessageAddress addr = msg.getTarget();
-	if (registry.findLocalClient(addr) != null) {
+	if (registry.isLocalClient(addr)) {
 	    return 0;
 	} else {
 	    return Integer.MAX_VALUE;
@@ -61,7 +62,7 @@ class LoopbackMessageTransport
 
     public boolean addressKnown(MessageAddress address) {
 	// true iff the address is local
-	return registry.findLocalClient(address) != null;
+	return registry.isLocalClient(address);
     }
    
 

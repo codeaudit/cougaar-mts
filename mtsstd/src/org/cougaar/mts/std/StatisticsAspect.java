@@ -78,15 +78,12 @@ public class StatisticsAspect
     }
 
 
-    public Object getDelegate(Object object, int cutpoint) {
-	switch (cutpoint) {
-	case RmiClientOutputStream:
+    public Object getDelegate(Object object, Class type) {
+	if (type == OutputStream.class) {
 	    return new StatisticsStreamWrapper((OutputStream) object);
-
-	case DestinationQueue:
+	} else if (type == DestinationQueue.class) {
 	    return new StatisticsDestinationQueue((DestinationQueue) object);
-
-	default:
+	} else {
 	    return null;
 	}
     }

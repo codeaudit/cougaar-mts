@@ -49,7 +49,7 @@ public class SecurityAspect implements MessageTransportAspect
 	enabled = ensure_msm() != null;
     }
 
-    public boolean rejectTransport(MessageTransport transport, int cutpoint) {
+    public boolean rejectTransport(MessageTransport transport, Class type) {
 	return (transport instanceof LoopbackMessageTransport);
     }
 
@@ -93,15 +93,12 @@ public class SecurityAspect implements MessageTransportAspect
     }
 
 
-    public Object getDelegate(Object delegate, int cutpoint) {
-	switch (cutpoint) {
-	case DestinationLink:
+    public Object getDelegate(Object delegate, Class type) {
+	if (type == DestinationLink.class) {
 	    return new SecureDestinationLink((DestinationLink) delegate);
-
-	case ReceiveQueue:
+	} else if (type == ReceiveQueue.class) {
 	    return new SecureReceiveQueue((ReceiveQueue) delegate);
-
-	default:
+	} else {
 	    return null;
 	}
     }

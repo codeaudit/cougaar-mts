@@ -45,7 +45,7 @@ public class SendQueueFactory extends AspectFactory
 	}
 	// No match, make a new one
 	SendQueue queue = new SendQueueImpl(name, router, registry);
-	queue = (SendQueue) attachAspects(queue, SendQueue);
+	queue = (SendQueue) attachAspects(queue, SendQueue.class);
 	queues.add(queue);
 	return queue;
     }

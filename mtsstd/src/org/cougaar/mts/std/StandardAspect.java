@@ -15,7 +15,7 @@ package org.cougaar.core.mts;
  */
 abstract public class StandardAspect implements MessageTransportAspect
 {
-    public boolean rejectTransport(MessageTransport transport, int cutpoint) {
+    public boolean rejectTransport(MessageTransport transport, Class type) {
 	// Accept any transport at any cut point by default
 	return false;
     }

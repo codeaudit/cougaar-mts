@@ -32,7 +32,7 @@ import org.cougaar.core.society.Node;
 
 public class MessageTransportServiceProvider 
     extends ContainerSupport
-    implements ContainerAPI, ServiceProvider, Debug, MessageTransportCutpoints
+    implements ContainerAPI, ServiceProvider, Debug
 {
 
     // Factories
@@ -191,7 +191,9 @@ public class MessageTransportServiceProvider
 		Object proxy = proxies.get(requestor);
 		if (proxy == null) {
 		    proxy = new MessageTransportServiceProxy(registry, sendQ);
-		    proxy = AspectFactory.attachAspects(aspects, proxy, ServiceProxy, null);
+		    proxy = AspectFactory.attachAspects(aspects, proxy, 
+							MessageTransportService.class,
+							null);
 		    proxies.put(requestor, proxy);
 		    if (Debug.DEBUG_TRANSPORT)
 			System.out.println("======= Created MessageTransportServiceProxy for "

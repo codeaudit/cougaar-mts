@@ -43,7 +43,7 @@ public class ReceiveLinkFactory extends AspectFactory
 	ReceiveLink link = (ReceiveLink) links.get(client);
 	if (link == null) {
 	    link = new ReceiveLinkImpl(client);
-	    link = ( ReceiveLink) attachAspects(link, ReceiveLink);
+	    link = ( ReceiveLink) attachAspects(link, ReceiveLink.class);
 	    links.put(client, link);
 	}
 	return link;

@@ -136,7 +136,8 @@ public class RMIMessageTransport
 	DestinationLink link = (DestinationLink) links.get(address);
 	if (link == null) {
 	    link = new Link(address); // attach aspects
-	    link = (DestinationLink) attachAspects(link, DestinationLink, this);
+	    link = (DestinationLink) attachAspects(link, DestinationLink.class,
+						   this);
 	    links.put(address, link);
 	}
 	return link;
@@ -145,7 +146,7 @@ public class RMIMessageTransport
 
 
     private MT getClientSideProxy(Object object) {
-	return (MT) attachAspects(object, RemoteProxy);
+	return (MT) attachAspects(object, MT.class);
     }
 
 
@@ -155,7 +156,7 @@ public class RMIMessageTransport
     private MT getServerSideProxy(Object object) 
 	throws RemoteException
     {
-	return (MT) attachAspects(object, RemoteImpl);
+	return (MT) attachAspects(object, MTImpl.class);
     }
 
 
