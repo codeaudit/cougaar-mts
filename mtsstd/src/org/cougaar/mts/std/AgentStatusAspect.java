@@ -64,6 +64,15 @@ import org.cougaar.mts.base.QueueListener;
 
 /**
  * This Aspect implements the {@link AgentStatusService}.
+ *
+ * In the <a
+ * href="../../../../../OnlineManual/MetricsService/sensors.html">Sensor
+ * Data Flow</a> pattern this class plays the role of <b>Sensor</b>
+ * for message counts and size among Agents and Nodes.
+ *
+ * @see org.cougaar.core.qos.metrics.AgentStatusRatePlugin
+ * @see org.cougaar.core.qos.metrics.AgentLoadServlet
+ *
  */
 public class AgentStatusAspect 
     extends StandardAspect
