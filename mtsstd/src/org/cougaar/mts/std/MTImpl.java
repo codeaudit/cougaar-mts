@@ -59,4 +59,8 @@ public class MTImpl extends UnicastRemoteObject implements MT
     public MessageAddress getMessageAddress() {
 	return address;
     }
+
+    public String toString() {
+      return "MT for "+getMessageAddress();
+    }
 }
