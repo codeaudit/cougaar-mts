@@ -28,6 +28,7 @@ import org.cougaar.core.society.MulticastMessageAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -139,7 +140,33 @@ class MessageTransportRegistry
     // Better alternatives surely exist.
     Iterator findLocalMulticastReceivers(MulticastMessageAddress addr)
     {
-	return new ArrayList(receiveLinks.keySet()).iterator();
+	String addr_string = addr.getAddress();
+	if (addr_string.startsWith("class ")) {
+	    ArrayList result = new ArrayList();
+	    String class_name = addr_string.substring(6);
+	    Class mclass = null;
+	    try {
+		mclass = Class.forName(class_name);
+	    } catch (ClassNotFoundException cnf) {
+		System.err.println("Bad multicast address " + addr +
+				   ": " + class_name + " is not a class name");
+		return result.iterator();
+	    }
+
+	    Iterator itr = receiveLinks.entrySet().iterator();
+	    while (itr.hasNext()) {
+		Map.Entry entry = (Map.Entry) itr.next();
+		Object client = entry.getValue();
+		if (client.getClass().isAssignableFrom(mclass)) {
+		    result.add(entry.getKey());
+		}
+	    }
+
+	    return result.iterator();
+
+	} else {
+	    return new ArrayList(receiveLinks.keySet()).iterator();
+	}
     }
 
 

@@ -81,7 +81,8 @@ public class MulticastAspect extends StandardAspect
 		    link.sendMessage(msg);
 		} else {
 		    if (Debug.debug(MULTICAST))
-			System.out.println("### MCAST: Remote multicast");
+			System.out.println("### MCAST: Remote multicast to "
+					   + destination);
 		    MulticastMessageAddress dst = 
 			(MulticastMessageAddress) destination;
 		    Iterator itr = registry.findRemoteMulticastTransports(dst);
@@ -118,6 +119,9 @@ public class MulticastAspect extends StandardAspect
 		msg = ((MulticastMessageEnvelope) msg).getContents();
 		dest = msg.getTarget();
 		MulticastMessageAddress addr = (MulticastMessageAddress) dest;
+		if (Debug.debug(MULTICAST))
+		    System.out.println("### MCAST: Received multicast to "
+					   + addr);
 		Iterator i = registry.findLocalMulticastReceivers(addr);
 		while (i.hasNext()) {
 		    dest = (MessageAddress) i.next();
