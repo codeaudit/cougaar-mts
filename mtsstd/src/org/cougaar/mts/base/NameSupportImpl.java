@@ -20,6 +20,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Set;
@@ -102,6 +103,18 @@ public final class NameSupportImpl implements ServiceProvider
 	}
 
 
+	private class VoidWPCallback implements Callback {
+	    public void execute(Response response) {
+		if (response.isSuccess()) {
+		    if (loggingService.isInfoEnabled()) {
+                        loggingService.info("WP Response: "+response);
+		    }
+		} else {
+		    loggingService.error("WP Error: "+response);
+		}
+	    }
+	}
+
 	private final void _register(String agent, 
 				     URI ref,
 				     String protocol) 
@@ -109,20 +122,8 @@ public final class NameSupportImpl implements ServiceProvider
 	    AddressEntry entry = 
                 AddressEntry.getAddressEntry(agent, protocol, ref);
 	    try {
-              final LoggingService ls = loggingService;
-              Callback cb = new Callback() {
-                  public void execute(Response r) {
-                    if (r.isSuccess()) {
-                      if (ls.isInfoEnabled()) {
-                        ls.info("WP Response: "+r);
-                      }
-                    } else {
-                      ls.error("WP Error: "+r);
-                    }
-                  }
-                };
-
-		wpService.rebind(entry, cb);
+              Callback cb = new VoidWPCallback();
+	      wpService.rebind(entry, cb);
 	    } catch (Exception ex) {
 		loggingService.error(null, ex);
 	    }
@@ -133,9 +134,10 @@ public final class NameSupportImpl implements ServiceProvider
 				       String protocol) 
 	{
 	    AddressEntry entry =
-               AddressEntry.getAddressEntry(agent, protocol, ref);
+		AddressEntry.getAddressEntry(agent, protocol, ref);
+	    Callback callback = new VoidWPCallback();
 	    try {
-		wpService.unbind(entry);
+		wpService.unbind(entry, callback);
 	    } catch (Exception ex) {
 		loggingService.error(null, ex);
 	    }

@@ -31,6 +31,8 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
+import org.cougaar.core.service.wp.Callback;
+import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.util.UnaryPredicate;
 
@@ -47,6 +49,32 @@ final public class SendLinkImpl
     private MessageTransportRegistryService registry;
     private LoggingService loggingService;
     private Long incarnation;
+
+    private class BlockingWPCallback implements Callback {
+	Object lock;
+	AddressEntry entry;
+	
+	BlockingWPCallback(Object lock)
+	{
+	    this.lock = lock;
+	}
+	
+	public void execute(Response response) 
+	{
+	    if (response.isSuccess()) {
+		if (loggingService.isInfoEnabled()) {
+		    loggingService.info("WP Response: "+response);
+		}
+		entry = ((Response.Get) response).getAddressEntry();
+		synchronized (lock) {
+		    lock.notify();
+		}
+	    } else {
+		loggingService.error("WP Error: "+response);
+	    }
+	}
+    }
+
 
     SendLinkImpl(MessageAddress addr, ServiceBroker sb)
     {
@@ -69,7 +97,19 @@ final public class SendLinkImpl
 	    sb.getService(this, WhitePagesService.class, null);
 	long incn = 0;
 	try {
-	    AddressEntry entry = wp.get(agentID, VERSION);
+	    AddressEntry entry;
+	    Object lock = new Object();
+	    BlockingWPCallback callback = new BlockingWPCallback(lock);
+	    synchronized (lock) {
+		wp.get(agentID, VERSION, callback);
+		// Callback could be invoked in this thread!  Don't
+		// wait in that case.
+		while (callback.entry == null) {
+		    try { lock.wait(); }
+		    catch (InterruptedException ex) {}
+		}
+	    }
+	    entry = callback.entry;
 	    if (entry != null) {
 		String path = entry.getURI().getPath();
 		int end = path.indexOf('/', 1);
