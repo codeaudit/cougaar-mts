@@ -26,7 +26,6 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ParameterizedComponent;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
@@ -40,7 +39,6 @@ abstract public class BoundComponent
     extends ParameterizedComponent
 {
 
-    private BindingSite bindingSite;
     private MessageTransportRegistryService registry;
     private NameSupport nameSupport;
     private AspectSupport aspectSupport;
@@ -119,9 +117,8 @@ abstract public class BoundComponent
 
 
 
-    public final void setBindingSite(BindingSite bs) {
-	this.bindingSite = bs;
-	this.sb = bs.getServiceBroker();
+    public final void setServiceBroker(ServiceBroker sb) {
+	this.sb = sb;
     }
 
 
