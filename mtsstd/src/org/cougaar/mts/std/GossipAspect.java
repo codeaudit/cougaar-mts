@@ -27,6 +27,9 @@ import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.qos.metrics.GossipKeyDistributionService;
 import org.cougaar.core.qos.metrics.GossipUpdateService;
 import org.cougaar.core.qos.metrics.MetricsService;
+import org.cougaar.core.service.wp.AddressEntry;
+import org.cougaar.core.service.wp.Application;
+import org.cougaar.core.service.wp.WhitePagesService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,33 +41,39 @@ import java.util.Map;
 public class GossipAspect 
     extends StandardAspect
 {
+    private static final Application TOPOLOGY = 
+	Application.getApplication("topology");
+    private static final String SCHEME = "node";
     private static final String VALUE_GOSSIP_ATTR = 
 	"org.cougaar.core.mts.value-gossip";
     private static final String KEY_GOSSIP_ATTR = 
 	"org.cougaar.core.mts.key-gossip";
+    private static final MessageAddress LIMBO =
+	MessageAddress.getMessageAddress("wp_cant_find_node");
 
     private MetricsService metricsService;
-
-    // Maps address to KeyGossip, one per neighbor.
-    // Each entry is the gossip that we've asked for so far from that
-    // neighbor. 
-    private HashMap propagatedRequests;
+    private GossipKeyDistributionService keyService;
+    private GossipUpdateService updateService;
+    private WhitePagesService wpService;
 
     // Local data we'd like to get via gossip.
     private KeyGossip localRequests;
 
-    // Maps address to KeyGossip, one per requesting neighbor.
+
+    // Maps address to KeyGossip, one per neighbor Agent.
+    // Each entry is the gossip that we've asked for so far from that
+    // neighbor.
+    private HashMap propagatedRequests;
+
+    // Maps address to KeyGossip, one per requesting neighbor Agent.
     // Each entry is the gossip that neighbor wants from us
     private HashMap neighborsRequests;
 
     // Maps address to GossipSubscription, one per requesting
-    // neighbor.  Each entry is the latest data we should forward to
-    // that neighbor.
+    // neighbor Agent.  Each entry is the latest data we should
+    // forward to that neighbor.
     private HashMap neighborsSubscriptions;
 
-    private GossipKeyDistributionService keyService;
-
-    private GossipUpdateService updateService;
 
     public Object getDelegate(Object delegatee, Class type) 
     {
@@ -89,7 +98,8 @@ public class GossipAspect
 
 	metricsService = (MetricsService)
 	    sb.getService(this, MetricsService.class, null);
-
+	wpService = (WhitePagesService)
+	    sb.getService(this, WhitePagesService.class, null);
 	localRequests = new KeyGossip();
 	propagatedRequests = new HashMap();
 	neighborsRequests = new HashMap();
@@ -107,8 +117,29 @@ public class GossipAspect
 	    loggingService.info("Registered GossipKeyDistributionService");
     }
 
+    private MessageAddress agentNode(MessageAddress agentAddr) {
+	String agent = agentAddr.getAddress();
+	try {
+	    AddressEntry entry = wpService.get(agent, TOPOLOGY, SCHEME);
+	    if (entry == null) {
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("WhitePages returned null entry for agent " 
+					 +agent);
+		return LIMBO;
+	    } else {
+		String node = entry.getAddress().getPath().substring(1);
+		return MessageAddress.getMessageAddress(node);
+	    }
+	} catch (Exception ex) {
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("", ex);
+	    return LIMBO;
+	}
+    }
+
     // A neighbor wants us to notify him if we see this key
-    private void handleKeyGossip(MessageAddress neighbor, KeyGossip gossip) {
+    private void handleKeyGossip(MessageAddress agent, KeyGossip gossip) {
+	MessageAddress neighbor = agentNode(agent);
 	if (loggingService.isInfoEnabled())
 	    loggingService.info("Received gossip requests from " 
 				+neighbor+ "="
@@ -132,8 +163,10 @@ public class GossipAspect
     }
 
     // A neighbor has provided us with a value we asked for
-    private void handleValueGossip(MessageAddress neighbor, ValueGossip gossip)
+    private void handleValueGossip(MessageAddress agent, 
+				   ValueGossip gossip)
     {
+	MessageAddress neighbor = agentNode(agent);
 	if (loggingService.isInfoEnabled())
 	    loggingService.info("Received gossip data from " 
 				+neighbor+ "="
@@ -157,7 +190,7 @@ public class GossipAspect
 	KeyGossip messageGossip = (KeyGossip) 
 	    message.getAttribute(KEY_GOSSIP_ATTR);
 	
-	MessageAddress destination = message.getTarget();
+	MessageAddress destination = agentNode(message.getTarget());
 	KeyGossip propagatedGossip = (KeyGossip) 
 	    propagatedRequests.get(destination);
 	if (propagatedGossip == null) {
@@ -192,24 +225,24 @@ public class GossipAspect
 	    message.getAttribute(KEY_GOSSIP_ATTR);
 	if (messageGossip == null) return;
 
-	MessageAddress destination = message.getTarget();
+	MessageAddress destination = agentNode(message.getTarget());
 	KeyGossip propagatedGossip = (KeyGossip) 
 	    propagatedRequests.get(destination);
 	if (propagatedGossip != null) propagatedGossip.add(messageGossip);
     }
 
 
-    private synchronized void addGossipValues(MessageAddress destination,
+    private synchronized void addGossipValues(MessageAddress neighbor,
 					      AttributedMessage message)
     {
 	GossipSubscription sub = (GossipSubscription)
-	    neighborsSubscriptions.get(destination);
+	    neighborsSubscriptions.get(neighbor);
 	if (sub != null) {
 	    ValueGossip changes = sub.getChanges();
 	    if (changes != null) {
 		if (loggingService.isInfoEnabled())
 		    loggingService.info("Adding gossip data for "
-					+destination+
+					+neighbor+
 					"="
 					+changes.prettyPrint());
 		message.setAttribute(VALUE_GOSSIP_ATTR, changes);
@@ -236,18 +269,18 @@ public class GossipAspect
 
 	    // Neighbor requests (excluding the recipient)
 	    Iterator itr = neighborsRequests.entrySet().iterator();
-	    MessageAddress destination = message.getTarget();
+	    MessageAddress neighbor = agentNode(message.getTarget());
 	    while (itr.hasNext()) {
 		Map.Entry entry = (Map.Entry) itr.next();
 		MessageAddress addr = (MessageAddress) entry.getKey();
 		KeyGossip gossip = (KeyGossip) entry.getValue();
-		if (!addr.equals(destination)) {
+		if (!addr.equals(neighbor)) {
 		    addRequests(message, gossip);
 		}
 	    }
 
 	    // Now add any updates for the destination
-	    addGossipValues(destination, message);
+	    addGossipValues(neighbor, message);
 	    
 
 	    MessageAttributes result = super.forwardMessage(message);
@@ -333,11 +366,11 @@ public class GossipAspect
 	implements GossipKeyDistributionService
     {
 
-	public void addKey(String key) {
+	public void addKey(String key, int propagationDistance) {
 	    if (loggingService.isInfoEnabled())
 		loggingService.info("GossipKeyDistributionService.addKey " 
 				    +key);
-	    localRequests.add(key);
+	    localRequests.add(key, propagationDistance);
 	}
 
 	public void removeKey(String key) {

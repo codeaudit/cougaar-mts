@@ -25,19 +25,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import org.cougaar.core.component.BindingSite;
-import org.cougaar.core.component.Component;
+import org.cougaar.core.component.ParameterizedComponent;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
-import org.cougaar.util.GenericStateModelAdapter;
 
 /**
  * Root class of Components of the MTS.
  */
 abstract public class BoundComponent
-    extends GenericStateModelAdapter
-    implements Component
+    extends ParameterizedComponent
 {
 
     private BindingSite bindingSite;
@@ -54,31 +52,6 @@ abstract public class BoundComponent
 
     }
 
-    protected String getParameter(String key) {
-	return getParameter(key, null);
-    }
-
-    protected String getParameter(String key, String defaultValue) {
-	if (parameters != null)
-	    return parameters.getProperty(key, defaultValue);
-	else
-	    return defaultValue;
-    }
-
-    public void setParameter(Object param) {
-	parameters = new Properties();
-	if (param instanceof List) {
-	    Iterator itr = ((List) param).iterator();
-	    while(itr.hasNext()) {
-		String property = (String) itr.next();
-		int sepr = property.indexOf('=');
-		if (sepr < 0) continue;
-		String key = property.substring(0, sepr);
-		String value = property.substring(++sepr);
-		parameters.setProperty(key, value);
-	    }
-	}
-    }
 
     public void load() {
 	super.load();

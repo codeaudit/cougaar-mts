@@ -26,8 +26,6 @@ import java.util.Map;
 
 class KeyGossip  extends Gossip
 {
-    public static final int PROPAGATION_DISTANCE = 3;
-
     private static class Data implements java.io.Serializable {
 	int propagation_distance;
 
@@ -37,9 +35,6 @@ class KeyGossip  extends Gossip
 
     }
 
-    void add(String key) {
-	add(key, PROPAGATION_DISTANCE);
-    }
 
     void add(String key, int propagationDistance) {
 	Data old = (Data) lookupValue(key);
