@@ -21,6 +21,7 @@
 
 package org.cougaar.mts.std;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject; // not used but needed by ANT and build process -- DO NOT REMOVE
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
@@ -29,7 +30,6 @@ import org.cougaar.core.mts.SerializationUtils;
 
 /** actual RMI remote object providing the implementation of MessageTransport client
  **/
-
 public class SerializedMTImpl extends MTImpl
     implements SerializedMT 
 {

@@ -22,6 +22,8 @@
 package org.cougaar.mts.std;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
+import java.rmi.server.UnicastRemoteObject; // not used but needed by ANT and build process -- DO NOT REMOVE
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,9 +38,8 @@ import org.cougaar.core.service.LoggingService;
 /** Actual RMI remote object providing the implementation of
  * MessageTransport client.  The transient tags shouldn't really be
  * necessary since this object should never be serialized.  But leave
- * them in anyway, for documentation if nothing else.1
+ * them in anyway, for documentation if nothing else.
  **/
-
 public class MTImpl extends RemoteObject implements MT 
 {
     private static transient MessageAttributes DummyReturn;
