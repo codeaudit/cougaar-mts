@@ -71,16 +71,18 @@ public class MessageTransportServiceProvider
     public MessageTransportServiceProvider(String id) {
         this.id = id;
 	proxies = new HashMap();
+	aspects = new ArrayList();
+	aspects_table = new HashMap();
+
     }
 
 
     private void readAspects() {
 	String property = "org.cougaar.message.transport.aspects";
 	String classes = System.getProperty(property);
+
 	if (classes == null) return;
 
-	aspects = new ArrayList();
-	aspects_table = new HashMap();
 	StringTokenizer tokenizer = new StringTokenizer(classes, ",");
 	while (tokenizer.hasMoreElements()) {
 	    String classname = tokenizer.nextToken();
