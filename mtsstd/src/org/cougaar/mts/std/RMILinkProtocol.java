@@ -86,6 +86,22 @@ public class RMILinkProtocol
     }
 
 
+    protected MTImpl makeMTImpl(MessageAddress myAddress,
+				MessageDeliverer deliverer,
+				SocketFactory socfac)
+	throws java.rmi.RemoteException
+    {
+	return new MTImpl(myAddress, deliverer, socfac);
+    }
+
+    protected void doForwarding(MT remote, Message message) 
+	throws MisdeliveredMessageException, java.rmi.RemoteException
+    {
+	remote.rerouteMessage(message);
+    }
+
+
+
 
     private MT lookupRMIObject(MessageAddress address) throws Exception {
 	Object object = 
@@ -106,11 +122,11 @@ public class RMILinkProtocol
     }
 
 
-    private void makeMT() {
+    private void findOrMakeMT() {
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = nameSupport.getNodeMessageAddress();
-	    MTImpl impl = new MTImpl(myAddress, deliverer, socfac);
+	    MTImpl impl = makeMTImpl(myAddress, deliverer, socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
 	    ex.printStackTrace();
@@ -118,7 +134,7 @@ public class RMILinkProtocol
     }
 
     public final void registerMTS(MessageAddress addr) {
-	makeMT();
+	findOrMakeMT();
 	try {
 	    Object proxy = myProxy;
 	    nameSupport.registerAgentInNameServer(proxy,addr,
@@ -252,6 +268,7 @@ public class RMILinkProtocol
 	    return target;
 	}
 
+
 	public void forwardMessage(Message message) 
 	    throws NameLookupException, 
 		   UnregisteredNameException, 
@@ -260,7 +277,7 @@ public class RMILinkProtocol
 	{
 	    cacheRemote();
 	    try {
-		remote.rerouteMessage(message);
+		doForwarding(remote, message);
 	    } 
 	    catch (MisdeliveredMessageException mis) {
 		// force recache of remote
