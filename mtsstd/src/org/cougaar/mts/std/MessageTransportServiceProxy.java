@@ -24,7 +24,7 @@ import java.util.Iterator;
  * redirecting calls to the MessageTransportRegistry and the
  * SendQueue.  */
 public class MessageTransportServiceProxy 
-    implements MessageTransportService
+    implements MessageTransportService, Debug
 {
     private MessageTransportRegistry registry;
     private SendQueue sendQ;
@@ -85,7 +85,8 @@ public class MessageTransportServiceProxy
 	}
 	MessageAddress destination = message.getTarget();
 	if (isRemoteMulticast(destination)) {
-	    System.out.println("!!!!!!! Remote Multicast!");
+	    if (DEBUG_MULTICAST)
+		System.out.println("!!!!!!! Remote Multicast!");
 
 	    MulticastMessageAddress dst = 
 		(MulticastMessageAddress) destination;
@@ -94,24 +95,26 @@ public class MessageTransportServiceProxy
 	    MessageAddress addr;
 	    while (itr.hasNext()) {
 		addr = (MessageAddress) itr.next();
-                System.out.println("!!!!!! next address =" + addr);
+                if (DEBUG_MULTICAST)
+		    System.out.println("!!!!!! next address =" + addr);
 		envelope = new MulticastMessageEnvelope(message, addr);
 		sendQ.sendMessage(envelope);
                 synchronized (this) { 
                     ++outstandingMessages; 
-                    if (Debug.DEBUG_FLUSH) showPending("Message queued");
+                    if (DEBUG_FLUSH) showPending("Message queued");
                 }
 	    }
 	} else if (checkMessage(message)) {
 	    if (destination.equals(MessageAddress.LOCAL)) {
-		System.out.println("!!!!!!!!!!!! Local Multicast!");
+		if (DEBUG_MULTICAST)
+		    System.out.println("!!!!!!!!!!!! Local Multicast!");
 		message = new MulticastMessageEnvelope(message,  destination);
 	    }
 
 	    sendQ.sendMessage(message);
 	    synchronized (this) { 
 		++outstandingMessages; 
-		if (Debug.DEBUG_FLUSH) showPending("Message queued");
+		if (DEBUG_FLUSH) showPending("Message queued");
 	    }
 	} else {
 	    System.err.println("**** Malformed message: "+message);
@@ -129,7 +132,7 @@ public class MessageTransportServiceProxy
      */
     synchronized void messageDelivered(Message m) {
 	--outstandingMessages;
-	if (Debug.DEBUG_FLUSH) showPending("Message delivered");
+	if (DEBUG_FLUSH) showPending("Message delivered");
 	if (outstandingMessages <= 0) notify();
     }
 
@@ -144,7 +147,7 @@ public class MessageTransportServiceProxy
 	if (!flushing) return false; // do nothing in this case
 
 	--outstandingMessages;
-	if (Debug.DEBUG_FLUSH) showPending("Message dropped");
+	if (DEBUG_FLUSH) showPending("Message dropped");
 	if (droppedMessages == null) droppedMessages = new ArrayList();
 	droppedMessages.add(message);
 	if (outstandingMessages <= 0) notify();
@@ -161,7 +164,7 @@ public class MessageTransportServiceProxy
     public synchronized ArrayList flushMessages() {
 	flushing = true;
 	while (outstandingMessages > 0) {
-	    if (Debug.DEBUG_FLUSH) {
+	    if (DEBUG_FLUSH) {
 		System.out.println("%%% " + addr + 
 				   ": Waiting on " + 
 				   outstandingMessages +
@@ -169,7 +172,7 @@ public class MessageTransportServiceProxy
 	    }
 	    try { wait(); } catch (InterruptedException ex) {}
 	}
-	if (Debug.DEBUG_FLUSH) {
+	if (DEBUG_FLUSH) {
 	    System.out.println("%%% " + addr + ": All messages flushed.");
 	}
 	flushing = false;
