@@ -51,16 +51,10 @@ public class MTImpl extends UnicastRemoteObject implements MT
     }
 
     public void rerouteMessage(Message m) {
-	try {
-	    if (deliverer != null) {
-		// System.err.println("Something efficient happened today ");
-		deliverer.deliverMessage(m);
-	    } else {
-		throw new Exception("No Deliverer in " + this);
-	    }
-	} catch (Exception e) {
-	    System.err.println("\n\nCaught exception in shim: "+e);
-	    e.printStackTrace();
+	if (deliverer != null) {
+	    deliverer.deliverMessage(m);
+	} else {
+	    throw new RuntimeException("*** No Deliverer!");
 	}
     }
 
