@@ -182,9 +182,9 @@ public class MessageTransportRegistry implements DebugFlags
 	return nameSupport.lookupMulticast(addr);
     }
 
-  protected MessageAddress getLocalAddress() {
-    return nameSupport.getNodeMessageAddress();
-  }
+    public MessageAddress getLocalAddress() {
+	return nameSupport.getNodeMessageAddress();
+    }
 
 
 
