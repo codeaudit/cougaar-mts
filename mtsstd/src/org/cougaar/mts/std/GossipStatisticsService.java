@@ -21,35 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Iterator;
+import org.cougaar.core.qos.metrics.Metric;
 
-class Gossip implements Serializable
+public interface GossipStatisticsService
 {
-    private HashMap map = new HashMap();
-    
-    Iterator iterator() {
-	return map.entrySet().iterator();
-    }
-
-    boolean hasEntry(Object key) {
-	return map.containsKey(key);
-    }
-
-    void removeEntry(Object key) {
-	map.remove(key);
-    }
-
-    void addEntry(Object key, Object value) {
-	map.put(key, value);
-    }
-
-    Object lookupValue(Object key) {
-	return map.get(key);
-    }
-
-    int size() {
-	return map.size();
-    }
+    GossipTrafficRecord getStatistics();
 }
+

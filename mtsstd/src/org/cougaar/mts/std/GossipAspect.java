@@ -44,9 +44,9 @@ public class GossipAspect
     private static final Application TOPOLOGY = 
 	Application.getApplication("topology");
     private static final String SCHEME = "node";
-    private static final String VALUE_GOSSIP_ATTR = 
+    static final String VALUE_GOSSIP_ATTR = 
 	"org.cougaar.core.mts.value-gossip";
-    private static final String KEY_GOSSIP_ATTR = 
+    static final String KEY_GOSSIP_ATTR = 
 	"org.cougaar.core.mts.key-gossip";
     private static final MessageAddress LIMBO =
 	MessageAddress.getMessageAddress("wp_cant_find_node");
@@ -55,11 +55,11 @@ public class GossipAspect
     private GossipKeyDistributionService keyService;
     private GossipQualifierService qualifierService;
     private GossipUpdateService updateService;
+    private GossipStatisticsService statsService;
     private WhitePagesService wpService;
 
     // Local data we'd like to get via gossip.
     private KeyGossip localRequests;
-
 
     // Maps address to KeyGossip, one per neighbor Agent.
     // Each entry is the gossip that we've asked for so far from that
@@ -97,6 +97,14 @@ public class GossipAspect
 	    ServiceBroker sb = getServiceBroker();
 	    qualifierService = (GossipQualifierService)
 		sb.getService(this, GossipQualifierService.class, null);
+	}
+    }
+
+    private synchronized void ensureStatsService() {
+	if (statsService == null) {
+	    ServiceBroker sb = getServiceBroker();
+	    statsService = (GossipStatisticsService)
+		sb.getService(this, GossipStatisticsService.class, null);
 	}
     }
 
