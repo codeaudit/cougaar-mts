@@ -21,6 +21,12 @@
 
 package org.cougaar.core.mts;
 
+/**
+ *   This Exception indicates a type of Link Protocol failure.
+ *   <p>
+ *   The destination Link got a valid address but could not deliver the message
+ *   to the receiving Node.
+ **/
 public class CommFailureException extends Exception 
 {
     private Exception nested_exception;

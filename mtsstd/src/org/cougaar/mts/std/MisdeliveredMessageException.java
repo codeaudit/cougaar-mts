@@ -25,6 +25,14 @@ import org.cougaar.core.society.Message;
 
 import java.rmi.RemoteException;
 
+/**
+ *   This Exception indicates a type of Link Protocol failure and it is
+ *   thrown when the message is delivered at the destination Node but the 
+ *   agent is not at the destination Node.
+ *   <p>
+ *   The most likely reason is that the agent has moved/moving from the specified
+ *    destination Node
+ **/
 public class MisdeliveredMessageException extends RemoteException 
 {
     public MisdeliveredMessageException(Message message) {

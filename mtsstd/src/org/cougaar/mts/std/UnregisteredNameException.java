@@ -23,6 +23,14 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.MessageAddress;
 
+/**
+ *   This Exception indicates a type of Link Protocol failure and it is thrown
+ *   when the destination address specified could not be obtained from the Name 
+ *   Lookup Service i.e destination address is not created yet.  
+ *   <p>
+ *   The likely reason is that Agent did not register with the Name LookUp Service or 
+ *   agent is in the process of moving
+ **/
 public class UnregisteredNameException extends Exception 
 {
     private MessageAddress addr;

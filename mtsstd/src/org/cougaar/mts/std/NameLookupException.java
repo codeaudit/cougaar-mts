@@ -21,6 +21,12 @@
 
 package org.cougaar.core.mts;
 
+/**
+ *   This Exception indicates a type of Link Protocol failure and it is 
+ *   thorwn when the Name Lookup Service is inaccessible.
+ *   <p>
+ *   The likely reason is that the Name Lookup Service itself failed.
+ **/
 public class NameLookupException extends Exception 
 {
     private Exception nested_exception;
@@ -30,3 +36,7 @@ public class NameLookupException extends Exception
 	this.nested_exception = nested;
     }
 }
+
+
+
+

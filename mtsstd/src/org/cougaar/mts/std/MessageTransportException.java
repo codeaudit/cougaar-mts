@@ -27,7 +27,7 @@ package org.cougaar.core.mts;
 
 /**
 *   This Exception class contains the information for throwing an
-*   exception for the unmovable messages by the transport gateway.
+*   exception for the invalid messages by the Message Transport Service
 *   <p>
 *   For the first version of this class the exceptions diffferentiated by the
 *   int type passed in during construction.  In the future we will want
