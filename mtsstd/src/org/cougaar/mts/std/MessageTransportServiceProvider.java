@@ -211,7 +211,7 @@ public final class MessageTransportServiceProvider
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
-	Debug.enableDebug(loggingService);
+	Debug.load(loggingService);
 
 	// Later this will be replaced by a Node-level service
 	ThreadServiceProvider tsp = new ThreadServiceProvider();

@@ -39,13 +39,10 @@ import java.util.StringTokenizer;
 public final class Debug implements DebugFlags
 {
 
-    private int flags;
+    private static boolean loaded = false;
+    private static int flags;
 
-    private Debug(LoggingService loggingService) {
-	initialize(loggingService);
-    }
-
-    private void initialize(LoggingService loggingService) {
+    private static void initialize(LoggingService loggingService) {
 	    flags = 0;
 	    String debug = 
 		System.getProperty("org.cougaar.message.transport.debug");
@@ -95,30 +92,23 @@ public final class Debug implements DebugFlags
 		    }
 		}
 	    }
+
+	    loaded = true;
 	}
 
 
 
 
-    private boolean debugEnabled(int mask) {
-	return ((flags & mask) == mask);
-    }
 
-
-
-
-    private static Debug debug;
-
-    static synchronized void enableDebug(LoggingService ls) {
-	if (debug != null) return;
-	debug = new Debug(ls);
+    static synchronized void load(LoggingService ls) {
+	if (!loaded) initialize(ls);
     }
 
     public static boolean isDebugEnabled(LoggingService ls, int mask) {
 	if (ls != null && !ls.isDebugEnabled())
 	    return false;
 	else
-	    return debug.debugEnabled(mask);
+	    return ((flags & mask) == mask);
     }
 
 }
