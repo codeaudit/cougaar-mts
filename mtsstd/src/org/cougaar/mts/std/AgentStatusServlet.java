@@ -89,6 +89,7 @@ public class AgentStatusServlet extends BaseServlet
 	    out.print("<p><b>");
 	    out.print("ERROR: Agent Status Service is not Available for Agent ");
 	    out.print(agentString + "</b><p>");
+	    out.println("<p>To Change Agent use cgi parameter: ?agent=agentname<p>");
 	    return;
 	}
 	out.print("<h2> Agent Status for Agent "+agentString+"</h2>");

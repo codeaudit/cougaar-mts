@@ -50,40 +50,54 @@ public class AgentStatusAspect
 	    getServiceBroker().getService(this, MetricsUpdateService.class, null);
     }
     
-   private synchronized AgentState ensureState(MessageAddress address)
-    {
-	AgentState state = (AgentState) states.get(address);
-	if (state == null) {
-	    state = new AgentState();
-	    System.out.println("Initializing State Agent"+address);
-	    // JAZ must be a better way to initialize an object
-	    state.timestamp = System.currentTimeMillis();
-	    state.status = UNREGISTERED;
-	    state.queueLength=0;
-	    state.receivedCount=0;
-	    state.receivedBytes=0;
-	    state.lastReceivedBytes=0;
-	    state.sendCount = 0;
-	    state.deliveredCount = 0;
-	    state.deliveredBytes=0;
-	    state.lastDeliveredBytes=0;
-	    state.deliveredLatencySum = 0;
-	    state.lastDeliveredLatency = 0;
-	    state.averageDeliveredLatency = 0;
-	    state.unregisteredNameCount = 0;
-	    state.nameLookupFailureCount = 0;
-	    state.commFailureCount = 0;
-	    state.misdeliveredMessageCount = 0;	
-	    state.lastLinkProtocolTried = null;
-	    state.lastLinkProtocolSuccess=null;
-
-	    states.put(address, state);
+    private AgentState ensureState(MessageAddress address) {
+	AgentState state = null;
+	synchronized(states){
+	    state = (AgentState) states.get(address);
+	    if (state == null) {
+		state = newAgentState();
+		states.put(address, state);
+	    }
 	}
 	return state;
     }
 
+    private  AgentState getState(MessageAddress address){
+	AgentState state = null;
+	synchronized(states){
+	    state = (AgentState) states.get(address);
+	}
+	return state;
+    }
+
+    private AgentState newAgentState() {
+	AgentState state = new AgentState();
+	// JAZ must be a better way to initialize an object
+	state.timestamp = System.currentTimeMillis();
+	state.status = UNREGISTERED;
+	state.queueLength=0;
+	state.receivedCount=0;
+	state.receivedBytes=0;
+	state.lastReceivedBytes=0;
+	state.sendCount = 0;
+	state.deliveredCount = 0;
+	state.deliveredBytes=0;
+	state.lastDeliveredBytes=0;
+	state.deliveredLatencySum = 0;
+	state.lastDeliveredLatency = 0;
+	state.averageDeliveredLatency = 0;
+	state.unregisteredNameCount = 0;
+	state.nameLookupFailureCount = 0;
+	state.commFailureCount = 0;
+	state.misdeliveredMessageCount = 0;	
+	state.lastLinkProtocolTried = null;
+	state.lastLinkProtocolSuccess=null;
+	return state;
+    }
+
+
     // JAZ must be a better way to clone an object
-    public AgentState snapshotState(AgentState state) {
+    private AgentState snapshotState(AgentState state) {
 	AgentState result = new AgentState();
 	synchronized (state) {
 	    result.timestamp = state.timestamp;
@@ -130,11 +144,7 @@ public class AgentStatusAspect
 
     // must snapshot state or caller will get a dynamic value.
     public AgentState getAgentState(MessageAddress address) {
-	//AgentState state = (AgentState) states.get(address);
-	AgentState state = ensureState(address);
-	System.out.println("#########Agent Status="+address+
-			   "messageOut="+state.sendCount+
-			   "states="+states.size());
+	AgentState state = getState(address);
 	if (state != null) return snapshotState(state);
 	else return null;
     }
@@ -162,9 +172,9 @@ public class AgentStatusAspect
 
 	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
-	    NameLookupException, 
-	    CommFailureException,
-	    MisdeliveredMessageException
+		   NameLookupException, 
+		   CommFailureException,
+		   MisdeliveredMessageException
 
 	{
 	    MessageAddress addr = message.getTarget();
@@ -203,12 +213,9 @@ public class AgentStatusAspect
 		    state.lastDeliveredLatency = (int) latency;
 		    state.deliveredLatencySum +=  latency;
 		    state.averageDeliveredLatency = (alpha * latency) +
-			((1-alpha) * latency);
+			((1-alpha) * state.averageDeliveredLatency);
 		    state.lastLinkProtocolSuccess=getProtocolClass().getName();
 		}
-		System.out.println("Wrote Status="+addr+
-				   "messageOut="+state.sendCount+
-				   "states="+states.size());
 		return meta;
 
 	    } catch (UnregisteredNameException unreg) {
@@ -253,7 +260,7 @@ public class AgentStatusAspect
 	}
 
 	public MessageAttributes deliverMessage(AttributedMessage message,
-					 MessageAddress dest)
+						MessageAddress dest)
 	    throws MisdeliveredMessageException
 	{  
 	    String agent= message.getOriginator().getAddress();
