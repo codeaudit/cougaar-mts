@@ -172,7 +172,7 @@
     <property name="compile.abs.jarlist" value=""/>
 
     <!-- javadoc package spec for building javadocs -->
-    <property name="javadoc.packages" value="org.cougaar.mts.std"/>
+    <property name="javadoc.packages" value="org.cougaar.mts.base,org.cougaar.mts.std"/>
 
     <!-- Extra jars needed at run / unit-test time. -->
     <!-- WARNING: Only relative paths work here. -->
