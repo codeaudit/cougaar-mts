@@ -158,7 +158,7 @@ public class AttributedMessage
 
 
 
-    void addFilter(StandardAspect aspect) {
+    public void addFilter(StandardAspect aspect) {
 	String name = aspect.getClass().getName();
 	if (logger.isDebugEnabled()) {
 	    Object old = getAttribute(FILTERS_ATTRIBUTE);
