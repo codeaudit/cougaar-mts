@@ -97,8 +97,8 @@ public class TraceAspect
 	    server.unregisterClient(client);
 	}
 
-	public void flushMessages() {
-	    server.flushMessages();
+	public java.util.ArrayList flushMessages() {
+	    return server.flushMessages();
 	}
 
 	public String getIdentifier() {

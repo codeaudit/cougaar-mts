@@ -12,8 +12,8 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.society.MessageStatistics;
 
+import java.util.ArrayList;
 
 /**
  * Currently the only implementation of MessageTransportService.  It
@@ -29,6 +29,7 @@ public class MessageTransportServiceProxy
     private int outstandingMessages;
     private boolean flushing;
     private MessageAddress addr;
+    private ArrayList droppedMessages;
 
     public MessageTransportServiceProxy(MessageTransportClient client,
 					MessageTransportRegistry registry,
@@ -99,7 +100,20 @@ public class MessageTransportServiceProxy
     }
 
 
-    public synchronized void flushMessages() {
+    synchronized void messageDropped(Message message) {
+	--outstandingMessages;
+	if (Debug.DEBUG_FLUSH) {
+	    System.out.println("%%% " + addr + 
+			       ": Message dropped, " 
+			       + outstandingMessages + 
+			       " messages pending");
+	}
+	if (droppedMessages == null) droppedMessages = new ArrayList();
+	droppedMessages.add(message);
+	if (outstandingMessages <= 0) notify();
+    }
+
+    public synchronized ArrayList flushMessages() {
 	flushing = true;
 	while (outstandingMessages > 0) {
 	    if (Debug.DEBUG_FLUSH) {
@@ -114,6 +128,7 @@ public class MessageTransportServiceProxy
 	    System.out.println("%%% " + addr + ": All messages flushed.");
 	}
 	flushing = false;
+	return droppedMessages;
     }
 
     /**
@@ -136,10 +151,6 @@ public class MessageTransportServiceProxy
 	return flushing;
     }
 
-    void droppedMessage(Message message) {
-	// notify agent?
-	System.err.println("#### Dropping message " + message);
-    }
 
    
     /**

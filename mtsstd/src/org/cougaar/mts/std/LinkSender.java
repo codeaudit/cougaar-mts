@@ -119,7 +119,7 @@ public class LinkSender implements Runnable
 		    }
 
 		    if (serviceProxy != null && serviceProxy.isFlushing()) {
-			serviceProxy.droppedMessage(message);
+			serviceProxy.messageDropped(message);
 			break;
 		    }
 

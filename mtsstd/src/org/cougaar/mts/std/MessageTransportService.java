@@ -12,7 +12,6 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.cluster.ClusterContext;
 import org.cougaar.core.component.Service;
 
 /**
@@ -47,7 +46,7 @@ public interface MessageTransportService extends Service
 
     /**
      * Block until all queued messages have been sent (or dropped).  */
-    void flushMessages();
+    java.util.ArrayList flushMessages();
 
     /**
      * @return the name of the entity that this MessageTransport
