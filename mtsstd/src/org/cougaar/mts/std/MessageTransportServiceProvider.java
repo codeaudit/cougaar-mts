@@ -228,7 +228,6 @@ public final class MessageTransportServiceProvider
 
         ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
 
-
 	// Make the SyscondFactory here if the class is available
 	try {
 	    Class scfac_class = Class.forName(SCFAC_CLASSNAME);
@@ -246,6 +245,9 @@ public final class MessageTransportServiceProvider
 
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
+
+	// AttributedMessages need to log but can't be components.
+	AttributedMessage.setLoggingService(loggingService);
 
 	Debug.load(loggingService);
 
