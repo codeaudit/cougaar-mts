@@ -147,11 +147,11 @@ final class DestinationQueueImpl
 	    } catch (CommFailureException comm_failure) {
 		Exception cause = comm_failure.getException();	
 		String msg = "Failure in communication, message " +message+
-		    " caused by " +cause;
+		    " caused by \n" +cause;
 		if (cause instanceof DontRetryException) {
 		    // Always log these.
-		    if (loggingService.isErrorEnabled()) {
-			loggingService.error(msg, cause.getCause());
+		    if (loggingService.isWarnEnabled()) {
+			loggingService.warn(msg, cause.getCause());
 		    }
 
 		    // Act as if the message has gone through.
@@ -161,8 +161,8 @@ final class DestinationQueueImpl
 		    // This is some other kind of CommFailure, not
 		    // related to security.  Retry.
 		    lastException = comm_failure;
-		    if (loggingService.isErrorEnabled()) 
-			loggingService.error(msg, comm_failure);
+		    if (loggingService.isWarnEnabled()) 
+			loggingService.warn(msg, comm_failure);
 		}
 	    } catch (MisdeliveredMessageException misd) {
 		lastException = misd;
