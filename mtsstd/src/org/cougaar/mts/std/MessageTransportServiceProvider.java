@@ -220,28 +220,10 @@ public final class MessageTransportServiceProvider
     }
 
 
-    private static final String SCFAC_CLASSNAME =
-	"org.cougaar.lib.mquo.SyscondFactory";
-
     public void initialize() {
         super.initialize();
 
         ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
-
-	// Make the SyscondFactory here if the class is available
-	try {
-	    Class scfac_class = Class.forName(SCFAC_CLASSNAME);
-	    Class[] types = { ServiceBroker.class };
-	    Object[] args = { sb };
-	     java.lang.reflect.Constructor cons =
-		 scfac_class.getConstructor(types);
-	    cons.newInstance(args);
-	} catch (ClassNotFoundException cnf) {
-	    // This means the quo jar isn't loaded
-	} catch (Exception ex) {
-	    ex.printStackTrace();
-	}
-
 
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);

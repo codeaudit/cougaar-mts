@@ -27,7 +27,12 @@ import org.cougaar.core.qos.metrics.MetricsUpdateService;
 import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
 
-public class MetricsTestAspect extends StandardAspect 
+import java.util.Observer;
+import java.util.Observable;
+
+public class MetricsTestAspect 
+    extends StandardAspect 
+    implements Observer
 {
 
     private double x = 0.0;
@@ -40,13 +45,30 @@ public class MetricsTestAspect extends StandardAspect
 	}
     }
 
+
+    public void load() {
+	super.load();
+
+	String path = System.getProperty("org.cougaar.metrics.test");
+	ServiceBroker sb = getServiceBroker();
+	MetricsService svc = (MetricsService)
+	    sb.getService(this, MetricsService.class, null);
+	svc.subscribeToValue(path, this);
+	System.out.println("Subscribed to " +path);
+    }
+
+    public void update(Observable o, Object arg) {
+	System.out.println("Updated with " +arg);
+    }
+
+
     private class DummySendQueue extends SendQueueDelegateImplBase {
 	DummySendQueue(SendQueue delegatee) {
 	    super(delegatee);
 	}
 
 	public void sendMessage(AttributedMessage message) {
-	    runTest();
+	    // runTest();
 	    super.sendMessage(message);
 	}
 
