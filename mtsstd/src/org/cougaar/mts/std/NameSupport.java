@@ -11,9 +11,11 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.naming.NS;
+import org.cougaar.core.society.MulticastMessageAddress;
 import org.cougaar.core.society.MessageAddress;
 
 import java.rmi.RemoteException;
+import java.util.Iterator;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -31,8 +33,11 @@ public interface NameSupport {
 				     MessageTransportClient client, 
 				     String transportType);
 
-    void registerNodeInNameServer(Object proxy, String transportType);
+    void registerNodeInNameServer(Object proxy, 
+				  String transportType);
 
     Object lookupAddressInNameServer(MessageAddress address, 
                                      String transportType);
+
+    Iterator lookupMulticast(MulticastMessageAddress address);
 }

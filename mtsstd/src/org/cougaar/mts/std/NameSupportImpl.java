@@ -10,13 +10,21 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.society.MulticastMessageAddress;
 import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.naming.NamingService;
 
-import javax.naming.NamingException;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import javax.naming.Name;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.SearchResult;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -35,29 +43,36 @@ public class NameSupportImpl implements NameSupport
 	return myNodeAddress;
     }
 
-    private final void _registerWithSociety(String key, Object proxy) 
+    private final void _registerWithSociety(String key, 
+					    Object proxy,
+					    BasicAttributes attributes) 
 	throws NamingException
     {
         DirContext ctx = namingService.getRootContext();
         Name name = ctx.getNameParser("").parse(key);
-        boolean exists = true;
         while (name.size() > 1) {
             Name prefix = name.getPrefix(1);
             name = name.getSuffix(1);
             try {
                 ctx = (DirContext) ctx.lookup(prefix);
             } catch (NamingException ne) {
-                ctx = (DirContext) ctx.createSubcontext(prefix, new BasicAttributes());
-                exists = false;
+		BasicAttributes empty_attr = new BasicAttributes();
+                ctx = (DirContext) ctx.createSubcontext(prefix, empty_attr);
             } catch (Exception e) {
                 throw new NamingException(e.toString());
             }
         }
 	if (proxy != null) 
-	    ctx.rebind(name, proxy, new BasicAttributes());
+	    ctx.rebind(name, proxy, attributes);
 	else
 	    ctx.unbind(name);
     }
+    private final void _registerWithSociety(String key, Object proxy) 
+	throws NamingException
+    {
+	_registerWithSociety(key, proxy, new BasicAttributes());
+    }
+    
 
     public void registerAgentInNameServer(Object proxy, 
 					  MessageTransportClient client, 
@@ -90,13 +105,26 @@ public class NameSupportImpl implements NameSupport
 	}
     }
 
-    public void registerNodeInNameServer(Object proxy, String transportType) {
+    public void registerNodeInNameServer(Object proxy, 
+					 String transportType) 
+    {
+	String addr = myNodeAddress.getAddress();
+	String name = MTDIR+addr+transportType;
 	try {
-	    _registerWithSociety(MTDIR+myNodeAddress.getAddress()+transportType, proxy);
-	    _registerWithSociety(CLUSTERDIR+myNodeAddress.getAddress()+transportType, proxy);
+	    BasicAttributes mts_attr = new BasicAttributes();
+	    mts_attr.put("MTS", Boolean.TRUE);
+	    mts_attr.put("Address", myNodeAddress);
+	    _registerWithSociety(name, proxy, mts_attr);
 	} catch (Exception e) {
-	    System.err.println("Failed to add Node " + myNodeAddress.getAddress() +
-			       "to NameServer for transport" + transportType);
+	    System.err.println("Failed to register " +  name);
+	    e.printStackTrace();
+	}
+
+	name = CLUSTERDIR+addr+transportType;
+	try {
+	    _registerWithSociety(name, proxy);
+	} catch (Exception e) {
+	    System.err.println("Failed to register " + name);
 	    e.printStackTrace();
 	}
     }
@@ -143,5 +171,56 @@ public class NameSupportImpl implements NameSupport
 	    return null; 
 	}
     }
+
+
+    public static class NamingItr implements Iterator {
+	private NamingEnumeration e;
+	private String attribute;
+
+	NamingItr(NamingEnumeration e, String attribute) {
+	    this.e = e;
+	    this.attribute = attribute;
+	}
+
+	public boolean hasNext() {
+	    try {
+		return e.hasMore();
+	    } catch (NamingException ex) {
+		ex.printStackTrace();
+		return false;
+	    }
+	}
+
+	public Object next() {
+	    try {
+		SearchResult result = (SearchResult) e.next();
+		Attributes attr = result.getAttributes();
+		return attr.get(attribute);
+	    } catch (NamingException ex) {
+		ex.printStackTrace();
+		return null;
+	    }
+	}
+
+	public void remove() {
+	    throw new RuntimeException("No way Jose");
+	}
+
+    }
+
+    public Iterator lookupMulticast(MulticastMessageAddress address) {
+	try {
+	    DirContext ctx = namingService.getRootContext();
+	    String name = null;
+	    String filter = "MTS=true";
+	    SearchControls cons = new SearchControls();
+	    cons.setSearchScope(SearchControls.SUBTREE_SCOPE);
+	    return new NamingItr(ctx.search(name, filter, cons), "Address");
+	} catch (NamingException ne) {
+	    ne.printStackTrace();
+	    return null;
+	}
+    }
+  
 
 }

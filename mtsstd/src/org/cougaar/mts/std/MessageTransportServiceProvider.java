@@ -118,7 +118,7 @@ public class MessageTransportServiceProvider
     public void initialize() {
 
         nameSupport = createNameSupport(id);
-	registry = MessageTransportRegistry.makeRegistry(id, this);
+	registry = MessageTransportRegistry.makeRegistry(id, nameSupport,this);
 
 	readAspects();
 

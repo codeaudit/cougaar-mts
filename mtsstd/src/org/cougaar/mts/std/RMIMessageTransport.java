@@ -94,9 +94,9 @@ public class RMIMessageTransport
 	synchronized (this) {
 	    if (myAddress == null) {
 		myAddress = nameSupport.getNodeMessageAddress();
-		MTImpl impl = new MTImpl(this, myAddress, deliverer);
+		MTImpl impl = new MTImpl(myAddress, deliverer);
 		MT proxy = getServerSideProxy(impl);
-		nameSupport.registerNodeInNameServer(proxy,TRANSPORT_TYPE);
+		nameSupport.registerNodeInNameServer(proxy, TRANSPORT_TYPE);
 	    }
 	}
     }

@@ -12,8 +12,11 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+
 
 /**
  * Currently the only implementation of MessageTransportService.  It
@@ -56,6 +59,11 @@ public class MessageTransportServiceProxy
     }
 
 
+    private boolean isRemoteMulticast(MessageAddress address) {
+	return address instanceof MulticastMessageAddress &&
+	    !address.equals(MessageAddress.LOCAL);
+	    
+    }
 
     private void showPending(String text) {
 	String msgs = 
@@ -67,7 +75,7 @@ public class MessageTransportServiceProxy
 
     /**
      * Redirects the sendMessage to the SendQueue. */
-    public void sendMessage(Message m) {
+    public void sendMessage(Message message) {
 	synchronized (this) {
 	    if (flushing) {
 		System.err.println("***** sendMessage during flush!");
@@ -75,15 +83,39 @@ public class MessageTransportServiceProxy
 		return;
 	    }
 	}
+	MessageAddress destination = message.getTarget();
+	if (isRemoteMulticast(destination)) {
+	    System.out.println("!!!!!!! Remote Multicast!");
 
-	if (checkMessage(m)) {
-	    sendQ.sendMessage(m);
+	    MulticastMessageAddress dst = 
+		(MulticastMessageAddress) destination;
+	    Iterator itr = registry.findRemoteMulticastTransports(dst);
+	    MulticastMessageEnvelope envelope;
+	    MessageAddress addr;
+	    int count = 0;
+	    while (itr.hasNext()) {
+		addr = (MessageAddress) itr.next();
+		envelope = new MulticastMessageEnvelope(message, addr);
+		sendQ.sendMessage(envelope);
+		count++;
+	    }
+	    synchronized (this) { 
+		outstandingMessages += count;
+		if (Debug.DEBUG_FLUSH) showPending(count + " messages queued");
+	    }
+	} else if (checkMessage(message)) {
+	    // Debugging
+	    if (destination.equals(MessageAddress.LOCAL)) {
+		System.out.println("!!!!!!!!!!!! Local Multicast!");
+	    }
+
+	    sendQ.sendMessage(message);
 	    synchronized (this) { 
 		++outstandingMessages; 
 		if (Debug.DEBUG_FLUSH) showPending("Message queued");
 	    }
 	} else {
-	    System.err.println("**** Malformed message: "+m);
+	    System.err.println("**** Malformed message: "+message);
 	    Thread.dumpStack();
 	    return;
 	}

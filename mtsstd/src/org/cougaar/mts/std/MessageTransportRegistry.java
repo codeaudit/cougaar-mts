@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+
 /**
  * The MessageTransportRegistry singleton is a utility instance that
  * helps certain pieces of the message transport subsystem to find one
@@ -27,10 +28,12 @@ class MessageTransportRegistry
     private static MessageTransportRegistry instance;
 
     public static synchronized MessageTransportRegistry 
-	makeRegistry(String name, MessageTransportServiceProvider server)
+	makeRegistry(String name, 
+		     NameSupport nameSupport,
+		     MessageTransportServiceProvider server)
     {
 	if (instance == null) {
-	    instance = new MessageTransportRegistry(name, server);
+	    instance = new MessageTransportRegistry(name, nameSupport, server);
 	    return instance;
 	} else {
 	    System.err.println("##### Attempt to make a second MessageTransportRegistry!");
@@ -56,11 +59,16 @@ class MessageTransportRegistry
     private MessageTransportServiceProvider serviceProvider;
     private MessageTransportFactory transportFactory;
     private ReceiveLinkFactory receiveLinkFactory;
+    private NameSupport nameSupport;
     private Object lock;
 
-    private MessageTransportRegistry(String name, MessageTransportServiceProvider serviceProvider) {
+    private MessageTransportRegistry(String name, 
+				     NameSupport nameSupport,
+				     MessageTransportServiceProvider serviceProvider)
+    {
 	this.name = name;
 	this.serviceProvider = serviceProvider;
+	this.nameSupport = nameSupport;
 	this.lock = new Object();
     }
 
@@ -117,7 +125,8 @@ class MessageTransportRegistry
 
     boolean isLocalClient(MessageAddress id) {
 	synchronized (lock) {
-	    return receiveLinks.get(id) != null;
+	    return receiveLinks.get(id) != null ||
+		id.equals(MessageAddress.LOCAL);
 	}
     }
 
@@ -136,6 +145,12 @@ class MessageTransportRegistry
     Iterator findLocalMulticastReceiveLinks(MulticastMessageAddress addr)
     {
 	return new ArrayList(receiveLinks.values()).iterator();
+    }
+
+
+    Iterator findRemoteMulticastTransports(MulticastMessageAddress addr)
+    {
+	return nameSupport.lookupMulticast(addr);
     }
 
 
