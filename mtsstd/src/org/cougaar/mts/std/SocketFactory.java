@@ -51,9 +51,11 @@ public class SocketFactory
     // happens.  Instead, the aspect delegation will be handled by a
     // special static call.
     private boolean use_ssl;
+    private DebugService debugService;
 
-    public SocketFactory(boolean use_ssl) {
+    public SocketFactory(boolean use_ssl, DebugService debugService) {
 	this.use_ssl = use_ssl;
+	this.debugService = debugService;
     }
 
     
@@ -65,7 +67,7 @@ public class SocketFactory
 	    try {
 		s = SSLSocketFactory.getDefault().createSocket(host, port);
 	    } catch (IOException ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 		return null;
 	    }
 	} else {
@@ -82,7 +84,7 @@ public class SocketFactory
 	    try {
 		s=SSLServerSocketFactory.getDefault().createServerSocket(port);
 	    } catch (IOException ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 		return null;
 	    }
 	} else {

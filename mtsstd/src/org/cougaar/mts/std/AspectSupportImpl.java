@@ -45,9 +45,8 @@ final class AspectSupportImpl implements ServiceProvider
 
     private static AspectSupport service;
 
-
-    AspectSupportImpl(Container container) {
-	service = new ServiceImpl(container);
+    AspectSupportImpl(Container container, DebugService debugService) {
+	service = new ServiceImpl(container, debugService);
     }
 
 
@@ -85,18 +84,20 @@ final class AspectSupportImpl implements ServiceProvider
 
 
 
-    private static class ServiceImpl implements AspectSupport, DebugFlags
+    private class ServiceImpl implements AspectSupport, DebugFlags
     {
 
 	private ArrayList aspects;
 	private HashMap aspects_table;
 	private Container container;
+	private DebugService debugService;
 
 
-	private ServiceImpl(Container container) {
+	private ServiceImpl(Container container, DebugService debugService) {
 	    aspects = new ArrayList();
 	    aspects_table = new HashMap();
 	    this.container = container;
+	    this.debugService = debugService;
 	}
     
  
@@ -109,9 +110,9 @@ final class AspectSupportImpl implements ServiceProvider
 	    while (tokenizer.hasMoreElements()) {
 		String classname = tokenizer.nextToken();
 		MessageTransportAspect aspect = findAspect(classname);
-		if (aspect != null) {
-		    System.err.println("Warning: ignoring duplicate aspect "+
-				       classname);
+		if (aspect != null && debugService.isErrorEnabled()) {
+		    debugService.error("Ignoring duplicate aspect "+
+					      classname);
 		    continue;
 		}
 		try {
@@ -120,8 +121,7 @@ final class AspectSupportImpl implements ServiceProvider
 		    addAspect(aspect);
 		}
 		catch (Exception ex) {
-		    ex.printStackTrace();
-		    // System.err.println(ex);
+		    debugService.error(null, ex);
 		}
 	    }
 	}
@@ -143,8 +143,8 @@ final class AspectSupportImpl implements ServiceProvider
 		aspects_table.put(classname, aspect);
 	    }
 	    container.add(aspect);
-	    if (Debug.debug(ASPECTS))
-		System.out.println("******* added aspect " + aspect);
+	    if (debugService.isDebugEnabled(ASPECTS))
+		debugService.debug("Added aspect " + aspect);
 	}
 
 
@@ -165,8 +165,8 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (Debug.debug(ASPECTS))
-			System.out.println("======> " + delegate);
+		    if (debugService.isDebugEnabled(ASPECTS))
+			debugService.debug("attached " + delegate);
 		}
 	    }
 
@@ -178,8 +178,9 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getReverseDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (Debug.debug(ASPECTS))
-			System.out.println("(r)======> " + delegate);
+		    if (debugService.isDebugEnabled(ASPECTS))
+			debugService.debug("reverse attached " 
+						  + delegate);
 		}
 	    }
 	

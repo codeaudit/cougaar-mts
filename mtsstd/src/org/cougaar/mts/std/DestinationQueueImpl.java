@@ -46,6 +46,7 @@ final class DestinationQueueImpl
     private MessageAddress destination;
     private MessageTransportRegistryService registry;
     private LinkSelectionPolicy selectionPolicy;
+    private DebugService debugService;
     private DestinationQueue delegate;
 
     private ArrayList destinationLinks;
@@ -57,6 +58,8 @@ final class DestinationQueueImpl
 
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
+	debugService = (DebugService)
+	    sb.getService(this, DebugService.class, null);
 	selectionPolicy =
 	(LinkSelectionPolicy)
 	    sb.getService(this, LinkSelectionPolicy.class, null);
@@ -101,15 +104,15 @@ final class DestinationQueueImpl
 	int retryCount = 0;
 	Exception lastException = null;
 	while (true) {
-	    if (retryCount > 0 && Debug.debug(SERVICE))
-		System.err.println("% Retrying " +message);
+	    if (retryCount > 0 && debugService.isDebugEnabled(SERVICE))
+		debugService.debug("Retrying " +message);
 
 	    links = destinationLinks.iterator();
 	    link = selectionPolicy.selectLink(links, message, retryCount, lastException);
 	    if (link != null) {
-		if (Debug.debug(POLICY))
-		System.out.println("#### Selected Protocol " +
-				   link.getProtocolClass());
+		if (debugService.isDebugEnabled(POLICY))
+		debugService.debug("Selected Protocol " +
+					  link.getProtocolClass());
 		try {
 		    link.forwardMessage(message);
 		    break;
@@ -118,18 +121,21 @@ final class DestinationQueueImpl
 		    // nothing to say here
 		} catch (NameLookupException lookup_error) {
 		    lastException = lookup_error;
-		    if (Debug.debug(COMM)) lookup_error.printStackTrace();
+		    if (debugService.isDebugEnabled(COMM)) 
+			debugService.error(null, lookup_error);
 		} catch (CommFailureException comm_failure) {
 		    lastException = comm_failure;
-		    if (Debug.debug(COMM)) comm_failure.printStackTrace();
+		    if (debugService.isDebugEnabled(COMM)) 
+			debugService.error(null, comm_failure);
 		} catch (MisdeliveredMessageException misd) {
 		    lastException = misd;
-		    if (Debug.debug(COMM)) System.err.println(misd);
+		    if (debugService.isDebugEnabled(COMM)) 
+			debugService.debug(misd.toString());
 		}
 
 		if (!link.retryFailedMessage(message, retryCount)) break;
-	    } else if (Debug.debug(POLICY)) {
-		System.out.println("#### No Protocol selected ");
+	    } else if (debugService.isDebugEnabled(POLICY)) {
+		debugService.debug("No Protocol selected ");
 	    }
 
 

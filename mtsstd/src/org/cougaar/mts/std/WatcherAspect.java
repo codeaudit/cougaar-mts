@@ -72,8 +72,8 @@ public class WatcherAspect
 	synchronized (this) {
 	    while (itr.hasNext()) {
 		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
-		if (Debug.debug(WATCHER)) {
-		    System.err.println("% Notifying " + w + " of send");
+		if (debugService.isDebugEnabled(WATCHER)) {
+		    debugService.debug("Notifying " + w + " of send");
 		}
 		w.messageSent(message);
 	    }
@@ -85,8 +85,9 @@ public class WatcherAspect
 	synchronized (this) {
 	    while ( itr.hasNext() ) {
 		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
-		if (Debug.debug(WATCHER)) {
-		    System.err.println("% Notifying " + w + " of receive");
+		if (debugService.isDebugEnabled(WATCHER)) {
+		    debugService.debug("Notifying " + w + 
+					      " of receive");
 		}
 		w.messageReceived(m);
 	    }

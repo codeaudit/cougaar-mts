@@ -33,6 +33,7 @@ final public class SendLinkImpl
     private SendQueue sendQ;
     private MessageAddress addr;
     private MessageTransportRegistryService registry;
+    private DebugService debugService;
 
     SendLinkImpl(MessageAddress addr, ServiceBroker sb)
     {
@@ -41,6 +42,8 @@ final public class SendLinkImpl
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	sendQ = (SendQueue)
 	    sb.getService(this, SendQueue.class, null);
+	debugService = (DebugService)
+	    sb.getService(this, DebugService.class, null);
     }
 
 
@@ -64,8 +67,8 @@ final public class SendLinkImpl
     public boolean okToSend(Message message) {
 	MessageAddress target = message.getTarget();
 	if (target == null || target.toString().equals("")) {
-	    System.err.println("**** Malformed message: "+message);
-	    Thread.dumpStack();
+	    if (debugService.isErrorEnabled())
+		debugService.error("Malformed message: "+message);
 	    return false;
 	} else {
 	    return true;

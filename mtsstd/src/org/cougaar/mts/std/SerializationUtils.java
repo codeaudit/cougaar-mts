@@ -43,14 +43,12 @@ public class SerializationUtils
 	    oos = new ObjectOutputStream(baos);
 	    oos.writeObject(data);
 	} catch (IOException ioe) {
-	    ioe.printStackTrace();
 	    return null;
 	}
 
 	try {
 	    oos.close();
 	} catch (IOException ioe2) {
-	    ioe2.printStackTrace();
 	}
 
 	return baos.toByteArray();
@@ -66,17 +64,14 @@ public class SerializationUtils
 	    ois = new ObjectInputStream(bais);
 	    udata = ois.readObject();
 	} catch (IOException ioe) {
-	    ioe.printStackTrace();
 	    return null;
 	} catch (ClassNotFoundException cnf) {
-	    cnf.printStackTrace();
 	    return null;
 	}
 	
 	try {
 	    ois.close();
 	} catch (IOException ioe2) {
-	    ioe2.printStackTrace();
 	}
 
 	return udata;

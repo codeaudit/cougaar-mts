@@ -72,15 +72,15 @@ public class MulticastAspect extends StandardAspect
 	    MessageAddress destination = msg.getTarget();
 	    if (destination instanceof MulticastMessageAddress) {
 		if (destination.equals(MessageAddress.LOCAL)) {
-		    if (Debug.debug(MULTICAST))
-			System.out.println("### MCAST: Local multicast");
+		    if (debugService.isDebugEnabled(MULTICAST))
+			debugService.debug("MCAST: Local multicast");
 		    destination = getRegistry().getLocalAddress();
 		    msg = new MulticastMessageEnvelope(msg,  destination);
 		    link.sendMessage(msg);
 		} else {
-		    if (Debug.debug(MULTICAST))
-			System.out.println("### MCAST: Remote multicast to "
-					   + destination);
+		    if (debugService.isDebugEnabled(MULTICAST))
+			debugService.debug("MCAST: Remote multicast to "
+						  + destination);
 		    MulticastMessageAddress dst = 
 			(MulticastMessageAddress) destination;
 		    Iterator itr = 
@@ -89,9 +89,9 @@ public class MulticastAspect extends StandardAspect
 		    MessageAddress addr;
 		    while (itr.hasNext()) {
 			addr = (MessageAddress) itr.next();
-			if (Debug.debug(MULTICAST))
-			    System.out.println("### MCAST: next address = " 
-					       + addr);
+			if (debugService.isDebugEnabled(MULTICAST))
+			    debugService.debug("MCAST: next address = " 
+						      + addr);
 			envelope = new MulticastMessageEnvelope(msg, addr);
 			link.sendMessage(envelope);
 		    }
@@ -120,16 +120,16 @@ public class MulticastAspect extends StandardAspect
 		msg = ((MulticastMessageEnvelope) msg).getContents();
 		MulticastMessageAddress addr = 
 		    (MulticastMessageAddress) msg.getTarget();
-		if (Debug.debug(MULTICAST))
-		    System.out.println("### MCAST: Received multicast to "
-					   + addr);
+		if (debugService.isDebugEnabled(MULTICAST)) 
+		    debugService.debug("MCAST: Received multicast to "
+					      + addr);
 		Iterator i = getRegistry().findLocalMulticastReceivers(addr);
 		MessageAddress localDestination = null;
 		while (i.hasNext()) {
 		    localDestination = (MessageAddress) i.next();
-		    if (Debug.debug(MULTICAST))
-			System.out.println("### MCAST: Delivering to "
-					   + localDestination);
+		    if (debugService.isDebugEnabled(MULTICAST))
+			debugService.debug("MCAST: Delivering to "
+						  + localDestination);
 		    deliverer.deliverMessage(msg, localDestination);
 		}
 	    } else {	

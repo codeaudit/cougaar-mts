@@ -47,12 +47,8 @@ public class ReceiveLinkFactory
     {
 	// Could restrict this request to the registry
 	if (serviceClass == ReceiveLinkProviderService.class) {
-	    if (requestor instanceof MessageTransportRegistry.ServiceImpl) {
+	    if (requestor instanceof MessageTransportRegistry.ServiceImpl) 
 		return this;
-	    } else {
-		System.err.println("Ilegal request for ReceiveLinkService " +
-				   " from " +requestor);
-	    }
 	} 
 	return null;
     }
@@ -71,7 +67,7 @@ public class ReceiveLinkFactory
      * The final object returned is the outermost aspect delegate, or
      * the ReceiveLinkImpl itself if there are no aspects.  */
     public ReceiveLink getReceiveLink(MessageTransportClient client) {
-	ReceiveLink link = new ReceiveLinkImpl(client);
+	ReceiveLink link = new ReceiveLinkImpl(client, sb);
 	return (ReceiveLink) attachAspects(link, ReceiveLink.class);
     }
 }

@@ -38,9 +38,11 @@ public class LinkSelectionPolicyServiceProvider
 	"org.cougaar.message.transport.policy";
 
     private LinkSelectionPolicy policy;
+    private DebugService debugService;
 
-    LinkSelectionPolicyServiceProvider() {
+    LinkSelectionPolicyServiceProvider(DebugService debugService) {
 	policy = createSelectionPolicy();
+	this.debugService = debugService;
     }
 
 
@@ -53,12 +55,13 @@ public class LinkSelectionPolicyServiceProvider
 		Class policy_class = Class.forName(policy_classname);
 		LinkSelectionPolicy selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
-		if (Debug.debug(POLICY))
-		    System.out.println("% Created " +  policy_classname);
+		if (debugService.isDebugEnabled(POLICY))
+		    debugService.debug("Created " +  policy_classname);
 
 		return selectionPolicy;
 	    } catch (Exception ex) {
-		ex.printStackTrace();
+		if (debugService.isErrorEnabled())
+		    debugService.error(null, ex);
 		return new MinCostLinkSelectionPolicy();
 	    }
 	}	       
@@ -73,8 +76,8 @@ public class LinkSelectionPolicyServiceProvider
 	if (serviceClass == LinkSelectionPolicy.class) {
 	    if (requestor instanceof DestinationQueueImpl)
 		return policy;
-	    else
-		System.err.println("Illegal request for LinkSelectionPolicy from "
+	    else if (debugService.isErrorEnabled())
+		debugService.error("Illegal request for LinkSelectionPolicy from "
 				   + requestor);
 	}
 	return null;

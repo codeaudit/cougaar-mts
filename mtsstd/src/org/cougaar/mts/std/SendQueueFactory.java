@@ -47,12 +47,7 @@ public class SendQueueFactory
     {
 	// Could restrict this request to the Router
 	if (serviceClass == SendQueue.class) {
-	    if (requestor instanceof SendLinkImpl) {
-		return queue;
-	    } else {
-		System.err.println("Ilegal request for SendQueue"
-				   +  " from " +requestor);
-	    }
+	    if (requestor instanceof SendLinkImpl) return queue;
 	}
 	return null;
     }

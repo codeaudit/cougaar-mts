@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageEnvelope;
 
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -101,14 +94,11 @@ public class SequenceAspect extends StandardAspect
 		return n;
 	    }
 	}
-//  	     System.err.println("????### Not a SequenceEnvelope: " + message);
-//  	     link.deliverMessage(message);
-//  	 }
+
 	public void sendMessage(Message message) 
 	{
 	    int sequence_number = nextSeq(message);
 	    link.sendMessage(new SequenceEnvelope(message, sequence_number));
-	    // System.out.println("####### Sequence message "  + message);
 	}
     }
 
@@ -130,7 +120,7 @@ public class SequenceAspect extends StandardAspect
 
     }
 
-    private static class ConversationState {
+    private class ConversationState {
 	int nextSeqNum;
 	TreeSet heldMessages;
 	ReceiveLink link;
@@ -143,7 +133,6 @@ public class SequenceAspect extends StandardAspect
 
 	private void stripAndDeliver(SequenceEnvelope  message){
 	       link.deliverMessage(message.getContents());
-	       //System.out.println("+++++++ delivered " + message); 
 	       nextSeqNum++;
 	}
      
@@ -154,14 +143,18 @@ public class SequenceAspect extends StandardAspect
 		while (itr.hasNext()) {
 		    SequenceEnvelope next = (SequenceEnvelope)itr.next();
 		    if (next.sequence_number == nextSeqNum){
-			System.err.println("+++++++ delivered held message" + next); 
+			if (debugService.isDebugEnabled())
+			    debugService.debug("delivered held message" + 
+					       next); 
 			stripAndDeliver(next);
 			itr.remove();
 		    }
 		}//end while
 	    }
 	    else {
-		System.err.println("+++++++ holding a out of sequence message" + message); 
+		if (debugService.isDebugEnabled())
+		    debugService.debug("holding a out of sequence message" + 
+				       message); 
 		heldMessages.add(message);
 	    }
 	}
@@ -187,7 +180,8 @@ public class SequenceAspect extends StandardAspect
 	     conversation.handleNewMessage((SequenceEnvelope) message);
 	 }
 	 else {
-	     System.err.println("????### Not a SequenceEnvelope: " + message);
+	     if (debugService.isErrorEnabled())
+		 debugService.error("Not a SequenceEnvelope: " + message);
 	     link.deliverMessage(message);
 	 }
 

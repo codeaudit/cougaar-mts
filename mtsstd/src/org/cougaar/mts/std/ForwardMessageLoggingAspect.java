@@ -45,7 +45,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    FileOutputStream fos = new FileOutputStream(logfile);
 	    log = new PrintStream(fos);
 	} catch (java.io.FileNotFoundException fnf) {
-	    fnf.printStackTrace();
+	    // ???
 	}
 	madeLog = true;
     }

@@ -20,9 +20,10 @@
  */
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.Service;
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.service.LoggingService;
 
 import java.util.StringTokenizer;
 
@@ -37,63 +38,184 @@ import java.util.StringTokenizer;
  * options.
  *
  **/
-public class Debug implements DebugFlags
+public final class Debug
 {
-    private static int Flags = 0;
 
-    public static boolean debug(int mask) {
-	return (Flags & mask) == mask;
+    Debug(ServiceBroker sb) {
+	LoggingService loggingService = (LoggingService)
+	    sb.getService(this, LoggingService.class, null);
+	Provider provider = new Provider(loggingService);
+	sb.addService(DebugService.class, provider);
+	
     }
 
-    static {
-	String debug = 
-	    System.getProperty("org.cougaar.message.transport.debug");
-	if (debug != null) {
-	    StringTokenizer tk = new StringTokenizer(debug, ",");
-	    while (tk.hasMoreTokens()) {
-		String dbg = tk.nextToken();
-		if (dbg.equalsIgnoreCase("true")) {
-		    Flags = -1;
-		    break;
-		} else if (dbg.equalsIgnoreCase("all")) {
-		    Flags = -1;
-		    break;
-		} else if (dbg.equalsIgnoreCase("false")) {
-		    Flags = 0;
-		    break;
-		} else if (dbg.equalsIgnoreCase("none")) {
-		    Flags = 0;
-		    break;
-		} else if (dbg.equalsIgnoreCase("aspects")) {
-		    Flags |= ASPECTS;
-		} else if (dbg.equalsIgnoreCase("flush")) {
-		    Flags |= FLUSH;
-		} else if (dbg.equalsIgnoreCase("comm")) {
-		    Flags |= COMM;
-		} else if (dbg.equalsIgnoreCase("multicast")) {
-		    Flags |= MULTICAST;
-		} else if (dbg.equalsIgnoreCase("policy")) {
-		    Flags |= POLICY;
-		} else if (dbg.equalsIgnoreCase("quo")) {
-		    Flags |= QUO;
-		} else if (dbg.equalsIgnoreCase("rms")) {
-		    Flags |= RMS;
-		} else if (dbg.equalsIgnoreCase("security")) {
-		    Flags |= SECURITY;
-		} else if (dbg.equalsIgnoreCase("service")) {
-		    Flags |= SERVICE;
-		} else if (dbg.equalsIgnoreCase("statistics")) {
-		    Flags |= STATISTICS;
-		} else if (dbg.equalsIgnoreCase("traffic_masking_generator")) {
-		    Flags |= TRAFFIC_MASKING_GENERATOR;
-		} else if (dbg.equalsIgnoreCase("watcher")) {
-		    Flags |= WATCHER;
-		} else {
-		    System.err.println("Ignoring unknown MTS debug key " + dbg);
+
+    private static class ServiceImpl implements DebugService, DebugFlags
+    {
+	private int flags;
+	private LoggingService loggingService;
+
+	private ServiceImpl(LoggingService loggingService) {
+	    this.loggingService = loggingService;
+
+	    flags = 0;
+	    String debug = 
+		System.getProperty("org.cougaar.message.transport.debug");
+	    if (debug != null) {
+		StringTokenizer tk = new StringTokenizer(debug, ",");
+		while (tk.hasMoreTokens()) {
+		    String dbg = tk.nextToken();
+		    if (dbg.equalsIgnoreCase("true")) {
+			flags = -1;
+			break;
+		    } else if (dbg.equalsIgnoreCase("all")) {
+			flags = -1;
+			break;
+		    } else if (dbg.equalsIgnoreCase("false")) {
+			flags = 0;
+			break;
+		    } else if (dbg.equalsIgnoreCase("none")) {
+			flags = 0;
+			break;
+		    } else if (dbg.equalsIgnoreCase("aspects")) {
+			flags |= ASPECTS;
+		    } else if (dbg.equalsIgnoreCase("flush")) {
+			flags |= FLUSH;
+		    } else if (dbg.equalsIgnoreCase("comm")) {
+			flags |= COMM;
+		    } else if (dbg.equalsIgnoreCase("multicast")) {
+			flags |= MULTICAST;
+		    } else if (dbg.equalsIgnoreCase("policy")) {
+			flags |= POLICY;
+		    } else if (dbg.equalsIgnoreCase("quo")) {
+			flags |= QUO;
+		    } else if (dbg.equalsIgnoreCase("rms")) {
+			flags |= RMS;
+		    } else if (dbg.equalsIgnoreCase("security")) {
+			flags |= SECURITY;
+		    } else if (dbg.equalsIgnoreCase("service")) {
+			flags |= SERVICE;
+		    } else if (dbg.equalsIgnoreCase("statistics")) {
+			flags |= STATISTICS;
+		    } else if (dbg.equalsIgnoreCase("traffic_masking_generator")) {
+			flags |= TRAFFIC_MASKING_GENERATOR;
+		    } else if (dbg.equalsIgnoreCase("watcher")) {
+			flags |= WATCHER;
+		    } else {
+			loggingService.error("Ignoring unknown MTS debug key "
+					     + dbg);
+		    }
 		}
 	    }
 	}
+
+	public boolean isDebugEnabled(int mask) {
+	    return loggingService.isDebugEnabled() && ((flags & mask) == mask);
+	}
+
+
+	// Everything else is just delegation
+
+	public boolean isEnabledFor(int level) {
+	    return loggingService.isEnabledFor(level);
+	}
+
+	public void log(int level, String message) {
+	    loggingService.log(level, message);
+	}
+
+	public void log(int level, String message, Throwable t) {
+	    loggingService.log(level, message, t);
+	}
+
+	public boolean isDebugEnabled() {
+	    return loggingService.isDebugEnabled();
+	}
+
+	public boolean isInfoEnabled() {
+	    return loggingService.isInfoEnabled();
+	}
+
+	public boolean isWarnEnabled() {
+	    return loggingService.isWarnEnabled();
+	}
+
+	public boolean isErrorEnabled() {
+	    return loggingService.isErrorEnabled();
+	}
+
+	public boolean isFatalEnabled() {
+	    return loggingService.isFatalEnabled();
+	}
+
+
+	public void debug(String message) {
+	    loggingService.debug(message);
+	}
+
+	public void debug(String message, Throwable t) {
+	    loggingService.debug(message, t);
+	}
+
+
+	public void info(String message) {
+	    loggingService.info(message);
+	}
+
+	public void info(String message, Throwable t) {
+	    loggingService.info(message, t);
+	}
+
+	public void warn(String message) {
+	    loggingService.warn(message);
+	}
+
+	public void warn(String message, Throwable t) {
+	    loggingService.warn(message, t);
+	}
+
+	public void error(String message) {
+	    loggingService.error(message);
+	}
+
+	public void error(String message, Throwable throwable) {
+	    loggingService.error(message, throwable);
+	}
+
+	public void fatal(String message) {
+	    loggingService.fatal(message);
+	}
+
+	public void fatal(String message, Throwable throwable) {
+	    loggingService.fatal(message, throwable);
+	}
+
     }
 
+    private static class Provider implements ServiceProvider {
+	private DebugService service;
+
+	private Provider(LoggingService loggingService) {
+	    service = new ServiceImpl(loggingService);
+	}
+
+	public Object getService(ServiceBroker sb, 
+				 Object requestor, 
+				 Class serviceClass) 
+	{
+	    if (serviceClass == DebugService.class) {
+		return service;
+	    } else {
+		return null;
+	    }
+	}
+
+	public void releaseService(ServiceBroker sb, 
+				   Object requestor, 
+				   Class serviceClass, 
+				   Object service)
+	{
+	}
+    }
 
 }

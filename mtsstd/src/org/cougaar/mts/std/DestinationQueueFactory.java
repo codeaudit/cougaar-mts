@@ -75,13 +75,7 @@ public class DestinationQueueFactory
     {
 	// Could restrict this request to the Router
 	if (serviceClass == DestinationQueueProviderService.class) {
-	    if (requestor instanceof RouterImpl) {
-		return this;
-	    } else {
-		System.err.println("Ilegal request for " +
-				   "DestinationQueueProviderService from " 
-				   +requestor);
-	    }
+	    if (requestor instanceof RouterImpl) return this;
 	} 
 	return null;
     }

@@ -49,7 +49,6 @@ public class SecurityAspect extends StandardAspect
 		Object raw = Class.forName(name).newInstance();
 		msm = (MessageSecurityManager) raw;
 	    } catch (Exception ex) {
-		ex.printStackTrace();
 	    }
 	} else {
 	    msm = new DummyMessageSecurityManager();
@@ -75,8 +74,8 @@ public class SecurityAspect extends StandardAspect
     // rid of MessageTransportClassic
     Message secure(Message message) {
 	if (msm != null) {
-	    if (Debug.debug(SECURITY)) 
-		System.out.println("Securing message " + message);
+	    if (debugService.isDebugEnabled(SECURITY)) 
+		debugService.debug("Securing message " + message);
 	    return msm.secureMessage(message);
 	} else {
 	    return message;
@@ -87,18 +86,19 @@ public class SecurityAspect extends StandardAspect
     // rid of MessageTransportClassic
     Message unsecure(Message message) {
 	if (msm == null) {
-	    System.err.println("MessageTransport "+this+
-			       " received SecureMessage "+message+
-			       " but has no MessageSecurityManager.");
+	    if (debugService.isErrorEnabled())
+		debugService.error("MessageTransport "+this+
+					  " received SecureMessage "+message+
+					  " but has no MessageSecurityManager.");
 	    return null;
 	} else {
-	    if (Debug.debug(SECURITY))
-		System.out.println("Unsecuring message " + message);
+	    if (debugService.isDebugEnabled(SECURITY))
+		debugService.debug("Unsecuring message " + message);
 	    Message msg = msm.unsecureMessage((SecureMessage) message);
-	    if (msg == null) {
-		System.err.println("MessageTransport "+this+
-				   " received an unverifiable SecureMessage "
-				   +message);
+	    if (msg == null && debugService.isErrorEnabled()) {
+		debugService.error("MessageTransport "+this+
+					  " received an unverifiable SecureMessage "
+					  +message);
 	    }
 	    return msg;
 	}

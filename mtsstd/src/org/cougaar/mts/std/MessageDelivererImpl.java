@@ -69,7 +69,6 @@ public class MessageDelivererImpl implements MessageDeliverer
 		return;
 	    }
 	}
-	System.err.println("## No such agent as "  +addr);
 	throw new MisdeliveredMessageException(message);
     }
 

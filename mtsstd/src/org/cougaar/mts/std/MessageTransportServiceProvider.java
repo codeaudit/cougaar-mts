@@ -64,6 +64,7 @@ public final class MessageTransportServiceProvider
 
     // Services we use (more than once)
     private AspectSupport aspectSupport;
+    private DebugService debugService;
 
     // Hang on to these because they implement services we provide.
     private WatcherAspect watcherAspect;
@@ -89,7 +90,9 @@ public final class MessageTransportServiceProvider
     
     // The MTS itself as a client
     public void receiveMessage(Message message) {
-	System.err.println("# MTS received unwanted message: " + message);
+	if (debugService.isErrorEnabled())
+	    debugService.error("# MTS received unwanted message: " + 
+				      message);
     }
 
     public MessageAddress getMessageAddress() {
@@ -113,7 +116,7 @@ public final class MessageTransportServiceProvider
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
 
-	AspectSupportImpl impl = new AspectSupportImpl(this);
+	AspectSupportImpl impl = new AspectSupportImpl(this, debugService);
 	sb.addService(AspectSupport.class, impl);
 	aspectSupport = 
 	    (AspectSupport) sb.getService(this, AspectSupport.class, null);
@@ -150,7 +153,7 @@ public final class MessageTransportServiceProvider
 	sb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
 
 	LinkSelectionPolicyServiceProvider lspsp =
-	    new LinkSelectionPolicyServiceProvider();
+	    new LinkSelectionPolicyServiceProvider(debugService);
 	sb.addService(LinkSelectionPolicy.class, lspsp);
 	
 	DestinationQueueFactory	destQFactory = 
@@ -189,11 +192,11 @@ public final class MessageTransportServiceProvider
 	// Make proxy
 	proxy = new MessageTransportServiceProxy(client, link);
 	proxies.put(addr, proxy);
-	if (Debug.debug(DebugFlags.SERVICE))
-	    System.out.println("=== Created MessageTransportServiceProxy for " 
-			       +requestor+
-			       " with address "
-			       +client.getMessageAddress());
+	if (debugService.isDebugEnabled(DebugFlags.SERVICE))
+	    debugService.debug("Created MessageTransportServiceProxy for " 
+				      +requestor+
+				      " with address "
+				      +client.getMessageAddress());
 	return proxy;
 
     }
@@ -203,6 +206,10 @@ public final class MessageTransportServiceProvider
         super.initialize();
         ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
 	
+	Debug debug = new Debug(sb); // provide DebugService
+	debugService = 
+	    (DebugService) sb.getService(this, DebugService.class, null);
+
 	// Later this will be replaced by a Node-level service
 	ThreadServiceProvider tsp = new ThreadServiceProvider();
 	sb.addService(ThreadService.class, tsp);

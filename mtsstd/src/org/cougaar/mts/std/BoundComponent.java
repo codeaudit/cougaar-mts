@@ -39,6 +39,20 @@ abstract public class BoundComponent
     private NameSupport nameSupport;
     private AspectSupport aspectSupport;
 
+    protected DebugService debugService;
+
+    BoundComponent() {
+
+    }
+
+    public void load() {
+	super.load();
+	getDebugService();
+	getRegistry();
+	getNameSupport();
+	getAspectSupport();
+    }
+
     protected MessageTransportRegistryService getRegistry() {
 	if (registry == null) {
 	    ServiceBroker sb = getServiceBroker();
@@ -68,6 +82,16 @@ abstract public class BoundComponent
 		(AspectSupport) sb.getService(this, AspectSupport.class,  null);
 	}
 	return aspectSupport;
+    }
+
+
+    protected DebugService getDebugService() {
+	if (debugService == null) {
+	    ServiceBroker sb = getServiceBroker();
+	    debugService =
+		(DebugService) sb.getService(this, DebugService.class,  null);
+	}
+	return debugService;
     }
 
 

@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  Copyright 2001 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -18,41 +18,14 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
-
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.service.LoggingService;
 
 /**
- * The only current implementation of ReceiveLink.  The implementation
- * of <strong>deliverMessage</strong> invokes
- * <strong>receiveMessage</strong> on the corresponding
- * MessageTransportClient.  */
-public class ReceiveLinkImpl implements ReceiveLink
+ * Extension to LoggingService that adds specific debug levels.
+ */
+public interface DebugService extends LoggingService
 {
-    private MessageTransportClient client;
-    private DebugService debugService;
-
-    ReceiveLinkImpl(MessageTransportClient client, ServiceBroker sb) {
-	this.client = client;
-	debugService = (DebugService)
-	    sb.getService(this, DebugService.class, null);
-    }
-
-    public void deliverMessage(Message message)
-    {
-	try {
-	    client.receiveMessage(message);
-	} catch (Throwable th) {
-	    if (debugService.isErrorEnabled())
-		debugService.error("MessageTransportClient threw an exception in receiveMessage, not retrying.", th);
-	}
-
-    }
-
-
-    public MessageTransportClient getClient() {
-	return client;
-    }
-
+    public boolean isDebugEnabled(int mask);
 }

@@ -29,10 +29,8 @@ import javax.naming.directory.Attributes;
 
 /**
  * This is a very simple aspect which is mostly for demonstration
- * purposes.  It attaches aspect delegates to each interface, and each
- * such delegate prints a message to System.err.  This provides a
- * trivial trace of a message as it passes through the various stages
- * of the message transport subsystem.  */
+ * purposes.  It provides a trivial trace of a message as it passes
+ * through the various stages of the message transport subsystem.  */
 public class TraceAspect 
     extends StandardAspect
 {
@@ -50,8 +48,8 @@ public class TraceAspect
 		String id = getRegistry().getIdentifier();
 		logStream = new PrintWriter(new FileWriter(id+".cml"), true);
 	    } catch (Exception e) {
-		e.printStackTrace();
-		System.err.println("Logging required but not possible - exiting");
+		if (debugService.isErrorEnabled())
+		    debugService.error("Logging required but not possible - exiting", e);
 		System.exit(1);
 	    }
 	}

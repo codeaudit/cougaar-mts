@@ -128,7 +128,7 @@ public class RMILinkProtocol
     }
 
     protected SocketFactory getSocketFactory() {
-	return new SocketFactory(false);
+	return new SocketFactory(false, debugService);
     }
 
 
@@ -178,14 +178,14 @@ public class RMILinkProtocol
     }
 
 
-    private void findOrMakeMT() {
+    private synchronized void findOrMakeMT() {
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
 	    MTImpl impl = makeMTImpl(myAddress, getDeliverer(), socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
-	    ex.printStackTrace();
+	    debugService.error(null, ex);
 	}
     }
 
@@ -196,12 +196,14 @@ public class RMILinkProtocol
 	    getNameSupport().registerAgentInNameServer(proxy,addr,
 						  getProtocolType());
 	} catch (Exception e) {
-	    System.err.println("Error registering MessageTransport:");
-	    e.printStackTrace();
+	    if (debugService.isErrorEnabled())
+		debugService.error("Error registering Protocol",
+					  e);
 	}
     }
 
     public final void registerClient(MessageTransportClient client) {
+	findOrMakeMT();
 	try {
 	    // Assume node-redirect
 	    Object proxy = myProxy;
@@ -209,8 +211,8 @@ public class RMILinkProtocol
 	    getNameSupport().registerAgentInNameServer(proxy,addr,
 						  getProtocolType());
 	} catch (Exception e) {
-	    System.err.println("Error registering MessageTransport:");
-	    e.printStackTrace();
+	    if (debugService.isErrorEnabled())
+		debugService.error("Error registering client", e);
 	}
     }
 
@@ -223,8 +225,8 @@ public class RMILinkProtocol
 	    getNameSupport().unregisterAgentInNameServer(proxy,addr,
 						    getProtocolType());
 	} catch (Exception e) {
-	    System.err.println("Error unregistering MessageTransport:");
-	    e.printStackTrace();
+	    if (debugService.isErrorEnabled())
+		debugService.error("Error unregistering client", e);
 	}
     }
 
@@ -234,8 +236,6 @@ public class RMILinkProtocol
 	try {
 	    return lookupRMIObject(address, false) != null;
 	} catch (Exception e) {
-	    //System.err.println("Failed in addressKnown:"+e);
-	    //e.printStackTrace();
 	}
 	return false;
     }
@@ -347,7 +347,8 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// force recache of remote
-		if (Debug.debug(COMM)) ex.printStackTrace();
+		if (debugService.isDebugEnabled(COMM)) 
+		    debugService.error(null, ex);
 		remote = null;
 		// Assume anything else is a comm failure
 		throw new CommFailureException(ex);

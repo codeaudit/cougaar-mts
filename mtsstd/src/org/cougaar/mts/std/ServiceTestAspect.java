@@ -44,9 +44,9 @@ public class ServiceTestAspect extends StandardAspect
 	    }
 	}
 
-	if (svc != null) {
-	    System.out.println("@@@@ LinkProtocol Service " + text + ":" + 
-			       addr + "->" + svc.addressKnown(addr));
+	if (svc != null && debugService.isInfoEnabled()) {
+	    debugService.info("LinkProtocol Service " + text + ":" + 
+				     addr + "->" + svc.addressKnown(addr));
 	}
 			       
     }

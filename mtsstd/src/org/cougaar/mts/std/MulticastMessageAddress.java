@@ -57,8 +57,6 @@ public class MulticastMessageAddress extends MessageAddress
 	    try {
 		return Class.forName(class_name);
 	    } catch (ClassNotFoundException cnf) {
-		System.err.println("Bad multicast address: " +
-				   class_name + " is not a class name");
 		return null;
 	    }
 	} else {

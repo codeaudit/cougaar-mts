@@ -40,8 +40,9 @@ public final class StepperAspect
 
     private StepFrame frame;
     private HashMap controllers;
-    private StepService service;
     private ThreadService threadService;
+    private StepService service;
+
 
     private ThreadService threadService() {
 	if (threadService != null) return threadService;
@@ -99,33 +100,26 @@ public final class StepperAspect
 	controllers.put(address, controller);
     }
 
+    
+
 
     private class ServiceImpl implements StepService {
 	public void pause(MessageAddress destination) {
 	    StepController controller = 
 		(StepController) controllers.get(destination);
-	    if (controller != null)
-		controller.pause();
-	    else
-		System.err.println("%%% No StepController for " + destination);
+	    if (controller != null) controller.pause();
 	}
 
 	public void resume(MessageAddress destination) {
-	    StepController controller =
+	    StepController controller = 
 		(StepController) controllers.get(destination);
-	    if (controller != null)
-		controller.resume();
-	    else
-		System.err.println("%%% No StepController for " + destination);
+	    if (controller != null) controller.resume();
 	}
 
 	public void step(MessageAddress destination) {
-	    StepController controller =
+	    StepController controller = 
 		(StepController) controllers.get(destination);
-	    if (controller != null)
-		controller.step();
-	    else
-		System.err.println("%%% No StepController for " + destination);
+	    if (controller != null) controller.step();
 	}
 
 
@@ -183,7 +177,7 @@ public final class StepperAspect
     private  class StepFrame extends JFrame 
 	implements ScrollPaneConstants 
     {
-	private JComponent contents;
+	private JComponent contents, controllers, scroller;
 
 	private StepFrame(String id) 
 	{
@@ -214,15 +208,13 @@ public final class StepperAspect
 	    buttons.add(stepAll);
 
 
-	    contents = new JPanel();
-	    contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
+  	    contents = new JPanel();
+  	    contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
 
 	    Container cp = getContentPane();
 	    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
 	    cp.add(buttons);
-	    cp.add(new JScrollPane(contents,
-				   VERTICAL_SCROLLBAR_AS_NEEDED,
-				   HORIZONTAL_SCROLLBAR_NEVER));
+	    cp.add(contents);
 
 
 	    addWindowListener(new WindowAdapter() {
@@ -237,21 +229,31 @@ public final class StepperAspect
 	}
 
 	private void addWidget(final StepController component,
-			       final MessageAddress destination)
+			       final MessageAddress address) 
 	{
 	    SwingUtilities.invokeLater (new Runnable() {
 		    public void run() {
-			addController(component, destination);
+			addController(component, address);
 			addControllerWidget(component);
-			// force a redisplay
-			contents.revalidate();
 		    }
 		});
 	}
 
 	private void addControllerWidget(StepController component) {
-	    contents.add(Box.createVerticalStrut(10));
-	    contents.add(component);
+	    if (controllers != null) {
+		controllers =
+		    new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+				   controllers,
+				   component);
+		contents.remove(scroller);
+	    } else {
+		controllers = component;
+	    }
+	    scroller = new JScrollPane(controllers,
+				       VERTICAL_SCROLLBAR_AS_NEEDED,
+				       HORIZONTAL_SCROLLBAR_NEVER);
+	    contents.add(scroller);
+	    contents.revalidate();
 	}
 
     }
@@ -311,8 +313,8 @@ public final class StepperAspect
 
 	    setBorder(new TitledBorder("Messages to " +destination));
 	    Dimension size = new Dimension(300, 100);
-	    setMaximumSize(size);
-	    setMinimumSize(size);
+	    // setMaximumSize(size);
+//  	    setMinimumSize(size);
 	    setPreferredSize(size);
 
 	}

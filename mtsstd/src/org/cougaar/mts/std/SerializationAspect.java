@@ -89,7 +89,7 @@ public class SerializationAspect extends StandardAspect
 
 	    } 
 	    catch (Exception ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 	    }
 	}
 
@@ -98,7 +98,7 @@ public class SerializationAspect extends StandardAspect
 		BufferedInputStream bis = new BufferedInputStream(piped_is);
 		reader = new ObjectInputStream(bis);
 	    } catch (Exception ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 		return;
 	    }
 
@@ -106,11 +106,11 @@ public class SerializationAspect extends StandardAspect
 	    while (true) {
 		try {
 		    object = reader.readObject();
-		    System.out.println("@@@@ Deserialized as " + object);
+		    if (debugService.isInfoEnabled())
+			debugService.info("Deserialized as " + object);
 		    link.forwardMessage((Message) object);
 		} catch (Exception ex) {
-		    ex.printStackTrace();
-		    System.exit(-1);
+		    debugService.error(null, ex);
 		}
 	    }
 	}
@@ -126,16 +126,19 @@ public class SerializationAspect extends StandardAspect
 	    // queue.
 	    if (writer != null) {
 		try {
-		    System.out.println("@@@@ Serializing " + message);
+		    if (debugService.isInfoEnabled())
+			debugService.info("Serializing " + message);
 		    writer.writeObject(message);
 		    writer.flush();
-		    System.out.println("@@@@ Serialized " + message);
+		    if (debugService.isInfoEnabled())
+			debugService.info("Serialized " + message);
 		} catch (Exception ex) {
-		    ex.printStackTrace();
+		    debugService.error(null, ex);
 		    link.forwardMessage(message);
 		}
 	    } else {
-		System.out.println("@@@@ Forwarding " + message);
+		if (debugService.isInfoEnabled())
+		    debugService.info("Forwarding " + message);
 		link.forwardMessage(message);
 	    }
 	}

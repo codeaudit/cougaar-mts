@@ -87,9 +87,9 @@ public class FlushAspect extends StandardAspect
 		   MisdeliveredMessageException
 	{
 	    SendLinkDelegate sendLink = findSendLink(message);
-	    if (sendLink == null) {
-		System.err.println("Warning: No SendLink for " +
-				   message.getOriginator());
+	    if (sendLink == null && debugService.isErrorEnabled()) {
+		debugService.error("Warning: No SendLink for " +
+					  message.getOriginator());
 	    }
 	    try {
 		link.forwardMessage(message);
@@ -139,24 +139,29 @@ public class FlushAspect extends StandardAspect
 	}
 
 	private void showPending(String text) {
+	    if (!debugService.isInfoEnabled()) return;
 	    String msgs = 
 		outstandingMessages == 1 ? " message" : " messages";
-	    System.out.println("% " + getAddress() + ": " + text +
-			       ", "  + outstandingMessages +  msgs +
-			       " now pending");
+	    String msg = "% " + getAddress() + ": " + text +
+		", "  + outstandingMessages +  msgs +
+		" now pending";
+	    debugService.info(msg);
 	}
+
 
 	public void sendMessage(Message message) {
 	    synchronized (this) {
 		++outstandingMessages;
-		if (Debug.debug(FLUSH)) showPending("Message queued");
+		if (debugService.isDebugEnabled(FLUSH)) 
+		    showPending("Message queued");
 	    }
 	    link.sendMessage(message);
 	}
 
 	synchronized void messageDelivered(Message m) {
 	    --outstandingMessages;
-	    if (Debug.debug(FLUSH)) showPending("Message delivered");
+	    if (debugService.isDebugEnabled(FLUSH)) 
+		showPending("Message delivered");
 	    if (outstandingMessages <= 0) this.notify();
 	}
 
@@ -172,7 +177,7 @@ public class FlushAspect extends StandardAspect
 	    if (!flushing) return; // do nothing in this case
 
 	    --outstandingMessages;
-	    if (Debug.debug(FLUSH)) showPending("Message dropped");
+	    if (debugService.isDebugEnabled(FLUSH)) showPending("Message dropped");
 	    if (droppedMessages == null) droppedMessages = new ArrayList();
 	    droppedMessages.add(message);
 	    if (outstandingMessages <= 0) this.notify();
@@ -186,9 +191,8 @@ public class FlushAspect extends StandardAspect
 
 	public boolean okToSend(Message message) {
 	    synchronized (this) {
-		if (flushing) {
-		    System.err.println("***** sendMessage during flush!");
-		    Thread.dumpStack();
+		if (flushing && debugService.isErrorEnabled()) {
+		    debugService.error("sendMessage during flush!");
 		    return false;
 		} 
 	    }
@@ -200,17 +204,17 @@ public class FlushAspect extends StandardAspect
 	    flushing = true;
 	    droppedMessages = new ArrayList();
 	    while (outstandingMessages > 0) {
-		if (Debug.debug(FLUSH)) {
-		    System.out.println("% " + getAddress() + 
-				       ": Waiting on " + 
-				       outstandingMessages +
-				       " messages");
+		if (debugService.isDebugEnabled(FLUSH)) {
+		    debugService.debug(getAddress() + 
+					      ": Waiting on " + 
+					      outstandingMessages +
+					      " messages");
 		}
 		try { this.wait(); } catch (InterruptedException ex) {}
 	    }
-	    if (Debug.debug(FLUSH)) {
-		System.out.println("% " + getAddress() + 
-				   ": All messages flushed.");
+	    if (debugService.isDebugEnabled(FLUSH)) {
+		debugService.debug(getAddress() + 
+					  ": All messages flushed.");
 	    }
 	    flushing = false;
 	    return droppedMessages;

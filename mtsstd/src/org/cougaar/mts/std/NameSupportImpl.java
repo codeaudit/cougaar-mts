@@ -56,7 +56,10 @@ public final class NameSupportImpl implements ServiceProvider
 	svc = sb.getService(this, AspectSupport.class, null);
 	AspectSupport aspectSupport = (AspectSupport) svc;
 
-	Object ns = new ServiceImpl(id, nameService);
+	DebugService debugService = (DebugService)
+	    sb.getService(this, DebugService.class, null);
+
+	Object ns = new ServiceImpl(id, nameService, debugService);
 	ns = aspectSupport.attachAspects(ns, NameSupport.class);
 	service = (NameSupport) ns;
 	
@@ -82,7 +85,7 @@ public final class NameSupportImpl implements ServiceProvider
 
 
 
-    private static final class ServiceImpl 
+    private final static class ServiceImpl 
 	implements NameSupport
     {
 
@@ -91,15 +94,20 @@ public final class NameSupportImpl implements ServiceProvider
 	private MessageAddress myNodeAddress;
 	private String id;
 	private String hostname;
+	private DebugService debugService;
 
-	private ServiceImpl(String id, NamingService namingService) {
+	private ServiceImpl(String id, 
+			    NamingService namingService,
+			    DebugService debugService) 
+	{
 	    this.id = id;
+	    this.debugService = debugService;
 	    myNodeAddress = new MessageAddress(id+"(MTS)");
 	    this.namingService = namingService;
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
 	    } catch (java.net.UnknownHostException ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 	    }
 	}
 
@@ -154,10 +162,11 @@ public final class NameSupportImpl implements ServiceProvider
 		String key = makeName(AGENT_DIR, addr, transportType);
 		_registerWithSociety(key, proxy);
 	    } catch (Exception e) {
-		System.err.println("Failed to add Client "+ addr + 
-				   " to NameServer for transport" + 
-				   transportType);
-		e.printStackTrace();
+		if (debugService.isErrorEnabled())
+		    debugService.error("Failed to add Client "+ addr + 
+					      " to N`ameServer for transport" 
+					      +  transportType,
+					      e);
 	    }
 	}
 
@@ -169,10 +178,11 @@ public final class NameSupportImpl implements ServiceProvider
 		String key = makeName(AGENT_DIR, addr, transportType);
 		_registerWithSociety(key, null);
 	    } catch (Exception e) {
-		System.err.println("Failed to remove Client "+ addr + 
-				   " from NameServer for transport" + 
-				   transportType);
-		e.printStackTrace();
+		if (debugService.isErrorEnabled())
+		    debugService.error("Failed to remove Client "+addr+ 
+					  " from NameServer for transport" + 
+					  transportType,
+					  e);
 	    }
 	}
 
@@ -186,8 +196,9 @@ public final class NameSupportImpl implements ServiceProvider
 		mts_attr.put(ADDRESS_ATTR, mts_address);
 		_registerWithSociety(name, mts_address, mts_attr);
 	    } catch (Exception e) {
-		System.err.println("Failed to register " +  name);
-		e.printStackTrace();
+		if (debugService.isErrorEnabled())
+		    debugService.error("Failed to register " +  name,
+					      e);
 	    }
 	    addToTopology(mts_address, SYSTEM_CATEGORY);
 
@@ -211,8 +222,10 @@ public final class NameSupportImpl implements ServiceProvider
 		object = ctx.lookup(key);
 		if (object instanceof MessageAddress) {
 		    addr = (MessageAddress) object;
-		    System.out.println("$$$ Trying redirect of " + address + 
-				       " to " + addr);
+		    if (debugService.isInfoEnabled())
+			debugService.info("Trying redirect of " 
+						 +address+ 
+						 " to " +addr);
 		} else {
 		    return object;
 		}
@@ -244,7 +257,7 @@ public final class NameSupportImpl implements ServiceProvider
 	 * Hides the messy details of a NamingEnumeration.  This version
 	 * returns a specific attribute value for each next() call.
 	 */
-	public static class NamingIterator implements Iterator {
+	public class NamingIterator implements Iterator {
 	    private NamingEnumeration e;
 	    private String attribute;
 
@@ -257,7 +270,7 @@ public final class NameSupportImpl implements ServiceProvider
 		try {
 		    return e.hasMore();
 		} catch (NamingException ex) {
-		    ex.printStackTrace();
+		    debugService.error(null, ex);
 		    return false;
 		}
 	    }
@@ -275,7 +288,7 @@ public final class NameSupportImpl implements ServiceProvider
 			return attr != null ? attr.get() : null;
 		    }
 		} catch (NamingException ex) {
-		    ex.printStackTrace();
+		    debugService.error(null, ex);
 		    return null;
 		}
 	    }
@@ -301,7 +314,7 @@ public final class NameSupportImpl implements ServiceProvider
 		// Return an Iterator instead of the messy NamingEnumeration
 		return new NamingIterator(e, ADDRESS_ATTR);
 	    } catch (NamingException ne) {
-		ne.printStackTrace();
+		debugService.error(null, ne);
 		return null;
 	    }
 	}
@@ -322,7 +335,7 @@ public final class NameSupportImpl implements ServiceProvider
 	    try {
 		_registerWithSociety(key, addr, attr);
 	    } catch (NamingException ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 	    }
 	}
 
@@ -335,7 +348,7 @@ public final class NameSupportImpl implements ServiceProvider
 	    try {
 		_registerWithSociety(key, addr, attr);
 	    } catch (NamingException ex) {
-		ex.printStackTrace();
+		debugService.error(null, ex);
 	    }
 	}
 
@@ -348,7 +361,7 @@ public final class NameSupportImpl implements ServiceProvider
 		// Return an Iterator instead of the messy NamingEnumeration
 		return new NamingIterator(e, attribute);
 	    } catch (NamingException ne) {
-		ne.printStackTrace();
+		debugService.error(null, ne);
 		return null;
 	    }
 	}
@@ -362,7 +375,7 @@ public final class NameSupportImpl implements ServiceProvider
 		// Return an Iterator instead of the messy NamingEnumeration
 		return new NamingIterator(e, null);
 	    } catch (NamingException ne) {
-		ne.printStackTrace();
+		debugService.error(null, ne);
 		return null;
 	    }
 	}

@@ -48,12 +48,7 @@ public class RouterFactory
     {
 	// Could restrict this request to the Router
 	if (serviceClass == Router.class) {
-	    if (requestor instanceof SendQueueImpl) {
-		return router;
-	    } else {
-		System.err.println("Ilegal request for Router"
-				   +  " from " +requestor);
-	    }
+	    if (requestor instanceof SendQueueImpl) return router;
 	} 
 	return null;
     }

@@ -60,9 +60,9 @@ public class StubDumperAspect extends StandardAspect
 	{
 	    super.registerAgentInNameServer(proxy, address, transportType);
 
-	    System.out.println("\nRegistering " + address +
-			       " for "+ transportType +
-			       " = [" +proxy+ "]");
+	    debugService.info("\nRegistering " + address +
+				     " for "+ transportType +
+				     " = [" +proxy+ "]");
 	}
 
 	public Object lookupAddressInNameServer(MessageAddress address, 
@@ -70,9 +70,9 @@ public class StubDumperAspect extends StandardAspect
 	{
 	    Object result = super.lookupAddressInNameServer(address,
 							    transportType);
-	    System.out.println("\nLookup " + address +
-			       " for "+ transportType +
-			       " = [" +result+ "]");
+	    debugService.info("\nLookup " + address +
+				     " for "+ transportType +
+				     " = [" +result+ "]");
 	    return result;
 	}
 

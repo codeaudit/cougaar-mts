@@ -45,6 +45,7 @@ final class LinkProtocolFactory
 
     private MessageTransportRegistryService registry;
     private NameSupport nameSupport;
+    private DebugService debugService;
     private Container container;
 
     LinkProtocolFactory(Container container, ServiceBroker sb)
@@ -53,6 +54,8 @@ final class LinkProtocolFactory
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	nameSupport = (NameSupport)
 	    sb.getService(this, NameSupport.class, null);
+	debugService = (DebugService)
+	    sb.getService(this, DebugService.class, null);
 	this.container = container;
 	loadProtocols();
     }
@@ -70,7 +73,8 @@ final class LinkProtocolFactory
 	    Class protocol_class = Class.forName(classname);
 	    protocol = (LinkProtocol) protocol_class.newInstance();
 	} catch (Exception xxx) {
-	    xxx.printStackTrace();
+	    if (debugService.isErrorEnabled())
+		debugService.error(null, xxx);
 	    return null;
 	}
 	initProtocol(protocol);
