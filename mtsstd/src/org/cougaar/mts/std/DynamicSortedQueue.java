@@ -75,18 +75,26 @@ public class DynamicSortedQueue
 
 
     public Object next() {
+	return next(null);
+    }
+
+
+    public Object next(Object status_quo) {
 	Iterator itr = store.iterator();
-	Object min = null;
+	Object min = status_quo;
 	while (itr.hasNext()) {
 	    Object candidate = itr.next();
 	    if (min == null) {
 		min = candidate;
 	    } else {
 		int comp = comparator.compare(min, candidate);
-		if (comp > 0) min = candidate;
+		if (comp > 0)
+		    min = candidate;
+		else if (comp == 0 && min == status_quo) 
+		    min = candidate;
 	    }
 	}
-	if (min != null) store.remove(min);
+	if (min != null && min != status_quo) store.remove(min);
 	return min;
     }
 	    

@@ -321,7 +321,8 @@ class ThreadServiceImpl
 	}
 
 
-	private void removeRunningThread(ControllableThread thread) {
+	// Called when a thread is about to end
+	private void threadEnded(ControllableThread thread) {
 	    synchronized (this) {
 		--runningThreadCount; 
 		if (!pendingThreads.isEmpty()) runNextThread();
@@ -329,13 +330,53 @@ class ThreadServiceImpl
 	    proxy.notifyEnd(thread);
 	}
 
-	private synchronized void yieldRunningThread(ControllableThread thread)
+
+	// Called when a thread has just started
+	private void threadStarted(ControllableThread thread) {
+	    synchronized (this) {
+		++runningThreadCount; 
+	    }
+	    proxy.notifyStart(thread);
+	}
+
+
+	// Yield only if there's a candidate to yield to.  Called when
+	// a thread wants to yield (as opposed to suspend).
+	private boolean maybeYieldThread(ControllableThread thread)
+	{
+	    ControllableThread candidate = null;
+	    synchronized (this) {
+		if (pendingThreads.isEmpty()) {
+		    // No point yielding since no pending threads
+		    return false;
+		}
+
+		candidate = (ControllableThread) pendingThreads.next(thread);
+		if (candidate == thread) {
+		    // No better-or-equal thread on the queue.
+		    return false;
+		}
+
+		// We found a thread to yield to. 
+		--runningThreadCount; 
+	    }
+	    candidate.start();
+	    return true;
+	}
+
+
+
+	// Called when a thread is about to suspend.
+	private synchronized void suspendThread(ControllableThread thread)
 	{
 	    --runningThreadCount; 
 	    if (!pendingThreads.isEmpty()) runNextThread();
 	}
 
-	private synchronized boolean resumeYieldedThread(ControllableThread thread)
+
+	// Try to resume a suspended or yielded thread, queuing
+	// otherwise.
+	private synchronized boolean maybeResumeThread(ControllableThread thread)
 	{
 	    if (canStartThread()) {
 		++runningThreadCount;
@@ -347,12 +388,18 @@ class ThreadServiceImpl
 	    }
 	}
 
-	private void startRunningThread(ControllableThread thread) {
+ 	// Called when resuming a suspended or yielded thread that was
+ 	// queued.
+	private void resumeQueuedThread(ControllableThread thread) {
 	    synchronized (this) {
 		++runningThreadCount; 
 	    }
-	    proxy.notifyStart(thread);
 	}
+
+
+
+
+
  
 	private void addPendingThread(ControllableThread thread) 
 	{
@@ -400,30 +447,19 @@ class ThreadServiceImpl
 	protected void claim() {
 	    // thread has started or restarted
 	    super.claim();
-	    pool.startRunningThread(this);
-	}
-
-
-	private void suspend(long millis) {
-	    pool.yieldRunningThread(this);
-	    try { sleep(millis); }
-	    catch (InterruptedException ex) {}
-	    attemptResume();
+	    pool.threadStarted(this);
 	}
 
 
 	// The argument is only here to avoid overriding yield(),
-	// 
-	// The semantics is not the same as Thread.yield, since a
-	// lower priority thread may get control.  Fix this later.
 	private void yield(Object ignore) {
-	    pool.yieldRunningThread(this);
-	    attemptResume();
+	    boolean yielded = pool.maybeYieldThread(this);
+	    if (yielded) attemptResume();
 	}
 
 	// Must be called from a block that's synchronized on lock.
 	private void wait(Object lock, long millis) {
-	    pool.yieldRunningThread(this);
+	    pool.suspendThread(this);
 	    try { lock.wait(millis); }
 	    catch (InterruptedException ex) {}
 	    attemptResume();
@@ -431,17 +467,26 @@ class ThreadServiceImpl
 
 	// Must be called from a block that's synchronized on lock.
 	private void wait(Object lock) {
-	    pool.yieldRunningThread(this);
+	    pool.suspendThread(this);
 	    try { lock.wait(); }
 	    catch (InterruptedException ex) {}
 	    attemptResume();
 	}
 
 
+	private void suspend(long millis) {
+	    pool.suspendThread(this);
+	    try { sleep(millis); }
+	    catch (InterruptedException ex) {}
+	    attemptResume();
+	}
+
+
+
 	private void attemptResume() {
 	    suspended = true;
 	    synchronized (suspendLock) {
-		suspended = !pool.resumeYieldedThread(this);
+		suspended = !pool.maybeResumeThread(this);
 		if (suspended) {
 		    // Couldn't be resumed - requeued instead
 		    while (true) {
@@ -453,6 +498,7 @@ class ThreadServiceImpl
 			} catch (InterruptedException ex) {
 			}
 		    }
+		    pool.resumeQueuedThread(this);
 		    suspended = false;
 		} 
 	    }
@@ -461,7 +507,7 @@ class ThreadServiceImpl
 
 	protected void reclaim() {
 	    // thread is done
-	    pool.removeRunningThread(this);
+	    pool.threadEnded(this);
 	    super.reclaim();
 	}
 

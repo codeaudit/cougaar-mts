@@ -86,7 +86,19 @@ public class WasteCPUAspect extends StandardAspect
 		count++;
 	    }
 
-	    // threadService.yieldCurrentThread();
+	    threadService.yieldCurrentThread();
+
+	    startTime = System.currentTimeMillis();
+	    while (System.currentTimeMillis() - startTime < wasteTime) {
+		count++;
+	    }
+
+	    threadService.yieldCurrentThread();
+
+	    startTime = System.currentTimeMillis();
+	    while (System.currentTimeMillis() - startTime < wasteTime) {
+		count++;
+	    }
 
 	    link.forwardMessage(message);
 
