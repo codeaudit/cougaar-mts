@@ -56,10 +56,12 @@ class MessageTransportRegistry
     private MessageTransportServiceProvider serviceProvider;
     private MessageTransportFactory transportFactory;
     private ReceiveLinkFactory receiveLinkFactory;
+    private Object lock;
 
     private MessageTransportRegistry(String name, MessageTransportServiceProvider serviceProvider) {
 	this.name = name;
 	this.serviceProvider = serviceProvider;
+	this.lock = new Object();
     }
 
     void setTransportFactory(MessageTransportFactory transportFactory) {
@@ -76,16 +78,21 @@ class MessageTransportRegistry
     }
 
 
-
     private void addLocalClient(MessageTransportClient client) {
-	synchronized (myClients) {
-	    try {
-		myClients.put(client.getMessageAddress(), client);
-	    } catch(Exception e) {}
+	MessageAddress key = client.getMessageAddress();
+	try {
+	    synchronized (lock) {
+		myClients.put(key, client);
+		ReceiveLink link = receiveLinkFactory.getReceiveLink(client);
+		receiveLinks.put(key, link);
+	    }
+	} catch (Exception e) {
+	    System.err.println(e);
 	}
     }
+
     private void removeLocalClient(MessageTransportClient client) {
-	synchronized (myClients) {
+	synchronized (lock) {
 	    try {
 		myClients.remove(client.getMessageAddress());
 	    } catch (Exception e) {}
@@ -93,7 +100,7 @@ class MessageTransportRegistry
     }
 
     MessageTransportClient findLocalClient(MessageAddress id) {
-	synchronized (myClients) {
+	synchronized (lock) {
 	    return (MessageTransportClient) myClients.get(id);
 	}
     }
@@ -102,7 +109,7 @@ class MessageTransportRegistry
     // Better alternatives surely exist.
     Iterator findLocalMulticastClients(MulticastMessageAddress addr)
     {
-	synchronized (myClients) {
+	synchronized (lock) {
 	    return new ArrayList(myClients.values()).iterator();
 	}
     }
@@ -111,17 +118,8 @@ class MessageTransportRegistry
 
 
 
-    private void addLocalReceiveLink(ReceiveLink link, MessageAddress key) {
-	synchronized (receiveLinks) {
-	    try {
-		receiveLinks.put(key, link);
-	    } catch(Exception e) {}
-	}
-    }
-
-
     ReceiveLink findLocalReceiveLink(MessageAddress id) {
-	synchronized (receiveLinks) {
+	synchronized (lock) {
 	    return (ReceiveLink) receiveLinks.get(id);
 	}
     }
@@ -130,7 +128,7 @@ class MessageTransportRegistry
     // Better alternatives surely exist.
     Iterator findLocalMulticastReceiveLinks(MulticastMessageAddress addr)
     {
-	synchronized (receiveLinks) {
+	synchronized (lock) {
 	    return new ArrayList(receiveLinks.values()).iterator();
 	}
     }
@@ -153,8 +151,6 @@ class MessageTransportRegistry
     void registerClient(MessageTransportClient client) {
 	addLocalClient(client);
 	registerClientWithSociety(client);
-	ReceiveLink link = receiveLinkFactory.getReceiveLink(client);
-	addLocalReceiveLink(link, client.getMessageAddress());
     }
 
 
