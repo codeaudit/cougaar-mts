@@ -28,10 +28,8 @@ package org.cougaar.mts.base;
 
 
 /**
- *   This Exception indicates a type of Link Protocol failure and it is 
- *   thorwn when the Name Lookup Service is inaccessible.
- *   <p>
- *   The likely reason is that the Name Lookup Service itself failed.
+ *   This Exception generally indicates a failed call to the White
+ *   Pages from within the MTS.
  **/
 public class NameLookupException extends Exception 
 {

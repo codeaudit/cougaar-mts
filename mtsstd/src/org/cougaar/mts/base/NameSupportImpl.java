@@ -44,8 +44,9 @@ import org.cougaar.core.wp.ListAllNodes;
 import org.cougaar.mts.std.AspectSupport;
 
 /**
- * This is utility class which hides the grimy details of dealing with
- * NameServers from the rest of the message transport subsystem . */
+ * This {@link ServiceProvider} provides the {@link NameSupport}
+ * service.  An inner class implements that service.
+ */
 public final class NameSupportImpl implements ServiceProvider
 {
     private NameSupport service;

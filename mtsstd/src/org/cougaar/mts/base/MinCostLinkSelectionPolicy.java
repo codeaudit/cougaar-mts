@@ -29,7 +29,10 @@ import java.util.Iterator;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * A cost-based selection policy that chooses the cheapest link.  */
+ * A cost-based {@link LinkSelectionPolicy} that chooses the cheapest
+ * link.    If no other poliy is loaded, this is the one that will be
+ * used. 
+ */
 public class MinCostLinkSelectionPolicy 
     extends AbstractLinkSelectionPolicy
 {

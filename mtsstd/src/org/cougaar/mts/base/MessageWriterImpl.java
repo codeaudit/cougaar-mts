@@ -31,6 +31,11 @@ import java.io.OutputStream;
 import org.cougaar.mts.std.AttributedMessage;
 
 
+/**
+ * Default implementatiom of {@link MessageWriter} that uses a trivial
+ * {@link ObjectOutputStream} extension to delegate calls to the
+ * original {@link ObjectOutput}.
+ */
 public  class MessageWriterImpl
     implements MessageWriter 
 {

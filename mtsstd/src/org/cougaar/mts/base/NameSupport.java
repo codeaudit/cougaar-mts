@@ -34,8 +34,10 @@ import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.wp.Callback;
 
 /**
- * This is utility class which hides the grimy details of dealing with
- * NameServers from the rest of the message transport subsystem.  */
+ * This utility service hides the grimy details of dealing with
+ * NameServers and White Pages from the rest of the message transport
+ * subsystem.  
+ */
 public interface NameSupport extends Service
 {
     MessageAddress  getNodeMessageAddress();

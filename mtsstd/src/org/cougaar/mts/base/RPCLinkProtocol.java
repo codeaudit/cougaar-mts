@@ -1,3 +1,29 @@
+/*
+ * <copyright>
+ *  
+ *  Copyright 1997-2004 BBNT Solutions, LLC
+ *  under sponsorship of the Defense Advanced Research Projects
+ *  Agency (DARPA).
+ * 
+ *  You can redistribute this software and/or modify it under the
+ *  terms of the Cougaar Open Source License as published on the
+ *  Cougaar Open Source Website (www.cougaar.org).
+ * 
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  
+ * </copyright>
+ */
+
 package org.cougaar.mts.base;
 
 import java.net.InetAddress;
@@ -17,6 +43,12 @@ import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.mts.std.AttributedMessage;
 
+/**
+ * This is the parent class of all {@link LinkProtocol}s that use a
+ * remote-procedure-call (rpc) semantics.  Instantiable extensions
+ * must provide implementations for a small set of abstract methods,
+ * covering protocol specifics.
+ */
 abstract public class RPCLinkProtocol
     extends LinkProtocol
 {
@@ -33,7 +65,7 @@ abstract public class RPCLinkProtocol
     // LinkProtocol.
 
     public interface Service extends LinkProtocolService {
-	// RMI-specific methods would go here.
+	// protocol-specific methods would go here.
     }
 
 
@@ -89,16 +121,43 @@ abstract public class RPCLinkProtocol
 
 
     // subclass responsibility
+
+    /**
+     * @return an identifier of the protocol that can be used by the
+     * WP to distinguish them from one another.
+     */
     abstract protected String getProtocolType();
     
+    /**
+     * @return a boolean indicating where or not the protocol uses ssl
+     */
     abstract protected Boolean usesEncryptedSocket();
 
+    /**
+     * @return the cost of transmitting the message over this
+     * protocol.
+     */
     abstract protected int computeCost(AttributedMessage message);
 
+    /**
+     * Return a protocol-specific {@link DestinationLink} for the
+     * target address.  The name should not be taken to mean that a
+     * new link will be created for every call.
+    */
     abstract protected DestinationLink createDestinationLink(MessageAddress address);
 
+    /**
+     * Ensure that some abstract form of 'servant' object exists for
+     * this protocol that will allow other Nodes to send messages to his
+     * one.
+    */
     abstract protected void findOrMakeNodeServant();
 
+    /**
+     * Force the proticol to remake its 'servant', typically because
+     * the address of the Host on which the Node is running has changed.
+     * Some protoocol (eg HTTP) can ignore this.
+    */
     abstract protected void remakeNodeServant();
 
 

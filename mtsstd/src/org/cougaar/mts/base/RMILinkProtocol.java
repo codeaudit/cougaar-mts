@@ -38,30 +38,14 @@ import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.mts.std.RMISocketControlService;
 
 /**
- * This is a minimal rmi message transport which does nothing other
- * than rmi-specific functionality.  The hope is that we can pull out
- * a number of other aspects from the big RMIMessageTransport, leaving
- * this simple and maintainable body of code to deal with the actual
- * rmi functionality per se.  
+ * This {@link LinkProtocol} handles message passing via RMI, one
+ * example RPC-like communication.  The interface is {@link MT}.
  *
  * The cost function of the DestinationLink inner subclass is
  * currently hardwired to an arbitrary value of 1000.  This should be
  * made smarter eventually. 
  *
- * The RMI transport supports two additional factory methods in
- * addition to the standard getDestinationLink (which is supported by
- * all transports).  For RMI, we also have factory methods for
- * constructing an RMI server object to be registered in the
- * nameserver, and for constructing RMI client stubs which refer to
- * remote MTs.  The registered servers are ordinarily MTImpls, one per
- * node.  By using the factory style, we allow aspects to "wrap" the
- * MTImpl before the final wrapped object is registered, without
- * requiring new subclasses of the transort itself. The RMI client
- * stubs are MTs, as returned by the nameserver.  Again, by using the
- * factory style, aspects can wrap the stub returned by the
- * nameserver.  QuO uses these two new aspects to add qos support to
- * the RMI pieces of Alp.
- * */
+ */
 public class RMILinkProtocol 
     extends RPCLinkProtocol
 {

@@ -33,6 +33,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This abstraction provides 'listener' support to inform interested
+ * parties when objects are removed from message queues.
+ */
 abstract class QueueFactory
     extends  AspectFactory
 {
