@@ -21,6 +21,10 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -31,9 +35,9 @@ import org.cougaar.core.component.ContainerAPI;
 import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.naming.NamingService;
-import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.society.Node;
+import org.cougaar.core.service.NamingService;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.node.Node;
 
 
 /**
@@ -176,7 +180,7 @@ public class MessageTransportServiceProvider
 		LinkSelectionPolicy selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
 		if (Debug.debug(DebugFlags.POLICY))
-		    System.out.println("%%% Created " +  policy_classname);
+		    System.out.println("% Created " +  policy_classname);
 
 		return selectionPolicy;
 	    } catch (Exception ex) {

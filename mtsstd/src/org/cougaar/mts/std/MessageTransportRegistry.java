@@ -21,9 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.society.MulticastMessageAddress;
-import org.cougaar.core.society.Node;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MulticastMessageAddress;
+import org.cougaar.core.node.Node;
 
 
 import java.util.ArrayList;
@@ -152,20 +156,20 @@ public class MessageTransportRegistry implements DebugFlags
 		    if (mclass.isAssignableFrom(client.getClass())) {
 			result.add(entry.getKey());
 			if (Debug.debug(MULTICAST))
-			    System.out.println("%%%%  Client " +
+			    System.out.println("%  Client " +
 					       client + " matches " +
 					       mclass + ", added " +
 					       entry.getKey());
 		    } else {
 			if (Debug.debug(MULTICAST)) 
-			    System.out.println("%%%%  Client " +
+			    System.out.println("%  Client " +
 					       client + " doesn't match " +
 					       mclass);
 		    }
 		}
 	    }
 	    if (Debug.debug(MULTICAST)) 
-		System.out.println("%%%% result=" + result);
+		System.out.println("% result=" + result);
 	    return result.iterator();
 
 	} else {

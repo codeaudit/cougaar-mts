@@ -20,6 +20,10 @@
  */
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 public interface DebugFlags
 {
     public static int ASPECTS = 1<<0;;

@@ -21,6 +21,10 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 /**
  * A factory which makes ReceiveLinks.  The caching for ReceiveLinks
  * is in the registry, not here, since the links need to be cleaned up

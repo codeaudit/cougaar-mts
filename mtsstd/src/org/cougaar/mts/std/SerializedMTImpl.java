@@ -21,10 +21,14 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 import java.rmi.RemoteException;
   
-import org.cougaar.core.society.Message;
-import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
 
 /** actual RMI remote object providing the implementation of MessageTransport client
  **/

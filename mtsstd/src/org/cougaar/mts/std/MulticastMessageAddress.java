@@ -25,61 +25,46 @@ import org.cougaar.core.service.*;
 
 import org.cougaar.core.node.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-import java.io.IOException;
+/**
+ * A marker class for multicasting messages.
+ * Used by constant addresses in MessageAddress.
+ **/
 
-
-public class SerializationUtils
+public class MulticastMessageAddress extends MessageAddress 
 {
 
-    public static byte[] toByteArray(Object data) {
-	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	ObjectOutputStream oos = null;
+    private static final String CLASS_TAG = "CLASS_";
 
-	try {
-	    oos = new ObjectOutputStream(baos);
-	    oos.writeObject(data);
-	} catch (IOException ioe) {
-	    ioe.printStackTrace();
-	    return null;
-	}
+    /** for Externalizable use only **/
+    public MulticastMessageAddress() {}
 
-	try {
-	    oos.close();
-	} catch (IOException ioe2) {
-	    ioe2.printStackTrace();
-	}
-
-	return baos.toByteArray();
+    public MulticastMessageAddress( String address ) {
+	super(address);
     }
 
 
-    public static Object fromByteArray(byte[] data) {
-	ByteArrayInputStream bais = new ByteArrayInputStream(data);
-	ObjectInputStream ois = null;
-	Object udata = null;
-
-	try {
-	    ois = new ObjectInputStream(bais);
-	    udata = ois.readObject();
-	} catch (IOException ioe) {
-	    ioe.printStackTrace();
-	    return null;
-	} catch (ClassNotFoundException cnf) {
-	    cnf.printStackTrace();
-	    return null;
-	}
-	
-	try {
-	    ois.close();
-	} catch (IOException ioe2) {
-	    ioe2.printStackTrace();
-	}
-
-	return udata;
+    public MulticastMessageAddress( Class clientClass ) {
+	super( CLASS_TAG + clientClass.getName() );
     }
+
+    public boolean hasReceiverClass() {
+	return getAddress().startsWith(CLASS_TAG);
+    }
+
+    public Class getReceiverClass() {
+	if (hasReceiverClass()) {
+	    String class_name = getAddress().substring(CLASS_TAG.length());
+	    try {
+		return Class.forName(class_name);
+	    } catch (ClassNotFoundException cnf) {
+		System.err.println("Bad multicast address: " +
+				   class_name + " is not a class name");
+		return null;
+	    }
+	} else {
+	    return null;
+	}
+    }
+    
 
 }

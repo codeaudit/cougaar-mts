@@ -21,8 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.Message;
-import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -132,7 +136,7 @@ public class FlushAspect extends StandardAspect
 	private void showPending(String text) {
 	    String msgs = 
 		outstandingMessages == 1 ? " message" : " messages";
-	    System.out.println("%%% " + getAddress() + ": " + text +
+	    System.out.println("% " + getAddress() + ": " + text +
 			       ", "  + outstandingMessages +  msgs +
 			       " now pending");
 	}
@@ -192,7 +196,7 @@ public class FlushAspect extends StandardAspect
 	    droppedMessages = new ArrayList();
 	    while (outstandingMessages > 0) {
 		if (Debug.debug(FLUSH)) {
-		    System.out.println("%%% " + getAddress() + 
+		    System.out.println("% " + getAddress() + 
 				       ": Waiting on " + 
 				       outstandingMessages +
 				       " messages");
@@ -200,7 +204,7 @@ public class FlushAspect extends StandardAspect
 		try { this.wait(); } catch (InterruptedException ex) {}
 	    }
 	    if (Debug.debug(FLUSH)) {
-		System.out.println("%%% " + getAddress() + 
+		System.out.println("% " + getAddress() + 
 				   ": All messages flushed.");
 	    }
 	    flushing = false;

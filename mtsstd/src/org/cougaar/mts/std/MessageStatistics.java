@@ -25,26 +25,41 @@ import org.cougaar.core.service.*;
 
 import org.cougaar.core.node.*;
 
-import org.cougaar.core.mts.Message;
+/**
+ * Abstract MessageStatistics layer for Society interaction.
+ * Used for Scalability testing.
+ **/
 
-abstract public class SendQueueDelegateImplBase implements SendQueue 
-{
-    protected SendQueue queue;
+public interface MessageStatistics {
+  int[] BIN_SIZES = {
+    100,
+    200,
+    500,
+    1000,
+    2000,
+    5000,
+    10000,
+    20000,
+    50000,
+    100000
+  };
 
-    protected SendQueueDelegateImplBase(SendQueue queue) {
-	this.queue = queue;
+  int NBINS = BIN_SIZES.length;
+
+  class Statistics {
+    public double averageMessageQueueLength;
+    public long totalMessageBytes;
+    public long totalMessageCount;
+    public long[] histogram = new long[NBINS];
+    public Statistics(double amql, long tmb, long tmc, long[] h) {
+      averageMessageQueueLength = amql;
+      totalMessageBytes = tmb;
+      totalMessageCount = tmc;
+      if (h != null) {
+        System.arraycopy(h, 0, histogram, 0, NBINS);
+      }
     }
-
-    public void sendMessage(Message message) {
-	queue.sendMessage(message);
-    }
-
-    public boolean matches(String name) {
-	return queue.matches(name);
-    }
-
-    public int size() {
-	return queue.size();
-    }
-
+  }
+      
+  Statistics getMessageStatistics(boolean reset);
 }

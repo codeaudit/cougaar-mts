@@ -20,6 +20,10 @@
  */
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 import org.cougaar.core.component.Binder;
 import org.cougaar.core.component.BinderFactorySupport;
 

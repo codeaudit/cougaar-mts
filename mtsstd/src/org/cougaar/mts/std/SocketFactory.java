@@ -21,6 +21,10 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 
 import java.io.IOException;
 import java.net.Socket;

@@ -3,6 +3,10 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 public final class SerializedMTImpl_Stub
     extends java.rmi.server.RemoteStub
     implements org.cougaar.core.mts.SerializedMT, org.cougaar.core.mts.MT, java.rmi.Remote
@@ -16,7 +20,7 @@ public final class SerializedMTImpl_Stub
     static {
 	try {
 	    $method_getMessageAddress_0 = org.cougaar.core.mts.MT.class.getMethod("getMessageAddress", new java.lang.Class[] {});
-	    $method_rerouteMessage_1 = org.cougaar.core.mts.MT.class.getMethod("rerouteMessage", new java.lang.Class[] {org.cougaar.core.society.Message.class});
+	    $method_rerouteMessage_1 = org.cougaar.core.mts.MT.class.getMethod("rerouteMessage", new java.lang.Class[] {org.cougaar.core.mts.Message.class});
 	    $method_rerouteMessage_2 = org.cougaar.core.mts.SerializedMT.class.getMethod("rerouteMessage", new java.lang.Class[] {byte[].class});
 	} catch (java.lang.NoSuchMethodException e) {
 	    throw new java.lang.NoSuchMethodError(
@@ -32,12 +36,12 @@ public final class SerializedMTImpl_Stub
     // methods from remote interfaces
     
     // implementation of getMessageAddress()
-    public org.cougaar.core.society.MessageAddress getMessageAddress()
+    public org.cougaar.core.mts.MessageAddress getMessageAddress()
 	throws java.rmi.RemoteException
     {
 	try {
 	    Object $result = ref.invoke(this, $method_getMessageAddress_0, null, -3927034548767378042L);
-	    return ((org.cougaar.core.society.MessageAddress) $result);
+	    return ((org.cougaar.core.mts.MessageAddress) $result);
 	} catch (java.lang.RuntimeException e) {
 	    throw e;
 	} catch (java.rmi.RemoteException e) {
@@ -48,7 +52,7 @@ public final class SerializedMTImpl_Stub
     }
     
     // implementation of rerouteMessage(Message)
-    public void rerouteMessage(org.cougaar.core.society.Message $param_Message_1)
+    public void rerouteMessage(org.cougaar.core.mts.Message $param_Message_1)
 	throws java.rmi.RemoteException
     {
 	try {

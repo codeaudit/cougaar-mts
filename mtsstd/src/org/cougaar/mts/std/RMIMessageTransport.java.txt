@@ -1,0 +1,923 @@
+/*
+ * <copyright>
+ *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
+ * 
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the Cougaar Open Source License as published by
+ *  DARPA on the Cougaar Open Source Website (www.cougaar.org).
+ * 
+ *  THE COUGAAR SOFTWARE AND ANY DERIVATIVE SUPPLIED BY LICENSOR IS
+ *  PROVIDED 'AS IS' WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR
+ *  IMPLIED, INCLUDING (BUT NOT LIMITED TO) ALL IMPLIED WARRANTIES OF
+ *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, AND WITHOUT
+ *  ANY WARRANTIES AS TO NON-INFRINGEMENT.  IN NO EVENT SHALL COPYRIGHT
+ *  HOLDER BE LIABLE FOR ANY DIRECT, SPECIAL, INDIRECT OR CONSEQUENTIAL
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE OF DATA OR PROFITS,
+ *  TORTIOUS CONDUCT, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ *  PERFORMANCE OF THE COUGAAR SOFTWARE.
+ * </copyright>
+ */
+
+package org.cougaar.core.node.rmi;
+
+import org.cougaar.core.service.*;
+
+import java.util.*;
+
+import org.cougaar.core.node.*;
+import org.cougaar.core.agent.ClusterIdentifier;
+import org.cougaar.core.agent.ClusterMessage;
+import org.cougaar.planning.ldm.plan.Notification;
+import org.cougaar.planning.ldm.plan.Directive;
+import org.cougaar.core.blackboard.DirectiveMessage;
+import org.cougaar.core.agent.ClusterServesClusterManagement;
+import org.cougaar.core.agent.RemoteClusterMetrics;
+import org.cougaar.core.node.*;
+import org.cougaar.core.agent.ClusterContext;
+import org.cougaar.core.util.*;
+import org.cougaar.util.*;
+
+import java.io.*;
+import java.rmi.*;
+import java.rmi.server.*;
+import java.net.Socket;
+import java.net.ServerSocket;
+import java.net.UnknownHostException;
+
+import org.cougaar.util.ReusableThreadPool;
+import org.cougaar.util.ReusableThread;
+
+/**
+ * RMIMessageTransport is a MessageTransport which uses RMI for
+ * sending messages to clusters resident in other nodes.
+ *
+ * Additional Logging points are:
+ *  DOM		message outgoing dispatch thread started for message
+ *  sent	message was (successfully) sent to remove (got ack)
+ *  sentFail	message send failed (no ack after many tries)
+ *
+ * Additional System Properties:
+ * org.cougaar.message.retryInterval=5000 : minimum milliseconds between
+ * 	message resend attempts.
+ * org.cougaar.message.fallbackCount=10 : if a destination queue fails to send
+ *      messages this many times in a row, it will enter fallback mode
+ *      where it will attempt resends at a lower frequency.
+ * org.cougaar.message.fallbackRetryInterval=120000 : ms between message retries 
+ *      while in fallback mode.
+ * org.cougaar.message.useThreadPool=false : should we use a thread pool for async message 
+ *      delivery?
+ * org.cougaar.message.uselocalDelivery=true : avoid network for local delivery
+ * org.cougaar.message.maxThreadCount=0 : maximum number of threads in use at one time 
+ *      for message delivery queues.  Should not be smaller than the number of
+ *      targets the MT will need to send to.  if <= 0, then there is no limit.
+ * org.cougaar.message.useNodeDelivery=false : if true, will minimize destination
+ *      queue threads.  This option cannot be used with run-time node splitting.
+ * org.cougaar.message.useNodeRedirect=false : if true, registers each cluster as a redirect 
+ *      to a Node-level message transport.
+ * org.cougaar.message.useServerProxies=false: if true, will use cluster-specific proxies on
+ *      the server side rather than a single server for the server node.
+ * org.cougaar.message.lazyLookup=true: if true, will batch namespace lookups to a single
+ *      service thread to avoid starting lots of mostly wasted threads doing little but
+ *      poll the nameserver.  This is especially useful when useNodeDelivery=true and
+ *      the society has more than 2 "missing" clusters.
+ * org.cougaar.message.fastTransport = false : if true, will optimize transport and
+ *      nameserver interaction to the fastest values.  Activates
+ *      useLocalDelivery, useNodeDelivery, useNodeRedirect and disables 
+ *      useServerProxies.
+ * org.cougaar.message.decacheFailureLimit=3 : number of consecutive message failures 
+ *	required to trigger a nameserver recache.  If '0', an existing address
+ *	will never be dropped - this will prevent clusters from moving between
+ *	hosts.
+ *
+ * Note: Only uses secure messaging on non-local messages.
+ * 
+ **/
+
+public class RMIMessageTransport 
+    extends MessageTransportClassic
+    implements MessageStatistics
+{
+
+    private static final String TRANSPORT_TYPE ="/RMI";
+
+  /** retry sending failed message no more often than every five seconds */
+  private static long retryInterval = 5000L;
+
+  /** how long before entering fallback mode **/
+  private static int fallbackCount = 30;
+
+  /** decache address on message sends after this many failures, if 0, doesn't decache **/
+  private static int decacheFailureLimit = 3;
+
+  /** retry interval while in fallback mode **/
+  private static long fallbackRetryInterval = 30000L;
+
+  /** thread pool **/
+  private static ReusableThreadPool threadPool = null;
+
+  /** Should we use a thread pool?  
+   * set by system property org.cougaar.message.useThreadPool
+   **/
+  private static boolean useThreadPool = false;
+
+  /** Maximum number of delivery threads.  Value can be set by
+   * system property org.cougaar.message.maxThreadCount
+   **/
+  private static int maxThreadCount = 0;
+
+  /** Deliver messages to local clients directly (without RMI involvement) **/
+  private static boolean useLocalDelivery = true;
+
+  /** Queue messages directly to Node queues whenever possible. **/
+  private static boolean useNodeDelivery = false;
+
+  /** Register the clusters as redirects to the Node-level server **/
+  private static boolean useNodeRedirect = false;
+
+  /** Proxy each client with its own MT rather than share the MT **/
+  private static boolean useServerProxies = false;
+
+  /** Attempt message delivery forever **/
+  private static boolean tryForeverDelivery = true;
+
+  /** Do target lookups in a separate thread rather than in each destination queue **/
+  private static boolean lazyLookup = true;
+
+  /** Total of all queue length measurements **/
+  private long totalElapsedTime = 0L;
+
+  /** Total of all time intervals of queue length measurements **/
+  private long totalQueueLength = 0L;
+
+  /** Total message count **/
+  private long statisticsTotalMessages = 0L;
+
+  private static final boolean getBool(String prop, boolean def) {
+    return (Boolean.valueOf(System.getProperty(prop, String.valueOf(def)))).booleanValue();
+  }
+  private static final int getInt(String prop, int def) {
+    return (Integer.valueOf(System.getProperty(prop, String.valueOf(def)))).intValue();
+  }
+  private static final long getLong(String prop, long def) {
+    return (Long.valueOf(System.getProperty(prop, String.valueOf(def)))).longValue();
+  }
+
+  // initialize static vars from system properties.
+  static {
+    Properties props = System.getProperties();
+    retryInterval = getLong("org.cougaar.message.retryInterval", retryInterval);
+    fallbackCount = getInt("org.cougaar.message.fallbackCount", fallbackCount);
+    fallbackRetryInterval = getLong("org.cougaar.message.fallbackRetryInterval", 
+                                    fallbackRetryInterval);
+    maxThreadCount = getInt("org.cougaar.message.maxThreadCount", 0);
+    tryForeverDelivery = getBool("org.cougaar.message.tryForeverDelivery", 
+                                 tryForeverDelivery);
+
+    useThreadPool = getBool("org.cougaar.message.useThreadPool", useThreadPool);
+    if (useThreadPool) {
+      threadPool = new ReusableThreadPool(16,32);
+    }
+
+    if (getBool("org.cougaar.message.fastTransport", false)) {
+      useLocalDelivery = true;
+      useNodeDelivery = true;
+      useNodeRedirect = true;
+      useServerProxies = false;
+    }
+
+    useLocalDelivery = getBool("org.cougaar.message.useLocalDelivery", useLocalDelivery);
+    decacheFailureLimit = getInt("org.cougaar.message.decacheFailureLimit", decacheFailureLimit);
+    useNodeDelivery = getBool("org.cougaar.message.useNodeDelivery", useNodeDelivery);
+    useNodeRedirect = getBool("org.cougaar.message.useNodeRedirect", useNodeRedirect);
+    useServerProxies = getBool("org.cougaar.message.useServerProxies", useServerProxies);
+    lazyLookup = getBool("org.cougaar.message.lazyLookup", lazyLookup);
+  }
+
+  /** hold the local (client-side) nameserver instance **/
+  private NameServer nameserver;
+  private MessageAddress myAddress;
+
+  private class CougaarSocketFactory extends RMISocketFactory {
+    private class MySocket extends Socket {
+      MySocket(String host, int port) throws IOException, UnknownHostException {
+        super(host, port);
+      }
+      public OutputStream getOutputStream() throws IOException {
+        OutputStream s = super.getOutputStream();
+        if (s == null) return null;
+        return new StatisticsStreamWrapper(s);
+      }
+    }
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+      return new MySocket(host, port);
+    }
+    public ServerSocket createServerSocket(int port) throws IOException {
+      return getDefaultSocketFactory().createServerSocket(port);
+    }
+  }
+
+  public RMIMessageTransport(String id, ArrayList aspects) {
+    super();
+    synchronized (getClass()) {
+      if (keepStatistics) {
+        try {
+          if (RMISocketFactory.getSocketFactory() instanceof CougaarSocketFactory) {
+            throw new RuntimeException("Multiple RMIMessageTransport instances");
+          } else {
+            System.out.println("Installing CougaarSocketFactory");
+            RMISocketFactory.setSocketFactory(new CougaarSocketFactory());
+          }
+        } catch (IOException ioe) {
+          System.err.println(ioe);
+          keepStatistics = false;
+        }
+      }
+    }
+    myAddress = new MessageAddress(id+"(Node)");
+  }
+
+    public void setNameSupport(NameSupport nameSupport) {
+	super.setNameSupport(nameSupport);
+	nameserver = nameSupport.getNameServer();
+    }
+
+
+
+  /** Create a nameserver <em>server</em> side instance **/
+//   public static void startNameService() {
+//     RMINameServer.create();
+//   }
+
+  public Enumeration getMulticastAddresses(MulticastMessageAddress mma) {
+    // only look in the Node directory, since everyone always registers there.
+    return new Enumerator(nameserver.keySet(NameSupport.MTDIR));
+  }
+
+  /** guard for thread governer **/
+  private static Object threadLock = new Object();
+  /** count of pending messages **/
+  private static int threadCount = 0;
+
+  public int getPendingMessages() { return threadCount; }
+
+  /** get a thread for message delivery **/
+  protected Thread getThread(Runnable r, String name) {
+    synchronized (threadLock) {
+      if (maxThreadCount>0) {
+        // block until we're allowed to continue
+        while ( threadCount >= maxThreadCount) {
+          try {
+            threadLock.wait();
+          } catch (InterruptedException ie) {}
+        }
+      }
+      // grab our slot and release the lock
+      threadCount++;
+    }
+
+    if (useThreadPool) {
+      return threadPool.getThread(r, name);
+    } else {
+      return new Thread(r, name);
+    }
+  }
+
+  /** called by MessageDispatcher to allow use of another thread **/
+  private void releaseThread() {
+    synchronized (threadLock) {
+      threadCount--;
+      threadLock.notifyAll();
+    }
+  }
+
+
+
+
+  /** send a single message to its destination without blocking */
+  protected void sendMessageToSociety(Message m) {
+    MessageAddress addr = m.getTarget();
+
+    if (addr instanceof MulticastMessageAddress) {
+      Enumeration addrs = getMulticastAddresses((MulticastMessageAddress) m.getTarget());
+      while (addrs.hasMoreElements()) {
+        sendMessageToTarget(m, new ClusterIdentifier((String) addrs.nextElement()));
+      }
+    } else {
+      sendMessageToTarget(m, addr);
+    }
+  }
+
+
+  /** send a single message to its destination without blocking */
+  private void sendMessageToTarget(Message m, MessageAddress addr) {
+    queueForDelivery(secure(m), addr);
+  }
+
+  private static int verbosity = 0;
+  static {
+    int i = Integer.getInteger("org.cougaar.nameserver.verbosity",-1).intValue();
+    if (i != -1) verbosity=i;
+  }
+
+  // must be started
+  public final void registerClient(MessageTransportClient client) {
+    try {
+      // always register the Node MT
+      registerMTWithSociety();
+
+      MessageAddress addr = client.getMessageAddress();
+      Object proxy;
+      if (useNodeRedirect) {
+        // register the cluster as the node string (proxy)
+        proxy = myAddress;
+      } else {
+        // register the cluster as shim object
+        proxy = generateServerSideProxy(addr);
+      }
+      nameSupport.registerAgentInNameServer( proxy,client,TRANSPORT_TYPE);
+    } catch (Exception e) {
+      System.err.println("Error registering MessageTransport:");
+      e.printStackTrace();
+    }
+  }
+
+
+  private final void _registerWithSociety(String path, Object proxy) 
+    throws RemoteException
+  {
+    Object old = nameserver.put(path, proxy);
+    if (old != null) {
+        System.err.println("Warning: Re-registration of "+
+                           path+" as "+proxy+
+                           " (was "+old+").");
+    }
+  }
+
+  /** holder for singular ServerProxy **/
+  private static MT myServerProxy = null;
+
+  /** Override or wrap to generate a different proxy for a client object **/
+  protected Object generateServerSideProxy(MessageAddress clientAddress) 
+    throws RemoteException
+  {
+    if (useServerProxies) {
+      synchronized (this) {
+        if (myServerProxy == null) {
+          myServerProxy = new MTImpl(this, myAddress);
+        }
+        return myServerProxy;
+      }
+    } else {
+      return new MTImpl(this, clientAddress, recvQ);
+    }
+  }
+
+
+  // Node-level MT registration and lookup
+
+  /** Hold the VM-private non-shim MT object **/
+    private boolean madeServerProxy = false;
+
+  private final void registerMTWithSociety() 
+    throws RemoteException
+  {
+    synchronized (this) {
+      if (!madeServerProxy) {
+	  madeServerProxy = true;
+
+
+	Object proxy =   generateServerSideProxy(nameSupport.getNodeMessageAddress());
+	nameSupport.registerNodeInNameServer(proxy,TRANSPORT_TYPE);
+
+      }
+    }
+  }
+  
+
+  // RMI object name management.
+  
+  /** hash table of known clusters (by name) - these are
+   * all clients seen, not just local ones.  The keys are MessageAddresses.toAddress()
+   * the values are KeyedMT
+   **/
+  private HashMap clusterAddresses = new HashMap(89);
+
+  /** force a real lookup in case a server died or moved **/
+  private void decacheRMIObject(MessageAddress address) {
+    //System.err.println("\nDecaching "+address);
+    clusterAddresses.remove(address);  
+  }
+
+  /** KeyedMT is a wrapper for MT which keeps name it was looked up as
+   * locally.
+   **/
+
+  private final static class KeyedMT implements MT {
+    private final MT mt;
+    private final MessageAddress key;
+    private final boolean isRedirect;
+    KeyedMT(MessageAddress key, MT mt, boolean isRedirect) { 
+      this.key = key; 
+      this.mt = mt; 
+      this.isRedirect = isRedirect;
+    }
+    MT getMT() { return mt; }
+
+    public void rerouteMessage(Message m) throws RemoteException {
+      mt.rerouteMessage(m);
+    }
+    public MessageAddress getMessageAddress() throws RemoteException {
+      return key;
+    }
+    public boolean isRedirect() { return isRedirect; }
+  }
+
+  private KeyedMT fastLookup(MessageAddress address) {
+    return (KeyedMT) clusterAddresses.get(address);
+  }
+
+  private KeyedMT lookupRMIObject(MessageAddress address) throws Exception {
+      // check local cache first
+    Object o = clusterAddresses.get(address);
+    if (o != null) return (KeyedMT) o;
+
+    int count = 0;
+    MessageAddress aa = address;
+    while (count < 2) {         // two tries
+	// JAZ temp hack 
+      String key = NameSupport.CLUSTERDIR+aa.getAddress()+TRANSPORT_TYPE;
+
+      o = nameserver.get(key);
+
+      if (o == null) { 
+        // unknown?
+        return null; 
+      } else if (o instanceof MessageAddress) {
+        aa = (MessageAddress) o;
+      } else {
+        o = generateClientSideProxy(o);
+        if (o instanceof MT) {
+          boolean isRedirect = (count!=0);
+          KeyedMT kmt = new KeyedMT(aa, (MT)o, isRedirect);
+          clusterAddresses.put(address, kmt);
+          return kmt;
+        } else {
+          throw new RuntimeException("Object "+o+" is not a MessageTransport!");
+        }
+      }
+      count++;
+    }
+    throw new RuntimeException("Address "+address+" loops");
+  }
+
+  /** Override to insert an alternate client-side proxy object **/
+  protected Object generateClientSideProxy(Object o) {
+    return o;
+  }
+
+  public boolean addressKnown(MessageAddress a) {
+    try {
+      if (lookupRMIObject(a) != null)
+        return true;
+    } catch (Exception e) {
+      //System.err.println("Failed in addressKnown:"+e);
+      //e.printStackTrace();
+    }
+    return false;
+  }
+
+  //
+  // Destination queues
+  //
+  private HashMap queues = new HashMap(89);
+  
+  private final void queueForDelivery(Message m, MessageAddress addr) {
+    DestinationQueue q;
+    synchronized (queues) {
+      q = (DestinationQueue) queues.get(addr);
+      if (q == null) {
+        q = new DestinationQueue(addr, isDisableRetransmission());
+        queues.put(addr, q);
+      }
+    }
+    q.add(m);
+  }    
+
+  /**
+   * Accumulate message statistics.  Add up the queue length and
+   * elapsed times.
+   **/
+  private synchronized void accumulateMessageStatistics(long elapsed,
+                                                        int queueLength)
+  {
+    totalElapsedTime += elapsed;
+    totalQueueLength += queueLength;
+  }
+
+  private synchronized void countMessage() {
+    statisticsTotalMessages++;
+  }
+
+  public synchronized MessageStatistics.Statistics getMessageStatistics(boolean reset) {
+    MessageStatistics.Statistics result =
+      new  MessageStatistics.Statistics((totalElapsedTime == 0 ?
+                                         0.0 :
+                                         (0.0 + totalQueueLength) /
+                                         (0.0 + totalElapsedTime)),
+                                        statisticsTotalBytes,
+                                        statisticsTotalMessages,
+                                        messageLengthHistogram);
+    if (reset) {
+      totalElapsedTime = 0L;
+      totalQueueLength = 0L;
+      statisticsTotalBytes = 0L;
+      statisticsTotalMessages = 0L;
+      for (int i = 0; i < messageLengthHistogram.length; i++) {
+        messageLengthHistogram[i] = 0;
+      }
+    }
+    return result;
+  }
+
+
+  protected void log(String key, String info) {
+    super.log(key,info);
+  }
+
+
+  // nameserver target pinger
+  private static class TargetPinger implements Runnable {
+    private Thread thread = null;
+
+    private ArrayList pingers = new ArrayList();
+    private ArrayList back = new ArrayList();
+    
+    public void run() {
+      while (true) {
+        try {
+          Thread.sleep(retryInterval); // 5 seconds at a time
+        } catch (InterruptedException ie) {}
+        try {
+          synchronized (this) {
+            int l = pingers.size();
+            if (l == 0) {
+              thread = null;       // nothing to do?  exit
+              return;
+            }
+            for (int i=0; i<l; i++) {
+              DestinationQueue dq = (DestinationQueue) pingers.get(i);
+              if (dq.ping()) {
+                //System.err.println("Lazyfound "+dq); // MIK
+              } else {
+                //put back on list
+                back.add(dq);
+              }
+            }
+            pingers.clear();
+            // swap lists
+            ArrayList tmp = back;
+            back = pingers;
+            pingers = tmp;
+          }
+        } catch (Exception e) {}
+      }
+    }
+    
+    public void add(DestinationQueue dq) {
+      synchronized (this) {
+        pingers.add(dq);
+        //System.err.println("LazyAdd "+dq); //MIK
+        if (thread == null) {
+          thread = new Thread(this, "DestinationQueue Lookup");
+          thread.start();
+        }
+      }
+    }
+  }
+
+  private static TargetPinger myTargetPinger = new TargetPinger();
+  
+  static void queueTargetLookup(DestinationQueue dq) {
+    myTargetPinger.add(dq);
+  }
+
+  // destination queue hackery
+
+  private class DestinationQueue implements Runnable {
+    /** the destination cluster that this DestinationQueue delivers to.
+     * Some future version might group all clusters served by one message
+     * transport in the same destination queue.
+     **/
+    MessageAddress dest;
+
+    /** current value for the remote message transport for dest */
+    KeyedMT remote = null;
+
+    /** are we lazy-sleeping?   This check must be done within a synchronize on this. **/
+    boolean lazy = false;
+
+    /** are we redirecting? **/
+    boolean isRedirecting = false;
+
+    /** if we're redirecting, this will be the redirection address **/
+    MessageAddress redirection = null;
+
+    /** signals that the next use of remote will be the first use of remote **/
+    boolean firstUse;
+    
+    /** fifo queue of Messages to send, all with the same destination. */
+    private CircularQueue queue = new CircularQueue();
+
+    /** the name of the queue used for thread name and debugging. **/
+    private String name;
+
+    /** our current thread, if we're running **/
+    private Thread thread = null;
+
+    /** disable retransmission if true. **/
+    private boolean disableRetransmission = false;
+
+    private Message pushback = null;
+
+    private long then = System.currentTimeMillis();
+
+    /** are we running in slow retry mode? **/
+    private boolean fallbackMode = false;
+
+    /** how many failures have we had in a row */
+    private int failureCount=0;
+
+    /** millis at last try **/
+    private long previousTry = 0L;
+
+    /** millis of failed sends **/
+    private long failureMillis = 0L;
+
+    public String toString() { return name; }
+    public DestinationQueue(MessageAddress address, boolean disableRetransmission) {
+      dest = address;
+      this.disableRetransmission = disableRetransmission;
+      name = dest+"/DestinationQueue";
+    }
+
+    private void accumulateStatistics() {
+      long now = System.currentTimeMillis();
+      accumulateMessageStatistics(now - then, size());
+      then = now;
+    }
+
+    //private boolean isFirst = true; // MIK
+    public synchronized void add(Message m) {
+      //queue.addLast(m);         // fifo
+      if (keepStatistics) {
+        accumulateStatistics();
+        countMessage();
+      }
+
+      if (isRedirecting) {
+        queueForDelivery(m, redirection);
+      } else {
+        queue.add(m);
+        if (isLogging) log("dQ+", m.toString()+" ("+size()+")");
+        if (!lazy) {
+          /*
+          if (isFirst) {          // MIK
+            lazy=true;
+            isFirst = false;
+            queueTargetLookup(this);
+          }
+          */
+          // only activate if not in lazy mode.
+          activate();
+        }
+      }
+    }
+
+    public synchronized void addFirst(Message m) {
+      if (pushback !=null)
+        System.err.println("Tried to pushback more than one message");
+      if (keepStatistics) {
+        accumulateStatistics();
+      }
+      pushback = m;
+    
+      if (isLogging) log("rQ+", m.toString()+" ("+size()+")");
+      activate();
+    }
+
+    public synchronized Message pop() {
+      if (keepStatistics) {
+        accumulateStatistics();
+      }
+      if (pushback != null) {
+        Message m = pushback;
+        pushback = null;
+        return m;
+      }
+
+      if (queue.isEmpty()) return null;
+
+      return (Message) queue.next();
+    }
+
+    public int size() {
+      return queue.size()+ ((pushback!=null)?1:0);
+    }
+      
+    private synchronized void activate() {
+      lazy = false;             // by definition
+      if (thread == null) {
+        thread = getThread(this, name);
+        thread.start();
+      }
+      this.notify();
+    }
+
+    private void pause() {
+      pause(fallbackMode?fallbackRetryInterval:retryInterval);
+    }
+
+    private synchronized void pause(long ms) {
+      try {
+        this.wait(ms);
+      } catch (InterruptedException ie) {}
+    }
+    
+    private void noteFailure() { noteTry(false); }
+    private void noteSuccess() { noteTry(true); }
+
+    private void noteTry(boolean success) {
+      long now = System.currentTimeMillis();
+      
+      if (success) {
+        failureCount=0;
+        if (fallbackMode) {
+          fallbackMode=false;
+          System.err.println(name+" leaving fallback mode after "+
+                             (failureMillis/1000)+" seconds.");
+        }
+      } else {
+        failureCount++;
+        if (previousTry!=0L) {
+          failureMillis += (now-previousTry);
+        }
+        if (failureCount >= fallbackCount &&
+            !fallbackMode) {
+          fallbackMode=true;
+          System.err.println(name+" entering fallback mode after "+
+                             (failureMillis/1000)+" seconds.");
+        }          
+      }
+      
+      previousTry = now;
+    }
+
+    /** called by pinger to redo a lookup if we aren't doing it in our main thread. 
+     * @return true on successful lookup and reactivation.
+     **/
+    boolean ping() {
+      if (lookupTarget()) {
+        activate();
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    /** lookup the target - return true on success. **/
+    boolean lookupTarget() {
+      if (remote == null) {   // need to look it up?
+        // might as well check to see if a local client has shown up...
+
+        // no local client (yet, at any rate), so try the lookup...
+        try {
+          remote = lookupRMIObject(dest);
+          firstUse = true;
+          if (remote != null) return true;
+        } catch (RuntimeException rre) {
+          System.err.println("\nWarning namespace exception: "+rre+"\n"+
+                             "\t Will retry in "+ ((int)(retryInterval/1000))+
+                             " seconds.");
+
+        } catch (Exception e) {
+          if (isLogging) {
+            log("Error (Name) : ",e.toString());
+          }
+        } 
+        return false;
+      }
+      return true;
+    }      
+
+    private void deactivate() {
+      thread = null;
+      releaseThread();
+    }
+
+    public void run() {
+      while (true) {
+        if (!lookupTarget()) {
+          if (lazyLookup) {
+            synchronized (this) {
+              lazy = true;      // enable lazy queue mode
+              queueTargetLookup(this);
+              deactivate();
+              return;
+            }
+          } else {
+            noteFailure();
+            pause();            // pause a few seconds
+            continue;           // keep retrying until success
+          }
+        }
+
+        Message m;
+        synchronized (this) {
+          m = pop();
+          
+          if (m == null) {      // no message?
+            if (isLogging) log("dS+", dest.toString());
+            pause(300000);      // pause a bit, then check again.  We'll wake
+                                //  up if someone sends a message.
+            if (isLogging) log("dS-", dest.toString());
+            m = pop();          
+            if (m == null) {    // still nothing?
+              if (isLogging) log("dS0", dest.toString());
+              deactivate();
+              return;           // exit the thread 
+            }
+          }
+        }
+        
+
+          try {
+            if (isLogging) log("dQ0", m.toString()+" ("+size()+")");
+            remote.rerouteMessage(m);
+            //System.err.print((remote.isRedirect())?"X":"O");
+            if (isLogging) log("dQ-", m.toString()+" ("+size()+")");
+            firstUse = false;     // Clear on first successful transmission
+            noteSuccess();
+          } catch (Exception e) {
+            //System.err.print(":");
+            //System.err.println("\nMessageTransport timed out on "+m);
+            //e.printStackTrace();//MTMTMT
+
+            if (isLogging) {
+              log("Error (Send): ",e.toString());
+            }
+
+            // print serious errors even when not logging.
+            if (e instanceof java.rmi.MarshalException ||
+                e instanceof java.io.NotSerializableException) {
+              Throwable t = e;
+              t.printStackTrace(System.err);
+              while (t instanceof RemoteException) {
+                t = ((RemoteException)t).detail;
+                t.printStackTrace(System.err);
+              }
+            }
+
+            remote = null;
+            // didn't send.  put it back on our queue (at the beginning);
+            if (!disableRetransmission) {
+              add(m);             // The old way.
+            } else if (firstUse) {
+              addFirst(m);        // Try harder for the first use
+            }
+            noteFailure();
+
+            if (decacheFailureLimit>0) {
+              if (failureCount >= decacheFailureLimit) {
+                decacheRMIObject(dest);
+              }
+            }
+
+            // pause for a while before attempting resend
+            pause();
+          }
+
+          // see if we should redirect now
+          if (remote != null && useNodeDelivery && remote.isRedirect()) {
+            synchronized (this) {
+              if (queue.isEmpty() && pushback == null) {
+                // we won't really start redirecting until our message
+                // queue is emptied so that we can still get 
+                try {
+                  redirection = remote.getMessageAddress();
+                  isRedirecting = true;
+                  if (isLogging) log("dS0", dest.toString());
+                  // exit the thread
+                  deactivate();
+                  return;           // exit the thread 
+                } catch (RemoteException re) { 
+                  System.err.println("Cannot happen! "+re);
+                  re.printStackTrace();
+                }
+              }
+            }
+          }
+      }
+    }
+  }
+}

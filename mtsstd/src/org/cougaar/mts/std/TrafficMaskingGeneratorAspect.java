@@ -21,11 +21,15 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 import org.cougaar.core.component.StateObject;
-import org.cougaar.core.society.Message;
-import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.society.MessageEnvelope;
-import org.cougaar.core.society.MulticastMessageAddress;
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageEnvelope;
+import org.cougaar.core.mts.MulticastMessageAddress;
 
 import java.util.*;
 
@@ -347,7 +351,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		    msg = new MaskingMessageEnvelope(msg, dest);
 		}
 	    if (Debug.debug(TRAFFIC_MASKING_GENERATOR))
-		System.out.println("\n %%%%% MaskingQueue sending message: "+msg);
+		System.out.println("\n %% MaskingQueue sending message: "+msg);
 	    sendMessage(msg);
 	}
     }  // end of MaskingQueueDelegate inner class

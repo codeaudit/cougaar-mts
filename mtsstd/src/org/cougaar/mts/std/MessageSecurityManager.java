@@ -1,3 +1,4 @@
+
 /*
  * <copyright>
  *  Copyright 1997-2001 BBNT Solutions, LLC
@@ -21,20 +22,26 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
+import org.cougaar.core.service.*;
 
-public interface MessageWatcherService extends Service
-{
+import org.cougaar.core.node.*;
 
-    /**
-     * Add a MessageTransportWatcher to the server.
-     **/
-    void addMessageTransportWatcher(MessageTransportWatcher watcher);
 
-    /**
-     * Remove a MessageTransportWatcher from the server.
-     **/
-    void removeMessageTransportWatcher(MessageTransportWatcher watcher);
+public interface MessageSecurityManager {
+  /** Returns a message which has been cryptologically secured.
+   * Implementations may destructively modify the original message
+   * in order to actually send the original message.
+   * @returns a SecureMessage marked Message
+   **/
+  Message secureMessage(Message m);
+
+  /** reverse the transform that secureMessage does, using whatever
+   * techniques are needed to verify the integrity and source of the 
+   * message.
+   * @return the unsecured message iff validated.  Will return null if
+   * validation fails.
+   **/
+  Message unsecureMessage(SecureMessage m);
+
 
 }
-

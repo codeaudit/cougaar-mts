@@ -21,8 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.Message;
-import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
 
 /** Class is a fake message sent in reply to a fake request 
  *  to mask real message traffic 

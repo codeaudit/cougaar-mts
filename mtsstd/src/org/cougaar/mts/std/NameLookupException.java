@@ -21,6 +21,10 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
 /**
  *   This Exception indicates a type of Link Protocol failure and it is 
  *   thorwn when the Name Lookup Service is inaccessible.

@@ -21,7 +21,11 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.Message;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.Message;
 
 
 /**
@@ -42,8 +46,8 @@ public class ReceiveLinkImpl implements ReceiveLink
 	try {
 	    client.receiveMessage(message);
 	} catch (Throwable th) {
-	    System.err.println("%%% MessageTransportClient threw an exception in receiveMessage: " + th);
-	    System.err.println("%%% Not retrying " + message);
+	    System.err.println("% MessageTransportClient threw an exception in receiveMessage: " + th);
+	    System.err.println("% Not retrying " + message);
 	    th.printStackTrace();
 	}
 

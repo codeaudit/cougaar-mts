@@ -21,9 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.MulticastMessageAddress;
-import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.naming.NamingService;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.MulticastMessageAddress;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.service.NamingService;
 import org.cougaar.core.naming.NS;
 
 import java.util.ArrayList;

@@ -21,8 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.Message;
-import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -69,7 +73,7 @@ public class WatcherAspect
 	    while (itr.hasNext()) {
 		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
 		if (Debug.debug(WATCHER)) {
-		    System.err.println("%%% Notifying " + w + " of send");
+		    System.err.println("% Notifying " + w + " of send");
 		}
 		w.messageSent(message);
 	    }
@@ -82,7 +86,7 @@ public class WatcherAspect
 	    while ( itr.hasNext() ) {
 		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
 		if (Debug.debug(WATCHER)) {
-		    System.err.println("%%% Notifying " + w + " of receive");
+		    System.err.println("% Notifying " + w + " of receive");
 		}
 		w.messageReceived(m);
 	    }

@@ -21,10 +21,29 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.MessageStatistics;
-import org.cougaar.core.component.Service;
+import org.cougaar.core.service.*;
 
-public interface MessageStatisticsService extends Service
+import org.cougaar.core.node.*;
+
+abstract public class MessageEnvelope extends Message 
 {
-  MessageStatistics.Statistics getMessageStatistics(boolean reset);
+
+    private Message contents;
+
+    public MessageEnvelope(Message contents) {
+	super();
+	this.contents = contents;
+    }
+
+    public MessageEnvelope(Message contents, MessageAddress src, MessageAddress dst) {
+	super(src, dst);
+	this.contents = contents;
+    }
+
+    // Security issue?
+    public Message getContents() {
+	return contents;
+    }
+
 }
+

@@ -21,7 +21,11 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.Message;
+import org.cougaar.core.service.*;
+
+import org.cougaar.core.node.*;
+
+import org.cougaar.core.mts.Message;
 
 
 
