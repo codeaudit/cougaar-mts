@@ -201,7 +201,7 @@ public class AttributedMessage
 	ObjectOutputStream oos = new ObjectOutputStream(bos);
  	oos.writeObject(attributes);
 
- 	byte[] bytes = svc.encryptHeader(bos.toByteArray(), 
+ 	byte[] bytes = svc.protectHeader(bos.toByteArray(), 
  					 getOriginator(),
  					 getTarget());
  	out.writeObject(bytes);
@@ -216,9 +216,9 @@ public class AttributedMessage
 	    MessageTransportServiceProvider.getMessageProtectionService(this);
 
  	byte[] rawData = (byte[]) in.readObject();
- 	byte[] data  = svc.decryptHeader(rawData, 
-  					 getOriginator(),
-  					 getTarget());
+ 	byte[] data  = svc.unprotectHeader(rawData, 
+					   getOriginator(),
+					   getTarget());
  	ByteArrayInputStream bis = new ByteArrayInputStream(data);
 	ObjectInputStream ois = new ObjectInputStream(bis);
  	attributes = (MessageAttributes) ois.readObject();

@@ -33,7 +33,7 @@ import java.io.OutputStream;
 class MessageProtectionServiceImpl 
     implements MessageProtectionService
 {
-    public byte[] encryptHeader(byte[] rawData, 
+    public byte[] protectHeader(byte[] rawData, 
 				MessageAddress source,
 				MessageAddress destination)
     {
@@ -41,9 +41,9 @@ class MessageProtectionServiceImpl
     }
 
 
-    public byte[] decryptHeader(byte[] rawData, 
-				MessageAddress source,
-				MessageAddress destination)
+    public byte[] unprotectHeader(byte[] rawData, 
+				  MessageAddress source,
+				  MessageAddress destination)
     {
 	return rawData;
     }
