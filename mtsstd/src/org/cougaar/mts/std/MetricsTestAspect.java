@@ -63,11 +63,12 @@ public class MetricsTestAspect extends StandardAspect
 	String key = System.getProperty("org.cougaar.metrics.key");
 	MetricsUpdateService update = (MetricsUpdateService)
 	    sb.getService(this, MetricsUpdateService.class, null);
-	String type = "ProcessStats";
+	// String type = "ProcessStats";
 	x = x + 500000;
 	Metric m = new MetricImpl(new Double(x), 0.3,
 				  "", "MetricsTestAspect");
-	update.updateValue(key, type, m);
+	// update.updateValue(key, type, m);
+	update.updateValue(key, m);
 
     }
 

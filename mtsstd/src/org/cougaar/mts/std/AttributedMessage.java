@@ -112,10 +112,10 @@ public class AttributedMessage
     
     // Should only be used by MessageReply.  The second argument is
     // only there to distinguish the constructor signature. It's not
-    // used for anything.
+    // used for anything.  Since this is a reply, flip the addresses.
     AttributedMessage(AttributedMessage source, Class msgClass) 
     {
-	super(source.getOriginator(), source.getTarget());
+	super(source.getTarget(), source.getOriginator());
 	this.contents = null;
 	attributes = source.attributes.cloneAttributes();
     }
