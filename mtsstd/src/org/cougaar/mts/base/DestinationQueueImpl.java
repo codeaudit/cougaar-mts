@@ -121,7 +121,21 @@ final class DestinationQueueImpl
 	container.add(this);
     }
 
+    // workaround for bug 3723
+    private boolean loaded = false;
+    protected synchronized void transitState(String op, int expectedState, int endState) {
+      if (getModelState() == expectedState) {
+        super.transitState(op, expectedState, endState);
+      }
+    }
+    public synchronized boolean shouldLoad() {
+      if (loaded) return false;
+      loaded = true;
+      return true;
+    }
+
     public void load() {
+        if (!shouldLoad()) return;
 	super.load();
 	ServiceBroker sb = getServiceBroker();
 	selectionPolicy = (LinkSelectionPolicy)
