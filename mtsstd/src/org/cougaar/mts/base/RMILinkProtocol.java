@@ -445,7 +445,7 @@ public class RMILinkProtocol
 		loggingService.debug("Brand spanking new WP callback: " 
 				     +entry+ 
 				     " incarnation = " +incn);
-	    link.handleCallback(entry, incn);
+	    link.handleWPCallback(entry, incn);
 	}
     }
 
@@ -471,12 +471,18 @@ public class RMILinkProtocol
 	    }
 	}
 
-	private void handleCallback(AddressEntry entry, long incn)
+	// WP callback
+	private void handleWPCallback(AddressEntry entry, long incn)
 	{
 	    synchronized (lookup_lock) {
 		lookup_pending = false;
+		if (incn > incarnation) {
+		    // tell the incarnation service
+		    incarnationService.updateIncarnation(target, incn);
+		    incarnation = incn;
+		}
 		lookup_result =
-		    (entry != null && incn >= incarnation)
+		    (entry != null && incn == incarnation)
 		    ? entry.getURI() : null;
 	    }
 	}
@@ -547,10 +553,22 @@ public class RMILinkProtocol
 
 
 
-
+	// IncarnationService callback
 	public void incarnationChanged(MessageAddress addr, long incn) {
-	    this.incarnation = incn;
-	    decache();
+	    synchronized (lookup_lock) {
+		if (incn > incarnation) {
+		    // newer value -- decache the stub
+		    incarnation = incn;
+		    decache();
+		} else if (incn < incarnation) {
+		    // out-of-date info
+		    if (loggingService.isWarnEnabled())
+			loggingService.warn("Incarnation service callback has out of date incarnation number " 
+					    +incn+
+					    " for " 
+					    +addr);
+		}
+	    }
 	}
 
 	private void cacheRemote() 
@@ -618,9 +636,19 @@ public class RMILinkProtocol
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    cacheRemote();
+	    MT committed_mt = null;
+	    synchronized (lookup_lock) {
+		cacheRemote();
+		if (remote == null) {
+		    Exception cause = 
+			new Exception("Inconsistent remote reference cache");
+		    throw new NameLookupException(cause);
+		} else {
+		   committed_mt  = remote;
+		}
+	    }
 	    try {
-		return doForwarding(remote, message);
+		return doForwarding(committed_mt, message);
 	    } 
 	    catch (MisdeliveredMessageException mis) {
 		// force recache of remote
