@@ -33,6 +33,7 @@ import java.util.Set;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
@@ -40,7 +41,6 @@ import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.core.wp.ListAllNodes;
 
-import org.cougaar.mts.std.MulticastMessageAddress;
 import org.cougaar.mts.std.AspectSupport;
 
 /**

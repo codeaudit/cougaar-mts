@@ -35,10 +35,10 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
+import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.std.MulticastMessageAddress;
 
 /**
  * The MessageTransportRegistry singleton is a utility instance that

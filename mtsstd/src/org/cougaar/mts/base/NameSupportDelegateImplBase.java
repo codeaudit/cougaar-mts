@@ -29,8 +29,8 @@ import java.net.URI;
 import java.util.Iterator;
 
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.wp.Callback;
-import org.cougaar.mts.std.MulticastMessageAddress;
 
 abstract public class NameSupportDelegateImplBase implements NameSupport 
 {

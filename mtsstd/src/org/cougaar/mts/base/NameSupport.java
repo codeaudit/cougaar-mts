@@ -30,8 +30,8 @@ import java.util.Iterator;
 
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.wp.Callback;
-import org.cougaar.mts.std.MulticastMessageAddress;
 
 /**
  * This is utility class which hides the grimy details of dealing with
