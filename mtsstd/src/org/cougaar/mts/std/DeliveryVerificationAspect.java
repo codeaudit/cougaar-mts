@@ -32,6 +32,16 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.UnregisteredNameException;
+import org.cougaar.mts.base.DontRetryException;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.SendLink;
+import org.cougaar.mts.base.SendLinkDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
 
 public class DeliveryVerificationAspect 
     extends StandardAspect

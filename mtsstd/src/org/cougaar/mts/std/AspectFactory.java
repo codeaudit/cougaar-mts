@@ -22,6 +22,8 @@
 package org.cougaar.mts.std;
 import java.util.ArrayList;
 
+import org.cougaar.mts.base.BoundComponent;
+
 /**
  * The root class of all aspect-ready factories.  Such factories have
  * the ability to attach a cascading series of aspect delegates to the

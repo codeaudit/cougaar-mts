@@ -32,6 +32,7 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
+import org.cougaar.mts.base.StandardAspect;
 
 /**
  * This aspect adds simple statistics gathering to the client side

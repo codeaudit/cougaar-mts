@@ -27,6 +27,20 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
+import org.cougaar.mts.base.MessageReader;
+import org.cougaar.mts.base.MessageReaderDelegateImplBase;
+import org.cougaar.mts.base.MessageWriter;
+import org.cougaar.mts.base.MessageWriterDelegateImplBase;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.UnregisteredNameException;
+import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.SendLink;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.SendLinkDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
+
 public class BufferedStreamsAspect extends StandardAspect
 {
 

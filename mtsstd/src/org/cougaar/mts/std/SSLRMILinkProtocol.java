@@ -20,7 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-
+import org.cougaar.mts.base.SocketFactory;
+import org.cougaar.mts.base.RMILinkProtocol;
 
 /**
  * Simple extension to RMILinkProtocol which uses ssl.

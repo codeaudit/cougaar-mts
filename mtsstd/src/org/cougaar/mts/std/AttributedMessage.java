@@ -39,6 +39,12 @@ import org.cougaar.core.service.MessageProtectionService;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
+import org.cougaar.mts.base.MessageReader;
+import org.cougaar.mts.base.MessageWriter;
+import org.cougaar.mts.base.MessageSecurityException;
+import org.cougaar.mts.base.MessageSerializationException;
+import org.cougaar.mts.base.MessageStreamsFactory;
+
 /**
  * An AttributedMessage is a Message with metadata, the latter
  * represented as HashMap with String keys.  When a Message enters the
@@ -86,7 +92,7 @@ public class AttributedMessage
 	attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
     }
 
-    AttributedMessage(Message contents, MessageAttributes initialAttributes) 
+    public AttributedMessage(Message contents, MessageAttributes initialAttributes) 
     {
 	super(contents == null ? null : contents.getOriginator(), 
 	      contents == null ? null : contents.getTarget());
@@ -119,7 +125,7 @@ public class AttributedMessage
     // Should only be used by MessageReply.  The second argument is
     // only there to distinguish the constructor signature. It's not
     // used for anything.  Since this is a reply, flip the addresses.
-    AttributedMessage(AttributedMessage source, Class msgClass) 
+    public AttributedMessage(AttributedMessage source, Class msgClass) 
     {
 	super(source.getTarget(), source.getOriginator());
 	this.contents = null;
@@ -146,12 +152,12 @@ public class AttributedMessage
     }
 
 
-    synchronized void snapshotAttributes() {
+    public synchronized void snapshotAttributes() {
 	snapshot = (MessageAttributes) attributes.cloneAttributes();
     }
 
     
-    synchronized void restoreSnapshot() {
+    public synchronized void restoreSnapshot() {
 	if (snapshot != null)
 	    attributes = (MessageAttributes) snapshot.cloneAttributes();
     }
@@ -186,7 +192,7 @@ public class AttributedMessage
     /**
      * Returns the raw (unattributed) message.
      */
-    Message getRawMessage() {
+    public Message getRawMessage() {
 	return contents;
     }
 

@@ -24,6 +24,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 
+import org.cougaar.mts.base.ServerSocketWrapper;
+import org.cougaar.mts.base.SocketDelegateImplBase;
+
 public class FuseServerSocket extends ServerSocketWrapper
 {
     private static final int MAX_CONNECTIONS = 10;

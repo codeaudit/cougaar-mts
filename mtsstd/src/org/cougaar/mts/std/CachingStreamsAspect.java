@@ -25,6 +25,10 @@ import java.io.FilterOutputStream;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
+import org.cougaar.mts.base.MessageWriter;
+import org.cougaar.mts.base.MessageWriterDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
+
 public class CachingStreamsAspect extends StandardAspect
 {
 

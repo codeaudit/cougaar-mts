@@ -33,6 +33,12 @@ import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.LoggingService;
 
+import org.cougaar.mts.base.ReceiveLink;
+import org.cougaar.mts.base.ReceiveLinkDelegateImplBase;
+import org.cougaar.mts.base.SendLink;
+import org.cougaar.mts.base.SendLinkDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
+
 /**
  * First attempt at a security aspect.  The message is secured by a
  * RemoteProxy aspect delegate and unsecued by a RemoteImpl aspect

@@ -23,6 +23,9 @@ package org.cougaar.mts.std;
 import java.net.URI;
 
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.mts.base.NameSupport;
+import org.cougaar.mts.base.NameSupportDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
 
 public class StubDumperAspect extends StandardAspect
 {

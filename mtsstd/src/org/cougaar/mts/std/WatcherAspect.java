@@ -28,6 +28,16 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportWatcher;
 
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.UnregisteredNameException;
+import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.MessageDeliverer;
+import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.SendQueueDelegateImplBase;
+import org.cougaar.mts.base.SendQueue;
+import org.cougaar.mts.base.StandardAspect;
+
 /**
  * A simple aspect which implements the message watching functionality
  * by attaching delegates to SendQueue and MessageDeliverer objects.  The

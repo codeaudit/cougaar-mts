@@ -28,6 +28,10 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.LinkProtocol;
+
 /**
  * Debugging aid - fails by design after serializing.
  */

@@ -29,6 +29,8 @@ import org.cougaar.core.qos.metrics.MetricImpl;
 import org.cougaar.core.qos.metrics.MetricsService;
 import org.cougaar.core.qos.metrics.MetricsUpdateService;
 
+import org.cougaar.mts.base.StandardAspect;
+
 public class MetricsBlastTestAspect 
     extends StandardAspect 
     implements Observer

@@ -27,6 +27,7 @@ import org.cougaar.core.qos.metrics.Constants;
 import org.cougaar.core.qos.metrics.CredibilityQualifier;
 import org.cougaar.core.qos.metrics.DeltaValueQualifier;
 import org.cougaar.core.qos.metrics.MetricNotificationQualifier;
+import org.cougaar.mts.base.BoundComponent;
 
 public class SimpleGossipQualifierComponent
     extends BoundComponent 

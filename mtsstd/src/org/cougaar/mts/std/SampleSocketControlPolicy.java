@@ -20,6 +20,8 @@
  */
 
 package org.cougaar.mts.std;
+import org.cougaar.mts.base.SocketFactory;
+import org.cougaar.mts.base.AbstractSocketControlPolicy;
 
 public class SampleSocketControlPolicy extends AbstractSocketControlPolicy 
 {

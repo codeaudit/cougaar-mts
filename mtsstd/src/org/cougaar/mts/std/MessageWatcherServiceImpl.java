@@ -26,18 +26,18 @@ import java.util.Iterator;
 import org.cougaar.core.mts.MessageTransportWatcher;
 import org.cougaar.core.service.MessageWatcherService;
 
-class MessageWatcherServiceImpl
+public class MessageWatcherServiceImpl
     implements MessageWatcherService
 {
     private WatcherAspect aspect;
     private ArrayList watchers;
 
-    MessageWatcherServiceImpl(WatcherAspect aspect) {
+    public MessageWatcherServiceImpl(WatcherAspect aspect) {
 	this.aspect = aspect;
 	this.watchers = new ArrayList();
     }
 
-    synchronized void release() {
+    public synchronized void release() {
 	Iterator itr = watchers.iterator();
 	while (itr.hasNext()) {
 	    MessageTransportWatcher watcher =

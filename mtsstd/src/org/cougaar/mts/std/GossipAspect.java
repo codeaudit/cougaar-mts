@@ -35,6 +35,19 @@ import org.cougaar.core.qos.metrics.MetricsService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.WhitePagesService;
 
+import org.cougaar.mts.base.RMILinkProtocol;
+import org.cougaar.mts.base.MessageDeliverer;
+import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.UnregisteredNameException;
+import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.SendLink;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.SendLinkDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
+
 public class GossipAspect 
     extends StandardAspect
 {

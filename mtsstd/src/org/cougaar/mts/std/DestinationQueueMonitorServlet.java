@@ -39,9 +39,11 @@ import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.servlet.ServletFrameset;
+import org.cougaar.mts.base.DestinationQueueMonitorService;
 
 
-final class DestinationQueueMonitorServlet extends ServletFrameset
+//final class DestinationQueueMonitorServlet extends ServletFrameset
+public final class DestinationQueueMonitorServlet extends ServletFrameset
 {
 
   // values for the FRAME url parameter

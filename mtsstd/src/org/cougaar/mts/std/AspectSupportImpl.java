@@ -32,19 +32,23 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
 
+import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.MessageTransportAspect;
+
 /**
  * This is utility class which supports loading aspects
  * @property org.cougaar.message.transport.aspects A comma-seperated
  * list of the MTS aspect classes to be instantiated.
  */
-final class AspectSupportImpl implements ServiceProvider
+//final class AspectSupportImpl implements ServiceProvider
+public class AspectSupportImpl implements ServiceProvider
 {
     private final static String ASPECTS_PROPERTY = 
 	"org.cougaar.message.transport.aspects";
 
     private static AspectSupport service;
 
-    AspectSupportImpl(Container container, LoggingService loggingService) {
+    public AspectSupportImpl(Container container, LoggingService loggingService) {
 	service = new ServiceImpl(container, loggingService);
     }
 
@@ -55,7 +59,7 @@ final class AspectSupportImpl implements ServiceProvider
     // by the server side of the connection.  To get around this
     // problem we need to open a hole into the aspectSupport.  Give it
     // package-access in a feeble attempt at security.
-    static Socket attachRMISocketAspects(Socket rmi_socket) {
+    public static Socket attachRMISocketAspects(Socket rmi_socket) {
 	return (Socket) service.attachAspects(rmi_socket, Socket.class);
     }
 
@@ -158,6 +162,16 @@ final class AspectSupportImpl implements ServiceProvider
 		loggingService.debug("Added aspect " + aspect);
 	}
 
+	public void addAspect(StandardAspect aspect)
+	{
+	    String classname = aspect.getClass().getName();
+	    synchronized (this) {
+		aspects.add(aspect);
+		aspects_table.put(classname, aspect);
+	    }
+	    if (loggingService.isDebugEnabled())
+		loggingService.debug("Added aspect " + aspect);
+	}
 
 	/**
 	 * Loops through the aspects, allowing each one to attach an

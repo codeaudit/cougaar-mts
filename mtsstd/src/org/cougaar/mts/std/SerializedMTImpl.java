@@ -27,6 +27,11 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SerializationUtils;
+import org.cougaar.mts.base.CougaarIOException;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.SocketFactory;
+import org.cougaar.mts.base.MT;
+import org.cougaar.mts.base.MTImpl;
 
 /** actual RMI remote object providing the implementation of MessageTransport client
  **/

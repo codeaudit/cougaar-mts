@@ -27,6 +27,16 @@ import org.cougaar.core.mts.MessageSecurityManager;
 import org.cougaar.core.node.DummyMessageSecurityManager;
 import org.cougaar.core.node.SecureMessage;
 
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.UnregisteredNameException;
+import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.MessageDeliverer;
+import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.StandardAspect;
+
 /**
  * First attempt at a security aspect.  The message is secured by a
  * RemoteProxy aspect delegate and unsecued by a RemoteImpl aspect

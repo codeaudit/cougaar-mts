@@ -21,7 +21,8 @@
 
 package org.cougaar.mts.std;
 import java.util.ArrayList;
-
+import org.cougaar.mts.base.MessageTransportAspect;
+import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.core.component.Service;
 
 /**
@@ -32,6 +33,7 @@ public interface AspectSupport extends Service
     MessageTransportAspect findAspect(String classname);
     void readAspects();
     void addAspect(MessageTransportAspect aspect);
+    void addAspect(StandardAspect aspect);
     Object attachAspects(Object delegate,  Class type);
     Object attachAspects(Object delegate,  Class type, ArrayList candidates);
 }
