@@ -43,7 +43,7 @@ class GossipSubscription
 	    String path = "GossipIntegrater(" +key+ "):GossipFormula";
 	    MetricNotificationQualifier qualifier = null;
 	    if (qualifier_svc != null) {
-		qualifier = qualifier_svc.getNotificationQualifierClass(key);
+		qualifier = qualifier_svc.getNotificationQualifier(key);
 	    }
 	    subscription_uid = svc.subscribeToValue(path, this,
 						    qualifier);

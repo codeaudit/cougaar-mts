@@ -209,7 +209,9 @@ public class GossipAspect
 	    propagatedRequests.put(destination, propagatedGossip);
 	}
 	
-	KeyGossip addendum = potentialGossip.computeAddendum(propagatedGossip);
+	ensureQualifierService();
+	KeyGossip addendum = 
+	    potentialGossip.computeAddendum(propagatedGossip,qualifierService);
 
 	if (messageGossip != null && loggingService.isInfoEnabled())
 	    loggingService.info("Existing requests for " +destination+ '=' 

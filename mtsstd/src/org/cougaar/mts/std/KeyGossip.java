@@ -56,16 +56,27 @@ class KeyGossip  extends Gossip
 	}
     }
 
+    private boolean propagate(String key, Data data, KeyGossip addendum,
+			      GossipQualifierService qService) 
+    {
+	return 
+	    data.propagation_distance > 0 &&
+	    (addendum == null || !addendum.hasEntry(key)) &&
+	    (qService == null || qService.shouldForwardRequest(key));
+    }
+
     // Return a gossip set to propagate.  Items are included if the're
     // not already in the addendum and if the propagation count is > 0.
-    synchronized KeyGossip computeAddendum(KeyGossip addendum) {
+    synchronized KeyGossip computeAddendum(KeyGossip addendum,
+					   GossipQualifierService qService) 
+    {
 	KeyGossip result = null;
 	Iterator itr = iterator();
 	while (itr.hasNext()) {
 	    Map.Entry entry = (Map.Entry) itr.next();
 	    String key = (String) entry.getKey();
 	    Data data = (Data) entry.getValue();
-	    if (data.propagation_distance > 0 && !addendum.hasEntry(key)) {
+	    if (propagate(key, data, addendum, qService))  {
 		if (result == null) result = new KeyGossip();
 		Data newdata = new Data(data.propagation_distance-1);
 		result.addEntry(key, newdata);

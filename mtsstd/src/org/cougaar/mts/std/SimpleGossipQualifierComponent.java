@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.qos.metrics.Constants;
 import org.cougaar.core.qos.metrics.CredibilityQualifier;
 import org.cougaar.core.qos.metrics.DeltaValueQualifier;
@@ -35,7 +36,11 @@ public class SimpleGossipQualifierComponent
 	super.load();
 
 	ServiceBroker sb = getServiceBroker();
-	ServiceProvider sp = new Provider();
+	NodeIdentificationService nis = (NodeIdentificationService)
+	    sb.getService(this, NodeIdentificationService.class, null);
+	String node = nis.getMessageAddress().getAddress();
+
+	ServiceProvider sp = new Provider(node);
 	sb.addService(GossipQualifierService.class, sp);
     }
 
@@ -43,8 +48,8 @@ public class SimpleGossipQualifierComponent
     private static class Provider implements ServiceProvider {
 	private GossipQualifierService impl;
 
-	Provider() {
-	    impl = new Impl();
+	Provider(String node) {
+	    impl = new Impl(node);
 	}
 
 	public Object getService(ServiceBroker sb, 
@@ -68,7 +73,26 @@ public class SimpleGossipQualifierComponent
 
     private static class Impl implements GossipQualifierService, Constants
     {
-	public MetricNotificationQualifier getNotificationQualifierClass(String key) {
+	String my_addr;
+	String host_key;
+	String ipflow_key;
+	String node;
+	String node_key;
+
+	Impl(String node) {
+	    this.node = node;
+	    try {
+		my_addr = java.net.InetAddress.getLocalHost().getHostAddress();
+	    } catch (java.net.UnknownHostException ex) {
+		my_addr = "127.0.0.1";
+	    }
+	    host_key = "Host_" + my_addr;
+	    ipflow_key = "Ip_Flow_" + my_addr;
+	    node_key = "Node_" + node;
+	}
+
+	public MetricNotificationQualifier getNotificationQualifier(String key)
+	{
 	    String classname = null;
 	    if (key.matches("^Agent_.*_((Spoke)|(Heard))Time$")) {
 		// These values are milliseconds.
@@ -76,6 +100,15 @@ public class SimpleGossipQualifierComponent
 	    } else {
 		return new CredibilityQualifier(SYS_DEFAULT_CREDIBILITY);
 	    }
+	}
+
+
+	public boolean shouldForwardRequest(String key) {
+	    return 
+		!key.startsWith(host_key) &&
+		!key.startsWith(ipflow_key) &&
+		!key.startsWith("Site_Flow") &&
+		!key.startsWith(node_key);
 	}
 
     }

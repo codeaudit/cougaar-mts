@@ -25,5 +25,6 @@ import org.cougaar.core.qos.metrics.MetricNotificationQualifier;
 
 interface GossipQualifierService 
 {
-    MetricNotificationQualifier getNotificationQualifierClass(String key);
+    MetricNotificationQualifier getNotificationQualifier(String key);
+    boolean shouldForwardRequest(String key);
 }
