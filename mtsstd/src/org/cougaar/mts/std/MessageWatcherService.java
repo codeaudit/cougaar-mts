@@ -26,10 +26,15 @@ import org.cougaar.core.component.Service;
 public interface MessageWatcherService extends Service
 {
 
-  /**
-   * add a MessageTransportWatcher to the server.
-   **/
-  void addMessageTransportWatcher(MessageTransportWatcher watcher);
+    /**
+     * Add a MessageTransportWatcher to the server.
+     **/
+    void addMessageTransportWatcher(MessageTransportWatcher watcher);
+
+    /**
+     * Remove a MessageTransportWatcher from the server.
+     **/
+    void removeMessageTransportWatcher(MessageTransportWatcher watcher);
 
 }
 

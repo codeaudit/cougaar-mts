@@ -35,8 +35,7 @@ class MessageWatcherServiceImpl
 	this.watchers = new ArrayList();
     }
 
-    void release() {
-	aspect = null;
+    synchronized void release() {
 	Iterator itr = watchers.iterator();
 	while (itr.hasNext()) {
 	    MessageTransportWatcher watcher =
@@ -44,9 +43,21 @@ class MessageWatcherServiceImpl
 	    aspect.removeWatcher(watcher);
 	}
 	watchers = null;
+	aspect = null;
     }
 
     public void addMessageTransportWatcher(MessageTransportWatcher watcher) {
 	aspect.addWatcher(watcher);
+	synchronized (this) {
+	    watchers.add(watcher);
+	}
     }
+
+    public void removeMessageTransportWatcher(MessageTransportWatcher watcher){
+	aspect.removeWatcher(watcher);
+	synchronized (this) {
+	    watchers.remove(watcher);
+	}
+    }
+
 }
