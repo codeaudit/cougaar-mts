@@ -37,10 +37,31 @@ import org.cougaar.core.mts.MessageAddress;
  */
 public interface StepService extends Service
 {
+    /** 
+     * Pause processing to all destinations.  The next message to each
+     * destination will be frozen until a subsequent resume or
+     * step. */
     void pauseAll();
-    void resumeAll();
-    void stepAll();
+
+    /** 
+     * Pause processing to the given destination.  The next message to
+     * that destination will be frozen until a subsequent resume or
+     * step. */
     void pause(MessageAddress destination);
+
+
+    /** Resume processing to all destinations. */
+    void resumeAll();
+
+    /** Resume processing to the given destination. */
     void resume(MessageAddress destination);
+
+
+    /** Allow the frozen message (if any) to proceed, for all
+     * destinations. */ 
+    void stepAll();
+
+    /** Allow the frozen message (if any) to proceed, for the given
+     * destination. */ 
     void step(MessageAddress destination);
 }

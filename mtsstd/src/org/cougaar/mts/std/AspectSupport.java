@@ -37,9 +37,33 @@ import org.cougaar.core.component.Service;
  */
 public interface AspectSupport extends Service
 {
+    /**
+     * Return an aspect object whose class is as given. If there's
+     * more than one, returns the last one added.  If there are none,
+     * return null.
+     */
     MessageTransportAspect findAspect(String classname);
+
+    /**
+     * Add an aspect to the global list.
+     */
     void addAspect(MessageTransportAspect aspect);
+
+    /**
+     * Add an aspect to the global list.  This method is vestigial,
+     * since StandardAspects are also MessageTransportAspects.
+     */
     void addAspect(StandardAspect aspect);
-    Object attachAspects(Object delegate,  Class type);
+    
+    /**
+     * Allow each global aspect to attach a delegate to given
+     * object at the cut-point indictated by the given type.
+     */
+    Object attachAspects(Object object,  Class type);
+
+    /**
+     * Allow each aspect in the list of canidates to attach a delegate
+     * to given object at the cut-point indictated by the given type.
+     */
     Object attachAspects(Object delegate,  Class type, ArrayList candidates);
 }
