@@ -54,14 +54,10 @@ import org.cougaar.core.thread.ThreadServiceProvider;
  * interesting local functions are those required for
  * ServiceBrokers.
  */
-
-
-
 public final class MessageTransportServiceProvider 
-    extends ContainerSupport
-    implements ContainerAPI, ServiceProvider, MessageTransportClient, StateObject
+extends ContainerSupport
+implements ServiceProvider, MessageTransportClient
 {
-
 
     // Some special aspect classes
     private final static String STATISTICS_ASPECT = 
@@ -85,17 +81,13 @@ public final class MessageTransportServiceProvider
 
 
     private String id;
-    private HashMap proxies;
+    private final HashMap proxies = new HashMap();
 
 
 
 
     public MessageTransportServiceProvider() {
-	proxies = new HashMap();
-	BinderFactory bf = new MTSBinderFactory();
-	if (!attachBinderFactory(bf)) {
-	    throw new RuntimeException("Failed to load the BinderFactory in MessageTransportServiceProvider");
-	}
+        super();
     }
  
 
@@ -118,62 +110,62 @@ public final class MessageTransportServiceProvider
 
 
     private void createNameSupport(String id) {
-        ServiceBroker sb = getServiceBroker();
-        if (sb == null) throw new RuntimeException("No service broker");
+        ServiceBroker csb = getChildServiceBroker();
+        if (csb == null) throw new RuntimeException("No child service broker");
 
-	NameSupportImpl impl = new NameSupportImpl(id, sb);
+	NameSupportImpl impl = new NameSupportImpl(id, csb);
 
-	sb.addService(NameSupport.class, impl);
+	csb.addService(NameSupport.class, impl);
     }
 
 
     private void loadAspects() {
-        ServiceBroker sb = getServiceBroker();
-        if (sb == null) throw new RuntimeException("No service broker");
+        ServiceBroker csb = getChildServiceBroker();
+        if (csb == null) throw new RuntimeException("No child service broker");
 
 	aspectSupport = 
-	    (AspectSupport) sb.getService(this, AspectSupport.class, null);
+	    (AspectSupport) csb.getService(this, AspectSupport.class, null);
 	aspectSupport.readAspects();
     }
 
     private void createFactories() {
-	ServiceBroker sb = getServiceBroker();
+	ServiceBroker csb = getChildServiceBroker();
 
 	MessageStreamsFactory msgFactory = MessageStreamsFactory.makeFactory();
 	add(msgFactory);
 
 	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory();
 	add(receiveLinkFactory);
-	sb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
+	csb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
 	
 
 	LinkSelectionPolicyServiceProvider lspsp =
-	    new LinkSelectionPolicyServiceProvider(sb, this);
-	sb.addService(LinkSelectionPolicy.class, lspsp);
+	    new LinkSelectionPolicyServiceProvider(csb, this);
+	csb.addService(LinkSelectionPolicy.class, lspsp);
 	
 	DestinationQueueFactory	destQFactory = 
 	    new DestinationQueueFactory(this);
 	add(destQFactory);
-	sb.addService(DestinationQueueProviderService.class, destQFactory);
+	csb.addService(DestinationQueueProviderService.class, destQFactory);
 
 	//  Singletons, though produced by factories.
 	MessageDelivererFactory delivererFactory = 
 	    new MessageDelivererFactory(id);
 	add(delivererFactory);
-	sb.addService(MessageDeliverer.class, delivererFactory);
+	csb.addService(MessageDeliverer.class, delivererFactory);
 
 	RouterFactory routerFactory =  new RouterFactory();
 	add(routerFactory);
-	sb.addService(Router.class, routerFactory);
+	csb.addService(Router.class, routerFactory);
 
 	SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
 	add(sendQFactory);
-	sb.addService(SendQueue.class, sendQFactory);
-	sb.addService(SendQueueImpl.class, sendQFactory);
+	csb.addService(SendQueue.class, sendQFactory);
+	csb.addService(SendQueueImpl.class, sendQFactory);
 
 
 	// load LinkProtocols
-	new LinkProtocolFactory(this, sb);
+	new LinkProtocolFactory(this, csb);
     }
 
 
@@ -184,7 +176,7 @@ public final class MessageTransportServiceProvider
 	if (proxy != null) return proxy;
 	
 	// Make SendLink and attach aspect delegates
-	SendLink link = new SendLinkImpl(addr, getServiceBroker());
+	SendLink link = new SendLinkImpl(addr, getChildServiceBroker());
 	Class c = SendLink.class;
 	Object raw = aspectSupport.attachAspects(link, c);
 	link = (SendLink) raw;
@@ -201,8 +193,11 @@ public final class MessageTransportServiceProvider
 
     }
 
+    protected String specifyContainmentPoint() {
+ 	return Agent.INSERTION_POINT + ".MessageTransport";
+    }
 
-    protected ComponentDescriptions findExternalComponentDescriptions() {
+    protected ComponentDescriptions findInitialComponentDescriptions() {
 	ServiceBroker sb = getServiceBroker();
 	ComponentInitializerService cis = (ComponentInitializerService) 
 	    sb.getService(this, ComponentInitializerService.class, null);
@@ -238,9 +233,10 @@ public final class MessageTransportServiceProvider
 	super.loadHighPriorityComponents();
 
 	ServiceBroker sb = getServiceBroker();
+	ServiceBroker csb = getChildServiceBroker();
 
 	AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
-	sb.addService(AspectSupport.class, impl);
+	csb.addService(AspectSupport.class, impl);
 
 	// Do the standard set first, since they're assumed to be more
 	// generic than the user-specified set.
@@ -271,17 +267,17 @@ public final class MessageTransportServiceProvider
 	add(tsp);
 
 
-	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
-	sb.addService(MessageTransportRegistryService.class, reg);
+	MessageTransportRegistry reg = new MessageTransportRegistry(id, csb);
+	csb.addService(MessageTransportRegistryService.class, reg);
 
 	LinkSelectionProvision lsp = new LinkSelectionProvision();
-	sb.addService(LinkSelectionProvisionService.class, lsp);
+	csb.addService(LinkSelectionProvisionService.class, lsp);
 
 	SocketControlProvision scp = new SocketControlProvision();
-	sb.addService(SocketControlProvisionService.class, scp);
+	csb.addService(SocketControlProvisionService.class, scp);
 	// SocketFactory has no access to services, so set it manually
 	// in a static.
-	SocketFactory.configureProvider(sb);
+	SocketFactory.configureProvider(csb);
    }
 
     // CSMART Aspects (INTERNAL priority) will load between
@@ -301,17 +297,18 @@ public final class MessageTransportServiceProvider
 	createFactories();
 
         ServiceBroker sb = getServiceBroker();
+        ServiceBroker csb = getChildServiceBroker();
 
 	NameSupport nameSupport = 
 	    (NameSupport) 
-	    sb.getService(this, NameSupport.class, null);
+	    csb.getService(this, NameSupport.class, null);
 	address = nameSupport.getNodeMessageAddress();
 
 	// MessageTransportService isn't available at this point, so
 	// do the calls manually (ugh).
 	MessageTransportRegistryService registry = 
 	    (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class,  null);
+	    csb.getService(this, MessageTransportRegistryService.class,  null);
 	MessageTransportService svc = 
 	    (MessageTransportService) findOrMakeProxy(this);
 	svc.registerClient(this);
@@ -384,60 +381,4 @@ public final class MessageTransportServiceProvider
 	    }
 	} 
     }
-
-
-
-
-
-
-    // Container
-
-
-    // We're not using this yet but leave it in anyway.
-    protected String specifyContainmentPoint() {
- 	return Agent.INSERTION_POINT + ".MessageTransport";
-    }
-
-    public void requestStop() {}
-
-    public final void setBindingSite(BindingSite bs) {
-        super.setBindingSite(bs);
-        setChildServiceBroker(new PropagatingServiceBroker(bs));
-    }
-
-
-    public ContainerAPI getContainerProxy() {
-	return this;
-    }
-
-
-    // StateModel
-
-    // Return a (serializable) snapshot that can be used to
-    // reconstitute the state later.
-    public Object getState() {
-	// TBD
-	return null;
-    }
-
-    // Reconstitute from the previously returned snapshot.
-    public void setState(Object state) {
-    }
-
-    private static class MTSBinderFactory 
-      extends BinderFactorySupport {
-        public Binder getBinder(Object child) {
-          return new MTSBinder(this, child);
-        }
-        private static class MTSBinder 
-          extends BinderSupport
-          implements BindingSite {
-            public MTSBinder(BinderFactory bf, Object child) {
-              super(bf, child);
-            }
-            protected final BindingSite getBinderProxy() {
-              return this;
-            }
-          }
-      }
 }
