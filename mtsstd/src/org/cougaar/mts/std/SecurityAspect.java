@@ -105,23 +105,21 @@ public class SecurityAspect extends StandardAspect
 
 
 
-    public Object getDelegate(Object delegate,
-			      LinkProtocol protocol,
-			      Class type) 
+    public Object getDelegate(Object delegate, Class type) 
     {
-	if (protocol instanceof LoopbackLinkProtocol) {
-	    return null;
-	} else if (type ==  DestinationLink.class) {
-	    return new SecureDestinationLink((DestinationLink) delegate);
+	if (type ==  DestinationLink.class) {
+	    DestinationLink link = (DestinationLink) delegate;
+	    if (link.getProtocolClass() == LoopbackLinkProtocol.class)
+		return null;
+	    else
+		return new SecureDestinationLink(link);
 	} else {
 	    return null;
 	}
     }
 
 
-    public Object getReverseDelegate(Object delegate,
-				     LinkProtocol protocol,
-				     Class type) 
+    public Object getReverseDelegate(Object delegate, Class type) 
     {
 	if (type == MessageDeliverer.class) {
 	    return new SecureDeliverer((MessageDeliverer) delegate);

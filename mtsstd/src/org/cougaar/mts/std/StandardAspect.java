@@ -38,31 +38,13 @@ abstract public class StandardAspect
 
 
 
-    // Backward compatibility for previous interface
-
-    public  boolean rejectProtocol(LinkProtocol protocol, Class type) {
-	return false;
-    }
-
-    public Object getDelegate(Object delegate, Class type) {
-	throw new RuntimeException("Subclass has not defined getDelegate(Object delegate, Class type)");
-    }
-
-    public Object getDelegate(Object delegate, 
-			      LinkProtocol protocol,
-			      Class type) 
+    public Object getDelegate(Object delegate, Class type) 
     {
-	if (rejectProtocol(protocol, type)) {
-	    return null;
-	} else {
-	    return getDelegate(delegate, type);
-	}
+	return null;
     }
 
 
-    public Object getReverseDelegate(Object delegate, 
-				     LinkProtocol protocol,
-				     Class type) 
+    public Object getReverseDelegate(Object delegate, Class type) 
     {
 	return null;
     }

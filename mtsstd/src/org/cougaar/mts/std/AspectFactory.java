@@ -41,16 +41,10 @@ abstract public class AspectFactory
     }
 
     public Object attachAspects(Object delegate, Class type) {
-	return aspectSupport.attachAspects(delegate, type, null);
+	return aspectSupport.attachAspects(delegate, type);
     }
 
 
-    public Object attachAspects(Object delegate, 
-				Class type, 
-				LinkProtocol protocol)
-    {
-	return aspectSupport.attachAspects(delegate, type, protocol);
-    }
 
 
 }

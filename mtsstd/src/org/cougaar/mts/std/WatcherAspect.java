@@ -41,9 +41,7 @@ public class WatcherAspect
     }
 
 
-    public Object getDelegate(Object delegate, 
-			      LinkProtocol protocol,
-			      Class type) 
+    public Object getDelegate(Object delegate, Class type) 
     {
 	if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) delegate);

@@ -93,9 +93,7 @@ public class StatisticsAspect
     }
 
 
-    public Object getDelegate(Object object, 
-			      LinkProtocol protocol, 
-			      Class type) 
+    public Object getDelegate(Object object, Class type) 
     {
 	if (type == Socket.class) {
 	    return new StatisticsSocket((Socket) object);

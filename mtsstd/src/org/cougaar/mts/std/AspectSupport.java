@@ -33,7 +33,5 @@ public interface AspectSupport {
 
     void addAspect(MessageTransportAspect aspect);
 
-    Object attachAspects(Object delegate, 
-                         Class type, 
-                         LinkProtocol protocol);
+    Object attachAspects(Object delegate,  Class type);
 }

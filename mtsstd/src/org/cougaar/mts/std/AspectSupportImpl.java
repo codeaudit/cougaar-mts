@@ -109,15 +109,14 @@ public final class AspectSupportImpl implements AspectSupport
      * attach a delegate, the original object, as created by the
      * factory, is returned.  */
     public synchronized Object attachAspects (Object delegate, 
-					      Class type, 
-					      LinkProtocol protocol)
+					      Class type)
     {
 	Iterator itr = aspects.iterator();
 	while (itr.hasNext()) {
 	    MessageTransportAspect aspect = 
 		(MessageTransportAspect) itr.next();
 
-	    Object candidate = aspect.getDelegate(delegate, protocol, type);
+	    Object candidate = aspect.getDelegate(delegate, type);
 	    if (candidate != null) {
 		delegate = candidate;
 		if (Debug.debugAspects()) 
@@ -130,7 +129,7 @@ public final class AspectSupportImpl implements AspectSupport
 	    MessageTransportAspect aspect = 
 		(MessageTransportAspect) litr.previous();
 
-	    Object candidate = aspect.getReverseDelegate(delegate, protocol, type);
+	    Object candidate = aspect.getReverseDelegate(delegate, type);
 	    if (candidate != null) {
 		delegate = candidate;
 		if (Debug.debugAspects()) 

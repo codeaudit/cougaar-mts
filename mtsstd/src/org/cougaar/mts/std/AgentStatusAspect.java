@@ -59,7 +59,7 @@ public class AgentStatusAspect
     }
 
  
-    public Object getDelegate(Object object, LinkProtocol proto, Class type) {
+    public Object getDelegate(Object object, Class type) {
 	if (type == DestinationLink.class) {
 	    return new AgentStatusDestinationLink((DestinationLink) object);
 	} else 	if (type == SendQueue.class) {

@@ -97,7 +97,7 @@ public class MessageTransportServiceProvider
         if (sb == null) throw new RuntimeException("No service broker");
 	Object svc = sb.getService(this, NamingService.class, null);
         Object ns = NameSupportImpl.makeInstance(id, (NamingService) svc);
-	ns = aspectSupport.attachAspects(ns, NameSupport.class, null);
+	ns = aspectSupport.attachAspects(ns, NameSupport.class);
 	nameSupport = (NameSupport) ns;
 	registry.setNameSupport(nameSupport);
     }
@@ -188,7 +188,7 @@ public class MessageTransportServiceProvider
 	// Make SendLink and attach aspect delegates
 	SendLink link = new SendLinkImpl(sendQ, addr);
 	Class c = SendLink.class;
-	Object raw = aspectSupport.attachAspects(link, c, null);
+	Object raw = aspectSupport.attachAspects(link, c);
 	link = (SendLink) raw;
 
 	// Make proxy

@@ -43,9 +43,7 @@ class LoopbackLinkProtocol
 
     public DestinationLink getDestinationLink(MessageAddress address) {
 	if (link == null) {
-	    link = (DestinationLink) attachAspects(this, 
-						   DestinationLink.class,
-						   this);
+	    link = (DestinationLink) attachAspects(this,DestinationLink.class);
 	}
 	return link;
     }

@@ -29,18 +29,14 @@ import org.cougaar.core.component.ServiceBroker;
  * Abstract specification of a aspect in the message transport
  * subsystem.  An aspect is only required to perform one job: return
  * an aspect delegate for a given object of a given interface, or null
- * if the aspect prefers not to deal with that interface.  
- *
- * The LinkProtocol is passed along as a bit of hack, to allow the
- * aspect to decide whether or not to attach an aspect based on the
- * protocol. */
+ * if the aspect prefers not to deal with that interface.
+ * 
+ * The getReverseDelegate method provides a means to do unwrapping of
+ * messages in envelopes in the proper (ie reverse order).
+ */
 public interface MessageTransportAspect extends ContainerAPI
 {
-    Object getDelegate(Object delegate, 
-		       LinkProtocol protocol,
-		       Class type);
+    Object getDelegate(Object delegate, Class type);
 
-    Object getReverseDelegate(Object delegate, 
-			      LinkProtocol protocol,
-			      Class type);
+    Object getReverseDelegate(Object delegate, Class type);
 }

@@ -54,9 +54,7 @@ public class SequenceAspect extends StandardAspect
     
     }
 
-    public Object getDelegate(Object delegate,
-			      LinkProtocol protocol,
-			      Class type) 
+    public Object getDelegate(Object delegate, Class type) 
     {
 	if (type ==  DestinationLink.class) {
 	    return new SequencedDestinationLink((DestinationLink) delegate);
@@ -66,9 +64,7 @@ public class SequenceAspect extends StandardAspect
     }
 
 
-    public Object getReverseDelegate(Object delegate,
-				     LinkProtocol protocol,
-				     Class type) 
+    public Object getReverseDelegate(Object delegate, Class type) 
     {
 	if (type == MessageDeliverer.class) {
 	    return new SequencedDeliverer((MessageDeliverer) delegate);

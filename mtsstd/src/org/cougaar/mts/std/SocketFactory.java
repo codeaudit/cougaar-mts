@@ -62,7 +62,7 @@ public class SocketFactory
     {
 	ensureAspects();
 	Socket s = new Socket(host, port);
-	s = (Socket) aspectSupport.attachAspects(s, Socket.class, null);
+	s = (Socket) aspectSupport.attachAspects(s, Socket.class);
 	return s;
     }
     
@@ -72,7 +72,7 @@ public class SocketFactory
 	ensureAspects();
 	// return getDefaultSocketFactory().createServerSocket(port);
 	ServerSocket s = new ServerSocket(port);
-	s = (ServerSocket) aspectSupport.attachAspects(s, ServerSocket.class, null);
+	s = (ServerSocket) aspectSupport.attachAspects(s, ServerSocket.class);
 	return s;
     }
 

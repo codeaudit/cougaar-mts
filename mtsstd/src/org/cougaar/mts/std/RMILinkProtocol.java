@@ -166,8 +166,7 @@ public class RMILinkProtocol
 	DestinationLink link = (DestinationLink) links.get(address);
 	if (link == null) {
 	    link = new Link(address); // attach aspects
-	    link = (DestinationLink) attachAspects(link, DestinationLink.class,
-						   this);
+	    link =(DestinationLink) attachAspects(link, DestinationLink.class);
 	    links.put(address, link);
 	}
 	return link;

@@ -55,9 +55,7 @@ public class FlushAspect extends StandardAspect
 	delegates.remove(addr);
     }
 
-    public Object getDelegate(Object delegate, 
-			      LinkProtocol protocol, 
-			      Class type) 
+    public Object getDelegate(Object delegate, Class type) 
     {
 	if (type == SendLink.class) {
 	    return new SendLinkDelegate((SendLink) delegate);
