@@ -50,7 +50,10 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     String requestPeriod = 
       System.getProperty("org.cougaar.message.trafficGenerator.requestPeriod");
     if (requestPeriod != null) {
-      requestRate = new Integer(requestPeriod).intValue();
+       int newPeriod = new Integer(requestPeriod).intValue();
+       if (newPeriod > 0) {
+         requestRate = newPeriod;
+       }
     }
     String thinkTime = 
       System.getProperty("org.cougaar.message.trafficGenerator.replyThinkTime", "333");
@@ -74,10 +77,10 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
   public void load() {
    super.load();
+   //set up the service provider
    TrafficMaskingGeneratorServiceProvider tmgSP = 
        new TrafficMaskingGeneratorServiceProvider(this);
    getBindingSite().getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
-   
   }
 
 
@@ -92,10 +95,17 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     }
   }
 
-  public void cancelTimer(MessageAddress node) {
+  private void cancelTimer(MessageAddress node) {
     Timer theMaskingTimer = (Timer) nodeTimerMap.get(node);
     theMaskingTimer.cancel();
     nodeTimerMap.remove(node);
+  }
+
+  private void startReplyTimer() {
+    Timer replyTimer = new Timer(true);
+    // delay start by replyRate
+    replyTimerTask = new ReplyTimerTask();
+    replyTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
   }
 
   //
@@ -133,6 +143,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     maskingTimer.scheduleAtFixedRate(new MaskingTimerTask(node, avgSize, avgPeriod), avgPeriod, avgPeriod);
     // register with timer
     nodeTimerMap.put(node, maskingTimer);
+    
+    // if this is the first timer task we need to turn on the reply 
+    // timer task.
+    if (replyTimerTask == null) {
+      startReplyTimer();
+    }
   }
 
   /** Set the Think Time and size parameters for Fake Replies coming 
@@ -172,10 +188,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     maskingTimer.scheduleAtFixedRate(new AutoMaskingTimerTask(), requestRate, requestRate);
 
     //start up the reply timer
-    Timer replyTimer = new Timer(true);
-    // delay start by replyRate
-    replyTimerTask = new ReplyTimerTask();
-    replyTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
+    startReplyTimer();
   }
 
   //
@@ -206,8 +219,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // synchronized so that this aspect's timer thread that sends fake messages
     // does not interact with a real outgoing message.
     public synchronized void sendMessage(Message msg) {
-      //The first time we see a message, setup a the timer to send fake messages
-      if (!timerOn && requestRate > 0) {
+      //The first time we see a message, setup the auto 
+      //timer to send fake messages(only if system properties were set)
+      if (requestRate > 0 && !timerOn) {
         myAddress = registry.getLocalAddress();
         setupMaskingTimer();
       }
@@ -246,11 +260,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
             }
             byte[] replyContents = new byte[replySize];
             random.nextBytes(replyContents);
-            // should be put into a think timer hold eventually
             FakeReplyMessage reply = new FakeReplyMessage(request.getTarget(),
                                                           request.getOriginator(),
                                                           replyContents);
-            //maskingQDelegate.sendMessage(reply);
             replyTimerTask.addMessage(reply);
             if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
               System.out.println("\n$$$ Masking Deliverer got Fake Request: "+request+
