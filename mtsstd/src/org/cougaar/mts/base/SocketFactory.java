@@ -50,10 +50,6 @@ import org.cougaar.mts.std.AspectSupportImpl;
  * <p>
  * Instantiating this class creates the socket factory.
  *
- * @property org.cougaar.core.security.ssl.KeyRingSSLFactory
- *   SSL socket factory classname (default is JDK's impl).
- * @property org.cougaar.core.security.ssl.KeyRingSSLServerFactory
- *   SSL server socket factory classname (default is JDK's impl).
  * @property org.cougaar.message.transport.server_socket_class
  *   ServerSocketWrapper classname (default is no wrapper).
  */
