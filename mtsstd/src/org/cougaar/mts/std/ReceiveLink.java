@@ -34,5 +34,6 @@ public interface ReceiveLink
 {
     /** Deliver the message to the final recipient (an Agent). */
     void deliverMessage(Message message);
+    MessageTransportClient getClient();
 
 }

@@ -39,7 +39,19 @@ public class ReceiveLinkImpl implements ReceiveLink
 
     public void deliverMessage(Message message)
     {
-	client.receiveMessage(message);
+	try {
+	    client.receiveMessage(message);
+	} catch (Throwable th) {
+	    System.err.println("%%% MessageTransportClient threw an exception in receiveMessage: " + th);
+	    System.err.println("%%% Not retrying " + message);
+	    th.printStackTrace();
+	}
+
+    }
+
+
+    public MessageTransportClient getClient() {
+	return client;
     }
 
 }

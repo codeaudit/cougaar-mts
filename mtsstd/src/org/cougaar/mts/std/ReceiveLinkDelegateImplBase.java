@@ -36,4 +36,8 @@ abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink
 	link.deliverMessage(message);
     }
 
+    public MessageTransportClient getClient() {
+	return link.getClient();
+    }
+
 }

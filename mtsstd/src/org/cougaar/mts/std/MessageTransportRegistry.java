@@ -35,7 +35,7 @@ import java.util.Map;
  * The MessageTransportRegistry singleton is a utility instance that
  * helps certain pieces of the message transport subsystem to find one
  * another. */
-class MessageTransportRegistry
+class MessageTransportRegistry implements DebugFlags
 {
     private static MessageTransportRegistry instance;
 
@@ -147,12 +147,25 @@ class MessageTransportRegistry
 		Iterator itr = receiveLinks.entrySet().iterator();
 		while (itr.hasNext()) {
 		    Map.Entry entry = (Map.Entry) itr.next();
-		    Object client = entry.getValue();
-		    if (client.getClass().isAssignableFrom(mclass)) {
+		    ReceiveLink link = (ReceiveLink) entry.getValue();
+		    MessageTransportClient client = link.getClient();
+		    if (mclass.isAssignableFrom(client.getClass())) {
 			result.add(entry.getKey());
+			if (Debug.debug(MULTICAST))
+			    System.out.println("%%%%  Client " +
+					       client + " matches " +
+					       mclass + ", added " +
+					       entry.getKey());
+		    } else {
+			if (Debug.debug(MULTICAST)) 
+			    System.out.println("%%%%  Client " +
+					       client + " doesn't match " +
+					       mclass);
 		    }
 		}
 	    }
+	    if (Debug.debug(MULTICAST)) 
+		System.out.println("%%%% result=" + result);
 	    return result.iterator();
 
 	} else {

@@ -125,10 +125,10 @@ public class MulticastAspect extends StandardAspect
 		Iterator i = registry.findLocalMulticastReceivers(addr);
 		while (i.hasNext()) {
 		    dest = (MessageAddress) i.next();
-		    deliverer.deliverMessage(msg, dest);
 		    if (Debug.debug(MULTICAST))
 			System.out.println("### MCAST: Delivering to "
 					   + dest);
+		    deliverer.deliverMessage(msg, dest);
 		}
 	    } else {	
 		deliverer.deliverMessage(msg, dest);
