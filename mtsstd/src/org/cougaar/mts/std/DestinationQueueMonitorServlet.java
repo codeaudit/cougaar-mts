@@ -40,7 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
-class DestinationQueueMonitorServlet extends ServletFrameset
+final class DestinationQueueMonitorServlet extends ServletFrameset
 {
 
   // values for the FRAME url parameter

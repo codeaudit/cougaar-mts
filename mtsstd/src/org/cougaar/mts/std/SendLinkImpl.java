@@ -22,6 +22,8 @@
 package org.cougaar.core.mts;
 
 import java.util.ArrayList;
+
+import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
@@ -89,9 +91,19 @@ final public class SendLinkImpl
     }
 
 
+    private final UnaryPredicate flushPredicate = new UnaryPredicate() {
+	    public boolean execute(Object m) {
+		AttributedMessage msg = (AttributedMessage) m;
+		MessageAddress primalAddress = addr.getPrimary();
+		MessageAddress src = msg.getOriginator().getPrimary();
+		return src.equals(primalAddress);
+	    }
+	};
+
+
     public void flushMessages(ArrayList droppedMessages) {
-	sendq_impl.removeMessagesFrom(addr, droppedMessages);
-	destq_factory.removeMessagesFrom(addr, droppedMessages);
+	sendq_impl.removeMessages(flushPredicate, droppedMessages);
+	destq_factory.removeMessages(flushPredicate, droppedMessages);
     }
 
     public MessageAddress getAddress() {

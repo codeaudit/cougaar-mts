@@ -21,7 +21,13 @@
 
 package org.cougaar.core.mts;
 
+import java.util.ArrayList;
+
 import org.cougaar.util.PropertyParser;
+import org.cougaar.util.UnaryPredicate;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 
 /**
  * Aspect to throw out a timed out message. Necessary for MsgLog et. al. 
@@ -35,17 +41,77 @@ import org.cougaar.util.PropertyParser;
  * @property org.cougaar.syncClock
  *   Is NTP clock synchronization guaranteed?  default is false.
  */
-public class MessageTimeoutAspect 
+public final class MessageTimeoutAspect 
     extends StandardAspect
     implements AttributeConstants
 { 
+    private SendQueueImpl sendq_impl;
+    private DestinationQueueProviderService destq_factory;
+    private final UnaryPredicate timeoutPredicate = new UnaryPredicate() {
+	    public boolean execute(Object x) {
+		AttributedMessage msg = (AttributedMessage) x;
+		return timedOut(msg, "Message Timeout Reclaimer");
+	    }
+	};
+
     public static final boolean SYNC_CLOCK_AVAILABLE =
 	PropertyParser.getBoolean("org.cougaar.syncClock", false);
+
+    public static final long RECLAIM_PERIOD =
+	PropertyParser.getLong("org.cougaar.core.mts.timout.reclaim", 
+				  60000);
 
     public MessageTimeoutAspect() {
     }
   
   
+
+    public void load() {
+	super.load();
+
+	ServiceBroker sb = getServiceBroker();
+	ThreadService tsvc = (ThreadService) 
+	    sb.getService(this, ThreadService.class, null);
+
+	Runnable reclaimer = new Runnable() {
+		public void run() {
+		    reclaim();
+		}
+	    };
+	Schedulable sched = tsvc.getThread(this, reclaimer, 
+					   "Message Timeout Reclaimer");
+	sched.schedule(RECLAIM_PERIOD, RECLAIM_PERIOD);
+	sb.releaseService(this, ThreadService.class, tsvc);
+
+    }
+
+    // This Aspect is loaded very early, during highPriority.  The
+    // internal MTS services won't be available at load() time.
+    private void getSendQ() {
+	ServiceBroker sb = getServiceBroker();
+	sendq_impl = (SendQueueImpl)
+	    sb.getService(this, SendQueueImpl.class, null);
+    }
+
+    private void getDestQ() {
+	ServiceBroker sb = getServiceBroker();
+	destq_factory = (DestinationQueueProviderService)
+	    sb.getService(this, 
+			  DestinationQueueProviderService.class, 
+			  null);
+
+    }	
+
+    private void reclaim() {
+	ArrayList droppedMessages = new ArrayList(); // not using this yet
+	if (sendq_impl == null) getSendQ();
+	if (sendq_impl != null)
+	    sendq_impl.removeMessages(timeoutPredicate, droppedMessages);
+	if (destq_factory == null) getDestQ();
+	if (destq_factory != null)
+	    destq_factory.removeMessages(timeoutPredicate, droppedMessages);
+    }
+
     // Helper methods
     private boolean delivered(MessageAttributes attributes) {
 	return 

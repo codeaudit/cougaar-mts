@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
@@ -75,20 +76,19 @@ abstract class MessageQueue
     }
 
 
-    void removeMessagesFrom(MessageAddress address, ArrayList removed) {
-	MessageAddress primalAddress = address.getPrimary();
+    void removeMessages(UnaryPredicate pred, ArrayList removed) {
 	synchronized (queue) {
 	    Iterator itr = queue.iterator();
 	    while (itr.hasNext()) {
 		AttributedMessage msg = (AttributedMessage) itr.next();
-		if (msg.getOriginator().getPrimary().equals(primalAddress)) {
+		if (pred.execute(msg)) {
 		    removed.add(msg);
 		    itr.remove();
 		}
 	    }
 	}
 	synchronized (pending_lock) {
-	    if (pending != null && pending.getOriginator().getPrimary().equals(primalAddress)) {
+	    if (pending != null && pred.execute(pending)) {
 		removed.add(pending);
 		pending = null;
 	    }
@@ -142,25 +142,6 @@ abstract class MessageQueue
 
     }
 
-    public AttributedMessage[] snapshot() 
-    {
-        AttributedMessage head;
-        synchronized (pending_lock) {
-            head = pending;
-        }
-        synchronized (queue) {
-            int size = queue.size();
-            if (head != null) size++;
-	    AttributedMessage[] ret = new AttributedMessage[size];
-            int i = 0;
-            if (head != null) ret[i++] = head;
-            for (Iterator iter = queue.iterator(); i < size; i++) {
-                ret[i] = (AttributedMessage) iter.next();
-            }
-            return ret;
-        }
-    }
-
     // Restart the thread immediately if the queue is not empty.
     private void restartIfNotEmpty() {
 	synchronized (queue) {
@@ -181,6 +162,24 @@ abstract class MessageQueue
 	thread.start();
     }
 
+
+     public AttributedMessage[] snapshot() 
+     {
+         AttributedMessage head;
+         synchronized (pending_lock) {
+             head = pending;
+         }
+         synchronized (queue) {
+             int size = queue.size();
+             if (head != null) size++;
+	     AttributedMessage[] ret = new AttributedMessage[size];
+             int i = 0;
+	     Iterator iter = queue.iterator();
+             if (head != null) ret[i++] = head;
+	     while (i < size) ret[i++] = (AttributedMessage) iter.next();
+             return ret;
+         }
+     }
 
     /**
      * Process a dequeued message.  Return value indicates success or

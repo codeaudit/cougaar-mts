@@ -22,10 +22,12 @@
 package org.cougaar.core.mts;
 
 import java.util.ArrayList;
+
+import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.Service;
 
 public interface DestinationQueueProviderService extends Service
 {
     DestinationQueue getDestinationQueue(MessageAddress destination);
-    void removeMessagesFrom(MessageAddress address, ArrayList removed);
+    void removeMessages(UnaryPredicate predicate, ArrayList removed);
 }

@@ -57,7 +57,9 @@ public class SendQueueFactory
 	if (serviceClass == SendQueue.class) {
 	    if (requestor instanceof SendLinkImpl) return queue;
 	} else if (serviceClass == SendQueueImpl.class) {
-	    if (requestor instanceof SendLinkImpl) return impl;
+	    if (requestor instanceof SendLinkImpl || 
+		requestor instanceof MessageTimeoutAspect)
+		return impl;
 	}
 	return null;
     }

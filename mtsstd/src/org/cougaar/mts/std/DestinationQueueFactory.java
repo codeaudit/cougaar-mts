@@ -24,6 +24,8 @@ package org.cougaar.core.mts;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+
+import org.cougaar.util.UnaryPredicate;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
@@ -78,12 +80,13 @@ public class DestinationQueueFactory
 
 
 
-    public void removeMessagesFrom(MessageAddress address, ArrayList removed) {
+    public void removeMessages(UnaryPredicate pred, ArrayList removed) 
+    {
 	synchronized (queues) {
 	    Iterator itr = impls.iterator();
 	    while (itr.hasNext()) {
 		MessageQueue queue = (MessageQueue) itr.next();
-		queue.removeMessagesFrom(address, removed);
+		queue.removeMessages(pred, removed);
 	    }
 	}
     }
@@ -93,19 +96,20 @@ public class DestinationQueueFactory
 	synchronized (queues) {
 	    MessageAddress[] ret = new MessageAddress[queues.size()];
 	    queues.keySet().toArray(ret);
-            return ret;
+	    return ret;
 	}
     }
-
-    public AttributedMessage[] snapshotQueue(MessageAddress destination)
-    {
-	DestinationQueue q = null;
-	MessageAddress dest = destination.getPrimary();
-	synchronized (queues) {
-	    q = (DestinationQueue) queues.get(dest);
-	}
-	return (q == null ? null : q.snapshot());
-    }
+ 
+     public AttributedMessage[] snapshotQueue(MessageAddress destination)
+     {
+	 DestinationQueue q = null;
+	 MessageAddress dest = destination.getPrimary();
+	 synchronized (queues) {
+	     q = (DestinationQueue) queues.get(dest);
+	 }
+	 return (q == null ? null : q.snapshot());
+     }
+ 
 
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
@@ -114,12 +118,13 @@ public class DestinationQueueFactory
 	// Restrict this service
 	if (serviceClass == DestinationQueueProviderService.class) {
 	    if (requestor instanceof RouterImpl ||
-		requestor instanceof SendLinkImpl) 
+		requestor instanceof SendLinkImpl ||
+		requestor instanceof MessageTimeoutAspect) 
 		return this;
 	} else if (serviceClass == DestinationQueueMonitorService.class) {
-	    // limit this!
-	    return this;
-	} 
+	    if (requestor instanceof DestinationQueueMonitorServlet)
+		return this;
+	}
 	return null;
     }
 
