@@ -23,16 +23,19 @@ public class DestinationQueueFactory extends  AspectFactory
 {
     private HashMap queues;
     private MessageTransportRegistry registry;
-    private LinkSenderFactory linkSenderFactory;
-    
+    private LinkProtocolFactory protocolFactory;
+    private LinkSelectionPolicy selectionPolicy;
+
     DestinationQueueFactory(MessageTransportRegistry registry,
-			    LinkSenderFactory linkSenderFactory,
+			    LinkProtocolFactory protocolFactory,
+			    LinkSelectionPolicy selectionPolicy,
 			    AspectSupport aspectSupport) 
     {
 	super(aspectSupport);
 	queues = new HashMap();
 	this.registry = registry;
-	this.linkSenderFactory = linkSenderFactory;
+	this.protocolFactory = protocolFactory;
+	this.selectionPolicy = selectionPolicy;
     }
 
     /**
@@ -46,10 +49,13 @@ public class DestinationQueueFactory extends  AspectFactory
 	    
 	DestinationQueue q = (DestinationQueue) queues.get(destination);
 	if (q == null) {
-	    DestinationQueueImpl qimpl = new DestinationQueueImpl(destination);
+	    DestinationQueueImpl qimpl = 
+		new DestinationQueueImpl(destination,
+					 registry,
+					 protocolFactory,
+					 selectionPolicy);
 	    q = (DestinationQueue) attachAspects(qimpl, 
 						 DestinationQueue.class);
-	    linkSenderFactory.getLinkSender(destination, qimpl, q);
 	    queues.put(destination, q);
 	}
 	return q;

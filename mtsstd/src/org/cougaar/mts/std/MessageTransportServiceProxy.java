@@ -97,10 +97,11 @@ public class MessageTransportServiceProxy
     }
 
 
-    // Callback functions, called only from LinkSender.
+    // Callback functions, called only during processing of messages
+    // in DestinationQueueImpl. 
 
     /**
-     * Callback from LinkSender which tells us that the message has
+     * Callback from DestinationQueueImpl which tells us that the message has
      * been successfully (?) delivered to the destination Node.
      */
     synchronized void messageDelivered(Message m) {
@@ -111,10 +112,11 @@ public class MessageTransportServiceProxy
 
 
     /**
-     * Callback from LinkSender which tells us that an unsuccessful
-     * attempt was made to deliver the message.  If this proxy is
-     * flushing, drop the message and notify the LinkSender of that
-     * fact by return true.  Otherwise do nothing, at least for now.
+     * Callback from DestinationQueueImpl which tells us that an
+     * unsuccessful attempt was made to deliver the message.  If this
+     * proxy is flushing, drop the message and notify the caller
+     * of that fact by return true.  Otherwise do nothing, at least
+     * for now.
      */
     synchronized boolean messageFailed(Message message) {
 	if (!flushing) return false; // do nothing in this case
@@ -125,7 +127,7 @@ public class MessageTransportServiceProxy
 	droppedMessages.add(message);
 	if (outstandingMessages <= 0) notify();
 
-	return true;  // tell LinkSender to abandon further send attempts
+	return true;  // tell caller to abandon further send attempts
     }
 
 

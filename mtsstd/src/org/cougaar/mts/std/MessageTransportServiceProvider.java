@@ -48,7 +48,6 @@ public class MessageTransportServiceProvider
     private SendQueueFactory sendQFactory;
     private MessageDelivererFactory delivererFactory;
     private DestinationQueueFactory destQFactory;
-    private LinkSenderFactory linkSenderFactory;
     private RouterFactory routerFactory;
     private ReceiveLinkFactory receiveLinkFactory;
 
@@ -148,11 +147,12 @@ public class MessageTransportServiceProvider
 	deliverer = delivererFactory.getMessageDeliverer(id+"/Deliverer");
 
 
-	linkSenderFactory =
-	    new LinkSenderFactory(registry, protocolFactory, selectionPolicy);
 	
 	destQFactory = 
-	    new DestinationQueueFactory(registry, linkSenderFactory, aspectSupport);
+	    new DestinationQueueFactory(registry, 
+					protocolFactory,
+					selectionPolicy,
+					aspectSupport);
 	routerFactory =
 	    new RouterFactory(registry, destQFactory, aspectSupport);
 

@@ -20,10 +20,9 @@ import org.cougaar.core.society.MessageAddress;
  * this implementation, the DestinationQueueFactory instantiates one
  * DestinationQueue per destination address.  
  * 
- * Unlike SendQueues and ReceiveQueues, DestinationQueues are assumed
- * to be passive holding places for messages.  A LinkSender associated
- * with the DestinationQueue will dequeue the messages and send them
- * on to a DestinarionLink.
+ * The dispatching thread associated with this queue will send
+ * dequeued messages on to the 'best' DestinationLink, handling
+ * retries if an exception occurs.
  *
  * The <strong>holdMessage</strong> method is used to queue messages
  * in preparation for passing them onto the next stop, a
@@ -41,17 +40,14 @@ public interface DestinationQueue
     public void holdMessage(Message message);
 
     /**
+     * Handles the next message popped off the queue */
+    public void dispatchNextMessage(Message message);
+
+    /**
      * Returns true iff this queue was created for the given
      * destination.  Used by the DestinationQueueFactory. */
     public boolean matches(MessageAddress address);
 
-    /**
-     * Returns true iff and the queue has no messages in it. */
-    public boolean isEmpty();
-
-    /**
-     * Pops the next message off the queue. */
-    public Object next();
     /**
      * Number of messages waiting in the queue.
      */

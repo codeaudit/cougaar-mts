@@ -23,8 +23,8 @@ public interface DestinationLink
 
     /**
      * This method is used to request the associated transport to do
-     * its thing with the given message.  Ordinarily only called by a
-     * LinkSender.  */
+     * its thing with the given message.  Only called during
+     * processing of messages in DestinationQueueImpl.  */
     public void forwardMessage(Message message) 
 	throws UnregisteredNameException, 
 	       NameLookupException, 
@@ -33,7 +33,7 @@ public interface DestinationLink
 
     /**
      * This method returns a simple measure of the cost of sending the
-     * given message via the associated transport. Ordinarily only
-     * called by a LinkSender. */
+     * given message via the associated transport. Only called during
+     * processing of messages in DestinationQueueImpl. */
     public int cost(Message message);
 }

@@ -111,11 +111,9 @@ public class StatisticsAspect
 	    countMessage();
 	}
 
-	public Object next() {
+	public void dispatchNextMessage(Message message) {
 	    --current_total_size;
 	    accumulateStatistics();
-	    Object next = queue.next();
-	    
 	    if (Debug.debugStatistics()) {
 		MessageStatistics.Statistics result = 
 		    getMessageStatistics(false);
@@ -124,17 +122,12 @@ public class StatisticsAspect
 				   + " Average Message Queue Length=" +
 				   result.averageMessageQueueLength);
 	    }
-
-	    return next;
+	    queue.dispatchNextMessage(message);
 	}
 
 
 	public boolean matches(MessageAddress addr) {
 	    return queue.matches(addr);
-	}
-
-	public boolean isEmpty() {
-	    return queue.isEmpty();
 	}
 
 	public int size() {

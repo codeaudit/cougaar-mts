@@ -179,21 +179,18 @@ public class TraceAspect
 	    this.server = server;
 	}
 	
-	public boolean isEmpty() {
-	    return server.isEmpty();
-	}
-
 	public int size() {
 	    return server.size();
-	}
-
-	public Object next() {
-	    return server.next();
 	}
 
 	public void holdMessage(Message message) {
 	    log("DestinationQueue", message.toString());
 	    server.holdMessage(message);
+	}
+
+	public void dispatchNextMessage(Message message) {
+	    log("DestinationQueue dispatch", message.toString());
+	    server.dispatchNextMessage(message);
 	}
 	
 	public boolean matches(MessageAddress addr){
