@@ -23,6 +23,8 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
 
+import java.util.Set;
+
 public interface AgentStatusService extends Service
 {
     int UNKNOWN = 0;
@@ -51,10 +53,16 @@ public interface AgentStatusService extends Service
 	public String lastLinkProtocolTried;
 	public String lastLinkProtocolSuccess;
     }
+
     AgentState getRemoteAgentState(MessageAddress address);
     AgentState getLocalAgentState(MessageAddress address);
 
-    // Deprecated: use getRemoteAgentState
+    Set getLocalAgents();
+    Set getRemoteAgents();
+
+    /**
+     * @deprecated Use {@link #getRemoteAgentState}
+     */
     AgentState getAgentState(MessageAddress address);
 
 }

@@ -27,6 +27,7 @@ import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricsUpdateService;
 
 import java.util.HashMap;
+import java.util.Set;
 
 public class AgentStatusAspect 
     extends StandardAspect
@@ -172,6 +173,20 @@ public class AgentStatusAspect
 	// must snapshot state or caller will get a dynamic value.
 	if (state != null) return snapshotState(state);
 	else return null;
+    }
+
+
+    public Set getLocalAgents() {
+	Set result = new  java.util.HashSet();
+	result.addAll(localStates.keySet());
+	return result;
+    }
+
+
+    public Set getRemoteAgents() {	
+	Set result = new java.util.HashSet();
+	result.addAll(remoteStates.keySet());
+	return result;
     }
 
 
