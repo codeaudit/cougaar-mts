@@ -32,8 +32,10 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-/** actual RMI remote interface for inter-Node message passing.
- **/
+/** 
+ * The RMI remote interface for inter-Node message passing.
+ *
+ */
 
 public interface MT extends Remote {
   /** receive a message **/

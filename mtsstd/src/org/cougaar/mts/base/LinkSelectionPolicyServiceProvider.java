@@ -31,9 +31,10 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
 
 /**
- * 
- * @property org.cougaar.message.transport.policy Sets the message
- * transport policy to instance o the specified class.
+ * This {@link ServiceProvider} provides the {@link
+ * LinkSelectionPolicy} service.  If no implementation of that service
+ * has been loaded at the time this singleton is made, it will create
+ * a default implementation, using {@link MinCostLinkSelectionPolicy}.
  */
 public class LinkSelectionPolicyServiceProvider
     implements ServiceProvider

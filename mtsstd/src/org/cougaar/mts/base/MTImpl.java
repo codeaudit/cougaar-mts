@@ -35,10 +35,16 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-/** Actual RMI remote object providing the implementation of
- * MessageTransport client.  The transient tags shouldn't really be
- * necessary since this object should never be serialized.  But leave
- * them in anyway, for documentation if nothing else.
+/** 
+ * RMI remote object providing the implementation of {@link MT}.  Note
+ * that this class extends {@link RemoteObject}, not {@link
+ * UnicastRemoteObject}, and will therefore not be exported in tne
+ * super constructor.  The export has to happen later, and is handled
+ * by {@link RMILinkProtocol}.
+ * 
+ * <p>The transient tags shouldn't really be necessary since this
+ * object should always be serialized as an RMI stub.  But leave them
+ * in anyway, for documentation if nothing else.
  **/
 public class MTImpl extends RemoteObject implements MT 
 {

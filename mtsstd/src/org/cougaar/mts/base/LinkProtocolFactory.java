@@ -32,14 +32,11 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
 
 /**
- * A factory which instantiates all LinkProtocols.  It will always
- * make at least two: one for local message
- * (LoopbackProtocol) and one for remote messages
- * (RMIProtocol).  It may also make others, one per
- * class, as listed in the property org.cougaar.message.protocol.classes.
- * 
- * @property org.cougaar.message.protocol.classes A comma-separated
- * list of LinkProtocol classes to be instantiated.
+ * This class was originally designed to instantiate {@link
+ * LinkProtocol}s, given a list of class names.  Now that LinkProtocol
+ * Components are loaded in the usual way, its only remaining function
+ * is to handle the case when none are loaded.  If that happens it
+ * will create two default LinkProtocol instances, for RMI and Loopback.
  */
 final class LinkProtocolFactory 
 {
@@ -70,6 +67,7 @@ final class LinkProtocolFactory
     }
 
 
+    // Vestigial.
     private LinkProtocol makeProtocol(String classname) {
 	LinkProtocol protocol = null;
 	try {

@@ -33,14 +33,14 @@ import org.cougaar.core.component.Component;
 import org.cougaar.core.component.Service;
 
 /**
- * The selection of a DestinationLink is handled by this MTS-internal
+ * The selection of a {@link DestinationLink} is handled by this MTS-internal
  * service, which is accessible only to MTS components.  Its one
  * method is used to select a link for every message processed by
  * every DestinationQueue.
  *
  * The default implementation simply chooses the cheapest valid link,
  * using the cost and isValid methods.  Other policies can be set with
- * the LinkSelectionProvisionService. 
+ * the {@link LinkSelectionProvisionService}. 
  */
 public interface LinkSelectionPolicy extends Service, Component
 {

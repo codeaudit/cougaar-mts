@@ -31,7 +31,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 
 /**
- * The parent class of all LinkProtocols.  Instantiable subclasses
+ * The parent class of all Link Protocols.  Instantiable subclasses
  * are required to do two things: they must be able to say whether or
  * not they can deal with any particular addresss (addressKnown), and
  * they must be able to supply a DestinationLink instance for any
@@ -44,7 +44,11 @@ import org.cougaar.core.mts.MessageTransportClient;
  * LinkProtocols are implicitly factories for the creation of
  * DestinationLinks, so the class is declared to extend AspectFactory,
  * in order to allow aspects to be added to the Links.  The aspect
- * attachment is handled in each specific transport class.  */
+ * attachment is handled in each specific transport class.  
+ *
+ * Finally, LinkProtocols can act as ServiceProviders for
+ * protocol-specific services.
+*/
 abstract public class LinkProtocol 
     extends BoundComponent
     implements ServiceProvider

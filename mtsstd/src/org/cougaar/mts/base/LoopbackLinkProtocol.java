@@ -33,7 +33,9 @@ import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This protocol handles all intra-node message traffic.   */
+ * This protocol Component handles intra-node message traffic.
+ * 
+ */
 public class LoopbackLinkProtocol 
     extends LinkProtocol
 {

@@ -28,6 +28,9 @@ package org.cougaar.mts.base;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
+/**
+ * The {@link ServiceProvider} for the {@link LinkSelectionProvisionService}.
+ */
 class LinkSelectionProvision implements ServiceProvider
 {
     private LinkSelectionProvisionImpl impl;
