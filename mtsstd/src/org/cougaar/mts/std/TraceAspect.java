@@ -145,7 +145,7 @@ public class TraceAspect
 	}
 	
 	public void sendMessage(Message message) {
-	    log("SendQueue", message.toString()+" ("+size()+")");
+	    log("SendQueue", message.toString()+" ("+this.size()+")");
 	    queue.sendMessage(message);
 	}
     }
