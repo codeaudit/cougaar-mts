@@ -90,6 +90,19 @@ public class AttributedMessage
     }
 
 
+    
+    // Should only be used by MessageReply.  The second argument is
+    // only there to distinguish the constructor signature. It's not
+    // used for anything.
+    AttributedMessage(AttributedMessage source, Class msgClass) 
+    {
+	super(source.getOriginator(), source.getTarget());
+	this.contents = null;
+	attributes = new SimpleMessageAttributes(source);
+    }
+
+
+
     /**
      * Make an AttributedMessage whose content, source and destination
      * are copied from the first argument, and whose initial set of
@@ -105,6 +118,10 @@ public class AttributedMessage
 	attributes = new SimpleMessageAttributes(initialAttributes);
     }
 
+
+    boolean replyOnly() {
+	return false;
+    }
 
 
     /**
@@ -218,6 +235,8 @@ public class AttributedMessage
 	    writer.finalizeAttributes(this);
 
 	    sendAttributes(rawOut);
+	    if (replyOnly()) return;
+
 
 	    writer.preProcess();
 
@@ -266,6 +285,8 @@ public class AttributedMessage
 	    setTarget((MessageAddress) rawIn.readObject());
 
 	    readAttributes(rawIn);
+
+	    if (replyOnly()) return;
 
 
 	    ArrayList aspectNames = (ArrayList)

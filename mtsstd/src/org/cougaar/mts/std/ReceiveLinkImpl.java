@@ -43,7 +43,7 @@ public class ReceiveLinkImpl implements ReceiveLink
 
     public MessageAttributes deliverMessage(AttributedMessage message)
     {
-	MessageAttributes metadata = new SimpleMessageAttributes(message);
+	MessageAttributes metadata = new MessageReply(message);
 	try {
 	    client.receiveMessage(message.getRawMessage());
 	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
