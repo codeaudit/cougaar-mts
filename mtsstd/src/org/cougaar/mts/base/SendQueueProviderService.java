@@ -28,7 +28,7 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.mts.MessageAddress;
 
-public interface DestinationQueueProviderService extends QueueProviderService
+public interface SendQueueProviderService extends QueueProviderService
 {
-    DestinationQueue getDestinationQueue(MessageAddress destination);
+    SendQueue getSendQueue(MessageAddress sender);
 }

@@ -26,9 +26,15 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.mts.MessageAddress;
+import java.util.ArrayList;
 
-public interface DestinationQueueProviderService extends QueueProviderService
+import org.cougaar.core.component.Service;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.util.UnaryPredicate;
+
+public interface QueueProviderService extends Service
 {
-    DestinationQueue getDestinationQueue(MessageAddress destination);
+    void removeMessages(UnaryPredicate predicate, ArrayList removed);
+    void addListener(QueueListener listener);
+    void removeListener(QueueListener listener);
 }

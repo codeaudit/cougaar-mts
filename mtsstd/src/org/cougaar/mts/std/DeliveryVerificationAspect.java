@@ -25,11 +25,14 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
@@ -37,20 +40,24 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
+
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.DestinationQueueProviderService;
+import org.cougaar.mts.base.QueueListener;
+import org.cougaar.mts.base.SendLink;
+import org.cougaar.mts.base.SendLinkDelegateImplBase;
+import org.cougaar.mts.base.SendQueueProviderService;
+import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.DontRetryException;
-import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
-import org.cougaar.mts.base.SendLink;
-import org.cougaar.mts.base.SendLinkDelegateImplBase;
-import org.cougaar.mts.base.StandardAspect;
 
 public class DeliveryVerificationAspect 
     extends StandardAspect
-    implements AttributeConstants, Runnable
+    implements AttributeConstants, Runnable, QueueListener
 {
     private static final int TOO_LONG = 10000; // 10 seconds
     private static final int SAMPLE_PERIOD = TOO_LONG / 2;
@@ -92,6 +99,37 @@ public class DeliveryVerificationAspect
 				getParameter(INFO_TIME_PARAM,
 					     INFO_TIME_VALUE_STR));
 	
+    }
+
+    public void start()
+    {
+	super.start();
+	ServiceBroker sb = getServiceBroker();
+	SendQueueProviderService sendq_fact = (SendQueueProviderService)
+	    sb.getService(this, SendQueueProviderService.class, null);
+
+	DestinationQueueProviderService destq_fact = (DestinationQueueProviderService)
+	    sb.getService(this, DestinationQueueProviderService.class, null);
+
+	LoggingService lsvc = getLoggingService();
+
+	if (sendq_fact != null) {
+	    sendq_fact.addListener(this);
+	    sb.releaseService(this, SendQueueProviderService.class, sendq_fact);
+	} else if (lsvc.isInfoEnabled()) {
+	    lsvc.info("Couldn't get SendQueueProviderService");
+	}
+
+
+	if (destq_fact != null) {
+	    destq_fact.addListener(this);
+	    sb.releaseService(this, DestinationQueueProviderService.class, sendq_fact);
+	} else if (lsvc.isInfoEnabled()) {
+	    lsvc.info("Couldn't get DestinationQueueProviderService");
+	}
+
+	
+
 
 	ThreadService tsvc = getThreadService();
 	schedulable = tsvc.getThread(this, this, 
@@ -136,12 +174,12 @@ public class DeliveryVerificationAspect
 		long deltaT = now-time;
 		if (timeToLog(deltaT)) {
 		    if (deltaT >= warnTime)
-			lsvc.warn(msg +
+			lsvc.warn(msg.logString() +
 				  " has been pending for "+
 				  deltaT + "ms (Pending Messages=" +
 				  pendingMessages.size()+")" );
 		    else if (deltaT >= infoTime)
-			lsvc.info(msg +
+			lsvc.info(msg.logString() +
 				  " has been pending for "+
 				  deltaT + "ms (Pending Messages=" +
 				  pendingMessages.size()+")" );
@@ -160,7 +198,8 @@ public class DeliveryVerificationAspect
 		long now = System.currentTimeMillis();
 		long deltaT = now-time.longValue();
 		if (deltaT > timeout) {
-		    lsvc.info("Pending " + message + 
+		    lsvc.info("Pending " 
+			      + ((AttributedMessage) message).logString() + 
 			       " has been sent after "+
 			       deltaT + "ms");
 		}
@@ -168,6 +207,25 @@ public class DeliveryVerificationAspect
 	}
 	
 	pendingMessages.remove(message);
+    }
+
+    public void messagesRemoved(List messages)
+    {
+	LoggingService lsvc = getLoggingService();
+	if (lsvc.isInfoEnabled())
+	    lsvc.info("Messages removed from queue");
+	synchronized (messages) {
+	    Iterator itr = messages.iterator();
+	    AttributedMessage message;
+	    while (itr.hasNext()) {
+		message = (AttributedMessage) itr.next();
+		synchronized (pendingMessages) {
+		    pendingMessages.remove(message);
+		}
+		if (lsvc.isInfoEnabled())
+		    lsvc.info("Removing message " +message.logString());
+	    }
+	}
     }
 
     // Aspect

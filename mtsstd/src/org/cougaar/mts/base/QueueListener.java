@@ -26,9 +26,9 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.mts.MessageAddress;
+import java.util.List;
 
-public interface DestinationQueueProviderService extends QueueProviderService
+public interface QueueListener
 {
-    DestinationQueue getDestinationQueue(MessageAddress destination);
+    void messagesRemoved(List messages);
 }

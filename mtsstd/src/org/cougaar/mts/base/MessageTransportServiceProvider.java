@@ -262,8 +262,7 @@ implements ServiceProvider
 
         SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
         add(sendQFactory);
-        csb.addService(SendQueue.class, sendQFactory);
-        csb.addService(SendQueueImpl.class, sendQFactory);
+        csb.addService(SendQueueProviderService.class, sendQFactory);
 
         // load LinkProtocols
         new LinkProtocolFactory(this, csb);

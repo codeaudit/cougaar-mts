@@ -49,7 +49,7 @@ final public class SendLinkImpl
     static final String VERSION = "version";
 
     private SendQueue sendq;
-    private SendQueueImpl sendq_impl;
+    private SendQueueProviderService sendq_factory;
     private DestinationQueueProviderService destq_factory;
     private MessageAddress addr;
     private MessageTransportRegistryService registry;
@@ -89,10 +89,9 @@ final public class SendLinkImpl
 	this.addr = addr;
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
-	sendq = (SendQueue)
-	    sb.getService(this, SendQueue.class, null);
-	sendq_impl = (SendQueueImpl)
-	    sb.getService(this, SendQueueImpl.class, null);
+	sendq_factory = (SendQueueProviderService)
+	    sb.getService(this, SendQueueProviderService.class, null);
+	sendq = sendq_factory.getSendQueue(addr);
 	destq_factory = (DestinationQueueProviderService)
 	    sb.getService(this, 
 			  DestinationQueueProviderService.class, 
@@ -159,7 +158,7 @@ final public class SendLinkImpl
 
     public void flushMessages(ArrayList droppedMessages) {
 	synchronized (flush_lock) {
-	    sendq_impl.removeMessages(flushPredicate, droppedMessages);
+	    sendq_factory.removeMessages(flushPredicate, droppedMessages);
 	    destq_factory.removeMessages(flushPredicate, droppedMessages);
 	}
     }

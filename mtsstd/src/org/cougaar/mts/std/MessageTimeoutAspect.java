@@ -36,10 +36,8 @@ import org.cougaar.util.PropertyParser;
 import org.cougaar.util.UnaryPredicate;
 
 import org.cougaar.mts.base.MessageReply;
-import org.cougaar.mts.base.Router;
-import org.cougaar.mts.base.RouterDelegateImplBase;
 import org.cougaar.mts.base.DestinationQueueProviderService;
-import org.cougaar.mts.base.SendQueueImpl;
+import org.cougaar.mts.base.SendQueueProviderService;
 import org.cougaar.mts.base.ReceiveLink;
 import org.cougaar.mts.base.ReceiveLinkDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;
@@ -56,7 +54,6 @@ import org.cougaar.mts.base.StandardAspect;
  * Aspect to throw out a timed out message. Necessary for MsgLog et. al. 
  * Checks every thread in MTS for timed out attributes on a message:<pre>
  *   -SendLink
- *   -Router
  *   -DestinationLink
  *   -ReceiveLink
  * </pre>
@@ -68,7 +65,7 @@ public final class MessageTimeoutAspect
     extends StandardAspect
     implements AttributeConstants
 { 
-    private SendQueueImpl sendq_impl;
+    private SendQueueProviderService sendq_factory;
     private DestinationQueueProviderService destq_factory;
     private final UnaryPredicate timeoutPredicate = new UnaryPredicate() {
 	    public boolean execute(Object x) {
@@ -108,29 +105,22 @@ public final class MessageTimeoutAspect
 
     }
 
-    // This Aspect is loaded very early, during highPriority.  The
-    // internal MTS services won't be available at load() time.
-    private void getSendQ() {
+    public void start()
+    {
+	super.start();
 	ServiceBroker sb = getServiceBroker();
-	sendq_impl = (SendQueueImpl)
-	    sb.getService(this, SendQueueImpl.class, null);
-    }
-
-    private void getDestQ() {
-	ServiceBroker sb = getServiceBroker();
+	sendq_factory = (SendQueueProviderService)
+	    sb.getService(this, SendQueueProviderService.class, null);
 	destq_factory = (DestinationQueueProviderService)
 	    sb.getService(this, 
 			  DestinationQueueProviderService.class, 
 			  null);
-
-    }	
+    }
 
     private void reclaim() {
 	ArrayList droppedMessages = new ArrayList(); // not using this yet
-	if (sendq_impl == null) getSendQ();
-	if (sendq_impl != null)
-	    sendq_impl.removeMessages(timeoutPredicate, droppedMessages);
-	if (destq_factory == null) getDestQ();
+	if (sendq_factory != null)
+	    sendq_factory.removeMessages(timeoutPredicate, droppedMessages);
 	if (destq_factory != null)
 	    destq_factory.removeMessages(timeoutPredicate, droppedMessages);
     }
@@ -164,7 +154,8 @@ public final class MessageTimeoutAspect
 		// log that the message timed out
 		if (loggingService.isWarnEnabled())
 		    loggingService.warn( station +
-					" threw away a message="+ message +
+					" threw away a message="
+					 + message.logString() +
 					" Beyond deadline="+ 
 					 (now-the_timeout) +
 					 " ms");
@@ -180,8 +171,6 @@ public final class MessageTimeoutAspect
     public Object getDelegate(Object object, Class type) {
 	if (type == SendLink.class) {
 	    return new SendLinkDelegate((SendLink) object);
-	} else if (type == Router.class) {
-	    return new RouterDelegate((Router) object);
 	} else if (type == DestinationLink.class) {
 	    return new DestinationLinkDelegate((DestinationLink) object);
 	} else if (type == ReceiveLink.class) {
@@ -249,28 +238,6 @@ public final class MessageTimeoutAspect
 	}
     } 
   
-  
-    /*
-     * Second station in the msg chain to check timeout values
-     */
-    private class RouterDelegate 
-	extends RouterDelegateImplBase 
-    {
-    
-	RouterDelegate(Router delegatee) {
-	    super(delegatee);
-	}
-    
-	public void routeMessage(AttributedMessage message)
-	{
-
-	    if(timedOut(message, "Router")) {
-		// drop message silently
-		return;
-	    }
-	    super.routeMessage(message);
-	}
-    }
   
     private class DestinationLinkDelegate 
 	extends DestinationLinkDelegateImplBase 

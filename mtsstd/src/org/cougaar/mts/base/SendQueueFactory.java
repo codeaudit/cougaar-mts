@@ -25,19 +25,24 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.mts.std.AspectFactory;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.util.UnaryPredicate;
 import org.cougaar.mts.std.MessageTimeoutAspect;
+import org.cougaar.mts.std.DeliveryVerificationAspect;
+
+import java.util.ArrayList;
 
 /**
  * A factory which makes SendQueues. A singleton for now  */
 public class SendQueueFactory 
-    extends AspectFactory
-    implements ServiceProvider
+    extends QueueFactory
+    implements ServiceProvider, SendQueueProviderService
 {
-    private SendQueue queue;
+    private SendQueue queue; // singleton
     private SendQueueImpl impl;
     private Container container;
     private String id;
@@ -55,17 +60,23 @@ public class SendQueueFactory
     }
 
 
+    public SendQueue getSendQueue(MessageAddress sender)
+    {
+	return queue;
+    }
+
+    public void removeMessages(UnaryPredicate pred, ArrayList removed) 
+    {
+	impl.removeMessages(pred, removed);
+	notifyListeners(removed);
+    }
+
    public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
     {
-	// Restrict this service
-	if (serviceClass == SendQueue.class) {
-	    if (requestor instanceof SendLinkImpl) return queue;
-	} else if (serviceClass == SendQueueImpl.class) {
-	    if (requestor instanceof SendLinkImpl || 
-		requestor instanceof MessageTimeoutAspect)
-		return impl;
+	if (serviceClass == SendQueueProviderService.class) {
+	    return this;
 	}
 	return null;
     }

@@ -36,8 +36,8 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
 import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.mts.std.DeliveryVerificationAspect;
 import org.cougaar.mts.std.DestinationQueueMonitorServlet;
-import org.cougaar.mts.std.AspectFactory;
 import org.cougaar.mts.std.MessageTimeoutAspect;
 
 /**
@@ -46,7 +46,7 @@ import org.cougaar.mts.std.MessageTimeoutAspect;
  * Since this factory is a subclass of AspectFactory, aspects can be
  * attached to a DestinationQueue when it's first instantiated.  */
 public class DestinationQueueFactory 
-    extends  AspectFactory
+    extends  QueueFactory
     implements DestinationQueueProviderService, 
 	       DestinationQueueMonitorService,
 	       ServiceProvider
@@ -105,6 +105,7 @@ public class DestinationQueueFactory
 	    MessageQueue queue = (MessageQueue) itr.next();
 	    queue.removeMessages(pred, removed);
 	}
+	notifyListeners(removed);
     }
 
     public MessageAddress[] getDestinations()
@@ -133,13 +134,9 @@ public class DestinationQueueFactory
     {
 	// Restrict this service
 	if (serviceClass == DestinationQueueProviderService.class) {
-	    if (requestor instanceof RouterImpl ||
-		requestor instanceof SendLinkImpl ||
-		requestor instanceof MessageTimeoutAspect) 
-		return this;
+	    return this;
 	} else if (serviceClass == DestinationQueueMonitorService.class) {
-	    if (requestor instanceof DestinationQueueMonitorServlet)
-		return this;
+	    return this;
 	}
 	return null;
     }
