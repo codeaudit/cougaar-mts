@@ -229,7 +229,7 @@ public class RMIMessageTransport
 	    try {
 		remote.rerouteMessage(message);
 	    } 
-	    catch (RemoteException ex) {
+	    catch (Exception ex) {
 		// force recache of remote
 		remote = null;
 		throw new CommFailureException(ex);

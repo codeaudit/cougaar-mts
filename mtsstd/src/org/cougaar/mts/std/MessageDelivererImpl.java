@@ -42,33 +42,29 @@ public class MessageDelivererImpl implements MessageDeliverer
      * handled by the MessageTransportRegistry. */
     public void deliverMessage(Message message) {
 	if (message == null) return;
-	try {
-	    MessageAddress addr = message.getTarget();
-	    if (addr instanceof MulticastMessageAddress) {
-		Object lock = registry.getLock();
-		synchronized (lock) {
+	MessageAddress addr = message.getTarget();
+	if (addr instanceof MulticastMessageAddress) {
+	    Object lock = registry.getLock();
+	    synchronized (lock) {
 		
-		    Iterator i = registry.findLocalMulticastReceiveLinks((MulticastMessageAddress)addr); 
-		    while (i.hasNext()) {
-			ReceiveLink link = (ReceiveLink) i.next();
-			link.deliverMessage(message);
-		    }
-		}
-	    } else {
-		Object lock = registry.getLock();
-		synchronized (lock) {
-		    ReceiveLink link = registry.findLocalReceiveLink(addr);
-		    if (link != null) {
-			link.deliverMessage(message);
-		    } else {
-			throw new RuntimeException("Misdelivered message "
-						   + message +
-						   " sent to "+this);
-		    }
+		Iterator i = registry.findLocalMulticastReceiveLinks((MulticastMessageAddress)addr); 
+		while (i.hasNext()) {
+		    ReceiveLink link = (ReceiveLink) i.next();
+		    link.deliverMessage(message);
 		}
 	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
+	} else {
+	    Object lock = registry.getLock();
+	    synchronized (lock) {
+		ReceiveLink link = registry.findLocalReceiveLink(addr);
+		if (link != null) {
+		    link.deliverMessage(message);
+		} else {
+		    throw new RuntimeException("Misdelivered message "
+					       + message +
+					       " sent to "+this);
+		}
+	    }
 	}
     }
 
