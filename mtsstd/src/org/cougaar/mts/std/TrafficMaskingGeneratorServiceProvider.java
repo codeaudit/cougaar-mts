@@ -21,14 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
 public class TrafficMaskingGeneratorServiceProvider implements ServiceProvider {
   private TrafficMaskingGeneratorService tmgs = null;

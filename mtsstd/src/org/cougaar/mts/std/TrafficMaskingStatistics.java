@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.MessageAddress;
 
   /** TrafficMaskingStatistics is an object that keeps track of various
    *  statistics about Fake-Request messages that have been sent to 

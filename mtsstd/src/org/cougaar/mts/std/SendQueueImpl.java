@@ -21,9 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
-import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.Container;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 
 /**
  * The default, and for now only, implementation of SendQueue.  The

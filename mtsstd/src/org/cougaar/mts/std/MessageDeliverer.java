@@ -23,7 +23,6 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
 
-
 /**
  * The fifth stop for an outgoing message, and the first on the
  * receive side, is a MessageDeliverer.  In theory a given Message

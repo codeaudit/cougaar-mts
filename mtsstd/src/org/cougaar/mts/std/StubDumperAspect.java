@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.LoggingService;
 
 public class StubDumperAspect extends StandardAspect
 {

@@ -21,10 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-import org.cougaar.core.component.Component;
-
 import java.util.Iterator;
+import org.cougaar.core.component.Component;
+import org.cougaar.core.component.Service;
 
 public interface LinkSelectionPolicy extends Service, Component
 {

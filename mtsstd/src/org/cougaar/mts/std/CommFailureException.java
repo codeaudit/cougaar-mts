@@ -21,11 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
 
 /**
  *   This Exception indicates a type of Link Protocol failure.

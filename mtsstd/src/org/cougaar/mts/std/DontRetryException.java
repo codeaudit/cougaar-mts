@@ -21,6 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import java.io.IOException;
+import java.io.Serializable;
 
 public class DontRetryException 
     extends java.io.IOException

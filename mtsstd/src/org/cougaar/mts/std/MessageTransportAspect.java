@@ -22,10 +22,6 @@
 package org.cougaar.core.mts;
 
 
-import org.cougaar.core.component.ContainerAPI;
-import org.cougaar.core.component.ServiceBroker;
-
-
 /**
  * Abstract specification of a aspect in the message transport
  * subsystem.  An aspect is only required to perform one job: return

@@ -21,9 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * A simple aspect which implements the message watching functionality

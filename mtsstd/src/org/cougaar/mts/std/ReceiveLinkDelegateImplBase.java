@@ -21,7 +21,7 @@
 
 package org.cougaar.core.mts;
 
- 
+
 abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink
 {
     private ReceiveLink link;

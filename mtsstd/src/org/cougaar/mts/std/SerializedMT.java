@@ -21,10 +21,8 @@
 
 package org.cougaar.core.mts;
 
-
 import java.rmi.RemoteException;
 
-  
 /** actual RMI remote interface for MessageTransport clients (clusters).
  **/
 

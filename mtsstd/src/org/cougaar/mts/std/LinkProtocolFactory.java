@@ -21,13 +21,11 @@
 
 package org.cougaar.core.mts;
 
+import java.util.StringTokenizer;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
-
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-
 
 /**
  * A factory which instantiates all LinkProtocols.  It will always

@@ -21,9 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-
 import java.util.Iterator;
+import org.cougaar.core.component.Service;
 
 /**
  * This is utility class which hides the grimy details of dealing with

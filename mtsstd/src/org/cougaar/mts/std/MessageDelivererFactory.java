@@ -21,12 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * A factory which makes MessageDeliverers.  In the current design

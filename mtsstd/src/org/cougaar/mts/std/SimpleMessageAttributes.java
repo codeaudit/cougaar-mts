@@ -21,15 +21,20 @@
 
 package org.cougaar.core.mts;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
-// Despite the name, this is the standard implementation of
-// Attributes, not just MessageAttributes.
+/**
+ * Despite the name, this is the standard implementation of
+ * Attributes, not just MessageAttributes.
+ */
 public class SimpleMessageAttributes    
     implements MessageAttributes, AgentState, Serializable
 {

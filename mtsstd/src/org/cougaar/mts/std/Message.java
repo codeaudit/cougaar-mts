@@ -21,11 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.Serializable;
 
 /**
 *   imports

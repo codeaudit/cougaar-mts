@@ -21,9 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-
 import java.util.ArrayList;
+import org.cougaar.core.component.Service;
 
 /**
  * This is a utility class which supports loading aspects

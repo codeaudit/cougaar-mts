@@ -21,7 +21,6 @@
 
 package org.cougaar.core.mts;
 
-
 import java.util.ArrayList;
 
 abstract public class SendLinkDelegateImplBase

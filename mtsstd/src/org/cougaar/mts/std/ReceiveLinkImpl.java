@@ -22,8 +22,8 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
-
 
 /**
  * The only current implementation of ReceiveLink.  The implementation

@@ -21,9 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
-import java.util.HashMap;
 import java.util.TimerTask;
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.ThreadService;
 
 /**
  * Scrambles the messages 

@@ -21,12 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
-import org.cougaar.core.service.MessageTransportService;
-
 import java.util.ArrayList;
 import java.util.Iterator;
-
+import org.cougaar.core.service.MessageTransportService;
 
 /**
  * Currently the only implementation of MessageTransportService.  It
@@ -62,7 +59,7 @@ public class MessageTransportServiceProxy
     /**
      * Redirects the sendMessage to the SendQueue. */
     public void sendMessage(Message rawMessage) {
-	MessageAttributes attrs = rawMessage.getTarget().getMessageAttributes();
+ 	MessageAttributes attrs = rawMessage.getTarget().getMessageAttributes();
 	AttributedMessage message = new AttributedMessage(rawMessage, attrs);
 	if (link.okToSend(message)) link.sendMessage(message);
     }

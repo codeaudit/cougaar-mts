@@ -21,13 +21,16 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.naming.NS;
-import org.cougaar.core.component.ServiceBroker;
-
+import java.rmi.MarshalException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.rmi.server.RMISocketFactory;
+import java.rmi.UnmarshalException;
 import java.util.HashMap;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.mts.RMILinkProtocol.Service;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * This is a minimal rmi message transport which does nothing other

@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+
 abstract public class SendQueueDelegateImplBase implements SendQueue 
 {
     private SendQueue queue;

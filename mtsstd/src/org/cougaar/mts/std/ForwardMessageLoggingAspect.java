@@ -21,10 +21,12 @@
 
 package org.cougaar.core.mts;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
-
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.TopologyEntry;
 import org.cougaar.core.service.TopologyReaderService;
 

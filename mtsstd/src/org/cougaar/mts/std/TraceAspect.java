@@ -21,9 +21,10 @@
 
 package org.cougaar.core.mts;
 
-
-import java.io.PrintWriter;
 import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * This is a very simple aspect which is mostly for demonstration

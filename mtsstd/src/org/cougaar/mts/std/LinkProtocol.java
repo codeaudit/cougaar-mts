@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceRevokedListener;
 
 /**
  * The parent class of all LinkProtocols.  Instantiable subclasses

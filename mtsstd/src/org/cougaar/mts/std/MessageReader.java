@@ -21,9 +21,9 @@
 
 package org.cougaar.core.mts;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 
 public interface MessageReader
 {

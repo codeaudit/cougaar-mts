@@ -1,4 +1,3 @@
-
 /*
  * <copyright>
  *  Copyright 1997-2001 BBNT Solutions, LLC
@@ -22,12 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
-
+import org.cougaar.core.node.SecureMessage;
 
 public interface MessageSecurityManager {
   /** Returns a message which has been cryptologically secured.

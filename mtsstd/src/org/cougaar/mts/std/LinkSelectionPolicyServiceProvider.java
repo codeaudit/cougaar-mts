@@ -24,8 +24,8 @@ package org.cougaar.core.mts;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
-
 
 /**
  * 

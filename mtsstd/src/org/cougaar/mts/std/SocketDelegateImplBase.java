@@ -21,11 +21,14 @@
 
 package org.cougaar.core.mts;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
 import java.nio.channels.SocketChannel;
-import java.net.*;
 
 abstract public class SocketDelegateImplBase extends Socket
 {

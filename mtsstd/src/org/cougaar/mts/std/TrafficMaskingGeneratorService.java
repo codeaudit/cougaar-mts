@@ -21,16 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.component.Service;
-import org.cougaar.core.mts.MessageAddress;
-
 import java.util.Collection;
+import org.cougaar.core.component.Service;
 
 public interface TrafficMaskingGeneratorService extends Service {
 

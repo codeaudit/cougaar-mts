@@ -21,10 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+import org.cougaar.core.component.Service;
 
 /**
  * The MessageTransportRegistry singleton is a utility instance that

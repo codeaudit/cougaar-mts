@@ -21,23 +21,21 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.MessageProtectionService;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.NotSerializableException;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
-
-
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.MessageProtectionService;
 
 /**
  * An AttributedMessage is a Message with metadata, the latter

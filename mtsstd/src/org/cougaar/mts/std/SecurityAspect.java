@@ -21,11 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
 import org.cougaar.core.node.DummyMessageSecurityManager;
 import org.cougaar.core.node.SecureMessage;
-
-import java.beans.Beans;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * First attempt at a security aspect.  The message is secured by a

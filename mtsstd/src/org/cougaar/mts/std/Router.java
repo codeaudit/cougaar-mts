@@ -23,8 +23,6 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
 
-
-
 /**
  * The second stop for an outgoing message.  In theory a
  * given Message Transport subsystem can have multiple Routers.

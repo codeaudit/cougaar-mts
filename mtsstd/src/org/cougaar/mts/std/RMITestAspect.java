@@ -20,11 +20,9 @@
  */
 
 package org.cougaar.core.mts;
-import org.cougaar.core.component.ServiceProvider;
 
-import java.net.Socket;
-import java.rmi.Remote;
-
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 
 /**
  * This aspect adds simple statistics gathering to the client side

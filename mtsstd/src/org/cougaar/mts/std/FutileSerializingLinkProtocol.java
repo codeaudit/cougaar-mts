@@ -21,10 +21,12 @@
 
 package org.cougaar.core.mts;
 
-
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * Debugging aid - fails by design after serializing.

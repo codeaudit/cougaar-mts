@@ -21,12 +21,11 @@
 
 package org.cougaar.core.mts;
 
+import java.util.ArrayList;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.TopologyReaderService;
-
-
-import java.util.ArrayList;
 
 final public class SendLinkImpl
     implements SendLink

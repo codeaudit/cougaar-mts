@@ -21,14 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
-import org.cougaar.core.component.ServiceBroker;
-
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
+import org.cougaar.core.component.Container;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * The default, and for now only, implementation of DestinationQueue.

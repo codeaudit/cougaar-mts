@@ -21,7 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import java.util.Iterator;
 
 /**
  * The default, and for now only, implementation of MessageDeliverer.

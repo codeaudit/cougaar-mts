@@ -21,11 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.MessageWatcherService;
-
-
 import java.util.ArrayList;
 import java.util.Iterator;
+import org.cougaar.core.service.MessageWatcherService;
 
 class MessageWatcherServiceImpl
     implements MessageWatcherService

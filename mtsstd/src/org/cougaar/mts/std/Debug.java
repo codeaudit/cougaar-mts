@@ -18,11 +18,11 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
+
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.LoggingService;
-
 import java.util.StringTokenizer;
+import org.cougaar.core.service.LoggingService;
 
 /** 
  * MTS debugging support.  Adds an extra level of control over the

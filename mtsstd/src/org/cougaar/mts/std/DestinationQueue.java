@@ -22,7 +22,6 @@
 package org.cougaar.core.mts;
 
 
-
 /**
  * The third stop for an outgoing message is a DestinationQueue. In
  * this implementation, the DestinationQueueFactory instantiates one

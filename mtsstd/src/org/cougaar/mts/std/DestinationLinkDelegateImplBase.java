@@ -22,7 +22,6 @@
 package org.cougaar.core.mts;
 
 
-
 /**
  * Convenience class for aspects which define DestinationLink delegate
  * classes. */

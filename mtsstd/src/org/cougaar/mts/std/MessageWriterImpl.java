@@ -21,9 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import java.io.OutputStream;
-import java.io.ObjectOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 public  class MessageWriterImpl
     implements MessageWriter 

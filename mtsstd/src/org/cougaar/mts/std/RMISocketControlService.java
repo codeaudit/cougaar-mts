@@ -21,9 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-
 import java.rmi.Remote;
+import org.cougaar.core.component.Service;
 
 public interface RMISocketControlService extends Service
 {

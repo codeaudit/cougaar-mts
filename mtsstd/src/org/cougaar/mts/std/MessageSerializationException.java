@@ -21,6 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import java.io.Serializable;
+
 public class MessageSerializationException 
     extends DontRetryException
     implements java.io.Serializable

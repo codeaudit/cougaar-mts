@@ -21,15 +21,15 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.LoggingService;
-
+import java.rmi.RemoteException;
+import java.rmi.server.RMIServerSocketFactory;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
-  
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.service.LoggingService;
 
 /** Actual RMI remote object providing the implementation of
  * MessageTransport client.  The transient tags shouldn't really be

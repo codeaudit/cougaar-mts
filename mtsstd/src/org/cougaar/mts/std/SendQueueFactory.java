@@ -25,7 +25,6 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
-
 /**
  * A factory which makes SendQueues. A singleton for now  */
 public class SendQueueFactory 

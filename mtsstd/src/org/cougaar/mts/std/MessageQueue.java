@@ -21,19 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.thread.ThreadServiceProvider;
-import org.cougaar.core.thread.Schedulable;
-
-// CircularQueue doesn't support remove so we can't use it here.
-// import org.cougaar.util.CircularQueue;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TimerTask;
+import org.cougaar.core.component.Container;
+import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 
 /**
  * An abstract class which manages a circular queue of messages, and

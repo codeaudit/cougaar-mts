@@ -23,7 +23,6 @@ package org.cougaar.core.mts;
 
 import java.util.HashMap;
 
-
 /**
  * This protocol handles all intra-node message traffic.   */
 public class LoopbackLinkProtocol 

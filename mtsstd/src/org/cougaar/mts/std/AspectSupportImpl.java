@@ -21,15 +21,12 @@
 
 package org.cougaar.core.mts;
 
-
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
-
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;

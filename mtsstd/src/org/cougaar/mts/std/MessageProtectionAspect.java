@@ -21,12 +21,14 @@
 
 package org.cougaar.core.mts;
 
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.OutputStream;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.MessageProtectionService;
-
-import java.io.*;
-
-
 
 /**
  * This class provides an example of adding trailers to serialized

@@ -18,8 +18,8 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
-
 // should this be in org.cougaar.core.services?
+
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;

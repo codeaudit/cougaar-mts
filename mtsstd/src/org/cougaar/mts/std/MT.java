@@ -21,18 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-  
 /** actual RMI remote interface for MessageTransport clients (clusters).
  **/
 

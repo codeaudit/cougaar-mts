@@ -22,6 +22,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceRevokedListener;
 
 /**
  * A cost-based selection policy that chooses the cheapest link.  */

@@ -18,17 +18,18 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
+
 package org.cougaar.core.mts;
 
-
+import java.io.PrintStream;
+import java.util.Observable;
+import java.util.Observer;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.qos.metrics.MetricsService;
-import org.cougaar.core.qos.metrics.MetricsUpdateService;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
-
-import java.util.Observer;
-import java.util.Observable;
+import org.cougaar.core.qos.metrics.MetricsService;
+import org.cougaar.core.qos.metrics.MetricsUpdateService;
 
 public class MetricsTestAspect 
     extends StandardAspect 

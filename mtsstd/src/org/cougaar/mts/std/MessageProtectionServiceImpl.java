@@ -21,16 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.MessageProtectionService;
-
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-
+import java.security.GeneralSecurityException;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.service.MessageProtectionService;
 
 class MessageProtectionServiceImpl 
     implements MessageProtectionService, ServiceProvider

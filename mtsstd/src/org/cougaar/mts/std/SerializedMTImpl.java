@@ -21,11 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
-import org.cougaar.core.component.ServiceBroker;
-
+import java.io.IOException;
 import java.rmi.RemoteException;
-  
+import org.cougaar.core.component.ServiceBroker;
 
 /** actual RMI remote object providing the implementation of MessageTransport client
  **/

@@ -18,11 +18,11 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
+
 package org.cougaar.core.mts;
 
-
-import org.cougaar.core.component.BinderSupport;
 import org.cougaar.core.component.BinderFactory;
+import org.cougaar.core.component.BinderSupport;
 import org.cougaar.core.component.BindingSite;
 
 public final class MTSBinder 

@@ -22,17 +22,9 @@
 package org.cougaar.core.mts;
 
 import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.util.Iterator;
-import java.util.Set;
-
-
-import javax.servlet.*;
-import javax.servlet.http.*;
-
+import javax.servlet.http.HttpServletRequest;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.servlet.ServletService;
-import org.cougaar.core.service.MessageStatisticsService;
+import org.cougaar.core.component.ServiceRevokedListener;
 
 abstract public class AgentStatusServlet extends BaseServlet
 {
@@ -80,7 +72,7 @@ abstract public class AgentStatusServlet extends BaseServlet
     {
 	String agentString= request.getParameter("agent");
 	if (agentString==null) agentString=nodeID;
-	MessageAddress agent = MessageAddress.getMessageAddress(agentString);
+ 	MessageAddress agent = MessageAddress.getMessageAddress(agentString);
 
 	AgentStatusService.AgentState state = getState(agent);
 

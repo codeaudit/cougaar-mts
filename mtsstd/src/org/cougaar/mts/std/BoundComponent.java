@@ -18,20 +18,19 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
+
 package org.cougaar.core.mts;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.Component;
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.PropagatingServiceBroker;
-import org.cougaar.util.GenericStateModelAdapter;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
-
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.List;
+import org.cougaar.util.GenericStateModelAdapter;
 
 /**
  * Root class of Components of the MTS.

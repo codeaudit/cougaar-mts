@@ -21,15 +21,15 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.MessageStatisticsService;
-
-import java.io.FilterOutputStream;
 import java.io.FilterInputStream;
-import java.io.ObjectInput;
+import java.io.FilterOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
-
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.MessageStatisticsService;
 
 /**
  * This aspect adds simple statistics gathering to the client side

@@ -23,8 +23,9 @@ package org.cougaar.core.mts;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ObjectInput;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 

@@ -21,6 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import java.io.IOException;
+
 public class UnresolvableReferenceException  extends java.io.IOException
 {
     public UnresolvableReferenceException(String msg) {

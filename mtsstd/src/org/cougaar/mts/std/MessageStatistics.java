@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+
 /**
  * Abstract MessageStatistics layer for Society interaction.
  * Used for Scalability testing.

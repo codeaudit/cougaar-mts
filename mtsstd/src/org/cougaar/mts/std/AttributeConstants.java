@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+
 public interface AttributeConstants
 {
     String IS_STREAMING_ATTRIBUTE = "IsStreaming";

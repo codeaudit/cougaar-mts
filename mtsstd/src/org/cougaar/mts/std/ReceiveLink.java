@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+
 /**
  * The final stop in the message transport system before an incoming
  * message is delivered to an Agent.  One ReceiveLink is instantiated

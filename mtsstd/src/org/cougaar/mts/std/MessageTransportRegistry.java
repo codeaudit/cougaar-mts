@@ -21,14 +21,16 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.service.LoggingService;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * The MessageTransportRegistry singleton is a utility instance that
@@ -191,7 +193,7 @@ final class MessageTransportRegistry
 	public boolean isLocalClient(MessageAddress id) {
 	    synchronized (this) {
 		return receiveLinks.get(id) != null ||
-		    id.equals(MessageAddress.MULTICAST_LOCAL);
+ 		    id.equals(MessageAddress.MULTICAST_LOCAL);
 	    }
 	}
 

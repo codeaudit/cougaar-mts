@@ -21,7 +21,6 @@
 
 package org.cougaar.core.mts;
 
-
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.plugin.ComponentPlugin;
 

@@ -21,8 +21,7 @@
 
 package org.cougaar.core.mts;
 
-
-import org.cougaar.core.thread.CougaarThread;
+import java.util.Random;
 
 /**
  * This is a debugging aspect.  By attaching it in a single-node

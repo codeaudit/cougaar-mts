@@ -21,27 +21,27 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.naming.NS;
-import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.NamingService;
-import org.cougaar.core.service.TopologyEntry;
-import org.cougaar.core.service.TopologyWriterService;
-
-import java.util.ArrayList;
-import java.util.Collections;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Iterator;
-
 import javax.naming.Name;
+import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.BasicAttributes;
-import javax.naming.directory.SearchControls;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchResult;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.naming.NS; // inlined
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.NamingService;
+import org.cougaar.core.service.TopologyEntry; // inlined
+import org.cougaar.core.service.TopologyWriterService;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -100,7 +100,7 @@ public final class NameSupportImpl implements ServiceProvider
 		sb.getService(this, LoggingService.class, null);
 	    topologyService = (TopologyWriterService)
 		sb.getService(this, TopologyWriterService.class, null);
-	    myNodeAddress = MessageAddress.getMessageAddress(id+"(MTS)");
+ 	    myNodeAddress = MessageAddress.getMessageAddress(id+"(MTS)");
 
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
@@ -281,7 +281,7 @@ public final class NameSupportImpl implements ServiceProvider
 
 	static class AddressCoercer implements Coercer {
 	    public Object coerce(String raw) {
-		return MessageAddress.getMessageAddress(raw);
+ 		return MessageAddress.getMessageAddress(raw);
 	    }
 	}
 

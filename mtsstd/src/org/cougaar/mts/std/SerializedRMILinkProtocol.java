@@ -21,7 +21,9 @@
 
 package org.cougaar.core.mts;
 
-
+import java.io.IOException;
+import java.rmi.RemoteException;
+import org.cougaar.core.component.ServiceBroker;
 
 /**
  * Simple extension to RMILinkProtocol which uses pre-serialization.

@@ -21,6 +21,9 @@
 
 package org.cougaar.core.mts;
 
+import java.io.IOException;
+import org.cougaar.core.service.LoggingService;
+
 /**
  * This is a debugging aspect.  By attaching it in a single-node
  * society (ie one in which all messages go through the Loopback

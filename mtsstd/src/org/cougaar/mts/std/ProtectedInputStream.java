@@ -18,9 +18,11 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
+
 package org.cougaar.core.mts;
 
 import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 public abstract class ProtectedInputStream extends FilterInputStream

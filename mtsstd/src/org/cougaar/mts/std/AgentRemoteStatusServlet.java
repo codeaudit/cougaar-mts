@@ -21,18 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.util.Iterator;
-import java.util.Set;
-
-
-import javax.servlet.*;
-import javax.servlet.http.*;
-
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.servlet.ServletService;
-import org.cougaar.core.service.MessageStatisticsService;
 
 public class AgentRemoteStatusServlet extends AgentStatusServlet
 {

@@ -21,31 +21,29 @@
 
 package org.cougaar.core.mts;
 
+import java.util.HashMap;
 import org.cougaar.core.agent.Agent;
 import org.cougaar.core.component.BinderFactory;
 import org.cougaar.core.component.BindingSite;
+import org.cougaar.core.component.ComponentDescription;
 import org.cougaar.core.component.ComponentDescriptions;
-import org.cougaar.core.component.ContainerSupport;
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ContainerAPI;
+import org.cougaar.core.component.ContainerSupport;
 import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.component.StateObject;
 import org.cougaar.core.node.InitializerService;
+import org.cougaar.core.node.InitializerServiceException;
 import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
-import org.cougaar.core.service.ThreadControlService;
-import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.ThreadServiceProvider;
-
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
 
 /**
  * The underlying implementation class for the
@@ -208,7 +206,7 @@ public final class MessageTransportServiceProvider
 	    sb.getService(this, InitializerService.class, null);
 	try {
 	    String cp = specifyContainmentPoint();
-	    // Want only items _below_. Could filter (not doing so now)
+ 	    // Want only items _below_. Could filter (not doing so now)
 	    return new ComponentDescriptions(is.getComponentDescriptions(id,cp));
 	} catch (org.cougaar.core.node.InitializerServiceException e) {
 	    if (loggingService.isInfoEnabled()) {
@@ -226,7 +224,7 @@ public final class MessageTransportServiceProvider
 	ServiceBroker sb = getServiceBroker();
 	NodeIdentificationService nis = (NodeIdentificationService)
 	    sb.getService(this, NodeIdentificationService.class, null);
-	id = nis.getMessageAddress().toString();
+ 	id = nis.getMessageAddress().toString();
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
@@ -390,7 +388,7 @@ public final class MessageTransportServiceProvider
 
     // We're not using this yet but leave it in anyway.
     protected String specifyContainmentPoint() {
-	return Agent.INSERTION_POINT + ".MessageTransport";
+ 	return Agent.INSERTION_POINT + ".MessageTransport";
     }
 
     public void requestStop() {}

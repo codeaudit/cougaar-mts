@@ -21,7 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import java.net.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
 import java.nio.channels.ServerSocketChannel;
 
 public abstract class ServerSocketWrapper extends ServerSocket

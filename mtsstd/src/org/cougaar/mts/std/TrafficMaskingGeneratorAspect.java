@@ -21,10 +21,17 @@
 
 package org.cougaar.core.mts;
 
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.TimerTask;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.StateObject;
-
-import java.util.*;
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.ThreadService;
 
 /** Generate Message Traffic to mask real cougaar message traffic patterns
  *  @property org.cougaar.message.trafficGenerator.requestPeriod
@@ -605,7 +612,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // get a request for an address before the timer 
 	    // has run the first time
 	    Iterator iter = getRegistry().findRemoteMulticastTransports(
-								   (MulticastMessageAddress)MessageAddress.MULTICAST_SOCIETY);
+ 								   (MulticastMessageAddress)MessageAddress.MULTICAST_SOCIETY);
 	    while (iter.hasNext()) {
 		MessageAddress anAddress = (MessageAddress) iter.next();
 		if (! anAddress.equals(myAddress)) {
@@ -617,7 +624,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	public void run() {
 	    //update the node list
 	    MulticastMessageAddress societynodes = 
-		(MulticastMessageAddress)MessageAddress.MULTICAST_SOCIETY;
+ 		(MulticastMessageAddress)MessageAddress.MULTICAST_SOCIETY;
 	    Iterator nodeIt = getRegistry().findRemoteMulticastTransports(societynodes);
 	    ArrayList tmpnodes = new ArrayList();
 	    while (nodeIt.hasNext()) {

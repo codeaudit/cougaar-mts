@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+
 class MessageReply extends AttributedMessage
 {
 

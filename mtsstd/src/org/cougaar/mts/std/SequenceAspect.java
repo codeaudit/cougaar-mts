@@ -21,12 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.LoggingService;
-
-import java.util.HashMap;
-import java.util.TreeSet;
-import java.util.Iterator;
+import java.io.Serializable;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.TreeSet;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * First attempt at a security aspect.  The message is secured by a
