@@ -76,11 +76,13 @@ public class AgentStatusAspect
 
     private HashMap remoteStates;
     private HashMap localStates;
+    private AgentState nodeState;
     private MetricsUpdateService metricsUpdateService;
     
     public AgentStatusAspect() {
 	remoteStates = new HashMap();
 	localStates = new HashMap();
+	nodeState = newAgentState();
     }
 
     public void load() {
@@ -255,6 +257,12 @@ public class AgentStatusAspect
     public AgentState getAgentState(MessageAddress address) {
 	return getRemoteAgentState(address);
     }
+
+    public AgentState getNodeState()
+    {
+	return snapshotState(nodeState);
+    }
+
 
     public AgentState getLocalAgentState(MessageAddress address) {
 	AgentState state = getLocalState(address);
@@ -437,6 +445,11 @@ public class AgentStatusAspect
 		    localState.deliveredBytes+=msgBytes;
 		    localState.lastDeliveredBytes=msgBytes;
 		}
+		synchronized(nodeState) {
+		    nodeState.timestamp = System.currentTimeMillis();
+		    nodeState.deliveredCount++;
+		    nodeState.deliveredBytes+=msgBytes;
+		}
 
 
 		return meta;
@@ -536,6 +549,10 @@ public class AgentStatusAspect
 			       +message.getTarget());
 	    }
 
+	    synchronized (nodeState) {
+		nodeState.receivedCount++;
+		nodeState.receivedBytes+=msgBytes;
+	    }
 
 	    return super.deliverMessage(message, dest);
 	}
@@ -562,8 +579,9 @@ public class AgentStatusAspect
 		remoteState.queueLength++;
 	    }	
 
+	    long receiveTime = System.currentTimeMillis();
+
 	    if (localState != null) {
-		long receiveTime = System.currentTimeMillis();
 		synchronized (localState) {
 		    localState.sendCount++;
 		    localState.lastHeardFrom = receiveTime;
@@ -581,6 +599,11 @@ public class AgentStatusAspect
 		if (lsvc.isErrorEnabled())
 		    lsvc.error("SendQueue sending leftover message from " 
 			       +localAddr);
+	    }
+
+	    synchronized (nodeState) {
+		nodeState.sendCount++;
+		nodeState.lastHeardFrom = receiveTime; // ???
 	    }
 
 	    super.sendMessage(message);
