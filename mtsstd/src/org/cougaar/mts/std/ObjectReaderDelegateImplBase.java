@@ -41,10 +41,23 @@ public  class ObjectReaderDelegateImplBase
     }
 
 
-    public void finishInput(ObjectInputStream ois) 
+    public void preProcess(ObjectInput in) 
 	throws java.io.IOException, ClassNotFoundException
     {
-	delegate.finishInput(ois);
+	delegate.preProcess(in);
     }
+
+
+    public void postProcess(ObjectInput in) 
+	throws java.io.IOException, ClassNotFoundException
+    {
+	delegate.postProcess(in);
+    }
+
+
+    public boolean proceed() {
+	return delegate.proceed();
+    }
+
 }
 

@@ -30,7 +30,12 @@ public interface ObjectReader
     public InputStream getObjectInputStream(ObjectInput in) 
 	throws java.io.IOException, ClassNotFoundException;
 
-    public void finishInput(ObjectInputStream ois) 
+    public void preProcess(ObjectInput in)
+	throws java.io.IOException, ClassNotFoundException;
+
+    public boolean proceed();
+
+    public void postProcess(ObjectInput in)
 	throws java.io.IOException, ClassNotFoundException;
 
 }

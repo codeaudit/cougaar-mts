@@ -85,8 +85,16 @@ public  class ObjectWriterImpl
 	}
     }
 
-    public void finishOutput(ObjectOutputStream oos) 
-    {
+    public void preProcess(ObjectOutput out) {
+    }
+
+
+    public void postProcess(ObjectOutput out) {
+    }
+
+
+    public boolean proceed() {
+	return true;
     }
 
 }

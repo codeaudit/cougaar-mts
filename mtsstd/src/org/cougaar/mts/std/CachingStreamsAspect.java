@@ -25,6 +25,7 @@ import java.io.ObjectInput;
 import java.io.InputStream;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
 import java.io.ObjectOutputStream;
@@ -36,6 +37,9 @@ public class CachingStreamsAspect extends StandardAspect
 	if (type == ObjectWriter.class) {
 	    ObjectWriter wtr = (ObjectWriter) delegatee;
 	    return new CachingObjectWriter(wtr);
+	} else if (type == ObjectReader.class) {
+	    ObjectReader rdr = (ObjectReader) delegatee;
+	    return new CachingObjectReader(rdr);
 	} else {
 	    return null;
 	}
@@ -73,7 +77,6 @@ public class CachingStreamsAspect extends StandardAspect
 	    super(delegatee);
 	}
 
-	// Join point
 	public OutputStream getObjectOutputStream(ObjectOutput out)
 	    throws java.io.IOException
 	{
@@ -82,7 +85,15 @@ public class CachingStreamsAspect extends StandardAspect
 	    return new TeeOutputStream(raw_os, byte_os);
 	}
 
-	public void finishOutput(ObjectOutputStream oos) 
+	public void preProcess(ObjectOutput out) 
+	    throws java.io.IOException
+	{
+	    out.writeObject(cache);
+	    super.preProcess(out);
+	}
+
+
+	public void postProcess(ObjectOutput out) 
 	    throws java.io.IOException
 	{
 	    byte_os.flush();
@@ -90,9 +101,43 @@ public class CachingStreamsAspect extends StandardAspect
 	    System.out.println("Wrote "
 			       +cache.length+ 
 			       " bytes in array");
-	    super.finishOutput(oos);
+	    super.postProcess(out);
 	}
 
     }
+
+
+
+    private class CachingObjectReader extends ObjectReaderDelegateImplBase
+    {
+	Object cache;
+
+	CachingObjectReader(ObjectReader delegatee) {
+	    super(delegatee);
+	}
+
+	public InputStream getObjectInputStream(ObjectInput in) 
+	    throws java.io.IOException, ClassNotFoundException
+	{
+	    InputStream raw_is = super.getObjectInputStream(in);
+	    if (cache != null) {
+		System.out.println("Using cache " + cache);
+		return new ByteArrayInputStream((byte[]) cache);
+	    } else {
+		return raw_is;
+	    }
+	}
+
+	public void preProcess(ObjectInput in) 
+	    throws java.io.IOException, ClassNotFoundException
+	{
+	    cache = in.readObject();
+	    super.preProcess(in);
+	}
+
+
+    }
+
+
 
 }

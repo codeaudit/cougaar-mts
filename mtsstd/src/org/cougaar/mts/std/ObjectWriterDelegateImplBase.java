@@ -40,10 +40,23 @@ public  class ObjectWriterDelegateImplBase
 	return delegate.getObjectOutputStream(out);
     }
 
-    public void finishOutput(ObjectOutputStream oos) 
+    public void preProcess(ObjectOutput out) 
 	throws java.io.IOException
     {
-	delegate.finishOutput(oos);
+	delegate.preProcess(out);
     }
+
+
+    public void postProcess(ObjectOutput out) 
+	throws java.io.IOException
+    {
+	delegate.postProcess(out);
+    }
+
+
+    public boolean proceed() {
+	return delegate.proceed();
+    }
+
 }
 

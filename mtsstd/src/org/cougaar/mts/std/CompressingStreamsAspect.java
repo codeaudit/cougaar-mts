@@ -69,7 +69,7 @@ public class CompressingStreamsAspect extends StandardAspect
 	    return def_os;
 	}
 
-	public void finishOutput(ObjectOutputStream oos) 
+	public void postProcess(ObjectOutput out) 
 	    throws java.io.IOException
 	{
 	    def_os.finish();
@@ -77,7 +77,7 @@ public class CompressingStreamsAspect extends StandardAspect
 	    System.out.println("Wrote " 
 			       +deflater.getTotalIn()+ " bytes in, "
 			       +deflater.getTotalOut()+ " bytes out ");
-	    super.finishOutput(oos);
+	    super.postProcess(out);
 	}
 
 

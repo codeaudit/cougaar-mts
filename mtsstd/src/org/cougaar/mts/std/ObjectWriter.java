@@ -30,6 +30,11 @@ public interface ObjectWriter
     public OutputStream getObjectOutputStream(ObjectOutput out)
 	throws java.io.IOException;
 
-    public void finishOutput(ObjectOutputStream oos) 
+    public void preProcess(ObjectOutput out)
+	throws java.io.IOException;
+
+    public boolean proceed();
+
+    public void postProcess(ObjectOutput out)
 	throws java.io.IOException;
 }

@@ -60,8 +60,7 @@ public class ExternalizableEnvelope
     public void writeExternal(ObjectOutput out) 
 	throws java.io.IOException
     {
-	out.writeObject("XXX");
-
+	writer.preProcess(out);
 	OutputStream os = writer.getObjectOutputStream(out);
 	ObjectOutputStream oos = null;
 	if (os instanceof ObjectOutputStream)
@@ -69,15 +68,14 @@ public class ExternalizableEnvelope
 	else
 	    oos = new ObjectOutputStream(os);
 	oos.writeObject(contents);
-	writer.finishOutput(oos);
+	writer.postProcess(out);
     }
 
 
     public void readExternal(ObjectInput in) 
 	throws java.io.IOException, ClassNotFoundException
     {
-	System.out.println(in.readObject());
-
+	reader.preProcess(in);
 	InputStream is = reader.getObjectInputStream(in);
 	ObjectInputStream ois = null;
 	if (is instanceof ObjectInputStream)
@@ -87,7 +85,7 @@ public class ExternalizableEnvelope
 	contents = (Message) ois.readObject();
 	setOriginator(contents.getOriginator());
 	setTarget(contents.getTarget());
-	reader.finishInput(ois);
+	reader.postProcess(in);
     }
 
     Message getContents() {

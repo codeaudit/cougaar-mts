@@ -98,7 +98,16 @@ public  class ObjectReaderImpl
     }
 
 
-    public void finishInput(ObjectInputStream ois) {
+    public void preProcess(ObjectInput in) {
+    }
+
+
+    public void postProcess(ObjectInput in) {
+    }
+
+
+    public boolean proceed() {
+	return true;
     }
 }
 
