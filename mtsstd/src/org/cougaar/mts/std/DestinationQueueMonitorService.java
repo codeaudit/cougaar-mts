@@ -21,28 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import java.io.Serializable;
+import org.cougaar.core.component.Service;
 
-public interface Attributes extends Serializable, AttributeConstants
+public interface DestinationQueueMonitorService extends Service
 {
- 
-    Object getAttribute(String attribute);
-
-    void setAttribute(String attribute, Object value);
-    void removeAttribute(String attribute);
-    void addValue(String attribute, Object value);
-    void pushValue(String attribute, Object value);
-    void removeValue(String attribute, Object value);
-
-    void setLocalAttribute(String attribute, Object value);
-    void removeLocalAttribute(String attribute);
-    void addLocalValue(String attribute, Object value);
-    void pushLocalValue(String attribute, Object value);
-    void removeLocalValue(String attribute, Object value);
-
-    Attributes cloneAttributes();
-    void clearAttributes();
-    void mergeAttributes(Attributes attributes);
-
-    String getAttributesAsString();
+    AttributedMessage[] snapshotQueue(MessageAddress destination);
+    MessageAddress[] getDestinations();
 }

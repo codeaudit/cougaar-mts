@@ -142,6 +142,25 @@ abstract class MessageQueue
 
     }
 
+    public AttributedMessage[] snapshot() 
+    {
+        AttributedMessage head;
+        synchronized (pending_lock) {
+            head = pending;
+        }
+        synchronized (queue) {
+            int size = queue.size();
+            if (head != null) size++;
+	    AttributedMessage[] ret = new AttributedMessage[size];
+            int i = 0;
+            if (head != null) ret[i++] = head;
+            for (Iterator iter = queue.iterator(); i < size; i++) {
+                ret[i] = (AttributedMessage) iter.next();
+            }
+            return ret;
+        }
+    }
+
     // Restart the thread immediately if the queue is not empty.
     private void restartIfNotEmpty() {
 	synchronized (queue) {

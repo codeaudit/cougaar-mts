@@ -189,11 +189,12 @@ public class AttributedMessage
     }
 
 
-
-
     // MessageAttributes interface
     // Delegate all calls 
 
+    public String getAttributesAsString() {
+        return attributes.getAttributesAsString();
+    }
 
     public Attributes cloneAttributes() {
 	return attributes.cloneAttributes();

@@ -131,6 +131,7 @@ implements ServiceProvider
 	    new DestinationQueueFactory(this);
 	add(destQFactory);
 	csb.addService(DestinationQueueProviderService.class, destQFactory);
+	csb.addService(DestinationQueueMonitorService.class, destQFactory);
 
 	//  Singletons, though produced by factories.
 	MessageDelivererFactory delivererFactory = 

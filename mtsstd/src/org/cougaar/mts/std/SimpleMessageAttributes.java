@@ -48,27 +48,23 @@ public class SimpleMessageAttributes
     }
 
 
-    private void dumpMap(HashMap map) 
+    private void dumpMap(StringBuffer buf, HashMap map) 
     {
 	synchronized (map) {
-	    Iterator itr = map.entrySet().iterator();
-	    while (itr.hasNext()) {
-		Map.Entry entry = (Map.Entry) itr.next();
-		String key = (String) entry.getKey();
-		Object value = entry.getValue();
-		System.out.println(key +"->"+ value);
-	    }
+            buf.append(map);
 	}
     }
 
-    public void listAttributes() 
+    public String getAttributesAsString() 
     {
-	System.out.println("Attributes");
-	dumpMap(data);
-	System.out.println("\nTransient attributes");
-	dumpMap(local_data);
+        StringBuffer buf = new StringBuffer();
+        buf.append("(attributes=");
+        dumpMap(buf, data);
+        buf.append(", transient_attributes=");
+        dumpMap(buf, local_data);
+        buf.append(")");
+        return buf.toString();
     }
-	
 
     private void readObject(ObjectInputStream ois)
 	throws java.io.IOException, ClassNotFoundException
@@ -315,11 +311,4 @@ public class SimpleMessageAttributes
 	    }
 	}
     }
-
-
-
-
-
-
 }
-

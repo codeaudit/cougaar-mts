@@ -21,28 +21,39 @@
 
 package org.cougaar.core.mts;
 
-import java.io.Serializable;
+import org.cougaar.util.PropertyParser;
 
-public interface Attributes extends Serializable, AttributeConstants
-{
- 
-    Object getAttribute(String attribute);
-
-    void setAttribute(String attribute, Object value);
-    void removeAttribute(String attribute);
-    void addValue(String attribute, Object value);
-    void pushValue(String attribute, Object value);
-    void removeValue(String attribute, Object value);
-
-    void setLocalAttribute(String attribute, Object value);
-    void removeLocalAttribute(String attribute);
-    void addLocalValue(String attribute, Object value);
-    void pushLocalValue(String attribute, Object value);
-    void removeLocalValue(String attribute, Object value);
-
-    Attributes cloneAttributes();
-    void clearAttributes();
-    void mergeAttributes(Attributes attributes);
-
-    String getAttributesAsString();
-}
+/**
+ * Aspect that tags all messages with a "send time" attribute when
+ * they enter the MTS SendLink.
+ */
+public class MessageSendTimeAspect 
+    extends StandardAspect
+    implements AttributeConstants
+{ 
+    public MessageSendTimeAspect() {
+    }
+  
+    public Object getDelegate(Object object, Class type) {
+	if (type == SendLink.class) {
+	    return new SendLinkDelegate((SendLink) object);
+	} else {
+	    return null;
+	}
+    }
+  
+    private class SendLinkDelegate
+	extends SendLinkDelegateImplBase
+    {    
+	SendLinkDelegate(SendLink link) {
+	    super(link);
+	}
+    
+	public void sendMessage(AttributedMessage message)
+	{ 
+	    long now = System.currentTimeMillis();
+            message.setAttribute(MESSAGE_SEND_TIME_ATTRIBUTE, new Long(now));
+	    super.sendMessage(message);
+	}
+    }
+} 

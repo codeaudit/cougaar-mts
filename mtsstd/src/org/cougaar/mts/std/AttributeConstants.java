@@ -47,6 +47,9 @@ public interface AttributeConstants
 
   String DELIVERY_STATUS_DROPPED = "Dropped";
   
+  // System clock when the client sent the message
+  String MESSAGE_SEND_TIME_ATTRIBUTE = "MessageSendTime";
+
   // Relative Timeout Attribute - 5000=5 seconds
   String MESSAGE_SEND_TIMEOUT_ATTRIBUTE = "MessageSendTimeout";
   // Absolute Timeout Attribute - 1060280361356 the system clock

@@ -35,7 +35,9 @@ import org.cougaar.core.component.ServiceProvider;
  * attached to a DestinationQueue when it's first instantiated.  */
 public class DestinationQueueFactory 
     extends  AspectFactory
-    implements DestinationQueueProviderService, ServiceProvider
+    implements DestinationQueueProviderService, 
+	       DestinationQueueMonitorService,
+	       ServiceProvider
 {
     private HashMap queues;
     private ArrayList impls;
@@ -86,6 +88,24 @@ public class DestinationQueueFactory
 	}
     }
 
+    public MessageAddress[] getDestinations()
+    {
+	synchronized (queues) {
+	    MessageAddress[] ret = new MessageAddress[queues.size()];
+	    queues.keySet().toArray(ret);
+            return ret;
+	}
+    }
+
+    public AttributedMessage[] snapshotQueue(MessageAddress destination)
+    {
+	DestinationQueue q = null;
+	MessageAddress dest = destination.getPrimary();
+	synchronized (queues) {
+	    q = (DestinationQueue) queues.get(dest);
+	}
+	return (q == null ? null : q.snapshot());
+    }
 
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
@@ -96,6 +116,9 @@ public class DestinationQueueFactory
 	    if (requestor instanceof RouterImpl ||
 		requestor instanceof SendLinkImpl) 
 		return this;
+	} else if (serviceClass == DestinationQueueMonitorService.class) {
+	    // limit this!
+	    return this;
 	} 
 	return null;
     }

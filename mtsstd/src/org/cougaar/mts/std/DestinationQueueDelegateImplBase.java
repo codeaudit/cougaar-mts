@@ -51,6 +51,8 @@ abstract public class DestinationQueueDelegateImplBase
 	return queue.getDestination();
     }
 
-
+    public AttributedMessage[] snapshot() {
+        return queue.snapshot();
+    }
 
 }

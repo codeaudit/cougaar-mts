@@ -62,4 +62,5 @@ public interface DestinationQueue
 
     MessageAddress getDestination();
 
+    AttributedMessage[] snapshot();
 }
