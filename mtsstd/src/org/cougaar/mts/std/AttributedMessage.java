@@ -184,7 +184,7 @@ public class AttributedMessage
 
     }
 
-    boolean replyOnly() {
+    protected boolean replyOnly() {
 	return false;
     }
 

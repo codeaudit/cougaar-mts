@@ -36,7 +36,7 @@ public class MessageReply extends AttributedMessage
 	super(source, MessageReply.class);
     }
 
-    boolean replyOnly() {
+    protected boolean replyOnly() {
 	return true;
     }
 
