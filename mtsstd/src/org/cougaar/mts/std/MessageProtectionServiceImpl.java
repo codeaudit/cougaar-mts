@@ -21,10 +21,15 @@
 
 package org.cougaar.core.mts;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.MessageProtectionService;
@@ -52,23 +57,37 @@ class MessageProtectionServiceImpl
     {
     }
 
-    public byte[] protectHeader(byte[] rawData, 
+    public byte[] protectHeader(MessageAttributes attributes, 
 				MessageAddress source,
 				MessageAddress destination)
-	throws java.security.GeneralSecurityException
+	throws java.security.GeneralSecurityException, java.io.IOException
     {
-	return rawData;
+	ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	ObjectOutputStream oos = new ObjectOutputStream(bos);
+	oos.writeObject(attributes);
+	oos.close();
+	return bos.toByteArray();
 	// For testing security exception handling
 	// throw new java.security.GeneralSecurityException("protectHeader");
     }
 
 
-    public byte[] unprotectHeader(byte[] rawData, 
-				  MessageAddress source,
-				  MessageAddress destination)
-	throws java.security.GeneralSecurityException
+    public MessageAttributes unprotectHeader(byte[] rawData, 
+					     MessageAddress source,
+					     MessageAddress destination)
+	throws java.security.GeneralSecurityException, java.io.IOException
     {
-	return rawData;
+	MessageAttributes attributes = null;
+
+	ByteArrayInputStream bis = new ByteArrayInputStream(rawData);
+	ObjectInputStream ois = new ObjectInputStream(bis);
+	try {
+	    attributes = (MessageAttributes) ois.readObject();
+	} catch (ClassNotFoundException cnf) {
+	    // ???
+	}
+	ois.close();
+	return attributes;
 	// For testing security exception handling
 	// throw new java.security.GeneralSecurityException("unprotectHeader");
     }

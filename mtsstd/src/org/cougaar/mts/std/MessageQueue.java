@@ -24,9 +24,10 @@ package org.cougaar.core.mts;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.TimerTask;
+
 import org.cougaar.core.component.Container;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 import org.cougaar.core.thread.Schedulable;
 
 /**
@@ -47,7 +48,6 @@ abstract class MessageQueue
     }
 
     
-    private TimerTask restartTask;
     private SimpleQueue queue;
     private Schedulable thread;
     private String name;
@@ -76,66 +76,81 @@ abstract class MessageQueue
 
 
     void removeMessagesFrom(MessageAddress address, ArrayList removed) {
+	MessageAddress primalAddress = address.getPrimary();
 	synchronized (queue) {
 	    Iterator itr = queue.iterator();
 	    while (itr.hasNext()) {
 		AttributedMessage msg = (AttributedMessage) itr.next();
-		if (msg.getOriginator().equals(address)) {
+		if (msg.getOriginator().getPrimary().equals(primalAddress)) {
 		    removed.add(msg);
 		    itr.remove();
 		}
 	    }
 	}
 	synchronized (pending_lock) {
-	    if (pending != null && pending.getOriginator().equals(address)) {
+	    if (pending != null && pending.getOriginator().getPrimary().equals(primalAddress)) {
 		removed.add(pending);
 		pending = null;
 	    }
 	}
     }
 
+
+
+    private static final long HOLD_TIME = 500;
+
+    // Process the last failed message, if any, followed by as many
+    // items as possible from the queue, with a max time as given by
+    // HOLD_TIME.
     public void run() {
-	boolean process_queue = true;
+	long endTime= System.currentTimeMillis() + HOLD_TIME;
+
+	// Retry the last failed dispatch before looking at the
+	// queue.
 	synchronized (pending_lock) {
 	    if (pending != null) {
-		// Retry the last failed dispatch before looking at the
-		// queue. 
-		if (!dispatch(pending)) {
-		    process_queue = false;
-		} else {
+		if (dispatch(pending)) {
 		    pending = null;
+		} else {
+		    // The dispatch code has already scheduled the
+		    // thread to run again later
+		    return;
 		}
 	    }
 	}
-	while (process_queue) {
-	    AttributedMessage message;
+
+	// Now process the queued items. 
+	AttributedMessage message;
+	while (System.currentTimeMillis() <= endTime) {
 	    synchronized (queue) {
-		if (queue.isEmpty()) break;
+		if (queue.isEmpty()) break; // done for now
 		message = (AttributedMessage) queue.next(); // from top
 	    }
 
 
-	    if (message == null || dispatch(message)) continue;
-	    
-	    // Dispatch failed.  Save the message as pending and stop
-	    // walking through the queue.  Presumably the dispatch
-	    // body has scheduled a restart.
-	    pending = message;
-	    break;
+	    if (message == null || dispatch(message)) {
+		// Processing succeeded, continue popping the queue
+		continue;
+	    } else {
+		// Remember the failed message.  The dispatch code
+		// has already scheduled the thread to run again later
+		pending = message;
+		return;
+	    }
+	}
+	restartIfNotEmpty();
+
+    }
+
+    // Restart the thread immediately if the queue is not empty.
+    private void restartIfNotEmpty() {
+	synchronized (queue) {
+	    if (!queue.isEmpty()) thread.start();
 	}
     }
 
     void scheduleRestart(int delay) {
-	// Some dedicated task needs to call restart at the right
-	// time.  For now use a static java.util.Timer.
-	restartTask = new TimerTask() {
-		public void run() { restart(); }
-	    };
-	threadService.schedule(restartTask, delay);
-    }
-
-    void restart() {
-	thread.start();
+	thread.schedule(delay);
     }
 
     /** 

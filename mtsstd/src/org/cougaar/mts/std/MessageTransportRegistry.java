@@ -97,6 +97,7 @@ final class MessageTransportRegistry
 	}
 
 
+
 	private ReceiveLink makeReceiveLink(MessageTransportClient client) {
 	    if (receiveLinkProvider == null) {
 		receiveLinkProvider = (ReceiveLinkProviderService) 
@@ -132,28 +133,24 @@ final class MessageTransportRegistry
 
 
 
-	private void addLocalClient(MessageTransportClient client) {
+	private synchronized void addLocalClient(MessageTransportClient client) {
 	    MessageAddress key = client.getMessageAddress();
 	    try {
-		synchronized (this) {
 		    ReceiveLink link = findLocalReceiveLink(key);
 		    if (link == null) {
 			link = makeReceiveLink(client);
 		    }
-		}
 	    } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error(e.toString());
 	    }
 	}
 
-	private void removeLocalClient(MessageTransportClient client) {
+	private synchronized void removeLocalClient(MessageTransportClient client) {
 	    MessageAddress key = client.getMessageAddress();
-	    synchronized (this) {
-		try {
-		    receiveLinks.remove(key);
-		} catch (Exception e) {}
-	    }
+	    try {
+		receiveLinks.remove(key);
+	    } catch (Exception e) {}
 	}
 
 
@@ -172,10 +169,11 @@ final class MessageTransportRegistry
 
 
 	public synchronized AgentState getAgentState(MessageAddress id) {
-	    Object raw =  agentStates.get(id);
+	    MessageAddress canonical_id = id.getPrimary();
+	    Object raw =  agentStates.get(canonical_id);
 	    if (raw == null) {
 		AgentState state = new SimpleMessageAttributes();
-		agentStates.put(id, state);
+		agentStates.put(canonical_id, state);
 		return state;
 	    } else if (raw instanceof AgentState) {
 		return (AgentState) raw;
@@ -187,19 +185,19 @@ final class MessageTransportRegistry
 	}
 
 	public synchronized void removeAgentState(MessageAddress id) {
-	    agentStates.remove(id);
+	    agentStates.remove(id.getPrimary());
 	}
 
 	public boolean isLocalClient(MessageAddress id) {
 	    synchronized (this) {
-		return receiveLinks.get(id) != null ||
+		return receiveLinks.get(id.getPrimary()) != null ||
  		    id.equals(MessageAddress.MULTICAST_LOCAL);
 	    }
 	}
 
 
 	public  ReceiveLink findLocalReceiveLink(MessageAddress id) {
-	    return (ReceiveLink) receiveLinks.get(id);
+	    return (ReceiveLink) receiveLinks.get(id.getPrimary());
 	}
 
 
@@ -254,32 +252,14 @@ final class MessageTransportRegistry
 
 
 	public void registerClient(MessageTransportClient client) {
-	    addLocalClient(client);
 	    registerClientWithSociety(client);
+	    addLocalClient(client);
 	}
 
 
 	public void unregisterClient(MessageTransportClient client) {
-	    unregisterClientWithSociety(client);
 	    removeLocalClient(client);
-	}
-
-
-	public void registerMTS(MessageTransportClient client) {
-	    MessageAddress mts_address = client.getMessageAddress();
-
-	    // Give each LinkProtocol a chance to register some object
-	    // using the MTS address (but *not* in the MTS DirContext).
-	    Iterator protocols = linkProtocols.iterator();
-	    while (protocols.hasNext()) {
-		LinkProtocol protocol = (LinkProtocol) protocols.next();
-		protocol.registerMTS(mts_address);
-	    }
-	
-	    // Now register the single MTS entry for this Node in the MTS
-	    // DirContext
-	    nameSupport().registerMTS(mts_address);
-
+	    unregisterClientWithSociety(client);
 	}
 
 

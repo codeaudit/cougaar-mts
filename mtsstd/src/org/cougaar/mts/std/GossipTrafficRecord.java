@@ -27,8 +27,10 @@ public class GossipTrafficRecord
     int requests_rcvd;
     int values_sent;
     int values_rcvd;
-    int send_count;
-    int rcv_count;
+    int msg_with_gossip_sent;
+    int msg_with_gossip_rcvd;
+    int msg_sent;
+    int msg_rcvd;
 
     GossipTrafficRecord() {
     }
@@ -38,8 +40,11 @@ public class GossipTrafficRecord
 	this.requests_rcvd =  other.requests_rcvd;
 	this.values_sent =  other.values_sent;
 	this.values_rcvd =  other.values_rcvd;
-	this.send_count = other.send_count;
-	this.rcv_count = other.rcv_count;
+	this.msg_with_gossip_sent = other.msg_with_gossip_sent;
+	this.msg_with_gossip_rcvd = other.msg_with_gossip_rcvd;
+	this.msg_sent = other.msg_sent;
+	this.msg_rcvd = other.msg_rcvd;
+
     }
     
 
@@ -53,19 +58,23 @@ public class GossipTrafficRecord
 	buf.append(values_sent);
 	buf.append(" values_rcvd=");
 	buf.append(values_rcvd);
-	buf.append(" send_count=");
-	buf.append(send_count);
-	buf.append(" rcv_count=");
-	buf.append(rcv_count);
+	buf.append(" msg_with_gossip_sent=");
+	buf.append(msg_with_gossip_sent);
+	buf.append(" msg_with_gossip_rcvd=");
+	buf.append(msg_with_gossip_rcvd);
+	buf.append(" msg_with_gossip_sent=");
+	buf.append(msg_sent);
+	buf.append(" msg_rcvd=");
+	buf.append(msg_rcvd);
 	buf.append('>');
 	return buf.toString();
     }
 
-    public int getRequestSent() {
+    public int getRequestsSent() {
 	return requests_sent;
     }
 
-    public int getRequestReceived() {
+    public int getRequestsReceived() {
 	return requests_rcvd;
     }
 
@@ -77,12 +86,20 @@ public class GossipTrafficRecord
 	return values_rcvd;
     }
 
-    public int getSendCount() {
-	return send_count;
+    public int getMessagesWithGossipSent() {
+	return msg_with_gossip_sent;
     }
 
-    public int getReceiveCount() {
-	return rcv_count;
+    public int getMessagesWithGossipReceived() {
+	return msg_with_gossip_rcvd;
+    }
+
+    public int getMessagesSent() {
+	return msg_sent;
+    }
+
+    public int getMessagesReceived() {
+	return msg_rcvd;
     }
 
 }

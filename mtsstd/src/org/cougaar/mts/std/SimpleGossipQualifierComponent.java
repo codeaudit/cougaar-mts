@@ -106,9 +106,9 @@ public class SimpleGossipQualifierComponent
 	public boolean shouldForwardRequest(String key) {
 	    return 
 		!key.startsWith(host_key) &&
-		!key.startsWith(ipflow_key) &&
 		!key.startsWith("Site_Flow") &&
-		!key.startsWith(node_key);
+		!key.startsWith(node_key) &&
+		key.indexOf("169.0.0.1") == -1;
 	}
 
     }

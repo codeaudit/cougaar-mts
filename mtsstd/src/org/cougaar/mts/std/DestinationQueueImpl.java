@@ -27,6 +27,7 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.util.PropertyParser;
 
 /**
  * The default, and for now only, implementation of DestinationQueue.
@@ -40,7 +41,12 @@ final class DestinationQueueImpl
     extends MessageQueue 
     implements DestinationQueue
 {
-    private static final int MAX_DELAY = 60 * 1000; // 1 minute
+    private static final int INITIAL_RETRY_TIMEOUT = 
+	PropertyParser.getInt("org.cougaar.core.mts.destq.retry.initialTimeout",
+			      500) ; // 1/2 second
+    private static final int MAX_RETRY_TIMEOUT = 
+	PropertyParser.getInt("org.cougaar.core.mts.destq.retry.maxTimeout",
+			      60 * 1000); // 1 minute
     private MessageAddress destination;
     private LinkSelectionPolicy selectionPolicy;
     private DestinationQueue delegate;
@@ -65,9 +71,10 @@ final class DestinationQueueImpl
 
 	// cache DestinationLinks, per transport
 	destinationLinks = getRegistry().getDestinationLinks(destination);
+
     }
 
-
+  
     public MessageAddress getDestination() {
 	return destination;
     }
@@ -90,13 +97,14 @@ final class DestinationQueueImpl
 
 
     // Save retry-state as instance variables
-    private int delay = 500;
+
+    private int retryTimeout = INITIAL_RETRY_TIMEOUT;
     private int retryCount = 0;
     private Exception lastException = null;
     private AttributedMessage previous = null;
 
     private void resetState() {
-	delay = 500; // comes from a property
+	retryTimeout = INITIAL_RETRY_TIMEOUT;
 	retryCount = 0;
 	lastException = null;
 	previous = null;
@@ -115,6 +123,7 @@ final class DestinationQueueImpl
     }
 
 
+
     public void dispatchNextMessage(AttributedMessage message) {
 	if (retryCount == 0) {
 	    message.snapshotAttributes();
@@ -130,7 +139,8 @@ final class DestinationQueueImpl
 				       retryCount, lastException);
 	if (link != null) {
 	    if (loggingService.isDebugEnabled())
-		loggingService.debug("Selected Protocol " +
+		loggingService.debug("To Agent="+destination+
+				     " Selected Protocol " +
 				     link.getProtocolClass());
 	    try {
 		link.addMessageAttributes(message);
@@ -145,13 +155,13 @@ final class DestinationQueueImpl
 		if (loggingService.isErrorEnabled()) 
 		    loggingService.error(null, lookup_error);
 	    } catch (CommFailureException comm_failure) {
-		Exception cause = comm_failure.getException();	
+		Exception cause = (Exception) comm_failure.getCause();	
 		String msg = "Failure in communication, message " +message+
 		    " caused by \n" +cause;
 		if (cause instanceof DontRetryException) {
 		    // Always log these.
 		    if (loggingService.isWarnEnabled()) {
-			loggingService.warn(msg, cause.getCause());
+			loggingService.warn(msg);
 		    }
 
 		    // Act as if the message has gone through.
@@ -161,8 +171,12 @@ final class DestinationQueueImpl
 		    // This is some other kind of CommFailure, not
 		    // related to security.  Retry.
 		    lastException = comm_failure;
-		    if (loggingService.isWarnEnabled()) 
-			loggingService.warn(msg, comm_failure);
+		    if (loggingService.isWarnEnabled()) {
+			loggingService.warn(msg);
+		    }
+		    if (loggingService.isInfoEnabled()) {
+			loggingService.info("",cause);
+		    }
 		}
 	    } catch (MisdeliveredMessageException misd) {
 		lastException = misd;
@@ -181,10 +195,11 @@ final class DestinationQueueImpl
 
 
 	retryCount++;
-	if (delay < MAX_DELAY) delay += delay;
 	previous = new AttributedMessage(message);
 	message.restoreSnapshot();
-	scheduleRestart(delay);
+	scheduleRestart(retryTimeout);
+	retryTimeout  = Math.min(retryTimeout + retryTimeout,
+				 MAX_RETRY_TIMEOUT);
     }
 
 

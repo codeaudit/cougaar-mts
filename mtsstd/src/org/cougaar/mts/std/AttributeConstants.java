@@ -44,4 +44,11 @@ public interface AttributeConstants
     String RECEIVED_BYTES_ATTRIBUTE = "ReceivedBytes";
 
     String INCARNATION_ATTRIBUTE = "AgentIncarnationNumber";
+
+  String DELIVERY_STATUS_DROPPED = "Dropped";
+  
+  // Relative Timeout Attribute - 5000=5 seconds
+  String MESSAGE_SEND_TIMEOUT_ATTRIBUTE = "MessageSendTimeout";
+  // Absolute Timeout Attribute - 1060280361356 the system clock
+  String MESSAGE_SEND_DEADLINE_ATTRIBUTE = "MessageSendDeadline";
 }

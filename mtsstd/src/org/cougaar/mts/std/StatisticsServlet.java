@@ -70,6 +70,9 @@ public class StatisticsServlet
 	    out.print("should be loaded into Node \n");
 	    return;
 	}
+	out.print("<h2>Messages from all agents on node ");
+	out.print(getNodeID());
+	out.println("</h2>");
 	out.print("<table border=1>\n");
 	out.print("<tr><b>");
 	out.print("<td><b>AvgQueueLength</b></td>");
@@ -89,9 +92,10 @@ public class StatisticsServlet
 	out.print(stats.totalMessageCount);
 	out.print("</b></td>");
 	out.print("</b></tr>");
+	out.println("</table>");
+	out.print("Note: Intra-Node messages have a length of zero bytes");
 
-	out.println("</table><p><h2>Message Length Histogram</h2>");
-
+	out.print("<p><h2>Message Length Histogram</h2>");
 	out.print("<table border=1>\n");
 	out.print("<tr><b>");
 	out.print("<td><b>Size</b></td>");
@@ -112,5 +116,6 @@ public class StatisticsServlet
 	    out.print("</b></tr>");
 	}
 	out.print("</table>");
+	out.print("Note: Histagram table does not include intra-Node traffic.");
     }
 }

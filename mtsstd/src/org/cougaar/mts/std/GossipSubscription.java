@@ -83,9 +83,31 @@ class GossipSubscription
     }
 
     synchronized ValueGossip getChanges() {
-	ValueGossip old_changes = changes;
-	changes = null;
-	return old_changes;
+	if (changes == null) return null;
+	ValueGossip result = new ValueGossip();
+	Iterator itr = changes.iterator();
+	Map.Entry entry = null;
+	while (itr.hasNext()) {
+	    entry = (Map.Entry) itr.next();
+	    result.addEntry(entry.getKey(), entry.getValue());
+	}
+	return result;
+    }
+
+    synchronized void commitChanges(ValueGossip uncommitted_changes) {
+	if (uncommitted_changes == null) return;
+	Iterator itr = uncommitted_changes.iterator();
+	Map.Entry entry = null;
+	Object key = null;
+	Object data = null;
+	while(itr.hasNext()) {
+	    entry = (Map.Entry) itr.next();
+	    key = entry.getKey();
+	    data = entry.getValue();
+	    Object old_data = changes.lookupValue(key);
+	    if (old_data != null && data.equals(old_data)) 
+		changes.removeEntry(key);
+	}
     }
 
     private void addKey(String key) {

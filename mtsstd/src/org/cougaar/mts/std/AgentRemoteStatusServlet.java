@@ -30,13 +30,24 @@ public class AgentRemoteStatusServlet extends AgentStatusServlet
     }
 
     public String getPath() {
-	return "/message/remote/agent/status";
+	return "/message/between-Node-and-Agent";
+    }
+
+    public String getDescription(MessageAddress agent) {
+	return "Message Transport statistics between all agents on node "+
+	    getNodeID()+ " and agent " +agent ;
+    }
+
+    public String getTitle() {
+	return "Message Transport statistics for agents communicating with node "+ 
+	    getNodeID();
+    }
+
+    protected boolean isRemote() {
+	return(true);
     }
 
 
-    protected String getAdjective() {
-	return "Remote";
-    }
 
     protected  AgentStatusService.AgentState getState(MessageAddress agent){
        	AgentStatusService.AgentState state = null;

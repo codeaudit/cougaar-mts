@@ -40,8 +40,9 @@ abstract public class AgentStatusServlet
     }
 
     abstract AgentStatusService.AgentState getState(MessageAddress agent);
-    abstract String getAdjective();	
-
+    abstract String getDescription(MessageAddress agent);
+    abstract boolean isRemote();
+    
 
     private void row(PrintWriter out, String name, String value){
 	out.print("<tr><b>");
@@ -65,10 +66,6 @@ abstract public class AgentStatusServlet
     }
 
 
-    public String getTitle() {
-	return getNodeID() + " Message Transport <em>"+getAdjective()+
-	   "</em> Agent Status";
-    }
 
     public void printPage(HttpServletRequest request,
 			  PrintWriter out)
@@ -85,17 +82,16 @@ abstract public class AgentStatusServlet
 
 	if (state == null) {
 	    out.print("<p><b>");
-	    out.print("ERROR: Agent <em>"+ getAdjective() +
-		      "</em> Status Service is not Available for Agent ");
+	    out.print("ERROR: Agent Status Service is not Available for Agent ");
 	    out.print(agent + "</b><p>");
 	    out.println("<p>To Change Agent use cgi parameter: ?agent=agentname<p>");
 	    return;
 	}
-	out.print("<h2> Agent <em> " +getAdjective()+
-		  "</em> Status for Agent "+agent+"</h2>");
+	out.print("<h2>");
+	out.print(getDescription(agent));
+	out.print("</h2>");
 	out.print("<table border=1>\n");
 	row(out,"Status", state.status);
-	row(out,"Queue Length", state.queueLength);
 	row(out,"Messages Received", state.receivedCount);
 	row(out,"Bytes Received", state.receivedBytes);
 	row(out,"Last Received Bytes", state.lastReceivedBytes);
@@ -103,14 +99,17 @@ abstract public class AgentStatusServlet
 	row(out,"Messages Delivered", state.deliveredCount);
 	row(out,"Bytes Delivered", state.deliveredBytes);
 	row(out,"Last Delivered Bytes", state.lastDeliveredBytes);
-	row(out,"Last Delivered Latency", state.lastDeliveredLatency);
-	row(out,"Average Delivered Latency", state.averageDeliveredLatency);
-	row(out,"Unregistered Name Error Count", state.unregisteredNameCount);
-	row(out,"Name Lookup Failure Count", state.nameLookupFailureCount);
-	row(out,"Communication Failure Count", state.commFailureCount);
-	row(out,"Misdelivered Message Count", state.misdeliveredMessageCount);
-	row(out,"Last Link Protocol Tried", state.lastLinkProtocolTried);
-	row(out,"Last Link Protocol Success", state.lastLinkProtocolSuccess);
+	if (isRemote()) {
+	    row(out,"Queue Length", state.queueLength);
+	    row(out,"Last Delivered Latency", state.lastDeliveredLatency);
+	    row(out,"Average Delivered Latency", state.averageDeliveredLatency);
+	    row(out,"Unregistered Name Error Count", state.unregisteredNameCount);
+	    row(out,"Name Lookup Failure Count", state.nameLookupFailureCount);
+	    row(out,"Communication Failure Count", state.commFailureCount);
+	    row(out,"Misdelivered Message Count", state.misdeliveredMessageCount);
+	    row(out,"Last Link Protocol Tried", state.lastLinkProtocolTried);
+	    row(out,"Last Link Protocol Success", state.lastLinkProtocolSuccess);
+	}
 	out.print("</b></tr>");
 	out.println("</table><p>");
 	out.println("<p>To Change Agent use cgi parameter: ?agent=agentname<p>");

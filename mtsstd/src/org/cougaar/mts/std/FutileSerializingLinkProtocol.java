@@ -70,10 +70,6 @@ class FutileSerializingLinkProtocol
     }
 
 
-    public void registerMTS(MessageAddress address) {
-    }
-   
-
 
 
     class Link implements DestinationLink {

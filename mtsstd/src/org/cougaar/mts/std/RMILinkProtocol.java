@@ -37,6 +37,7 @@ import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
+import org.cougaar.core.thread.SchedulableStatus;
 
 /**
  * This is a minimal rmi message transport which does nothing other
@@ -160,13 +161,56 @@ public class RMILinkProtocol
 	return new MTImpl(myAddress, getServiceBroker(), socfac);
     }
 
+    // Even though MisdeliveredMessageExceptions are
+    // RemoteExceptions, nonethless they'll be wrapped.  Check for
+    // this case here.  Also look for IllegalArgumentExceptions,
+    // which can also occur as a side-effect of mobility.
+    protected void checkForMisdelivery(Throwable ex,
+				       AttributedMessage message)
+	throws MisdeliveredMessageException
+    {
+	if (ex instanceof MisdeliveredMessageException) {
+	    throw ((MisdeliveredMessageException) ex);
+	} else if (ex instanceof IllegalArgumentException) {
+	    // Probably a misdelivered message that failed during
+	    // deserialization.  Try to check with a string match...
+	    String msg = ex.getMessage();
+	    int match = msg.indexOf("is not an Agent on this node");
+	    if (match > 0) {
+		// pretend this is a MisdeliveredMessageException
+		throw new MisdeliveredMessageException(message);
+	    }
+	}
+	// If we get here, the caller is responsible for rethrowing
+	// the exception.
+    }
+
     protected MessageAttributes doForwarding(MT remote, 
 					     AttributedMessage message) 
 	throws MisdeliveredMessageException, 
-	       CommFailureException,
-	       java.rmi.RemoteException
+	       java.rmi.RemoteException,
+	       CommFailureException 
+    // Declare CommFailureException because the signature needs to
+    // match SerializedRMILinkProtocol's doForwarding method.  That
+    // exception will never be thrown here.
     {
-	return remote.rerouteMessage(message);
+	MessageAttributes result = null;
+	try {
+	    SchedulableStatus.beginNetIO("RMI call");
+	    result = remote.rerouteMessage(message);
+	} catch (java.rmi.RemoteException remote_ex) {
+	    Throwable cause = remote_ex.getCause();
+	    checkForMisdelivery(cause, message);
+	    // Not a misdelivery  - rethrow the remote exception
+	    throw remote_ex;
+	} catch (IllegalArgumentException illegal_arg) {
+	    checkForMisdelivery(illegal_arg, message);
+	    // Not a misdelivery  - rethrow the exception
+	    throw illegal_arg;
+	} finally {
+	    SchedulableStatus.endBlocking();
+	}
+	return result;
     }
 
 
@@ -175,15 +219,16 @@ public class RMILinkProtocol
     }
 
 
-    // Standard RMI handling of security exceptions. Subclasses may
-    // need to do something different (see CORBALinkProtocol).
+    // Standard RMI handling of security and other cougaar-specific io
+    // exceptions. Subclasses may need to do something different (see
+    // CORBALinkProtocol).
     //
     // If the argument itself is a MarshalException whose cause is a
-    // MessageSecurityException, a local security error has occured.
+    // CougaarIOException, a local cougaar-specific error has occured.
     //
     // If the argument is some other RemoteException whose cause is an
-    // UnmarshalException whose cause in turn is a MessageSecurityEx,
-    // a remote security error has occured.
+    // UnmarshalException whose cause in turn is a CougaarIOException,
+    // a remote cougaar-specific error has occured.
     //
     // Otherwise this is some other kind of remote error.
     protected void handleSecurityException(Exception ex) 
@@ -191,12 +236,22 @@ public class RMILinkProtocol
     {
 	Throwable cause = ex.getCause();
 	if (ex instanceof java.rmi.MarshalException) {
-	    if (cause instanceof DontRetryException) {
+	    if (cause instanceof CougaarIOException) {
+		throw new CommFailureException((Exception) cause);
+	    } 
+	    // When a TransientIOException is thrown sometimes it
+	    // triggers different exception on the socket, which gets
+	    // through instead of the TransientIOException. For now we
+	    // will catch these and treat them as if they were
+	    // transient (though other kinds of SocketExceptions
+	    // really shouldn't be).
+	    else if (cause instanceof java.net.SocketException) {
+		cause = new TransientIOException(cause.getMessage());
 		throw new CommFailureException((Exception) cause);
 	    }
 	} else if (cause instanceof java.rmi.UnmarshalException) {
 	    Throwable remote_cause = cause.getCause();
-	    if (remote_cause instanceof DontRetryException) {
+	    if (remote_cause instanceof CougaarIOException) {
 		throw new CommFailureException((Exception) remote_cause);
 	    }
 	} 
@@ -220,11 +275,6 @@ public class RMILinkProtocol
     }
 
 
-
-    public final void registerMTS(MessageAddress addr) {
-	// No-op now.  Probably the whole notion of per-protocol
-	// registerMTS is no longer useful.
-    }
 
     public final void registerClient(MessageTransportClient client) {
 	findOrMakeMT();
@@ -310,6 +360,8 @@ public class RMILinkProtocol
 		public void execute(Response response) {
 		    Response.Get rg = (Response.Get) response;
 		    AddressEntry entry = rg.getAddressEntry();
+		    if (loggingService.isDebugEnabled())
+			loggingService.debug("WP callback: " +entry);
 		    synchronized (lookup_lock) {
 			lookup_pending = false;
 			lookup_result =(entry != null) ? entry.getURI() : null;
@@ -321,6 +373,11 @@ public class RMILinkProtocol
 	private MT lookupRMIObject() 
 	    throws Exception 
 	{
+	    if (getRegistry().isLocalClient(target)) {
+		// myself as an RMI stub
+		return myProxy;
+	    }
+
 	    URI ref = null;
 	    Object object = null;
 
@@ -335,14 +392,23 @@ public class RMILinkProtocol
 		    getNameSupport().lookupAddressInNameServer(target, 
 							       ptype, 
 							       lookup_cb);
-		    return null;
+		    // The results may have arrived as part of registering callback
+		    if (lookup_result != null) {
+			ref = lookup_result;
+		    } else {
+			return null;
+		    }
 		}
 	    }
 
 	    try {
+		// This call can block in net i/o
+		SchedulableStatus.beginNetIO("RMI reference decode");
 		object = RMIRemoteObjectDecoder.decode(ref);
 	    } catch (Throwable ex) {
 		loggingService.error("Can't decode URI " +ref, ex);
+	    } finally {
+		SchedulableStatus.endBlocking();
 	    }
 
 
@@ -436,6 +502,7 @@ public class RMILinkProtocol
 		decache();
 		throw mis;
 	    }
+	    // RMILinkProtocol won't throw this but subclasses might.
 	    catch (CommFailureException cfe) {
 		// force recache of remote
 		decache();
@@ -443,7 +510,7 @@ public class RMILinkProtocol
 	    }
 	    catch (java.rmi.RemoteException ex) {
 		if (loggingService.isDebugEnabled()) {
-		    loggingService.debug(null, ex);
+		    loggingService.debug("RemoteException", ex);
 		}
 		handleSecurityException(ex);
 		// If we get here it wasn't a security exception
@@ -453,7 +520,7 @@ public class RMILinkProtocol
 	    catch (Exception ex) {
 		// Ordinary comm failure.  Force recache of remote
 		if (loggingService.isDebugEnabled()) {
-		    loggingService.debug(null, ex);
+		    loggingService.debug("Ordinary comm failure", ex);
 		}
 		decache();
 		//  Ordinary comm failure

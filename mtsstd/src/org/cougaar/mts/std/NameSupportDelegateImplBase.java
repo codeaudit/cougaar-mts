@@ -53,9 +53,6 @@ abstract public class NameSupportDelegateImplBase implements NameSupport
 	nameSupport.unregisterAgentInNameServer(reference, address, protocol);
     }
 
-    public void registerMTS(MessageAddress address) {
-	nameSupport.registerMTS(address);
-    }
 
     public void lookupAddressInNameServer(MessageAddress address, 
 					  String protocol,

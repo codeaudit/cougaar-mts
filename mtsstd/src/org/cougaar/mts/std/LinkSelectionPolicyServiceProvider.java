@@ -49,8 +49,8 @@ public class LinkSelectionPolicyServiceProvider
 	    sb.getService(this, LoggingService.class, null);
 	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
 	    sb.getService(this, LinkSelectionProvisionService.class, null);
-	if (policy == null) createSelectionPolicy(container);
 	policy = lsp.getPolicy();
+	if (policy == null) policy = createSelectionPolicy(container);
     }
 
 

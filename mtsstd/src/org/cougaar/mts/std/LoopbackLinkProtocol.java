@@ -62,10 +62,6 @@ public class LoopbackLinkProtocol
     }
 
 
-    public void registerMTS(MessageAddress address) {
-    }
-   
-
 
     private class Link implements DestinationLink {
 	MessageAddress address;

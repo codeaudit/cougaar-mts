@@ -80,12 +80,6 @@ abstract public class LinkProtocol
 
 
     /**
-     * Register an MTS pseudo-agent to handle incoming multicasts.
-     */
-    abstract public void registerMTS(MessageAddress address);
-
-
-    /**
      * Determine whether or not the given protocol understands the
      * given address. */
     abstract public boolean addressKnown(MessageAddress address);

@@ -21,8 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -266,13 +264,7 @@ public class AttributedMessage
 	    MessageProtectionAspect.getMessageProtectionService();
 
 	if (svc != null) {
-
-	    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	    ObjectOutputStream oos = new ObjectOutputStream(bos);
-	    oos.writeObject(attributes);
-	    oos.close();
-	    
-	    byte[] bytes = svc.protectHeader(bos.toByteArray(), 
+	    byte[] bytes = svc.protectHeader(attributes, 
 					     getOriginator(),
 					     getTarget());
 	    out.writeObject(bytes);
@@ -282,21 +274,17 @@ public class AttributedMessage
     }
 
     private void readAttributes(ObjectInput in) 
-	throws java.io.IOException, ClassNotFoundException, GeneralSecurityException
+	throws java.io.IOException, GeneralSecurityException, ClassNotFoundException
     {
  	MessageProtectionService svc =
 	    MessageProtectionAspect.getMessageProtectionService();
 	if (svc != null) {
 
 	    byte[] rawData = (byte[]) in.readObject();
-	    byte[] data  = svc.unprotectHeader(rawData, 
-					       getOriginator(),
-					       getTarget());
+	    attributes  = svc.unprotectHeader(rawData, 
+					      getOriginator(),
+					      getTarget());
 
-	    ByteArrayInputStream bis = new ByteArrayInputStream(data);
-	    ObjectInputStream ois = new ObjectInputStream(bis);
-	    attributes = (SimpleMessageAttributes) ois.readObject();
-	    ois.close();
 	} else {
 	    attributes = (SimpleMessageAttributes) in.readObject();
 	}

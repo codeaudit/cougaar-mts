@@ -71,7 +71,8 @@ final public class SendLinkImpl
 		incn = Long.parseLong(incn_str);
 	    }
 	} catch (Exception ex) {
-	    ex.printStackTrace();
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("Failed Incarnation",ex);
 	}
 	incarnation = new Long(incn);
     }
@@ -130,11 +131,7 @@ final public class SendLinkImpl
     public void unregisterClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
 
-	// The synchronization is to prevent a race condition with the
-	// deliverMessage() method of MessageDelivererImpl.
-	synchronized (registry) {
-	    registry.unregisterClient(client);
-	}
+	registry.unregisterClient(client);
 
 	// NB: The proxy (as opposed to the client) CANNOT be
 	// unregistered here.  If it were, messageDelivered callbacks

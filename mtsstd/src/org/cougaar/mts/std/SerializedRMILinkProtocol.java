@@ -62,7 +62,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	    byte[] messageBytes = null;
 	    try {
 		messageBytes = SerializationUtils.toByteArray(message);
-	    } catch (DontRetryException mex) {
+	    } catch (CougaarIOException mex) {
 		throw new CommFailureException(mex);
 	    } catch (java.io.IOException iox) {
 		// What would this mean?
@@ -71,15 +71,24 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	    byte[] res = null;
 	    try {
 		res = ((SerializedMT) remote).rerouteMessage(messageBytes);
-	    } catch (DontRetryException mex) {
+	    } catch (CougaarIOException mex) {
 		throw new CommFailureException(mex);
+	    } catch (java.rmi.RemoteException remote_ex) {
+		Throwable cause = remote_ex.getCause();
+		checkForMisdelivery(cause, message);
+		// Not a misdelivery  - rethrow the remote exception
+		throw remote_ex;
+	    } catch (IllegalArgumentException illegal_arg) {
+		checkForMisdelivery(illegal_arg, message);
+		// Not a misdelivery  - rethrow the exception
+		throw illegal_arg;
 	    }
 
 	    MessageAttributes attrs = null;
 	    try {
 		attrs = (MessageAttributes) 
 		    SerializationUtils.fromByteArray(res);
-	    } catch (DontRetryException mex) {
+	    } catch (CougaarIOException mex) {
 		throw new CommFailureException(mex);
 	    } catch (java.io.IOException iox) {
 		// What would this mean?

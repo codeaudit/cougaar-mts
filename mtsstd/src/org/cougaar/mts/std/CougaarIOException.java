@@ -21,40 +21,26 @@
 
 package org.cougaar.core.mts;
 
-import java.io.PrintStream;
-import org.cougaar.core.component.ServiceBroker;
+import java.io.IOException;
+import java.io.Serializable;
 
-public class AgentLocalStatusServlet extends AgentStatusServlet
+/**
+ * Parent class of COUGAAR-specific IO exceptions.  So far the
+ * sublclasses are DontRetryException and TransientIOException.
+ */
+abstract public class  CougaarIOException 
+    extends IOException
+    implements Serializable
 {
-
-    public AgentLocalStatusServlet(ServiceBroker sb) {
-	super(sb);
+    
+    public CougaarIOException() 
+    {
+	super();
     }
 
-    public String getPath() {
-	return "/message/between-Any-agent-and-Local-Agent";
+    public CougaarIOException(String message) 
+    {
+	super(message);
     }
 
-    public String getDescription(MessageAddress agent) {
-	return "Message Transport statistics between local agent "+
-	    agent + " and any other agent";
-    }
-
-    public String getTitle() {
-	return "Message Transport statistics for agents on node "+ 
-	    getNodeID();
-    }
-
-    protected boolean isRemote() {
-	return(false);
-    }
-
-   protected AgentStatusService.AgentState getState(MessageAddress agent){
-       	AgentStatusService.AgentState state = null;
-	
-	if (agentStatusService!=null) {
-	    state = agentStatusService.getLocalAgentState(agent);
-	}
-	return state;
-    }
 }

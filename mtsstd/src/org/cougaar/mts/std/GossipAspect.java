@@ -40,14 +40,19 @@ import java.util.Map;
 public class GossipAspect 
     extends StandardAspect
 {
+    // pseudo dynamic parameters
+    private static final String REQUEST_GOSSIP_MAX_VALUE_STR = "500";
+    private static final String REQUEST_GOSSIP_MAX_PARAM = "MaxRequestsPerMsg";
+
     private static final String TOPOLOGY = "topology";
     static final String VALUE_GOSSIP_ATTR = 
 	"org.cougaar.core.mts.value-gossip";
-    static final String KEY_GOSSIP_ATTR = 
-	"org.cougaar.core.mts.key-gossip";
+    static final String REQUEST_GOSSIP_ATTR = 
+	"org.cougaar.core.mts.request-gossip";
     private static final MessageAddress LIMBO =
 	MessageAddress.getMessageAddress("wp_cant_find_node");
 
+    private int requestGossipMaxPerMsg;
     private MetricsService metricsService;
     private GossipKeyDistributionService keyService;
     private GossipQualifierService qualifierService;
@@ -57,20 +62,29 @@ public class GossipAspect
     // Local data we'd like to get via gossip.
     private KeyGossip localRequests;
 
-    // Maps address to KeyGossip, one per neighbor Agent.
-    // Each entry is the gossip that we've asked for so far from that
-    // neighbor.
-    private HashMap propagatedRequests;
+    // All requests, from all sources, local or remote.
+    private KeyGossip allRequests;
 
-    // Maps address to KeyGossip, one per requesting neighbor Agent.
-    // Each entry is the gossip that neighbor wants from us
+
+
+    // Maps address to GossipSubscription, one per neighbor Node.
+    // Each entry is the collection of requests we're waiting to send
+    // to that neighbor.
+    private HashMap pendingRequests;
+
+
+    // Maps address to KeyGossip, one per requesting neighbor Node.
+    // Each entry is the gossip that neighbor wants from us.
     private HashMap neighborsRequests;
 
-    // Maps address to GossipSubscription, one per requesting
-    // neighbor Agent.  Each entry is the latest data we should
-    // forward to that neighbor.
+    // Maps address to GossipSubscription, one per requesting neighbor
+    // Node.  Each entry is the latest data we should forward to that
+    // neighbor.
     private HashMap neighborsSubscriptions;
 
+    // Maps Node addresses to Booleans, as a kind of per-Node lock
+    // for key gossip.
+    private HashMap neighborLocks;
 
     public Object getDelegate(Object delegatee, Class type) 
     {
@@ -107,9 +121,11 @@ public class GossipAspect
 	wpService = (WhitePagesService)
 	    sb.getService(this, WhitePagesService.class, null);
 	localRequests = new KeyGossip();
-	propagatedRequests = new HashMap();
+	allRequests = new KeyGossip();
+	pendingRequests = new HashMap();
 	neighborsRequests = new HashMap();
 	neighborsSubscriptions = new HashMap();
+	neighborLocks = new HashMap();
 
 	keyService = new GossipKeyDistributionServiceImpl();
 	
@@ -121,15 +137,30 @@ public class GossipAspect
 	rootsb.addService(GossipKeyDistributionService.class, sp);
 	if (loggingService.isInfoEnabled())
 	    loggingService.info("Registered GossipKeyDistributionService");
+
+// 	initializeParameter(REQUEST_GOSSIP_MAX_PARAM, REQUEST_GOSSIP_MAX_VALUE_STR);
+	dynamicParameterChanged(REQUEST_GOSSIP_MAX_PARAM,
+				getParameter(REQUEST_GOSSIP_MAX_PARAM,
+					     REQUEST_GOSSIP_MAX_VALUE_STR));
+	
+    }
+
+
+    protected void dynamicParameterChanged(String name, String value)
+    {
+	if (name.equals(REQUEST_GOSSIP_MAX_PARAM)) {
+	    requestGossipMaxPerMsg = Integer.parseInt(value);
+	}
     }
 
     private MessageAddress agentNode(MessageAddress agentAddr) {
 	String agent = agentAddr.getAddress();
 	try {
-	    AddressEntry entry = wpService.get(agent, TOPOLOGY);
+	    //only look at WP cache, do not block
+	    AddressEntry entry = wpService.get(agent, TOPOLOGY, -1);
 	    if (entry == null) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error("WhitePages returned null entry for agent " 
+		if (loggingService.isDebugEnabled())
+		    loggingService.debug("WhitePages returned null entry for agent " 
 					 +agent);
 		return LIMBO;
 	    } else {
@@ -137,27 +168,87 @@ public class GossipAspect
 		return MessageAddress.getMessageAddress(node);
 	    }
 	} catch (Exception ex) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("", ex);
+	    if (loggingService.isDebugEnabled())
+		loggingService.debug("", ex);
 	    return LIMBO;
 	}
     }
 
+    private void addRequest(String key, int propagationDistance)
+    {
+	ensureQualifierService();
+	if (qualifierService == null || qualifierService.shouldForwardRequest(key)) {
+	    boolean new_entry = allRequests.add(key, propagationDistance);
+	    if (new_entry) {
+		// add to all pendingRequests
+		synchronized (pendingRequests) {
+		    Iterator itr = pendingRequests.values().iterator();
+		    KeyGossip gossip = null;
+		    while (itr.hasNext()) {
+			gossip = (KeyGossip) itr.next();
+			gossip.add(key, propagationDistance);
+		    }
+		}
+	    }
+	}
+    }
+
+
+    private void addNeighborRequest(KeyGossip gossip)
+    {
+	Iterator itr = gossip.iterator();
+	Map.Entry entry = null;
+	String key = null;
+	GossipPropagation propagation = null;
+	while (itr.hasNext()) {
+	    entry = (Map.Entry) itr.next();
+	    key = (String) entry.getKey();
+	    propagation = (GossipPropagation) entry.getValue();
+	    int distance = propagation.getDistance();
+	    // This is a non-local request, so the propagation count
+	    // is relative to the originator.  Given which, the
+	    // appropriate distance test is 1, not 0.  If a local
+	    // requests ever went through here, this wouldn't work
+	    // properly.
+	    if (distance > 1) addRequest(key, --distance);
+	}
+    }
+
+    private KeyGossip findOrMakePendingRequests(MessageAddress neighbor)
+    {
+	KeyGossip result = null;
+	synchronized (pendingRequests) {
+	    result = (KeyGossip) pendingRequests.get(neighbor);
+	    if (result == null) {
+		result = allRequests.cloneGossip();
+		pendingRequests.put(neighbor, result);
+	    }
+	}
+	return result;
+	
+    }
+
     // A neighbor wants us to notify him if we see this key
-    private void handleKeyGossip(MessageAddress agent, KeyGossip gossip) {
+    private void handleRequestGossip(MessageAddress agent, KeyGossip gossip) {
 	MessageAddress neighbor = agentNode(agent);
 	if (loggingService.isInfoEnabled())
 	    loggingService.info("Received gossip requests from " 
 				+neighbor+ "="
 				+gossip.prettyPrint());
+
+	// Add Neighbors requests to our nodes request's
+	addNeighborRequest(gossip);
 	synchronized(this) {
+
+	    // Remember requests from neighbor
 	   KeyGossip old = (KeyGossip) neighborsRequests.get(neighbor);
 	    if (old == null) {
 		old = new KeyGossip();
 		neighborsRequests.put(neighbor, old);
 	    }
 	    old.add(gossip);
-
+	    
+	    // Add Subscriptions for request
 	    GossipSubscription sub = (GossipSubscription) 
 		neighborsSubscriptions.get(neighbor);
 	    if (sub == null) {
@@ -165,6 +256,10 @@ public class GossipAspect
 		sub = new GossipSubscription(neighbor, metricsService,
 					     qualifierService);
 		neighborsSubscriptions.put(neighbor, sub);
+	    }
+	    if (loggingService.isInfoEnabled()) {
+		loggingService.info("Adding subscriptions for requests from "
+				    +neighbor+ "\n" + gossip.prettyPrint());
 	    }
 	    sub.add(gossip);
 	}
@@ -191,61 +286,10 @@ public class GossipAspect
     }
 
 
-    // Ask target for any gossip we haven't already asked him for
-    private synchronized void addRequests(AttributedMessage message,
-					  KeyGossip potentialGossip) 
+    private void addGossipValues(MessageAddress neighbor,
+				 AttributedMessage message)
     {
-	KeyGossip messageGossip = (KeyGossip) 
-	    message.getAttribute(KEY_GOSSIP_ATTR);
-	
-	MessageAddress destination = agentNode(message.getTarget());
-	KeyGossip propagatedGossip = (KeyGossip) 
-	    propagatedRequests.get(destination);
-	if (propagatedGossip == null) {
-	    propagatedGossip = new KeyGossip();
-	    propagatedRequests.put(destination, propagatedGossip);
-	}
-	
-	ensureQualifierService();
-	KeyGossip addendum = 
-	    potentialGossip.computeAddendum(propagatedGossip,qualifierService);
-
-	if (messageGossip != null && loggingService.isInfoEnabled())
-	    loggingService.info("Existing requests for " +destination+ '=' 
-				+messageGossip.prettyPrint());
-	if (addendum != null) {
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("Additional requests for " 
-				    +destination+ '='
-				    +addendum.prettyPrint());
-	    if (messageGossip == null) messageGossip = new KeyGossip(); 
-	    messageGossip.add(addendum);
-	}
-
-	if (messageGossip != null) {
-	    message.setAttribute(KEY_GOSSIP_ATTR, messageGossip);
-	}
-	
-    }
-
-
-    private synchronized void commitRequests(AttributedMessage message) 
-    {
-	KeyGossip messageGossip = (KeyGossip) 
-	    message.getAttribute(KEY_GOSSIP_ATTR);
-	if (messageGossip == null) return;
-
-	MessageAddress destination = agentNode(message.getTarget());
-	KeyGossip propagatedGossip = (KeyGossip) 
-	    propagatedRequests.get(destination);
-	if (propagatedGossip != null) propagatedGossip.add(messageGossip);
-    }
-
-
-    private synchronized void addGossipValues(MessageAddress neighbor,
-					      AttributedMessage message)
-    {
-	GossipSubscription sub = (GossipSubscription)
+	GossipSubscription sub = (GossipSubscription) 
 	    neighborsSubscriptions.get(neighbor);
 	if (sub != null) {
 	    ValueGossip changes = sub.getChanges();
@@ -258,6 +302,66 @@ public class GossipAspect
 		message.setAttribute(VALUE_GOSSIP_ATTR, changes);
 	    }
 	}
+    }
+
+    private boolean getGossipLock(MessageAddress neighbor)
+    {
+	boolean result = false;
+	synchronized (neighbor) {
+	    Boolean locked = (Boolean) neighborLocks.get(neighbor);
+	    if (locked == null || !locked.booleanValue()) {
+		neighborLocks.put(neighbor, Boolean.TRUE);
+		result = true;
+	    }
+	}
+	return true; // result;
+    }
+
+    private void releaseGossipLock(MessageAddress neighbor)
+    {
+	synchronized (neighbor) {
+	    neighborLocks.put(neighbor, Boolean.FALSE);
+	}
+    }
+
+    private void addGossipRequests(MessageAddress neighbor,
+			       AttributedMessage message)
+    {
+	KeyGossip pending = findOrMakePendingRequests(neighbor);
+	KeyGossip clone = null;
+
+	// Limit the size
+	synchronized (pending) {
+	    clone = pending.cloneGossip(requestGossipMaxPerMsg);
+	}
+	if (loggingService.isInfoEnabled()) {
+	    if (clone.size() < pending.size()) {
+		loggingService.info("Truncated pending requests to " 
+				    +neighbor);
+	    }
+	    loggingService.info("About to send requests to " +neighbor+
+				"\n" + clone.prettyPrint());
+	}
+	if (!clone.isEmpty()) message.setAttribute(REQUEST_GOSSIP_ATTR, clone);
+    }
+
+    private void commitValues(MessageAddress neighbor,
+			      AttributedMessage message)
+    {
+	GossipSubscription sub = (GossipSubscription) 
+	    neighborsSubscriptions.get(neighbor);
+	ValueGossip sent = (ValueGossip) 
+	    message.getAttribute(VALUE_GOSSIP_ATTR);
+	if (sub != null && sent != null) sub.commitChanges(sent);
+    }
+
+    private void commitRequests(MessageAddress neighbor,
+				AttributedMessage message)
+    {
+	KeyGossip pending = findOrMakePendingRequests(neighbor);
+	KeyGossip sent = (KeyGossip) 
+	    message.getAttribute(REQUEST_GOSSIP_ATTR);
+	if (sent != null && !sent.isEmpty()) pending.commitChanges(sent);
     }
 
     private class DestinationLinkDelegate 
@@ -273,34 +377,28 @@ public class GossipAspect
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    // Add gossip attributes
-	    // Local requests
-	    addRequests(message, localRequests);
-
 	    // Neighbor requests (excluding the recipient)
-	    synchronized (GossipAspect.this) {
-		Iterator itr = neighborsRequests.entrySet().iterator();
-		MessageAddress neighbor = agentNode(message.getTarget());
-		while (itr.hasNext()) {
-		    Map.Entry entry = (Map.Entry) itr.next();
-		    MessageAddress addr = (MessageAddress) entry.getKey();
-		    KeyGossip gossip = (KeyGossip) entry.getValue();
-		    if (!addr.equals(neighbor)) {
-			addRequests(message, gossip);
-		    }
-		}
+	    MessageAddress neighbor = agentNode(message.getTarget());
+	    MessageAttributes result = null;
 
-		// Now add any updates for the destination
+	    // Check for other in-flight messages to this neighbor. 
+	    boolean locked = getGossipLock(neighbor);
+	    
+	    if (locked) {
+		addGossipRequests(neighbor, message);
 		addGossipValues(neighbor, message);
 	    }
 
-	    MessageAttributes result = super.forwardMessage(message);
-	    
-	    // If the forward succeeds, commit changes.
-	    // If there was an exception, we won't get here
-	    commitRequests(message);
+	    try {
+		result = super.forwardMessage(message);
 
-	    // TO BE DONE: commit values
+		// If the forward succeeds, commit changes.
+		// If there was an exception, we won't get here
+		commitRequests(neighbor, message);
+		commitValues(neighbor, message);
+	    } finally {
+		if (locked) releaseGossipLock(neighbor);
+	    }
 	    
 	    return result;
 	}
@@ -318,18 +416,18 @@ public class GossipAspect
 						MessageAddress dest)
 	    throws MisdeliveredMessageException
 	{
-	    Object keyGossip = 	message.getAttribute(KEY_GOSSIP_ATTR);
-	    if (keyGossip != null) {
-		if (keyGossip instanceof KeyGossip) {
-		    handleKeyGossip(message.getOriginator(),
-				    (KeyGossip) keyGossip);
+	    Object requestGossip = 	message.getAttribute(REQUEST_GOSSIP_ATTR);
+	    if (requestGossip != null) {
+		if (requestGossip instanceof KeyGossip) {
+		    handleRequestGossip(message.getOriginator(),
+				    (KeyGossip) requestGossip);
 		} else {
 		    loggingService.error("Weird gossip request in " 
-					 +KEY_GOSSIP_ATTR+
+					 +REQUEST_GOSSIP_ATTR+
 					 "="
-					 +keyGossip);
+					 +requestGossip);
 		}
-		message.removeAttribute(KEY_GOSSIP_ATTR);
+		message.removeAttribute(REQUEST_GOSSIP_ATTR);
 	    }
 		
 	    Object valueGossip = message.getAttribute(VALUE_GOSSIP_ATTR);
@@ -382,6 +480,7 @@ public class GossipAspect
 		loggingService.info("GossipKeyDistributionService.addKey " 
 				    +key);
 	    localRequests.add(key, propagationDistance);
+	    addRequest(key, propagationDistance);
 	}
 
 	public void removeKey(String key) {

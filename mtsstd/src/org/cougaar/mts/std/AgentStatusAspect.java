@@ -21,10 +21,13 @@
 
 package org.cougaar.core.mts;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.qos.metrics.Constants;
@@ -200,11 +203,19 @@ public class AgentStatusAspect
     // 
     // Aspect Code to implement Sensors
 
+    // To gather sensible send-side statistics, this aspect's
+    // delegates need to run very late on the SendQueue (so as to
+    // count any internal messages added to the queue by other aspect
+    // delegates) but very early on the DestinationLink (because the
+    // delegate on that side is processing the return).  The aspect
+    // mechanism doesn't provide for station-specific ordering.  But
+    // it does provide an implicit early-vs-late switch, since
+    // reverse delegates always run early.  Use that here.
     public Object getDelegate(Object object, Class type) {
-	if (type == DestinationLink.class) {
-	    return new AgentStatusDestinationLink((DestinationLink) object);
-	} else 	if (type == SendQueue.class) {
+	if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) object);
+	} else 	if (type == SendLink.class) {
+	    return new SendLinkDelegate((SendLink) object);
 	} else 	if (type == MessageDeliverer.class) {
 	    return new MessageDelivererDelegate((MessageDeliverer) object);
 	} else {
@@ -212,13 +223,42 @@ public class AgentStatusAspect
 	}
     }
 
+    public Object getReverseDelegate(Object object, Class type) {
+	if (type == DestinationLink.class) {
+	    return new DestinationLinkDelegate((DestinationLink) object);
+	} else {
+	    return null;
+	}
+    }
+
  
-    public class AgentStatusDestinationLink 
+    private class SendLinkDelegate
+	extends SendLinkDelegateImplBase
+    {
+	SendLinkDelegate(SendLink link) {
+	    super(link);
+	}
+
+	public void flushMessages(ArrayList messages) {
+	    super.flushMessages(messages);
+	    Iterator i = messages.iterator();
+	    while (i.hasNext()) {
+		Message message = (Message) i.next();
+		MessageAddress remoteAddr = message.getTarget().getPrimary();
+		AgentState remoteState = ensureRemoteState(remoteAddr);
+		synchronized (remoteState) {
+		    remoteState.queueLength--;
+		}
+	    }
+	}
+    }
+
+    private class DestinationLinkDelegate
 	extends DestinationLinkDelegateImplBase
     {
 	private String spoke_key, heard_key,error_key;
 
-	public AgentStatusDestinationLink(DestinationLink link)
+	public DestinationLinkDelegate(DestinationLink link)
 	{
 	    super(link);
 	    String remoteAgent = link.getDestination().getAddress();
@@ -241,9 +281,9 @@ public class AgentStatusAspect
 		   MisdeliveredMessageException
 
 	{
-	    MessageAddress remoteAddr = message.getTarget();
+	    MessageAddress remoteAddr = message.getTarget().getPrimary();
 	    AgentState remoteState = ensureRemoteState(remoteAddr);
-	    MessageAddress localAddr = message.getOriginator();
+	    MessageAddress localAddr = message.getOriginator().getPrimary();
 	    AgentState localState = ensureLocalState(localAddr);
 	    
 	    try {
@@ -342,7 +382,7 @@ public class AgentStatusAspect
 	
     }
 
-    public class  MessageDelivererDelegate 
+    private class  MessageDelivererDelegate 
 	extends MessageDelivererDelegateImplBase 
     {
 
@@ -367,14 +407,14 @@ public class AgentStatusAspect
 		msgBytes=((Number) attr).intValue();
 
 	    AgentState remoteState = 
-		ensureRemoteState(message.getOriginator());
+		ensureRemoteState(message.getOriginator().getPrimary());
 	    synchronized (remoteState) {
 		remoteState.receivedCount++;
 		remoteState.receivedBytes+=msgBytes;
 	    }
 		    
 	    AgentState localState = 
-		ensureLocalState(message.getTarget());
+		ensureLocalState(message.getTarget().getPrimary());
 	    synchronized (localState) {
 		localState.receivedCount++;
 		localState.receivedBytes+=msgBytes;
@@ -386,7 +426,7 @@ public class AgentStatusAspect
     }
 
 
-    public class SendQueueDelegate 
+    private class SendQueueDelegate 
 	extends SendQueueDelegateImplBase
     {
 	public SendQueueDelegate (SendQueue queue) {
@@ -395,9 +435,9 @@ public class AgentStatusAspect
 	}
 	
 	public void sendMessage(AttributedMessage message) {
-	    MessageAddress remoteAddr = message.getTarget();
+	    MessageAddress remoteAddr = message.getTarget().getPrimary();
 	    AgentState remoteState = ensureRemoteState(remoteAddr);
-	    MessageAddress localAddr = message.getOriginator();
+	    MessageAddress localAddr = message.getOriginator().getPrimary();
 	    AgentState localState = ensureLocalState(localAddr);
 
 	    synchronized (remoteState) {

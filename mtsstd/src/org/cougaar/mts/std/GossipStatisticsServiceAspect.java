@@ -52,16 +52,8 @@ final public class GossipStatisticsServiceAspect
 	sb.releaseService(this, NodeControlService.class, null);
 
 	rootsb.addService(GossipStatisticsService.class, this);
+
 	
-	// Testing
-// 	java.util.TimerTask task = new java.util.TimerTask() {
-// 		public void run() {
-// 		    GossipTrafficRecord stats = impl.getStatistics();
-// 		    System.out.println("### " +stats);
-// 		}
-// 	    };
-// 	java.util.Timer timer = new java.util.Timer();
-// 	timer.schedule(task, 0, 10000);
     }
 
     public Object getReverseDelegate(Object delegatee, Class type) 
@@ -111,22 +103,18 @@ final public class GossipStatisticsServiceAspect
 
     void requestsSent(KeyGossip gossip) {
 	stats.requests_sent += gossip.size();
-	++stats.send_count;
     }
 
     void requestsReceived(KeyGossip gossip) {
 	stats.requests_rcvd += gossip.size();
-	++stats.rcv_count;
     }
 
     void valuesSent(ValueGossip gossip) {
 	stats.values_sent += gossip.size();
-	++stats.send_count;
     }
 
     void valuesReceived(ValueGossip gossip) {
 	stats.values_rcvd += gossip.size();
-	++stats.rcv_count;
     }
 
 
@@ -158,11 +146,14 @@ final public class GossipStatisticsServiceAspect
 	    MessageAttributes result = super.forwardMessage(message);
 	    // statistics
 	    KeyGossip keyGossip = (KeyGossip) 
-		message.getAttribute(GossipAspect.KEY_GOSSIP_ATTR);
+		message.getAttribute(GossipAspect.REQUEST_GOSSIP_ATTR);
 	    ValueGossip valueGossip = (ValueGossip) 
 		message.getAttribute(GossipAspect.VALUE_GOSSIP_ATTR);
 	    if (keyGossip != null) requestsSent(keyGossip);
 	    if (valueGossip != null) valuesSent(valueGossip);
+	    ++stats.msg_sent;
+	    if ((keyGossip != null) || (valueGossip != null))
+		++stats.msg_with_gossip_sent;
 	    return result;
 	}
 
@@ -182,12 +173,14 @@ final public class GossipStatisticsServiceAspect
 	{
 	    // statistics
 	    KeyGossip keyGossip = (KeyGossip) 
-		message.getAttribute(GossipAspect.KEY_GOSSIP_ATTR);
+		message.getAttribute(GossipAspect.REQUEST_GOSSIP_ATTR);
 	    ValueGossip valueGossip = (ValueGossip) 
 		message.getAttribute(GossipAspect.VALUE_GOSSIP_ATTR);
 	     if (keyGossip != null) requestsReceived(keyGossip);
 	     if (valueGossip != null) valuesReceived(valueGossip);
-	    
+	     ++stats.msg_rcvd;
+	     if ((keyGossip != null) || (valueGossip != null))
+		 ++stats.msg_with_gossip_rcvd;
 	    return super.deliverMessage(message, dest);
 	}
     }

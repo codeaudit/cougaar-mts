@@ -156,14 +156,14 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    remote == null ? null : extractInetAddr(remote.toString());
         String dst_node =  null;
 	try {
-	    AddressEntry entry = wp.get(dst_agent, TOPOLOGY);
+	    AddressEntry entry = wp.get(dst_agent, TOPOLOGY, 10);
 	    if (entry == null) {
 		dst_node = "???";
 	    } else {
 		dst_node = entry.getURI().getPath().substring(1);
 	    }
 	} catch (Exception ex) {
-	    ex.printStackTrace();
+	    getLoggingService().error("", ex);
 	    dst_node = "???";
 	}
 

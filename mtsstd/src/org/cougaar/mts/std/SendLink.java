@@ -26,7 +26,7 @@ import java.util.ArrayList;
 public interface SendLink
 {
     void sendMessage(AttributedMessage message);
-    void flushMessages(ArrayList messsages);
+    void flushMessages(ArrayList messages);
     void release();
     MessageAddress getAddress();
     boolean okToSend(AttributedMessage message);

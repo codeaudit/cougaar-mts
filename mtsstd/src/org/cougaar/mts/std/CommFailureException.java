@@ -30,15 +30,15 @@ package org.cougaar.core.mts;
  **/
 public class CommFailureException extends Exception 
 {
-    private Exception nested_exception;
-
     public CommFailureException(Exception nested) {
-	super(nested.toString());
-	this.nested_exception = nested;
+	super(nested);
     }
 
+    /**
+     * @deprecated Use getCause()
+     */
     public Exception getException() {
-	return nested_exception;
+	return (Exception) getCause();
     }
 
 }

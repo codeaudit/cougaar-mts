@@ -22,6 +22,8 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -56,6 +58,8 @@ public class SocketFactory
     implements java.io.Serializable
 {
 
+    private static transient Logger logger = 
+	Logging.getLogger("org.cougaar.core.mts.SocketFactory");
     // This has to be set very early from outside
     private static transient SocketControlProvisionService PolicyProvider; 
 
@@ -120,7 +124,8 @@ public class SocketFactory
 	    Method meth = cls.getMethod("getDefault", FORMALS);
 	    return (SSLSocketFactory) meth.invoke(cls, ACTUALS);
 	} catch (Exception ex) {
-	    ex.printStackTrace();
+	    if (logger.isErrorEnabled())
+		logger.error("Error getting SSL socket factory: " + ex);
 	    return (SSLSocketFactory) SSLSocketFactory.getDefault();
 	}
     }
@@ -138,7 +143,8 @@ public class SocketFactory
 	    Method meth = cls.getMethod("getDefault", FORMALS);
 	    return (ServerSocketFactory) meth.invoke(cls, ACTUALS);
 	} catch (Exception ex) {
-	    ex.printStackTrace();
+	    if (logger.isErrorEnabled())
+		logger.error("Error getting socket factory: " + ex);
 	    return SSLServerSocketFactory.getDefault();
 	}
     }

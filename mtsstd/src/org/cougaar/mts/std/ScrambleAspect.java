@@ -21,9 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import java.util.TimerTask;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 
 /**
  * Scrambles the messages 
@@ -49,7 +49,7 @@ public class ScrambleAspect extends StandardAspect
 	extends SendLinkDelegateImplBase 
     {
 	
-	TimerTask timerTask;
+	Schedulable sender;
 	AttributedMessage heldMessage;
 	
 	int heldMessageCount;
@@ -64,7 +64,7 @@ public class ScrambleAspect extends StandardAspect
 	
 
 	
-	private class SendMessageTask extends TimerTask {
+	private class MessageSender implements Runnable {
 	    public void run() {
 		forcedHeldMessage();
 	    }
@@ -86,8 +86,9 @@ public class ScrambleAspect extends StandardAspect
 	//================util methods
 	private void holdMessage(AttributedMessage message){
 	    heldMessage = message;
-	    timerTask = new SendMessageTask ();
-	    threadService.schedule(timerTask, 3000); //schedule a timer task
+	    MessageSender sender_body = new MessageSender();
+	    sender = threadService.getThread(this, sender_body, "Scramble");
+	    sender.schedule(300);
 	    heldMessageCount++;
 	    if (loggingService.isDebugEnabled())
 		loggingService.debug("Holding message #" +printString()  
@@ -96,7 +97,7 @@ public class ScrambleAspect extends StandardAspect
 
 	private void flipMessage(AttributedMessage message)
 	{
-	    timerTask.cancel();
+	    sender.cancel();
 	    // Cancelling the task doesn't guarantee that it won't
 	    // run.  But the only purpose of this aspect is to test
 	    // weird cases (messages out of order) so it might as well

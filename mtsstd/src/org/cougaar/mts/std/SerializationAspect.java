@@ -78,14 +78,14 @@ public class SerializationAspect extends StandardAspect
 		clone = (AttributedMessage) SerializationUtils.fromByteArray(data);
 		if (loggingService.isInfoEnabled())
 		    loggingService.info("Deserialized as " + clone);
-	    } catch (DontRetryException no_retry) {
-		loggingService.error("SerializationAspect", no_retry);
-		throw new CommFailureException(no_retry);
+	    } catch (CougaarIOException cougaar_iox) {
+		loggingService.error("SerializationAspect", cougaar_iox);
+		throw new CommFailureException(cougaar_iox);
 	    } catch (java.io.IOException iox) {
-		iox.printStackTrace();
+		loggingService.error("SerializationAspect", iox);
 		return null;
 	    } catch (ClassNotFoundException cnf) {
-		cnf.printStackTrace();
+		loggingService.error("SerializationAspect", cnf);
 		return null;
 	    }
 

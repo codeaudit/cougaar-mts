@@ -21,13 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
-import org.cougaar.core.mts.*;
-import org.cougaar.core.mts.*;
-import org.cougaar.core.node.*;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
  * A MessageAddress which includes MessageAttributes
@@ -48,8 +48,14 @@ public class MessageAddressWithAttributes
     this.attributes = attributes;
   }
 
+    /**
+     * @deprecated Why would you want a MessageAddress that only has attributes?
+     */
   protected MessageAddressWithAttributes(MessageAttributes attributes)
   {
+    Logger logger = Logging.getLogger(getClass().getName());
+    if (logger.isErrorEnabled())
+	logger.error("Creating a MessageAddress with attributes but no name!");
     delegate = null;
     this.attributes = attributes;
   }
@@ -61,7 +67,7 @@ public class MessageAddressWithAttributes
 
   /** @return The MessageAddress without the MessageAtributes **/
   public final MessageAddress getPrimary() {
-    return delegate.getPrimary();
+      return delegate == null ? null : delegate.getPrimary();
   }
 
   /** @return The Parent MessageAddress.  This is usually the same
@@ -72,7 +78,7 @@ public class MessageAddressWithAttributes
   }
 
   public final String toAddress() {
-    return delegate.toAddress();
+      return (delegate == null) ? null : delegate.toAddress();
   }
 
   public final MessageAttributes getMessageAttributes() {
@@ -90,6 +96,9 @@ public class MessageAddressWithAttributes
     return new MessageAddressWithAttributes(ma, mas);
   }
 
+    /**
+     * @deprecated Why would you want a MessageAddress that only has attributes?
+     */
   public static final MessageAddress getMessageAddressWithAttributes(MessageAttributes mas) {
     return new MessageAddressWithAttributes(mas);
   }

@@ -111,12 +111,6 @@ public class TraceAspect
 	    super.unregisterAgentInNameServer(reference, addr, protocol);
 	}
 
-	public void registerMTS(MessageAddress addr)
-	{
-	    log("NameSupport", "Register MTS " + addr);
-	    super.registerMTS(addr);
-	}
-
 	public URI lookupAddressInNameServer(MessageAddress address, 
 					     String protocol)
 	{

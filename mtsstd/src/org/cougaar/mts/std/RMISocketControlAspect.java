@@ -30,10 +30,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimerTask;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 
 /**
  * This aspect adds simple statistics gathering to the client side
@@ -98,12 +99,16 @@ public class RMISocketControlAspect
 	    addresses = new HashMap();
 	    default_timeouts = new HashMap();
 	    referencesByKey = new HashMap();
-	    TimerTask reaper = new TimerTask() {
+
+	    Runnable reaper = new Runnable() {
 		    public void run() {
 			reapClosedSockets();
 		    }
 		};
-	    getThreadService().schedule(reaper, 0, 5000);
+	    ThreadService tsvc = getThreadService();
+	    Schedulable sched = tsvc.getThread(this, reaper, "Socket Reaper");
+	    
+	    sched.schedule(0, 5000);
 	}
 
 	private String getKey(String host, int port) {

@@ -93,6 +93,18 @@ public class StatisticsAspect
 	statisticsTotalMessages++;
     }
 
+    private synchronized void updateMessageLengthStatistics(int byteCount) {
+	int bin = 0;
+	int maxBin = MessageStatistics.NBINS - 1;
+	while (bin < maxBin && 
+	       byteCount >= MessageStatistics.BIN_SIZES[bin]) {
+	    bin++;
+	}
+	messageLengthHistogram[bin]++;
+	statisticsTotalBytes += byteCount;
+    }
+	    
+
 
     public Object getDelegate(Object delegatee, Class type) 
     {
@@ -243,15 +255,10 @@ public class StatisticsAspect
 	{
 	    super.finishOutput();
 	    int byteCount = wrapper.byteCount;
-	    int bin = 0;
-	    int maxBin = MessageStatistics.NBINS - 1;
-	    while (bin < maxBin && 
-		   byteCount >= MessageStatistics.BIN_SIZES[bin]) {
-		bin++;
-	    }
-	    messageLengthHistogram[bin]++;
-	    statisticsTotalBytes += byteCount;
-	    
+	    //JAZ updating Length needs to go in the Destination Link interface.
+	    //So that intra-node messages are be counted in histagram
+	    //Also, this double counts retried messages.
+	    updateMessageLengthStatistics(byteCount);
 	    //This attribute is not actually sent remotely, but is put
 	    //onto the local message's header.  The Attribute can be
 	    //read by other local Aspects after message is delivered,

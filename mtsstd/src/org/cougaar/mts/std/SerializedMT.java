@@ -29,6 +29,6 @@ import java.rmi.RemoteException;
 public interface SerializedMT extends MT {
   /** receive a message **/
   byte[] rerouteMessage(byte[] messageBytes)
-      throws RemoteException, DontRetryException;
+      throws RemoteException, CougaarIOException;
 
 }

@@ -52,4 +52,8 @@ class Gossip implements Serializable
     int size() {
 	return map.size();
     }
+
+    boolean isEmpty() {
+	return map.isEmpty();
+    }
 }

@@ -38,20 +38,20 @@ public class FlushAspect extends StandardAspect
 
     private SendLinkDelegate findSendLink(AttributedMessage message) {
 	MessageAddress addr = message.getOriginator();
-	Object result =  delegates.get(addr);
+	Object result =  delegates.get(addr.getPrimary());
 	return (SendLinkDelegate) result;
     }
 
     private void registerSendLink(SendLinkDelegate link,
 				  MessageAddress addr)
     {
-	delegates.put(addr, link);
+	delegates.put(addr.getPrimary(), link);
     }
 
     private void unregisterSendLink(SendLinkDelegate link,
 				    MessageAddress addr)
     {
-	delegates.remove(addr);
+	delegates.remove(addr.getPrimary());
     }
 
     public Object getDelegate(Object delegate, Class type) 

@@ -53,6 +53,9 @@ public class MulticastMessageAddress
   }
 
 
+    /**
+     * @deprecated Why would you want a MessageAddress that only has attributes?
+     */
   public static final MessageAddress getMulticastMessageAddress(MessageAttributes ma) {
     return MessageAddressWithAttributes.getMessageAddressWithAttributes(ma);    
   }

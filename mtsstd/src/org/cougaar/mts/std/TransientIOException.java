@@ -20,41 +20,45 @@
  */
 
 package org.cougaar.core.mts;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
-import java.io.PrintStream;
-import org.cougaar.core.component.ServiceBroker;
+/**
+ * Special kind of IOException whose stack trace shouldn't be
+ * logged.  See DestinationQueueImpl.
+ */
 
-public class AgentLocalStatusServlet extends AgentStatusServlet
+public class TransientIOException
+    extends CougaarIOException
+    implements java.io.Serializable
 {
+    private transient Logger logger = 
+	Logging.getLogger("org.cougaar.core.mts.TransientIOException");
 
-    public AgentLocalStatusServlet(ServiceBroker sb) {
-	super(sb);
+    public TransientIOException() 
+    {
+	super();
     }
 
-    public String getPath() {
-	return "/message/between-Any-agent-and-Local-Agent";
+    public TransientIOException(String message) 
+    {
+	super(message);
     }
 
-    public String getDescription(MessageAddress agent) {
-	return "Message Transport statistics between local agent "+
-	    agent + " and any other agent";
+
+    // Make these very quiet
+    public void printStackTrace() {
+	if (logger.isDebugEnabled()) super.printStackTrace();
     }
 
-    public String getTitle() {
-	return "Message Transport statistics for agents on node "+ 
-	    getNodeID();
+
+    public void printStackTrace(java.io.PrintStream s) {
+	if (logger.isDebugEnabled()) super.printStackTrace(s);
     }
 
-    protected boolean isRemote() {
-	return(false);
-    }
 
-   protected AgentStatusService.AgentState getState(MessageAddress agent){
-       	AgentStatusService.AgentState state = null;
-	
-	if (agentStatusService!=null) {
-	    state = agentStatusService.getLocalAgentState(agent);
-	}
-	return state;
+    public void printStackTrace(java.io.PrintWriter w) {
+	if (logger.isDebugEnabled()) super.printStackTrace(w);
     }
+    
 }

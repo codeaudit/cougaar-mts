@@ -57,15 +57,17 @@ public class DestinationQueueFactory
      * there are no aspects.  */
     public DestinationQueue getDestinationQueue(MessageAddress destination) 
     {
-	DestinationQueue q = (DestinationQueue) queues.get(destination);
+	MessageAddress dest = destination.getPrimary();
+	DestinationQueue q = (DestinationQueue) 
+	    queues.get(dest);
 	if (q == null) {
 	    DestinationQueueImpl qimpl = 
-		new DestinationQueueImpl(destination, container);
+		new DestinationQueueImpl(dest, container);
 	    q = (DestinationQueue) attachAspects(qimpl, 
 						 DestinationQueue.class);
 	    qimpl.setDelegate(q);
 	    synchronized (queues) {
-		queues.put(destination, q);
+		queues.put(dest, q);
 		impls.add(qimpl);
 	    }
 	}

@@ -41,13 +41,13 @@ public class SerializedMTImpl extends MTImpl
     }
 
     public byte[] rerouteMessage(byte[] messageBytes) 
-	throws MisdeliveredMessageException, DontRetryException
+	throws MisdeliveredMessageException, CougaarIOException
     {
 	AttributedMessage message = null;
 	try {
 	    message = (AttributedMessage)
 		SerializationUtils.fromByteArray(messageBytes);
-	} catch (DontRetryException mex) {
+	} catch (CougaarIOException mex) {
 	    throw mex;
 	} catch (java.io.IOException deser_ex) {
 	} catch (ClassNotFoundException cnf) {
@@ -58,7 +58,7 @@ public class SerializedMTImpl extends MTImpl
 	byte[] result = null;
 	try {
 	    result = SerializationUtils.toByteArray(meta);
-	} catch (DontRetryException mex) {
+	} catch (CougaarIOException mex) {
 	    throw mex;
 	} catch (java.io.IOException ser_ex) {
 	}

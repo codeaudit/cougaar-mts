@@ -113,13 +113,13 @@ public class SequenceAspect extends StandardAspect
 	private Integer nextSeq(AttributedMessage msg) {
 	    // Verify that msg.getOriginator()  == getAddress() ?
 	    MessageAddress dest = msg.getTarget();
-	    Integer next = (Integer) sequenceNumbers.get(dest);
+	    Integer next = (Integer) sequenceNumbers.get(dest.getPrimary());
 	    if (next == null) {
-		sequenceNumbers.put(dest, TWO);
+		sequenceNumbers.put(dest.getPrimary(), TWO);
 		return ONE;
 	    } else {
 		int n = next.intValue();
-		sequenceNumbers.put(dest, new Integer(1+n));
+		sequenceNumbers.put(dest.getPrimary(), new Integer(1+n));
 		return next;
 	    }
 	}

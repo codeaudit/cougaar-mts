@@ -90,6 +90,9 @@ public abstract class MessageAddress
     return MessageAddressWithAttributes.getMessageAddressWithAttributes(address,mas);
   }
 
+    /**
+     * @deprecated Why would you want a MessageAddress that only has attributes?
+     */
   public static final MessageAddress getMessageAddress(MessageAttributes mas) {
     return MessageAddressWithAttributes.getMessageAddressWithAttributes(mas);
   }

@@ -201,7 +201,6 @@ public class ChecksumStreamsAspect extends StandardAspect
 		// writeLong(stream, checksum);
 		stream.writeObject(new Long(checksum));
 	    } catch (java.io.IOException iox) {
-		iox.printStackTrace();
 		throw iox;
 	    }
 	    System.err.println("Checksum output finished");

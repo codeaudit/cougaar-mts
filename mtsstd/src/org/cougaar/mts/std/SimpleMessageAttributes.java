@@ -41,23 +41,28 @@ public class SimpleMessageAttributes
     private HashMap data;
     private transient HashMap local_data;
 
-    public SimpleMessageAttributes() {
+    public SimpleMessageAttributes() 
+    {
 	data = new HashMap();
 	local_data = new HashMap();
     }
 
 
-    private void dumpMap(HashMap map) {
-	Iterator itr = map.entrySet().iterator();
-	while (itr.hasNext()) {
-	    Map.Entry entry = (Map.Entry) itr.next();
-	    String key = (String) entry.getKey();
-	    Object value = entry.getValue();
-	    System.out.println(key +"->"+ value);
+    private void dumpMap(HashMap map) 
+    {
+	synchronized (map) {
+	    Iterator itr = map.entrySet().iterator();
+	    while (itr.hasNext()) {
+		Map.Entry entry = (Map.Entry) itr.next();
+		String key = (String) entry.getKey();
+		Object value = entry.getValue();
+		System.out.println(key +"->"+ value);
+	    }
 	}
     }
 
-    public void listAttributes() {
+    public void listAttributes() 
+    {
 	System.out.println("Attributes");
 	dumpMap(data);
 	System.out.println("\nTransient attributes");
@@ -75,23 +80,26 @@ public class SimpleMessageAttributes
 
     // MessageAttributes interface
 
-    private static void deepCopy(HashMap src, HashMap dst) {
+    private static void deepCopy(HashMap src, HashMap dst) 
+    {
 	// dst.putAll(src); // shallow
-	Iterator itr = src.entrySet().iterator();
-	Map.Entry entry = null;
-	Object value = null;
-	while (itr.hasNext()) {
-	    entry = (Map.Entry) itr.next();
-	    value = entry.getValue();
-	    if (value instanceof ArrayList) {
-		value = new ArrayList((ArrayList) value);
+	synchronized (src) {
+	    Iterator itr = src.entrySet().iterator();
+	    Map.Entry entry = null;
+	    Object value = null;
+	    while (itr.hasNext()) {
+		entry = (Map.Entry) itr.next();
+		value = entry.getValue();
+		if (value instanceof ArrayList) {
+		    value = new ArrayList((ArrayList) value);
+		}
+		dst.put(entry.getKey(), value);
 	    }
-	    dst.put(entry.getKey(), value);
 	}
     }
 
-    // Caller should synchronize
-    public Attributes cloneAttributes() {
+    public Attributes cloneAttributes() 
+    {
 	SimpleMessageAttributes clone = new SimpleMessageAttributes();
 	deepCopy(data, clone.data);
 	deepCopy(local_data, clone.local_data);
@@ -99,12 +107,17 @@ public class SimpleMessageAttributes
     }
 
     public void clearAttributes() {
-	data.clear();
-	local_data.clear();
+	synchronized (data) {
+	    data.clear();
+	}
+	synchronized (local_data) {
+	    local_data.clear();
+	}
     }
 
     // The attributes being merged in have precedence during load
-    public void mergeAttributes(Attributes attributes) {
+    public void mergeAttributes(Attributes attributes) 
+    {
 	if (!(attributes instanceof SimpleMessageAttributes)) {
 	    throw new RuntimeException("SimpleMessageAttributes cannot merge wih " 
 				       + attributes);
@@ -115,72 +128,89 @@ public class SimpleMessageAttributes
 	merge(local_data, attrs.local_data);
     }
 
-    private void merge(HashMap current, HashMap merge) {
-	Iterator itr = merge.entrySet().iterator();
-	while (itr.hasNext()) {
-	    Map.Entry merge_entry = (Map.Entry) itr.next();
-	    String key = (String) merge_entry.getKey();
-	    Object value = merge_entry.getValue();
-	    Object old = current.get(key);
-	    if (old == null) {
-		setAttribute(key, value, current);
-	    } else if (value instanceof ArrayList && old instanceof ArrayList){
-		// Both are multi-value -- merge the lists by adding
-		// the values to the end.
-		Iterator i2 = ((ArrayList) value).iterator();
-		while (i2.hasNext()) addValue(key, i2.next(), current);
-	    } else {
-		// Either one value is multi and one is single or both
-		// are single.  Either way, use the new value.
-		setAttribute(key, value, current);
+    private void merge(HashMap current, HashMap merge) 
+    {
+	synchronized (current) {
+	    synchronized (merge) {
+		Iterator itr = merge.entrySet().iterator();
+		while (itr.hasNext()) {
+		    Map.Entry merge_entry = (Map.Entry) itr.next();
+		    String key = (String) merge_entry.getKey();
+		    Object value = merge_entry.getValue();
+		    Object old = current.get(key);
+		    if (old == null) {
+			setAttribute(key, value, current);
+		    } else if (value instanceof ArrayList &&
+			       old instanceof ArrayList) {
+			// Both are multi-value -- merge the lists by adding
+			// the values to the end.
+			Iterator i2 = ((ArrayList) value).iterator();
+			while (i2.hasNext()) addValue(key, i2.next(), current);
+		    } else {
+			// Either one value is multi and one is single or both
+			// are single.  Either way, use the new value.
+			setAttribute(key, value, current);
+		    }
+		}
 	    }
 	}
     }
 
 
-    public Object getAttribute(String attribute) {
+    public Object getAttribute(String attribute) 
+    {
 	Object value = getAttribute(attribute, local_data);
 	if (value != null) return value;
 	return getAttribute(attribute, data);
     }
 
-    public void setAttribute(String attribute, Object value) {
+    public void setAttribute(String attribute, Object value) 
+    {
 	setAttribute(attribute, value, data);
     }
 
-    public void removeAttribute(String attribute) {
+    public void removeAttribute(String attribute) 
+    {
 	removeAttribute(attribute, data);
     }
 
-    public void addValue(String attribute, Object value) {
+    public void addValue(String attribute, Object value) 
+    {
 	addValue(attribute, value, data);
     }
 
-    public void pushValue(String attribute, Object value) {
+    public void pushValue(String attribute, Object value)
+    {
 	pushValue(attribute, value, data);
     }
 
-    public void removeValue(String attribute, Object value) {
+    public void removeValue(String attribute, Object value)
+    {
 	removeValue(attribute, value, data);
     }
 
-    public void setLocalAttribute(String attribute, Object value) {
+    public void setLocalAttribute(String attribute, Object value)
+    {
 	setAttribute(attribute, value, local_data);
     }
 
-    public void removeLocalAttribute(String attribute) {
+    public void removeLocalAttribute(String attribute) 
+    {
 	removeAttribute(attribute, local_data);
     }
 
-    public void addLocalValue(String attribute, Object value) { 
+    public void addLocalValue(String attribute, Object value) 
+    { 
 	addValue(attribute, value, local_data);
    }
 
-    public void pushLocalValue(String attribute, Object value) { 
+    public void pushLocalValue(String attribute, Object value) 
+    { 
 	pushValue(attribute, value, local_data);
    }
 
-    public void removeLocalValue(String attribute, Object value) {
+    public void removeLocalValue(String attribute, Object value)
+    {
 	removeValue(attribute, value, local_data);
     }
 
@@ -191,24 +221,33 @@ public class SimpleMessageAttributes
     /**
      * Returns the current value of the given attribute.
      */
-    private Object getAttribute(String attribute, HashMap map) {
-	return map.get(attribute);
+    private Object getAttribute(String attribute, HashMap map) 
+    {
+	synchronized (map) {
+	    return map.get(attribute);
+	}
     }
 
     /**
      * Modifies or sets the current value of the given attribute to the
      * given value.
      */
-    private void setAttribute(String attribute, Object value, HashMap map) {
-	map.put(attribute, value);
+    private void setAttribute(String attribute, Object value, HashMap map) 
+    {
+	synchronized (map) {
+	    map.put(attribute, value);
+	}
     }
 
 
     /**
      * Removes the given attribute.
      */
-    private void removeAttribute(String attribute, HashMap map) {
-	map.remove(attribute);
+    private void removeAttribute(String attribute, HashMap map) 
+    {
+	synchronized (map) {
+	    map.remove(attribute);
+	}
     }
 	
     /**
@@ -218,19 +257,22 @@ public class SimpleMessageAttributes
      * will be created and the current value (if non-null) as well as
      * the new value will be added to it.
      */
-    private void addValue(String attribute, Object value, HashMap map) {
-	Object old = map.get(attribute);
-	if (old == null) {
-	    ArrayList list = new ArrayList();
-	    list.add(value);
-	    map.put(attribute, list);
-	} else if (old instanceof ArrayList) {
-	    ((ArrayList) old).add(value);
-	} else {
-	    ArrayList list = new ArrayList();
-	    list.add(old);
-	    list.add(value);
-	    map.put(attribute, list);
+    private void addValue(String attribute, Object value, HashMap map) 
+    {
+	synchronized (map) {
+	    Object old = map.get(attribute);
+	    if (old == null) {
+		ArrayList list = new ArrayList();
+		list.add(value);
+		map.put(attribute, list);
+	    } else if (old instanceof ArrayList) {
+		((ArrayList) old).add(value);
+	    } else {
+		ArrayList list = new ArrayList();
+		list.add(old);
+		list.add(value);
+		map.put(attribute, list);
+	    }
 	}
     }
 
@@ -238,19 +280,22 @@ public class SimpleMessageAttributes
     /**
      * Like addValue but add to the front. 
      */
-    private void pushValue(String attribute, Object value, HashMap map) {
-	Object old = map.get(attribute);
-	if (old == null) {
-	    ArrayList list = new ArrayList();
-	    list.add(value);
-	    map.put(attribute, list);
-	} else if (old instanceof ArrayList) {
-	    ((ArrayList) old).add(0, value);
-	} else {
-	    ArrayList list = new ArrayList();
-	    list.add(old);
-	    list.add(0, value);
-	    map.put(attribute, list);
+    private void pushValue(String attribute, Object value, HashMap map) 
+    {
+	synchronized (map) {
+	    Object old = map.get(attribute);
+	    if (old == null) {
+		ArrayList list = new ArrayList();
+		list.add(value);
+		map.put(attribute, list);
+	    } else if (old instanceof ArrayList) {
+		((ArrayList) old).add(0, value);
+	    } else {
+		ArrayList list = new ArrayList();
+		list.add(old);
+		list.add(0, value);
+		map.put(attribute, list);
+	    }
 	}
     }
 
@@ -258,13 +303,16 @@ public class SimpleMessageAttributes
      * Remove a value to an attribute.  The current raw value should
      * either be an ArrayList or a singleton equal to the given value.
      */
-    private void removeValue(String attribute, Object value, HashMap map) {
-	Object old = map.get(attribute);
-	if (old == null) {
-	} else if (old instanceof ArrayList) {
-	    ((ArrayList) old).remove(value);
-	} else if (value.equals(old)) {
-	    map.remove(attribute);
+    private void removeValue(String attribute, Object value, HashMap map) 
+    {
+	synchronized (map) {
+	    Object old = map.get(attribute);
+	    if (old == null) {
+	    } else if (old instanceof ArrayList) {
+		((ArrayList) old).remove(value);
+	    } else if (value.equals(old)) {
+		map.remove(attribute);
+	    }
 	}
     }
 

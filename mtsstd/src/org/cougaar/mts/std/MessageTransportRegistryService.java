@@ -45,7 +45,6 @@ public interface MessageTransportRegistryService extends Service
     Iterator findRemoteMulticastTransports(MulticastMessageAddress addr);
     void registerClient(MessageTransportClient client);
     void unregisterClient(MessageTransportClient client);
-    void registerMTS(MessageTransportClient client);
     boolean addressKnown(MessageAddress address);
     ArrayList getDestinationLinks(MessageAddress destination);
     AgentState getAgentState(MessageAddress agent);

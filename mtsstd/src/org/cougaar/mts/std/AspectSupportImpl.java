@@ -169,6 +169,7 @@ final class AspectSupportImpl implements ServiceProvider
 				     Class type,
 				     ArrayList candidateClassNames)
 	{
+	    if (candidateClassNames == null) return delegate;
 	    ArrayList candidates = new ArrayList(candidateClassNames.size());
 	    Iterator itr = candidateClassNames.iterator();
 	    while (itr.hasNext()) {

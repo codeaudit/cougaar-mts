@@ -21,40 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import java.io.PrintStream;
-import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.Service;
 
-public class AgentLocalStatusServlet extends AgentStatusServlet
-{
-
-    public AgentLocalStatusServlet(ServiceBroker sb) {
-	super(sb);
-    }
-
-    public String getPath() {
-	return "/message/between-Any-agent-and-Local-Agent";
-    }
-
-    public String getDescription(MessageAddress agent) {
-	return "Message Transport statistics between local agent "+
-	    agent + " and any other agent";
-    }
-
-    public String getTitle() {
-	return "Message Transport statistics for agents on node "+ 
-	    getNodeID();
-    }
-
-    protected boolean isRemote() {
-	return(false);
-    }
-
-   protected AgentStatusService.AgentState getState(MessageAddress agent){
-       	AgentStatusService.AgentState state = null;
-	
-	if (agentStatusService!=null) {
-	    state = agentStatusService.getLocalAgentState(agent);
-	}
-	return state;
-    }
+public interface TrafficMatrixStatisticsService extends Service
+{ 
+  
+  public TrafficMatrix snapshotMatrix();
 }

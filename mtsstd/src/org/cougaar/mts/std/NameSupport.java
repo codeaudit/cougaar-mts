@@ -42,8 +42,6 @@ public interface NameSupport extends Service
 				     MessageAddress address, 
 				     String protocol);
 
-    void registerMTS(MessageAddress address);
-
     URI lookupAddressInNameServer(MessageAddress address, 
 				  String protocol);
 

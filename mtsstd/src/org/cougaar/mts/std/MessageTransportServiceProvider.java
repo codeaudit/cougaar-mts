@@ -56,7 +56,7 @@ import org.cougaar.core.thread.ThreadServiceProvider;
  */
 public final class MessageTransportServiceProvider 
 extends ContainerSupport
-implements ServiceProvider, MessageTransportClient
+implements ServiceProvider
 {
 
     // Some special aspect classes
@@ -92,22 +92,6 @@ implements ServiceProvider, MessageTransportClient
  
 
     
-    // The MTS itself as a client
-    public void receiveMessage(Message message) {
-	if (loggingService.isErrorEnabled()) {
-	    MessageAddress target = message.getTarget();
-	    if (!(target instanceof MulticastMessageAddress))
-		loggingService.error("# MTS received unwanted message: " + 
-				     message);
-	}
-    }
-
-    public MessageAddress getMessageAddress() {
-	return address;
-    }
-
-
-
 
     private void createNameSupport(String id) {
         ServiceBroker csb = getChildServiceBroker();
@@ -239,6 +223,11 @@ implements ServiceProvider, MessageTransportClient
 	// Do the standard set first, since they're assumed to be more
 	// generic than the user-specified set.
 
+	// Drop Stale messages
+	// Needs loaded first so all other aspets have a chance the
+	// process the message before it gets dropped)
+	add(new MessageTimeoutAspect());
+
 	// For the MessageWatcher service
 	watcherAspect =  new WatcherAspect();
 	add(watcherAspect);
@@ -254,10 +243,6 @@ implements ServiceProvider, MessageTransportClient
         if ("false".equalsIgnoreCase(
               System.getProperty(USE_NEW_FLUSH, "true")))
 	    add(new FlushAspect());
-
-	// could do this as a ComponentDescription
-// 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
-// 	tsp.provideServices(sb);
 
 	// Could use a ComponentDescription
 	ThreadServiceProvider tsp = new ThreadServiceProvider();
@@ -307,10 +292,6 @@ implements ServiceProvider, MessageTransportClient
 	MessageTransportRegistryService registry = 
 	    (MessageTransportRegistryService)
 	    csb.getService(this, MessageTransportRegistryService.class,  null);
-	MessageTransportService svc = 
-	    (MessageTransportService) findOrMakeProxy(this);
-	svc.registerClient(this);
-	registry.registerMTS(this);
 
 
 	NodeControlService ncs = (NodeControlService)

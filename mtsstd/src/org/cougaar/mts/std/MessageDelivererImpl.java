@@ -53,6 +53,8 @@ public class MessageDelivererImpl implements MessageDeliverer
 	synchronized (registry) {
 	    // This is locked to prevent the receiver from
 	    // unregistering between the lookup and the delivery.
+	    // The corresponding unregister lock is on a private
+	    // method in MesageTransportRegistry, removeLocalClient. 
 	    ReceiveLink link = registry.findLocalReceiveLink(addr);
 	    if (link != null) {
 		return link.deliverMessage(message);

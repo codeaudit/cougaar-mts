@@ -25,7 +25,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.net.URI;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Set;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
@@ -35,6 +35,7 @@ import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
+import org.cougaar.core.wp.ListAllNodes;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -87,7 +88,7 @@ public final class NameSupportImpl implements ServiceProvider
 		sb.getService(this, WhitePagesService.class, null);
 	    loggingService = (LoggingService)
 		sb.getService(this, LoggingService.class, null);
- 	    myNodeAddress = MessageAddress.getMessageAddress(id+"(MTS)");
+ 	    myNodeAddress = MessageAddress.getMessageAddress(id);
 
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
@@ -184,25 +185,30 @@ public final class NameSupportImpl implements ServiceProvider
 	}
 
 
-	public void registerMTS(MessageAddress mts_address) {
-	    String node = mts_address.getAddress();
-	    URI reference = URI.create("mts://" +node);
-	    _register("MTS", reference, node);
-	}
 
+	private static class EmptyIterator implements Iterator {
+	    public boolean hasNext() {
+		return false;
+	    }
+	    public Object next() {
+		return null;
+	    }
+	    public void remove() {
+		throw new UnsupportedOperationException();
+	    }
+	}
 
 	public Iterator lookupMulticast(MulticastMessageAddress address) {
 	    try {
-		Map result = wpService.getAll("MTS");
-		if (result == null) return null;
-                final Iterator iter = result.values().iterator();
+		Set result = ListAllNodes.listAllNodes(wpService, 30000);
+		if (result == null) return new EmptyIterator();
+                final Iterator iter = result.iterator();
                 return new Iterator() {
                     public boolean hasNext() {
                         return iter.hasNext();
                     }
                     public Object next() {
-                        AddressEntry entry = (AddressEntry) iter.next();
-                        String node = entry.getType();
+                        String node = (String) iter.next();
                         return MessageAddress.getMessageAddress(node);
                     }
                     public void remove() {
@@ -210,11 +216,11 @@ public final class NameSupportImpl implements ServiceProvider
                     }
                 };
 	    } catch (Exception ex) {
-		loggingService.error(null, ex);
-		return null;
+		if (loggingService.isWarnEnabled())
+		    loggingService.warn("Multicast had WP timout");
+		return new EmptyIterator();
 	    }
 	}
-  
 
     }
 

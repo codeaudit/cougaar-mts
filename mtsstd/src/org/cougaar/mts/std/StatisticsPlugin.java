@@ -37,6 +37,7 @@ public class StatisticsPlugin extends ComponentPlugin
 	new StatisticsServlet(sb);
 	new AgentRemoteStatusServlet(sb);
 	new AgentLocalStatusServlet(sb);
+	new GossipServlet(sb);
     }
 
     protected void setupSubscriptions() {
