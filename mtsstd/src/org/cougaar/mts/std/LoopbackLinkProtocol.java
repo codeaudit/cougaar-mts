@@ -44,6 +44,11 @@ class LoopbackLinkProtocol
 	// by MessageTransportServerImpl
     }
 
+    public void registerNode() {
+	// Does nothing because the Database of local clients is held
+	// by MessageTransportServerImpl
+    }
+
     public void unregisterClient(MessageTransportClient client) {
 	// Does nothing because the Database of local clients is held
 	// by MessageTransportServerImpl

@@ -138,6 +138,7 @@ public final class NameSupportImpl implements NameSupport
     public void registerNodeInNameServer(Object proxy, 
 					 String transportType) 
     {
+	// Register Node address as MTS multicast handler
 	String name = makeName(MTS_DIR, myNodeAddress, transportType);
 	try {
 	    BasicAttributes mts_attr = new BasicAttributes();
@@ -149,13 +150,14 @@ public final class NameSupportImpl implements NameSupport
 	    e.printStackTrace();
 	}
 
-	name = makeName(AGENT_DIR, myNodeAddress, transportType);
-	try {
-	    _registerWithSociety(name, proxy);
-	} catch (Exception e) {
-	    System.err.println("Failed to register " + name);
-	    e.printStackTrace();
-	}
+	// Register Node address as Agent.  Is this used?
+// 	name = makeName(AGENT_DIR, myNodeAddress, transportType);
+// 	try {
+// 	    _registerWithSociety(name, proxy);
+// 	} catch (Exception e) {
+// 	    System.err.println("Failed to register " + name);
+// 	    e.printStackTrace();
+// 	}
     }
 
     public Object lookupAddressInNameServer(MessageAddress address, 
@@ -176,6 +178,8 @@ public final class NameSupportImpl implements NameSupport
 	    object = ctx.lookup(key);
 	    if (object instanceof MessageAddress) {
 		addr = (MessageAddress) object;
+		System.out.println("$$$ Trying redirect of " + address + 
+				   " to " + addr);
 	    } else {
 		return object;
 	    }

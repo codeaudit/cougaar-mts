@@ -37,6 +37,7 @@ public abstract class LinkProtocol extends AspectFactory
     // abstract public void routeMessage(Message message);
     abstract public DestinationLink getDestinationLink(MessageAddress destination);
     abstract public void registerClient(MessageTransportClient client);
+    abstract public void registerNode();
     abstract public void unregisterClient(MessageTransportClient client);
     abstract public boolean addressKnown(MessageAddress address);
 

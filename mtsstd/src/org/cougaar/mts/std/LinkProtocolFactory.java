@@ -27,14 +27,10 @@ public final class LinkProtocolFactory
 {
     private static final String CLASSES_PROPERTY =
 	"org.cougaar.message.protocol.classes";
-    private static final String PREFERRED_PROPERTY =
-	"org.cougaar.message.protocol.preferred";
-
 
     private ArrayList protocols;
     private AspectSupport aspectSupport;
     private String id;
-    private LinkProtocol defaultProtocol, loopbackProtocol;
     private MessageTransportRegistry registry;
     private MessageDeliverer deliverer;
     private NameSupport nameSupport;
@@ -54,6 +50,15 @@ public final class LinkProtocolFactory
 	this.deliverer = deliverer;
     }
 
+    private void initProtocol(LinkProtocol protocol) {
+	protocol.setDeliverer(deliverer);
+	protocol.setRegistry(registry);
+	protocol.setNameSupport(nameSupport);
+	protocol.registerNode();
+	protocols.add(protocol);
+    }
+
+
     private LinkProtocol makeProtocol(String classname) {
 	// Assume for now all transport classes have a constructor of
 	// one argument (the id string).
@@ -70,24 +75,8 @@ public final class LinkProtocolFactory
 	    xxx.printStackTrace();
 	    return null;
 	}
-	protocol.setDeliverer(deliverer);
-	protocol.setRegistry(registry);
-	protocol.setNameSupport(nameSupport);
-	protocols.add(protocol);
+	initProtocol(protocol);
 	return protocol;
-    }
-
-
-    private void makeOtherProtocols() {
-	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
-	if (protocol_classes == null) return;
-
-	StringTokenizer tokenizer = 
-	    new StringTokenizer(protocol_classes, ",");
-	while (tokenizer.hasMoreElements()) {
-	    String classname = tokenizer.nextToken();
-	    makeProtocol(classname);
-	}
     }
 
     public  ArrayList getProtocols() {
@@ -95,46 +84,25 @@ public final class LinkProtocolFactory
 
 	protocols = new ArrayList();
 
-	String preferredClassname = System.getProperty(PREFERRED_PROPERTY);
-	if (preferredClassname != null) {
-	    LinkProtocol protocol = makeProtocol(preferredClassname);
-	    if (protocol != null) {
-		// If there's a preferred transport, never use any
-		// others.
-		defaultProtocol = protocol;
-		loopbackProtocol = protocol;
-		return protocols;
+	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
+	if (protocol_classes == null || protocol_classes.equals("")) {
+	    // Make the two standard protocols if none specified.
+	    LinkProtocol protocol =new LoopbackLinkProtocol(id, aspectSupport);
+	    initProtocol(protocol);
+	    protocol = new RMILinkProtocol(id, aspectSupport);
+	    initProtocol(protocol);
+	} else {
+	    StringTokenizer tokenizer = 
+		new StringTokenizer(protocol_classes, ",");
+	    while (tokenizer.hasMoreElements()) {
+		String classname = tokenizer.nextToken();
+		makeProtocol(classname);
 	    }
 	}
 
-	// No preferred transport, make all the usual ones.
-
-	loopbackProtocol = new LoopbackLinkProtocol(id, aspectSupport);
-	loopbackProtocol.setDeliverer(deliverer);
-	loopbackProtocol.setRegistry(registry);
-	loopbackProtocol.setNameSupport(nameSupport);
-	protocols.add(loopbackProtocol);
-	
-	defaultProtocol = new RMILinkProtocol(id, aspectSupport);
-	defaultProtocol.setDeliverer(deliverer);
-	defaultProtocol.setRegistry(registry);
-	defaultProtocol.setNameSupport(nameSupport);
-	protocols.add(defaultProtocol);
-
-
-	makeOtherProtocols();
 
 	return protocols;
     }
-
-    LinkProtocol getDefaultProtocol() {
-	return defaultProtocol;
-    }
-
-    LinkProtocol getLoopbackProtocol() {
-	return loopbackProtocol;
-    }
-
 
 
 }

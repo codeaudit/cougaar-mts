@@ -49,7 +49,8 @@ public class RMILinkProtocol
 {
     public static final String PROTOCOL_TYPE = "-RMI";
 
-    private MessageAddress myAddress;
+    // private MessageAddress myAddress;
+    private MT myProxy;
     private HashMap links;
 
 
@@ -88,28 +89,27 @@ public class RMILinkProtocol
     }
 
 
-    private final void registerNodeWithSociety() 
-	throws RemoteException
+    public final void registerNode() 
     {
 	synchronized (this) {
-	    if (myAddress == null) {
-		myAddress = nameSupport.getNodeMessageAddress();
+	    if (myProxy != null) return;  // once only
+
+	    try {
+		MessageAddress myAddress = nameSupport.getNodeMessageAddress();
 		MTImpl impl = new MTImpl(myAddress, deliverer);
-		MT proxy = getServerSideProxy(impl);
-		nameSupport.registerNodeInNameServer(proxy, PROTOCOL_TYPE);
+		myProxy = getServerSideProxy(impl);
+	    } catch (java.rmi.RemoteException ex) {
+		ex.printStackTrace();
+		return;
 	    }
+	    nameSupport.registerNodeInNameServer(myProxy, PROTOCOL_TYPE);
 	}
     }
 
     public final void registerClient(MessageTransportClient client) {
 	try {
-	    // Register a MT for the Node
-	    // Since there is no explicit time for registering the Node
-	    // Attempt every time you register a Client
-	    registerNodeWithSociety();
-
 	    // Assume node-redirect
-	    Object proxy = myAddress;
+	    Object proxy = myProxy;
 	    nameSupport.registerAgentInNameServer(proxy,client,PROTOCOL_TYPE);
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
@@ -121,7 +121,7 @@ public class RMILinkProtocol
     public final void unregisterClient(MessageTransportClient client) {
 	try {
 	    // Assume node-redirect
-	    Object proxy = myAddress;
+	    Object proxy = myProxy;
 	    nameSupport.unregisterAgentInNameServer(proxy,client,PROTOCOL_TYPE);
 	} catch (Exception e) {
 	    System.err.println("Error unregistering MessageTransport:");
