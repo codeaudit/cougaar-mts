@@ -31,13 +31,14 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * The default, and for now only, implementation of SendQueue.  The
- * implementation of <strong>sendMessage</strong> simply adds the
+ * The default, and for now only, implementation of {@link SendQueue}.
+ * The implementation of <strong>sendMessage</strong> simply adds the
  * message to the queue.  This kind of queue includes its own thread,
  * which invokes <strong>dispatch</strong> as each message is popped
- * off the queue (see MessageQueue).  This, in turn, requests the
- * Router to route the message to the appropriate DestinationQueue.
- * */
+ * off the queue (@see MessageQueue).  This, in turn, requests the
+ * {@link Router} to route the message to the appropriate {@link
+ * DestinationQueue}.
+ */
 public final class SendQueueImpl extends MessageQueue implements SendQueue
 {
     private Router router;

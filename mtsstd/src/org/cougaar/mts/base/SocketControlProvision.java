@@ -28,6 +28,11 @@ package org.cougaar.mts.base;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
+/**
+ * This {@link ServiceProvider} provides the
+ * SocketControlProvisionService, the implementation of which is an
+ * inner class.
+ */
 class SocketControlProvision implements ServiceProvider
 {
     private SocketControlProvisionImpl impl;

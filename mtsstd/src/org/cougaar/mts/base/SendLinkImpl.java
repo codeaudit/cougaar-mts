@@ -43,6 +43,11 @@ import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.util.UnaryPredicate;
 
 
+/**
+ * The only implementation of {@link SendLink}, instantiated once per
+ * MessageTransportClient.  It's main job is simply to place outgoing
+ * messages on the (singleton) {@link SendQueue}.
+ */
 final public class SendLinkImpl
     implements SendLink
 {

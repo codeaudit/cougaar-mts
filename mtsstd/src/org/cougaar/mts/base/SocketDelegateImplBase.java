@@ -34,6 +34,11 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.SocketChannel;
 
+/**
+ * This class is a delegating {@link Socket} that simply passes all
+ * methods to another socket.  It's handy as a base class for Socket
+ * aspect delegates, as attached by the {@link SocketFactory}.
+ */
 abstract public class SocketDelegateImplBase extends Socket
 {
     private Socket socket;

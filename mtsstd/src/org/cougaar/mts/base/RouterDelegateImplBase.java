@@ -30,7 +30,7 @@ import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Convenience class for aspects which define {@link Router}
- * delegate classes.  It implements all methods of by delegating to
+ * delegate classes.  It implements all methods by delegating to
  * another instance, given in the constructor.  Aspect inner classes
  * which extend this need only implement specific methods that are
  * relevant to that aspect,

@@ -31,12 +31,10 @@ import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AspectFactory;
 
 /**
- * A factory which makes ReceiveLinks.  The caching for ReceiveLinks
- * is in the registry, not here, since the links need to be cleaned up
- * when agents unregister. 
- * 
- * This Factory is a subclass of AspectFactory, so aspects can be *
- * attached to a ReceiveLink when it's first instantiated.  */
+ * This {@link ServiceProvider} both provides and implements the {@link
+ * ReceiveLinkProviderService}.  It makes new links as needed,
+ * atttaching Aspect delegates for every instantiation.
+ */
 public class ReceiveLinkFactory 
     extends AspectFactory
     implements ReceiveLinkProviderService, ServiceProvider

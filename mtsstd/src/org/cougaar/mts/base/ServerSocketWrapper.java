@@ -32,6 +32,11 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.ServerSocketChannel;
 
+/**
+ * This class is a delegating {@link ServerSocket} that simply passes
+ * all methods to another socket.  It's handy as a base class for
+ * whatever wrapper class, if any, the {@link SocketFactory} is using.
+ */
 public abstract class ServerSocketWrapper extends ServerSocket
 {
     private ServerSocket delegate;

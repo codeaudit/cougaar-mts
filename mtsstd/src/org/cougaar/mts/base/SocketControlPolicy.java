@@ -30,8 +30,9 @@ import org.cougaar.core.component.Component;
 /**
  * This interface is a simple version of pluggable control over
  * network sockets.  For now it includes only a single method which
- * specifies the tcp timeout value. This is used by the SocketFactory
- * when initially connecting clients Sockets to ServerSockets.
+ * specifies the tcp timeout value. This is used by the {@link
+ * SocketFactory} when initially connecting client Sockets to
+ * ServerSockets.
  */
 public interface SocketControlPolicy extends Component
 {

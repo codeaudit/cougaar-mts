@@ -31,7 +31,7 @@ import org.cougaar.core.mts.MessageTransportClient;
 /**
  * This is the factory service for getting a ReceiveLink for a given
  * destination.  It's both and implemented and provided by
- * ReceiveLinkFactory and is accessible only to MTS components.
+ * {@link ReceiveLinkFactory} and is accessible only to MTS components.
  */
 public interface ReceiveLinkProviderService extends Service
 {

@@ -44,11 +44,10 @@ import org.cougaar.util.log.Logging;
 import org.cougaar.mts.std.AspectSupportImpl;
 
 /**
- * This is not really a factory, it just needs to use AspectFactory's
- * attachAspects method.  The purpose of this class is to create an
- * RMISocketFactory with aspectizable streams.
- * <p>
- * Instantiating this class creates the socket factory.
+ * This is an RMISocketFactory that can wrap {@link ServerSocket}s and
+ * apply Aspect delegates to client {@link Socket}s.  It handles SSL as well
+ * as straight RMI, using the CSI classes for the former if they're
+ * available.
  *
  * @property org.cougaar.message.transport.server_socket_class
  *   ServerSocketWrapper classname (default is no wrapper).

@@ -37,7 +37,11 @@ import org.cougaar.mts.std.DeliveryVerificationAspect;
 import java.util.ArrayList;
 
 /**
- * A factory which makes SendQueues. A singleton for now  */
+ * This {@link ServiceProvider} provides and implements the {@link
+ * SendQueueProviderService}.  Its jobs is to find or make a {@link
+ * SendQueue} for a given address.  For now all addresses use a
+ * singleton queue, in order to enforce ordering across senders.
+ */
 public class SendQueueFactory 
     extends QueueFactory
     implements ServiceProvider, SendQueueProviderService

@@ -26,6 +26,9 @@
 
 package org.cougaar.mts.base;
 
+/**
+ * This Exception appears to be unused.  
+ */
 public class UnresolvableReferenceException  extends java.io.IOException
 {
     public UnresolvableReferenceException(String msg) {

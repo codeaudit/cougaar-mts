@@ -30,9 +30,9 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.mts.std.AspectFactory;
 
 /**
- * A factory which makes Routers.  Since this factory is a subclass of
- * AspectFactory, aspects can be attached to a SendQueue when it's
- * first instantiated.  */
+ * This {@link ServiceProvider} provides the {@link Router} service.
+ * The implementation of that service is the singletin RouterImpl.
+ */
 public class RouterFactory 
     extends AspectFactory
     implements ServiceProvider

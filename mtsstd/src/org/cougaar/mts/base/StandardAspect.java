@@ -29,8 +29,8 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.mts.std.AspectSupport;
 
 /**
- * Default base Aspect class, which will accept any transport at any
- * cutpoint.
+ * Default base Aspect class.  It handles the registration of the
+ * Aspect with the {@link AspectSupport} service.
  */
 abstract public class StandardAspect 
     extends BoundComponent
