@@ -189,8 +189,8 @@ public final class NameSupportImpl implements ServiceProvider
 		   String name = makeName(MTS_DIR, mts_address, "");
 	    try {
 		BasicAttributes mts_attr = new BasicAttributes();
-		mts_attr.put(MTS_ATTR, Boolean.TRUE);
-		mts_attr.put(ADDRESS_ATTR, mts_address);
+		mts_attr.put(MTS_ATTR, Boolean.TRUE.toString());
+		mts_attr.put(ADDRESS_ATTR, mts_address.toString());
 		_registerWithSociety(name, mts_address, mts_attr);
 	    } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
@@ -302,7 +302,7 @@ public final class NameSupportImpl implements ServiceProvider
 
 	// Fixed for all time...
 	private static final Attributes MC_MATCH = 
-	    new BasicAttributes(MTS_ATTR, Boolean.TRUE);
+	    new BasicAttributes(MTS_ATTR, Boolean.TRUE.toString());
 	private static final String[] MC_RETATTR = { ADDRESS_ATTR };
 
 
