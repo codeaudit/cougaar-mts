@@ -116,6 +116,7 @@ final class DestinationQueueImpl
 	return retryCount == 0;
     }
 
+
     public void dispatchNextMessage(AttributedMessage message) {
 	if (retryCount == 0) {
 	    message.snapshotAttributes();
@@ -146,9 +147,40 @@ final class DestinationQueueImpl
 		if (Debug.isErrorEnabled(loggingService,COMM)) 
 		    loggingService.error(null, lookup_error);
 	    } catch (CommFailureException comm_failure) {
-		lastException = comm_failure;
-		if (Debug.isErrorEnabled(loggingService,COMM)) 
-		    loggingService.error(null, comm_failure);
+		Exception exception = comm_failure.getException();
+		Throwable cause = exception.getCause();
+		// A local security exception will be wrapped in a
+		// MarshalException.  In this case 'exception' is the
+		// MarshalException. and 'cause' is the
+		// MessageSecurityException.
+		//
+		// A remote security exception will be wrapped in an
+		// RemoteException which will in turn be wrapped by an
+		// UnmarshalException.  In this case 'exception' is
+		// the RemoteException, 'cause' is the
+		// UnmarshalException and 'cause.getCause' is the
+		// MessageSecurityException.
+		//
+		// Finally, the original GeneralSecurityException is
+		// the cause of the MessageSecurityException.
+		//
+		// What could be simpler?
+		//
+		if (cause instanceof java.rmi.UnmarshalException)
+		    cause = cause.getCause();
+		if (cause instanceof MessageSecurityException) {
+		    // Always log these,
+		    cause = cause.getCause();
+		    loggingService.error("Security Exception", cause);
+
+		    // Act as if the message has gone through.
+		    resetState();
+		    return;
+		} else {
+		    lastException = comm_failure;
+		    if (Debug.isErrorEnabled(loggingService,COMM)) 
+			loggingService.error(null, comm_failure);
+		}
 	    } catch (MisdeliveredMessageException misd) {
 		lastException = misd;
 		if (Debug.isDebugEnabled(loggingService,COMM)) 

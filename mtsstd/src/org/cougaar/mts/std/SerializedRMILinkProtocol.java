@@ -56,13 +56,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	throws MisdeliveredMessageException, java.rmi.RemoteException
     {
 	if (remote instanceof SerializedMT) {
-	    byte[] messageBytes = null;
-	    try {
-		messageBytes = SerializationUtils.toByteArray(message);
-	    } catch (MessageSecurityException ex) {
-		loggingService.error(ex.getMessage(), ex.getException());
-		return null;
-	    }
+	    byte[] messageBytes = SerializationUtils.toByteArray(message);
 	    byte[] res = ((SerializedMT) remote).rerouteMessage(messageBytes);
 	    return (MessageAttributes) SerializationUtils.fromByteArray(res);
 	} else {

@@ -39,5 +39,10 @@ public class CommFailureException extends Exception
 	super(nested.toString());
 	this.nested_exception = nested;
     }
+
+    public Exception getException() {
+	return nested_exception;
+    }
+
 }
 

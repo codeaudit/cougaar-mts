@@ -21,21 +21,21 @@
 
 package org.cougaar.core.mts;
 
-public class MessageSecurityException extends RuntimeException
+import java.security.GeneralSecurityException;
+
+public class MessageSecurityException 
+    extends java.io.IOException
+    implements java.io.Serializable
 {
-    private String message;
-    private Throwable exception;
+    
+    GeneralSecurityException cause;
 
-    MessageSecurityException(String msg, Throwable thr) {
-	message = msg;
-	exception = thr;
+    MessageSecurityException(GeneralSecurityException cause) {
+	this.cause = cause;
     }
 
-    public String getMessage() {
-	return message;
+    public Throwable getCause() {
+	return cause;
     }
 
-    public Throwable getException() {
-	return exception;
-    }
 }

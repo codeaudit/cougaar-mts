@@ -156,12 +156,7 @@ public class RMILinkProtocol
 					     AttributedMessage message) 
 	throws MisdeliveredMessageException, java.rmi.RemoteException
     {
-	try {
-	    return remote.rerouteMessage(message);
-	} catch (MessageSecurityException ex) {
-	    loggingService.error(ex.getMessage(), ex.getException());
-	    return null;
-	}
+	return remote.rerouteMessage(message);
     }
 
 

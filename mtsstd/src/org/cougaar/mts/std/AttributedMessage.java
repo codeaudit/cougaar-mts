@@ -228,12 +228,8 @@ public class AttributedMessage
     }
 
 
-    void securityException(String msg, Throwable thr) {
-	throw new MessageSecurityException(msg, thr);
-    }
-
     private void sendAttributes(ObjectOutput out) 
-	throws java.io.IOException
+	throws java.io.IOException, GeneralSecurityException
     {
  	MessageProtectionService svc =
 	    MessageProtectionAspect.getMessageProtectionService();
@@ -245,17 +241,9 @@ public class AttributedMessage
 	    oos.writeObject(attributes);
 	    oos.close();
 	    
-	    byte[] bytes = null;
-
-	    try {
-		bytes = svc.protectHeader(bos.toByteArray(), 
-					  getOriginator(),
-					  getTarget());
-	    } catch (GeneralSecurityException gse) {
-		securityException("Can't send message attributes", gse);
-	    } catch (java.io.IOException ioe) {
-		securityException("Can't send message attributes", ioe);
-	    }
+	    byte[] bytes = svc.protectHeader(bos.toByteArray(), 
+					     getOriginator(),
+					     getTarget());
 	    out.writeObject(bytes);
 	} else {
 	    out.writeObject(attributes);
@@ -263,23 +251,16 @@ public class AttributedMessage
     }
 
     private void readAttributes(ObjectInput in) 
-	throws java.io.IOException, ClassNotFoundException
+	throws java.io.IOException, ClassNotFoundException, GeneralSecurityException
     {
  	MessageProtectionService svc =
 	    MessageProtectionAspect.getMessageProtectionService();
 	if (svc != null) {
 
 	    byte[] rawData = (byte[]) in.readObject();
-	    byte[] data  = null;
-	    try {
-		data = svc.unprotectHeader(rawData, 
-					    getOriginator(),
-					    getTarget());
-	    } catch (GeneralSecurityException gse) {
-		securityException("Can't read message attributes", gse);
-	    } catch (java.io.IOException ioe) {
-		securityException("Can't read message attributes", ioe);
-	    }
+	    byte[] data  = svc.unprotectHeader(rawData, 
+					       getOriginator(),
+					       getTarget());
 
 	    ByteArrayInputStream bis = new ByteArrayInputStream(data);
 	    ObjectInputStream ois = new ObjectInputStream(bis);
@@ -325,6 +306,7 @@ public class AttributedMessage
 
 	    sendAttributes(rawOut);
 
+
 	    if (replyOnly()) return;
 
 
@@ -344,16 +326,9 @@ public class AttributedMessage
 
 	    writer.finishOutput();
 	    writer.postProcess();
-	} 
-	catch (java.io.IOException ex1) {
-	    ex1.printStackTrace();
-	    throw ex1;
+	} catch (GeneralSecurityException ex) {
+	    throw new MessageSecurityException(ex);
 	}
-	catch (Exception ex2) {
-	    ex2.printStackTrace();
-	    throw new java.io.IOException(ex2.toString());
-	}
-
     }
 
 
@@ -398,18 +373,8 @@ public class AttributedMessage
 
 	    reader.finishInput();
 	    reader.postProcess();
-	} 
-	catch (java.io.IOException ex1) {
-	    ex1.printStackTrace();
-	    throw ex1;
-	}
-	catch (ClassNotFoundException ex2) {
-	    ex2.printStackTrace();
-	    throw ex2;
-	}
-	catch (Exception ex3) {
-	    ex3.printStackTrace();
-	    throw new java.io.IOException(ex3.toString());
+	} catch (GeneralSecurityException ex) {
+	    throw new MessageSecurityException(ex);
 	}
     }
 }
