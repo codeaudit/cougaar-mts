@@ -78,7 +78,7 @@ public class MessageAddress implements Externalizable {
   }
 
   public boolean equals(MessageAddress ma ){
-    return (_as== ma._as);
+    return (ma != null && _as == ma._as);
   }
 
   public boolean equals(Object o ){
