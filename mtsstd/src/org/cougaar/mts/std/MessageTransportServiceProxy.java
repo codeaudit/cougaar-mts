@@ -65,12 +65,6 @@ public class MessageTransportServiceProxy
     }
 
 
-    private boolean isRemoteMulticast(MessageAddress address) {
-	return address instanceof MulticastMessageAddress &&
-	    !address.equals(MessageAddress.LOCAL);
-	    
-    }
-
     private void showPending(String text) {
 	String msgs = 
 	    outstandingMessages == 1 ? " message" : " messages";
@@ -89,34 +83,7 @@ public class MessageTransportServiceProxy
 		return;
 	    }
 	}
-	MessageAddress destination = message.getTarget();
-	if (isRemoteMulticast(destination)) {
-	    if (Debug.debugMulticast())
-		System.out.println("!!!!!!! Remote Multicast!");
-
-	    MulticastMessageAddress dst = 
-		(MulticastMessageAddress) destination;
-	    Iterator itr = registry.findRemoteMulticastTransports(dst);
-	    MulticastMessageEnvelope envelope;
-	    MessageAddress addr;
-	    while (itr.hasNext()) {
-		addr = (MessageAddress) itr.next();
-                if (Debug.debugMulticast())
-		    System.out.println("!!!!!! next address =" + addr);
-		envelope = new MulticastMessageEnvelope(message, addr);
-		sendQ.sendMessage(envelope);
-                synchronized (this) { 
-                    ++outstandingMessages; 
-                    if (Debug.debugFlush()) showPending("Message queued");
-                }
-	    }
-	} else if (checkMessage(message)) {
-	    if (destination.equals(MessageAddress.LOCAL)) {
-		if (Debug.debugMulticast())
-		    System.out.println("!!!!!!!!!!!! Local Multicast!");
-		message = new MulticastMessageEnvelope(message,  destination);
-	    }
-
+	if (checkMessage(message)) {
 	    sendQ.sendMessage(message);
 	    synchronized (this) { 
 		++outstandingMessages; 

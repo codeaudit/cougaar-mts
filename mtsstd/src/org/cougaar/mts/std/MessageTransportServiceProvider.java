@@ -130,12 +130,14 @@ public class MessageTransportServiceProvider
         nameSupport = createNameSupport(id);
 	registry.setNameSupport(nameSupport);
 
-	//Watcher Aspect is special because the MTServicer interace
+	//Watcher Aspect is special because the MTServicer interface
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
 	watcherAspect =  new WatcherAspect();
-	if (aspects == null) aspects = new ArrayList();
 	aspects.add(watcherAspect);
+
+	// Multicast Aspect is always required.
+	aspects.add(new MulticastAspect());
 
 	transportFactory = 
 	    new MessageTransportFactory(id, registry, nameSupport, aspects);

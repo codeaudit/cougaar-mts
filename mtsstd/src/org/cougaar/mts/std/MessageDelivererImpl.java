@@ -44,31 +44,14 @@ public class MessageDelivererImpl implements MessageDeliverer
 	throws MisdeliveredMessageException
     {
 	if (message == null) return;
-	if (message instanceof MulticastMessageEnvelope) {
-	    message = ((MulticastMessageEnvelope) message).getContents();
-	    MessageAddress addr = message.getTarget();
-	    Object lock = registry.getLock();
-	    synchronized (lock) {
-		
-		Iterator i = registry.findLocalMulticastReceiveLinks((MulticastMessageAddress)addr); 
-		while (i.hasNext()) {
-		    ReceiveLink link = (ReceiveLink) i.next();
-		    link.deliverMessage(message);
-		    if (Debug.debugMulticast())
-			System.out.println("!!!!! Delivering multicast to " +
-					   link);
-		}
-	    }
-	} else {	
-	    MessageAddress addr = message.getTarget();
-	    Object lock = registry.getLock();
-	    synchronized (lock) {
-		ReceiveLink link = registry.findLocalReceiveLink(addr);
-		if (link != null) {
-		    link.deliverMessage(message);
-		} else {
-		    throw new MisdeliveredMessageException(message);
-		}
+	MessageAddress addr = message.getTarget();
+	Object lock = registry.getLock();
+	synchronized (lock) {
+	    ReceiveLink link = registry.findLocalReceiveLink(addr);
+	    if (link != null) {
+		link.deliverMessage(message);
+	    } else {
+		throw new MisdeliveredMessageException(message);
 	    }
 	}
     }
