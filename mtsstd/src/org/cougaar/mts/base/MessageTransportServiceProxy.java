@@ -55,11 +55,16 @@ public class MessageTransportServiceProxy
     }
 
 
+    synchronized long getIncarnationNumber()
+    {
+	return client != null ? client.getIncarnationNumber() : 0;
+    }
+
     void release() {
 	synchronized (this) {
 	    if (registered) unregisterClient(client);
+	    client = null;
 	}
-	client = null;
 	link.release();
 	link = null;
     }

@@ -263,8 +263,11 @@ implements ServiceProvider
         MessageTransportClient client = (MessageTransportClient) requestor;
         MessageAddress addr = client.getMessageAddress();
         long incarnation = client.getIncarnationNumber();
-        Object proxy = proxies.get(addr);
-        if (proxy != null) return proxy;
+        MessageTransportServiceProxy proxy = (MessageTransportServiceProxy)
+	    proxies.get(addr);
+        if (proxy != null && proxy.getIncarnationNumber() == incarnation) {
+	    return proxy;
+	}
 
         // Make SendLink and attach aspect delegates
         SendLink link = new SendLinkImpl(addr, incarnation, getChildServiceBroker());

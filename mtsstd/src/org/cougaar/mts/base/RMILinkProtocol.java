@@ -31,6 +31,7 @@ import java.rmi.Remote;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
@@ -40,6 +41,7 @@ import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
+import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.mts.std.RMISocketControlService;
@@ -82,6 +84,7 @@ public class RMILinkProtocol
     private Object ipAddrLock = new Object();
     private ArrayList clients = new ArrayList();
     private IncarnationService incarnationService;
+    private WhitePagesService wpService;
 
     public RMILinkProtocol() {
 	super(); 
@@ -122,6 +125,13 @@ public class RMILinkProtocol
 
 	incarnationService = (IncarnationService)
 	    sb.getService(this, IncarnationService.class, null);
+	if (incarnationService == null && loggingService.isWarnEnabled())
+	    loggingService.warn("Couldn't load IncarnationService");
+
+	wpService = (WhitePagesService)
+	    sb.getService(this, WhitePagesService.class, null);
+	if (wpService == null && loggingService.isWarnEnabled())
+	    loggingService.warn("Couldn't load WhitePagesService");
     }
 
 
@@ -390,10 +400,54 @@ public class RMILinkProtocol
 	return link;
     }
 
+    private class WPCallback 
+	implements Callback
+    {
+	Link link;
 
+	WPCallback(Link link)
+	{
+	    this.link = link;
+	}
 
+	private long extractIncarnation(Map entries) 
+	{
+	    // parse "(.. type=version uri=version:///1234/blah)"
+	    if (entries == null) return 0;
 
+	    AddressEntry ae = (AddressEntry) entries.get("version");
+	    if (ae == null) return 0;
 
+	    try {
+		String path = ae.getURI().getPath();
+		int end = path.indexOf('/', 1);
+		String incn_str = path.substring(1, end);
+		return Long.parseLong(incn_str);
+	    } catch (Exception e) {
+		if (loggingService.isDetailEnabled()) {
+		    loggingService.detail("ignoring invalid version entry: "
+					  +ae);
+		}
+		return 0;
+	    }
+	}
+					    
+	public void execute(Response response) {
+	    Response.GetAll rg = (Response.GetAll) response;
+	    Map entries = rg.getAddressEntries();
+	    AddressEntry entry = null;
+	    long incn = 0;
+	    if (entries != null) {
+		entry = (AddressEntry) entries.get(getProtocolType());
+		incn = extractIncarnation(entries);
+	    }
+	    if (loggingService.isDebugEnabled())
+		loggingService.debug("Brand spanking new WP callback: " 
+				     +entry+ 
+				     " incarnation = " +incn);
+	    link.handleCallback(entry, incn);
+	}
+    }
 
     class Link implements DestinationLink,  IncarnationService.Callback
     {
@@ -403,15 +457,30 @@ public class RMILinkProtocol
 	private boolean lookup_pending = false;
 	private URI lookup_result = null;
 	private Object lookup_lock = new Object();
+	private long incarnation;
+	private Callback lookup_cb = new WPCallback(this);
 
 
 	protected Link(MessageAddress destination)
 	{
 	    this.target = destination;
 	    // subscribe to IncarnationService
-	    if (incarnationService != null)
+	    if (incarnationService != null) {
+		incarnation = incarnationService.getIncarnation(target);
 		incarnationService.subscribe(destination, this);
+	    }
 	}
+
+	private void handleCallback(AddressEntry entry, long incn)
+	{
+	    synchronized (lookup_lock) {
+		lookup_pending = false;
+		lookup_result =
+		    (entry != null && incn >= incarnation)
+		    ? entry.getURI() : null;
+	    }
+	}
+
 
 	private void decache() {
 	    remote = null;
@@ -419,20 +488,6 @@ public class RMILinkProtocol
 		if (!lookup_pending) lookup_result = null;
 	    }
 	}
-
-	private Callback lookup_cb = new Callback() {
-		public void execute(Response response) {
-		    Response.Get rg = (Response.Get) response;
-		    AddressEntry entry = rg.getAddressEntry();
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("WP callback: " +entry);
-		    synchronized (lookup_lock) {
-			lookup_pending = false;
-			lookup_result =(entry != null) ? entry.getURI() : null;
-		    }
-		}
-	    };
-
 
 	private MT lookupRMIObject() 
 	    throws Exception 
@@ -452,11 +507,9 @@ public class RMILinkProtocol
 		    return  null;
 		} else {
 		    lookup_pending = true;
-		    String ptype = getProtocolType();
-		    getNameSupport().lookupAddressInNameServer(target, 
-							       ptype, 
-							       lookup_cb);
-		    // The results may have arrived as part of registering callback
+		    wpService.getAll(target.getAddress(), lookup_cb);
+		    // The results may have arrived as part of
+		    // registering callback
 		    if (lookup_result != null) {
 			ref = lookup_result;
 		    } else {
@@ -496,6 +549,7 @@ public class RMILinkProtocol
 
 
 	public void incarnationChanged(MessageAddress addr, long incn) {
+	    this.incarnation = incn;
 	    decache();
 	}
 

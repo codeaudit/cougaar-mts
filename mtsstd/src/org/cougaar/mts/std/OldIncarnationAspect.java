@@ -26,11 +26,6 @@
 
 package org.cougaar.mts.std;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
@@ -44,9 +39,6 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.MessageTransportRegistryService;
-import org.cougaar.mts.base.RMILinkProtocol;
-import org.cougaar.mts.base.SendLink;
-import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.CommFailureException;
@@ -64,44 +56,26 @@ public class OldIncarnationAspect extends StandardAspect
 				 MessageAttributes.DELIVERY_STATUS_OLD_INCARNATION);
     }
 
-    private HashSet obsoleteAgents;
-    private HashMap incarnationNumbers;
+
+
     private MessageTransportRegistryService registry;
+    private IncarnationService incarnationSvc;
 
     public void load()
     {
 	super.load();
-	obsoleteAgents = new HashSet();
-	incarnationNumbers = new HashMap();
+	LoggingService loggingService = getLoggingService();
 	ServiceBroker sb = getServiceBroker();
-	this.registry = (MessageTransportRegistryService)
+
+	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
-    }
+	if (registry == null && loggingService.isWarnEnabled()) 
+	    loggingService.warn("Couldn't get MessageTransportRegistryService");
 
-    private boolean agentIsObsolete(MessageAddress agent)
-    {
-	synchronized (obsoleteAgents) {
-	    return obsoleteAgents.contains(agent.getPrimary());
-	}
-    }
-
-
-    private void decacheDestinationLink(MessageAddress sender) 
-    {
-	// Find the RMI DestinationLink for this address and force a
-	// decache.
-	ArrayList links = registry.getDestinationLinks(sender);
-	if (links != null) {
-	    Iterator itr = links.iterator();
-	    while (itr.hasNext()) {
-		Object next = itr.next();
-		if (next instanceof IncarnationService.Callback) {
-		    IncarnationService.Callback cb = (IncarnationService.Callback)
-			next;
-		    cb.incarnationChanged(sender, -1);
-		}
-	    }
-	}
+	incarnationSvc = (IncarnationService)
+	    sb.getService(this, IncarnationService.class, null);
+	if (incarnationSvc == null  && loggingService.isWarnEnabled())
+	    loggingService.warn("Couldn't get IncarnationService");
     }
 
 
@@ -111,32 +85,12 @@ public class OldIncarnationAspect extends StandardAspect
 	    return new DestinationLinkDelegate((DestinationLink) delegate);
 	} else if (type == MessageDeliverer.class) {
 	    return new MessageDelivererDelegate((MessageDeliverer) delegate);
-	} else if (type == SendLink.class) {
-	    return new SendLinkDelegate((SendLink) delegate);
 	} else {
 	    return null;
 	}
     }
 
 
-    private class SendLinkDelegate
-	extends SendLinkDelegateImplBase
-    {
-	public SendLinkDelegate (SendLink link) 
-	{
-	    super(link);
-	}
-
-	public void registerClient(MessageTransportClient client)
-	{
-	    // remove from obsoleteAgents
-	    synchronized (obsoleteAgents) {
-		obsoleteAgents.remove(client.getMessageAddress().getPrimary());
-	    }
-	    super.registerClient(client);
-	}
-
-    }
 
     private class MessageDelivererDelegate
 	extends MessageDelivererDelegateImplBase
@@ -146,47 +100,55 @@ public class OldIncarnationAspect extends StandardAspect
 	    super(deliverer);
 	}
 
+
+	// The sender's incarnation has to be checked for two cases.
+	// If it's new we need to inform the incarnation service of
+	// that fact. If it's an obsolete incarnation we need to avoid
+	// delivering the message, and also to notify the sender (the
+	// sender-side handling of this case is in the DestinationLink
+	// delegate, below).
 	public MessageAttributes deliverMessage(AttributedMessage message, 
 						MessageAddress addr) 
 	    throws MisdeliveredMessageException
 	{
 	    LoggingService loggingService = getLoggingService();
+
+	    // Check sender incarnation
 	    MessageAddress sender = message.getOriginator();
-	    String sender_string = sender.getAddress();
-	    Long incarnation = (Long)
+	    Long incarnationAttr = (Long)
 		message.getAttribute(AttributeConstants.INCARNATION_ATTRIBUTE);
-	    Long old = (Long) incarnationNumbers.get(sender_string);
-	    if (incarnation == null) {
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("No incarnation number in message " +
+
+	    if (incarnationAttr == null) {
+		throw new RuntimeException("No incarnation number in message " +
 					message);
-	    } else if (old == null || 
-		       old.longValue() < incarnation.longValue()) {
-		// First message from this sender or new incarnation 
-		if (old != null && loggingService.isInfoEnabled())
+	    } 
+
+	    long incarnation = incarnationAttr.longValue();
+	    int status = incarnationSvc.updateIncarnation(sender, incarnation);
+	    if (status > 0) {
+		if (loggingService.isInfoEnabled())
 		    loggingService.info("Detected new incarnation number " 
 					+incarnation+ " in message " +message);
-		incarnationNumbers.put(sender_string, incarnation);
-		decacheDestinationLink(sender);
-	    } else if (old.longValue() > incarnation.longValue()) {
+	    } else if (status < 0) {
 		// Bogus message from old incarnation.  Pretend normal
 		// delivery but don't process it.
 		if (loggingService.isInfoEnabled())
 		    loggingService.info("Detected obsolete incarnation number " 
-					+incarnation+ " in message " +message+
-					"\nShould be " +old);
-		return DummyReturn;
+					+incarnation+ " in message " +message);
+		long new_incarnation = incarnationSvc.getIncarnation(sender);
+
+
+		MessageAttributes reply = new SimpleMessageAttributes();
+		reply.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
+				    MessageAttributes.DELIVERY_STATUS_OLD_INCARNATION);
+		reply.setAttribute(AttributeConstants.INCARNATION_ATTRIBUTE,
+				   new Long(new_incarnation));
+		return reply;
 	    }
 
-	    if (agentIsObsolete(addr)) {
-		if (loggingService.isErrorEnabled()) {
-		    loggingService.error("Blocking message to obsolete agent: "
-					 +message);
-		}
-		throw new MisdeliveredMessageException(message);
-	    } else {
-		return super.deliverMessage(message, addr);
-	    }
+
+
+	    return super.deliverMessage(message, addr);
 	}
 	
     }
@@ -208,22 +170,29 @@ public class OldIncarnationAspect extends StandardAspect
 		   MisdeliveredMessageException
 		   
 	{
-	    if (agentIsObsolete(message.getOriginator())) {
-		LoggingService loggingService = getLoggingService();
+	    LoggingService loggingService = getLoggingService();
+
+	    // Check sender - don't allow messages from obsolete local
+	    // agents. 
+	    if (!registry.isLocalClient(message.getOriginator())) {
 		if (loggingService.isWarnEnabled()) {
 		    loggingService.warn("Blocking message from obsolete agent: " 
 					+message);
 		}
 		return DummyReturn;
 	    }
+
+	    // Handle the special return if the receive side thinks
+	    // the sender is obsolete.
 	    try {
 		MessageAttributes reply = super.forwardMessage(message);
 		Object status = reply.getAttribute(MessageAttributes.DELIVERY_ATTRIBUTE);
 		if (status.equals(MessageAttributes.DELIVERY_STATUS_OLD_INCARNATION)) {
-		    synchronized (obsoleteAgents) {
-			obsoleteAgents.add(message.getOriginator().getPrimary());
-		    }
-		    LoggingService loggingService = getLoggingService();
+		    Long new_incarnation_attr = (Long)
+			reply.getAttribute(AttributeConstants.INCARNATION_ATTRIBUTE);
+		    long new_incarnation = new_incarnation_attr.longValue();
+		    MessageAddress sender = message.getOriginator();
+		    incarnationSvc.updateIncarnation(sender, new_incarnation);
 		    if (loggingService.isInfoEnabled()) {
 			loggingService.info(message.getTarget() 
 					    +" says that "+

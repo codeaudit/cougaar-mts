@@ -36,6 +36,7 @@ import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.SimpleMessageAttributes;
+import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.std.MulticastMessageAddress;
 
@@ -77,23 +78,30 @@ public final class MessageTransportRegistry
 
 
     static final class ServiceImpl
-	implements MessageTransportRegistryService 
+	implements MessageTransportRegistryService, IncarnationService.Callback
     {
     
 	private String name;
 	private HashMap receiveLinks = new HashMap(89);
 	private HashMap agentStates = new HashMap();
+	private HashMap localClients = new HashMap();
 	private ArrayList linkProtocols = new ArrayList();
 	private ReceiveLinkProviderService receiveLinkProvider;
 	private NameSupport nameSupport;
 	private ServiceBroker sb;
 	private LoggingService loggingService;
+	private IncarnationService incarnationService;
 
 	private ServiceImpl(String name, ServiceBroker sb) {
 	    this.name = name;
 	    this.sb = sb;
 	    loggingService = (LoggingService) 
 		sb.getService(this, LoggingService.class, null);
+
+	    incarnationService = (IncarnationService)
+		sb.getService(this, IncarnationService.class, null);
+	    if (incarnationService == null && loggingService.isWarnEnabled())
+		loggingService.warn("Couldn't load IncarnationService");
 	}
 
 	private NameSupport nameSupport() {
@@ -143,14 +151,34 @@ public final class MessageTransportRegistry
 	}
 
 
+	public synchronized void incarnationChanged(MessageAddress address,
+						    long incarnation)
+	{
+	    MessageAddress key = address.getPrimary();
+	    MessageTransportClient client = null;
+	    client = (MessageTransportClient) localClients.get(key);
+	    if (client != null && client.getIncarnationNumber() < incarnation) {
+		agentStates.remove(key);
+		receiveLinks.remove(key);
+		localClients.remove(key);
+	    }
+	}
 
-	private synchronized void addLocalClient(MessageTransportClient client) {
+
+	private synchronized void addLocalClient(MessageTransportClient client)
+	{
 	    MessageAddress key = client.getMessageAddress();
+	    localClients.put(key.getPrimary(), client);
+
+	    if (incarnationService != null) {
+		incarnationService.subscribe(key, this);
+	    }
+
 	    try {
-		    ReceiveLink link = findLocalReceiveLink(key);
-		    if (link == null) {
-			link = makeReceiveLink(client);
-		    }
+		ReceiveLink link = findLocalReceiveLink(key);
+		if (link == null) {
+		    link = makeReceiveLink(client);
+		}
 	    } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error(e.toString());
@@ -161,6 +189,7 @@ public final class MessageTransportRegistry
 	    MessageAddress key = client.getMessageAddress();
 	    try {
 		receiveLinks.remove(key);
+		localClients.remove(key.getPrimary());
 	    } catch (Exception e) {}
 	}
 
@@ -316,7 +345,7 @@ public final class MessageTransportRegistry
 	    return destinationLinks;
 	}
 
-    }
 
+    }
 
 }
