@@ -21,7 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.Container;
 
 import java.lang.reflect.Constructor;
 
@@ -33,20 +33,14 @@ import java.lang.reflect.Constructor;
  * of the factory.  The aspect delegates are made on the fly by each
  * aspect, if it wishes to attach one for a given factory
  * interface. */
-abstract public class AspectFactory implements DebugFlags
+abstract public class AspectFactory 
+    extends BoundComponent
+    implements DebugFlags
 {
-    private AspectSupport aspectSupport;
-    protected ServiceBroker sb;
 
-
-    protected AspectFactory(ServiceBroker sb) {
-	Object svc = sb.getService(this, AspectSupport.class, null);
-	aspectSupport = (AspectSupport) svc;
-	this.sb = sb;
-    }
 
     public Object attachAspects(Object delegate, Class type) {
-	return aspectSupport.attachAspects(delegate, type);
+	return getAspectSupport().attachAspects(delegate, type);
     }
 
 

@@ -22,6 +22,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.Component;
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.util.GenericStateModelAdapter;
 import org.cougaar.core.service.LoggingService;
@@ -40,14 +41,16 @@ abstract public class BoundComponent
     private AspectSupport aspectSupport;
 
     protected LoggingService loggingService;
+    protected ThreadService threadService;
 
-    BoundComponent() {
+    protected BoundComponent() {
 
     }
 
     public void load() {
 	super.load();
 	getLoggingService();
+	getThreadService();
 	getRegistry();
 	getNameSupport();
 	getAspectSupport();
@@ -93,6 +96,17 @@ abstract public class BoundComponent
 					       null);
 	}
 	return loggingService;
+    }
+
+
+    protected ThreadService getThreadService() {
+	if (threadService == null) {
+	    ServiceBroker sb = getServiceBroker();
+	    threadService =
+		(ThreadService) sb.getService(this, ThreadService.class,  
+					       null);
+	}
+	return threadService;
     }
 
 

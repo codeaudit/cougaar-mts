@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
@@ -36,10 +37,6 @@ public class ReceiveLinkFactory
     extends AspectFactory
     implements ReceiveLinkProviderService, ServiceProvider
 {
-    ReceiveLinkFactory(ServiceBroker sb) {
-	super(sb);
-    }
-
 
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
@@ -67,7 +64,7 @@ public class ReceiveLinkFactory
      * The final object returned is the outermost aspect delegate, or
      * the ReceiveLinkImpl itself if there are no aspects.  */
     public ReceiveLink getReceiveLink(MessageTransportClient client) {
-	ReceiveLink link = new ReceiveLinkImpl(client, sb);
+	ReceiveLink link = new ReceiveLinkImpl(client, getServiceBroker());
 	return (ReceiveLink) attachAspects(link, ReceiveLink.class);
     }
 }

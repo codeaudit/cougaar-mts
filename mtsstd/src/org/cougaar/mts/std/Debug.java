@@ -20,27 +20,26 @@
  */
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
 
 import java.util.StringTokenizer;
 
 /** 
- * MTS debugging support.
+ * MTS debugging support.  Adds an extra level of control over the
+ * usual LoggingService isDebugEnabled().
  * 
- * @property org.cougaar.message.transport.debug  If specified, may
- * be "aspects","flush", "comm", "multicast", "policy", "security",
- * "service", "statistics", "watcher", or a comma-separated list of
- * these options.  Case is not considered. The values "true" and "all"
- * enable all options.  The values "false" and "none" disable all
- * options.
+ * @property org.cougaar.message.transport.debug If specified, may be
+ * any of the names defined in DebugFlags, or a comma-separated list
+ * of those names.  Case is not considered. The values "true" and
+ * "all" enable all options.  The values "false" and "none" disable
+ * all options.
  *
  **/
 public final class Debug implements DebugFlags
 {
 
     private static boolean loaded = false;
-    private static int flags;
+    private static int flags = 0;
 
     private static void initialize(LoggingService loggingService) {
 	    flags = 0;

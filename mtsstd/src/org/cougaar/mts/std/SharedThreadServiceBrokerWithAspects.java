@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  Copyright 2001 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -18,48 +18,38 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
-
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceProvider;
 
-/**
- * A factory which makes Routers.  Since this factory is a subclass of
- * AspectFactory, aspects can be attached to a SendQueue when it's
- * first instantiated.  */
-public class RouterFactory 
-    extends AspectFactory
-    implements ServiceProvider
+public class SharedThreadServiceBrokerWithAspects
+    extends  SharedThreadServiceBroker
 {
-    private Router router;
 
+    private AspectSupport aspectSupport;
+    private ThreadGroup group;
 
-    public void load() {
-	super.load();
-	router = new RouterImpl(getServiceBroker());
-	router = (Router) attachAspects(router, Router.class);
+    public SharedThreadServiceBrokerWithAspects(ServiceBroker sb) {
+	super(sb);
+	group = new ThreadGroup("MTS");
+    }
+
+    public ThreadGroup getGroup() {
+	return group;
     }
 
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Could restrict this request to the Router
-	if (serviceClass == Router.class) {
-	    if (requestor instanceof SendQueueImpl) return router;
-	} 
-	return null;
+    protected synchronized Object getThreadService() {
+	Object svc = super.getThreadService();
+	if (aspectSupport == null) {
+	    aspectSupport = (AspectSupport)
+		super.getService(this, AspectSupport.class, null);
+	}
+	return aspectSupport.attachAspects(svc, ThreadService.class);
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
-    }
+
 
 
 }
+

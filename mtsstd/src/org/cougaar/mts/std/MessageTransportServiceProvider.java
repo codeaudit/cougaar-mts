@@ -150,26 +150,32 @@ public final class MessageTransportServiceProvider
     private void createFactories() {
 	ServiceBroker sb = getServiceBroker();
 
-	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory(sb);
+	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory();
+	add(receiveLinkFactory);
 	sb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
+	
 
 	LinkSelectionPolicyServiceProvider lspsp =
 	    new LinkSelectionPolicyServiceProvider(loggingService);
 	sb.addService(LinkSelectionPolicy.class, lspsp);
 	
 	DestinationQueueFactory	destQFactory = 
-	    new DestinationQueueFactory(sb);
+	    new DestinationQueueFactory(this);
+	add(destQFactory);
 	sb.addService(DestinationQueueProviderService.class, destQFactory);
 
 	//  Singletons, though produced by factories.
 	MessageDelivererFactory delivererFactory = 
-	    new MessageDelivererFactory(sb, id);
+	    new MessageDelivererFactory(id);
+	add(delivererFactory);
 	sb.addService(MessageDeliverer.class, delivererFactory);
 
-	RouterFactory routerFactory =  new RouterFactory(sb);
+	RouterFactory routerFactory =  new RouterFactory();
+	add(routerFactory);
 	sb.addService(Router.class, routerFactory);
 
-	SendQueueFactory sendQFactory = new SendQueueFactory(sb, id);
+	SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
+	add(sendQFactory);
 	sb.addService(SendQueue.class, sendQFactory);
 
 
@@ -214,8 +220,7 @@ public final class MessageTransportServiceProvider
 	Debug.load(loggingService);
 
 	// Later this will be replaced by a Node-level service
-	ThreadServiceProvider tsp = new ThreadServiceProvider();
-	sb.addService(ThreadService.class, tsp);
+	new ThreadServiceImpl(sb);
 
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);

@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.Container;
 import org.cougaar.core.mts.Message;
 
 
@@ -37,13 +38,16 @@ import org.cougaar.core.mts.Message;
 final class SendQueueImpl extends MessageQueue implements SendQueue
 {
     private Router router;
-    private MessageTransportRegistryService registry;
 
-    SendQueueImpl(String name, ServiceBroker sb) 
+    SendQueueImpl(String name, Container container) 
     {
-	super(name, sb);
-	registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
+	super(name, container);
+	container.add(this);
+    }
+
+    public void load() {
+	super.load();
+	ServiceBroker sb = getServiceBroker();
 	router = (Router)
 	    sb.getService(this, Router.class, null);
     }

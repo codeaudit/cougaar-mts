@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
@@ -36,10 +37,11 @@ public class DestinationQueueFactory
     implements DestinationQueueProviderService, ServiceProvider
 {
     private HashMap queues;
+    private Container container;
 
-    DestinationQueueFactory(ServiceBroker sb) 
+    DestinationQueueFactory(Container container) 
     {
-	super(sb);
+	this.container = container;
 	queues = new HashMap();
     }
 
@@ -52,11 +54,10 @@ public class DestinationQueueFactory
      * there are no aspects.  */
     public DestinationQueue getDestinationQueue(MessageAddress destination) 
     {
-	    
 	DestinationQueue q = (DestinationQueue) queues.get(destination);
 	if (q == null) {
 	    DestinationQueueImpl qimpl = 
-		new DestinationQueueImpl(destination, sb);
+		new DestinationQueueImpl(destination, container);
 	    q = (DestinationQueue) attachAspects(qimpl, 
 						 DestinationQueue.class);
 	    qimpl.setDelegate(q);

@@ -21,8 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.LoggingService;
 
 
 import java.util.ArrayList;
@@ -45,22 +45,21 @@ final class DestinationQueueImpl
 {
     private static final int MAX_DELAY = 60 * 1000; // 1 minute
     private MessageAddress destination;
-    private MessageTransportRegistryService registry;
     private LinkSelectionPolicy selectionPolicy;
-    private LoggingService loggingService;
     private DestinationQueue delegate;
 
     private ArrayList destinationLinks;
 
-    DestinationQueueImpl(MessageAddress destination, ServiceBroker sb)
+    DestinationQueueImpl(MessageAddress destination, Container container)
     {
-	super(destination.toString(), sb);
+	super(destination.toString(), container);
 	this.destination = destination;
+	container.add(this);
+    }
 
-	registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
-	loggingService = (LoggingService)
-	    sb.getService(this, LoggingService.class, null);
+    public void load() {
+	super.load();
+	ServiceBroker sb = getServiceBroker();
 	selectionPolicy =
 	(LinkSelectionPolicy)
 	    sb.getService(this, LinkSelectionPolicy.class, null);
@@ -68,7 +67,7 @@ final class DestinationQueueImpl
 	this.delegate = this;
 
 	// cache DestinationLinks, per transport
-	destinationLinks = registry.getDestinationLinks(destination);
+	destinationLinks = getRegistry().getDestinationLinks(destination);
     }
 
 

@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 
 import org.cougaar.util.CircularQueue;
@@ -30,21 +31,21 @@ import org.cougaar.util.CircularQueue;
  * runs its own thread to pop messages off that queue.  The method
  * <strong>dispatch</strong>, provided by instantiable subclasses, is
  * invoked on each message as it's popped off. */
-abstract class MessageQueue implements Runnable
+abstract class MessageQueue 
+    extends BoundComponent
+    implements Runnable
 {
 
     private CircularQueue queue;
-    private ThreadService threadService;
     private Thread thread;
     private String name;
 
 
-    MessageQueue(String name, ServiceBroker sb) {
+    MessageQueue(String name, Container container) {
 	this.name = name;
-	this.threadService = 
-	    (ThreadService) sb.getService(this, ThreadService.class, null);
 	queue = new CircularQueue();
     }
+
 
 
 

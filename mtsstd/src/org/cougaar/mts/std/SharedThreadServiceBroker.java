@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  Copyright 2001 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -18,48 +18,54 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
-
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.*;
 
 /**
- * A factory which makes Routers.  Since this factory is a subclass of
- * AspectFactory, aspects can be attached to a SendQueue when it's
- * first instantiated.  */
-public class RouterFactory 
-    extends AspectFactory
-    implements ServiceProvider
+ * A ServiceBroker that shares a single ThreadService among all
+ * requestors of any given BinderSupport class.
+ */
+public class SharedThreadServiceBroker
+    extends PropagatingServiceBroker
+    implements ThreadServiceClient
 {
-    private Router router;
 
-
-    public void load() {
-	super.load();
-	router = new RouterImpl(getServiceBroker());
-	router = (Router) attachAspects(router, Router.class);
+    private ThreadService threadService;
+    
+    public SharedThreadServiceBroker(ServiceBroker sb) {
+	super(sb);
     }
 
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Could restrict this request to the Router
-	if (serviceClass == Router.class) {
-	    if (requestor instanceof SendQueueImpl) return router;
-	} 
+
+    public ThreadGroup getGroup() {
 	return null;
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
+
+    protected synchronized Object getThreadService() {
+	if (threadService == null) {
+	    threadService = (ThreadService)
+		super.getService(this, ThreadService.class, null);
+	}
+	return threadService;
+    }
+
+
+
+
+    public Object getService(Object requestor, 
+			     Class serviceClass, 
+			     ServiceRevokedListener srl)
     {
+	if (serviceClass == ThreadService.class) {
+	    return getThreadService();
+	} else {
+	    return super.getService(requestor, serviceClass, srl);
+	}
     }
 
 
 }
+

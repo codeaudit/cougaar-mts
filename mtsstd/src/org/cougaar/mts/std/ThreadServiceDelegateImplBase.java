@@ -21,45 +21,29 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceProvider;
 
-/**
- * A factory which makes Routers.  Since this factory is a subclass of
- * AspectFactory, aspects can be attached to a SendQueue when it's
- * first instantiated.  */
-public class RouterFactory 
-    extends AspectFactory
-    implements ServiceProvider
+abstract public class ThreadServiceDelegateImplBase implements ThreadService
 {
-    private Router router;
+    protected ThreadService svc;
 
-
-    public void load() {
-	super.load();
-	router = new RouterImpl(getServiceBroker());
-	router = (Router) attachAspects(router, Router.class);
+    protected ThreadServiceDelegateImplBase(ThreadService svc) {
+	this.svc = svc;
     }
 
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Could restrict this request to the Router
-	if (serviceClass == Router.class) {
-	    if (requestor instanceof SendQueueImpl) return router;
-	} 
-	return null;
+    public Thread getThread() {
+	return svc.getThread();
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public Thread getThread(String name) {
+	return svc.getThread(name);
     }
 
+    public Thread getThread(Runnable runnable) {
+	return svc.getThread(runnable);
+    }
+
+    public Thread getThread(Runnable runnable, String name) {
+	return svc.getThread(runnable, name);
+    }
 
 }

@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
@@ -35,16 +36,17 @@ public class MessageDelivererFactory
     implements ServiceProvider
 {
     private MessageDeliverer deliverer;
+    private String id;
 
-    MessageDelivererFactory(ServiceBroker sb, String id)
+    MessageDelivererFactory(String id)
     {
-	super(sb);
-	MessageTransportRegistryService registry = 
-	    (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
+	this.id = id;
+    }
 
+    public void load() {
+	super.load();
 	String name = id+"/Deliverer";
-	MessageDeliverer d = new MessageDelivererImpl(name, registry);
+	MessageDeliverer d = new MessageDelivererImpl(name, getRegistry());
 	deliverer = 
 	    (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
     }
