@@ -216,7 +216,7 @@ public class AgentStatusAspect
     public class AgentStatusDestinationLink 
 	extends DestinationLinkDelegateImplBase
     {
-	private String spoke_key, heard_key;
+	private String spoke_key, heard_key,error_key;
 
 	public AgentStatusDestinationLink(DestinationLink link)
 	{
@@ -224,6 +224,8 @@ public class AgentStatusAspect
 	    String remoteAgent = link.getDestination().getAddress();
 	    spoke_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ "SpokeTime";
 	    heard_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ "HeardTime";
+	    error_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ 
+		"SpokeErrorTime";
 	}
 	
 	boolean delivered(MessageAttributes attributes) {
@@ -246,8 +248,6 @@ public class AgentStatusAspect
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
-		metricsUpdateService.updateValue(spoke_key, 
-						 longMetric(startTime));
 		synchronized (remoteState) {
 		    remoteState.lastLinkProtocolTried=
 			getProtocolClass().getName();
@@ -258,9 +258,13 @@ public class AgentStatusAspect
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
 		
-		if (delivered(meta))
+		if (delivered(meta)) {
 		    metricsUpdateService.updateValue(heard_key, 
 						     longMetric(endTime));
+		    metricsUpdateService.updateValue(spoke_key, 
+						 longMetric(endTime));
+		}
+
 		int msgBytes=0;
 		Object attr= message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
 		if (attr!=null && (attr instanceof Number) )
@@ -294,32 +298,44 @@ public class AgentStatusAspect
 		return meta;
 
 	    } catch (UnregisteredNameException unreg) {
+		long now=System.currentTimeMillis();
 		synchronized (remoteState) {
 		    remoteState.status = UNREGISTERED;
-		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.timestamp = now;
 		    remoteState.unregisteredNameCount++;
 		}
+		metricsUpdateService.updateValue(error_key, 
+						 longMetric(now));
 		throw unreg;
 	    } catch (NameLookupException namex) {
+		long now=System.currentTimeMillis();
 		synchronized (remoteState) {
 		    remoteState.status =UNKNOWN;
-		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.timestamp = now;
 		    remoteState.nameLookupFailureCount++;
 		}
+		metricsUpdateService.updateValue(error_key, 
+						 longMetric(now));
 		throw namex;
 	    } catch (CommFailureException commex) {
+		long now=System.currentTimeMillis();
 		synchronized (remoteState) {
 		    remoteState.status =UNREACHABLE;
-		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.timestamp = now;
 		    remoteState.commFailureCount++;
 		}
+		metricsUpdateService.updateValue(error_key, 
+						 longMetric(now));
 		throw commex;
 	    } catch (MisdeliveredMessageException misd) {
+		long now=System.currentTimeMillis();
 		synchronized (remoteState) {
 		    remoteState.status =UNREGISTERED;
-		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.timestamp = now;
 		    remoteState.misdeliveredMessageCount++;
 		}	
+		metricsUpdateService.updateValue(error_key, 
+						 longMetric(now));
 		throw misd;
 	    }
 	}
