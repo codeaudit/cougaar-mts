@@ -27,7 +27,8 @@ import org.cougaar.core.society.Message;
 
 public interface MessageDeliverer
 {
-    public void deliverMessage(Message message);
+    public void deliverMessage(Message message)
+	throws MisdeliveredMessageException;
     public boolean matches(String name);
 
 }

@@ -93,7 +93,9 @@ public class WatcherAspect
 	    this.server = server;
 	}
 	
-	public void deliverMessage(Message message) {
+	public void deliverMessage(Message message) 
+	    throws MisdeliveredMessageException
+	{
 	    server.deliverMessage(message);
 	    notifyWatchersOfReceive(message);
 	}

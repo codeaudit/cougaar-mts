@@ -40,7 +40,9 @@ public class MessageDelivererImpl implements MessageDeliverer
      * Forward the message on to the appropriate ReceiveLink, or links
      * in the case of a MulticastMessageAddress.  The lookup is
      * handled by the MessageTransportRegistry. */
-    public void deliverMessage(Message message) {
+    public void deliverMessage(Message message) 
+	throws MisdeliveredMessageException
+    {
 	if (message == null) return;
 	MessageAddress addr = message.getTarget();
 	if (addr instanceof MulticastMessageAddress) {
@@ -60,9 +62,7 @@ public class MessageDelivererImpl implements MessageDeliverer
 		if (link != null) {
 		    link.deliverMessage(message);
 		} else {
-		    throw new RuntimeException("Misdelivered message "
-					       + message +
-					       " sent to "+this);
+		    throw new MisdeliveredMessageException(message);
 		}
 	    }
 	}

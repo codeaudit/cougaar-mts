@@ -115,7 +115,8 @@ public class SecurityAspect extends StandardAspect
 	public void forwardMessage(Message message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
-		   CommFailureException
+		   CommFailureException,
+		   MisdeliveredMessageException
 	{
 	    link.forwardMessage(secure(message));
 	}
@@ -136,7 +137,9 @@ public class SecurityAspect extends StandardAspect
 	    this.deliverer = deliverer;
 	}
 
-	public void deliverMessage(Message m) {
+	public void deliverMessage(Message m) 
+	    throws MisdeliveredMessageException
+	{
 	    deliverer.deliverMessage(unsecure(m));
 	}
 

@@ -223,18 +223,24 @@ public class RMIMessageTransport
 	public void forwardMessage(Message message) 
 	    throws NameLookupException, 
 		   UnregisteredNameException, 
-		   CommFailureException
+		   CommFailureException,
+		   MisdeliveredMessageException
 	{
 	    cacheRemote();
 	    try {
 		remote.rerouteMessage(message);
 	    } 
+	    catch (MisdeliveredMessageException mis) {
+		// force recache of remote
+		remote = null;
+		throw mis;
+	    }
 	    catch (Exception ex) {
 		// force recache of remote
 		remote = null;
+		// Assume anything else is a comm failure
 		throw new CommFailureException(ex);
 	    }
-		    
 	}
     }
 

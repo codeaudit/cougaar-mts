@@ -198,7 +198,8 @@ public class TraceAspect
 	public void forwardMessage(Message message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
-		   CommFailureException
+		   CommFailureException,
+		   MisdeliveredMessageException
 
 	{
 	    log("DestinationLink", message.toString());
@@ -220,7 +221,9 @@ public class TraceAspect
 	    this.server = server;
 	}
 	
-	public void deliverMessage(Message message) {
+	public void deliverMessage(Message message) 
+	    throws MisdeliveredMessageException
+	{
 	    log("MessageDeliverer", message.toString());
 	    server.deliverMessage(message);
 	}

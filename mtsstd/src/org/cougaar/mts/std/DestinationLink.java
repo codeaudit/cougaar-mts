@@ -28,7 +28,8 @@ public interface DestinationLink
     public void forwardMessage(Message message) 
 	throws UnregisteredNameException, 
 	       NameLookupException, 
-	       CommFailureException;
+	       CommFailureException,
+	       MisdeliveredMessageException;
 
     /**
      * This method returns a simple measure of the cost of sending the

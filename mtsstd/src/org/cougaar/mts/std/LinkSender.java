@@ -115,6 +115,8 @@ public class LinkSender implements Runnable
 			    lookup_error.printStackTrace();
 			} catch (CommFailureException comm_failure) {
 			    comm_failure.printStackTrace();
+			} catch (MisdeliveredMessageException misd) {
+			    System.err.println(misd);
 			}
 		    }
 

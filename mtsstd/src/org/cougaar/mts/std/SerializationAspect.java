@@ -98,7 +98,8 @@ public class SerializationAspect extends StandardAspect
 	public synchronized void forwardMessage(Message message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
-		   CommFailureException
+		   CommFailureException,
+		   MisdeliveredMessageException
 
 	{
 	    // Serialize into the stream rather than pushing on the
