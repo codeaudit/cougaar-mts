@@ -21,14 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
 import org.cougaar.core.naming.NS;
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-
+import org.cougaar.core.component.ServiceBroker;
 
 import java.rmi.RemoteException;
 import java.rmi.server.RMISocketFactory;
@@ -74,6 +68,59 @@ public class RMILinkProtocol
 	remoteRefs = new HashMap();
 	socfac = getSocketFactory();
     }
+
+
+
+    // Just for testing -- an example of supplying a service from a
+    // LinkProtocol.
+
+    public static interface Service extends LinkProtocolService {
+	// RMI-specific methods would go here.
+    }
+
+    private class ServiceProxy 
+	extends LinkProtocol.ServiceProxy 
+	implements Service
+    {
+
+    }
+
+    // If LinkProtocols classes want to define this method, eg in
+    // order to provide a service, they should not in general invoke
+    // super.load(), since if they do they'll end up clobbering any
+    // services defined by super classes service.  Instead they should
+    // use super_load(), defined in LinkProtocol, which runs the
+    // standard load() method without running any intervening ones.
+    public void load() {
+	super_load();
+	ServiceBroker sb = getBindingSite().getServiceBroker();
+	sb.addService(Service.class, this);
+    }
+
+
+    public Object getService(ServiceBroker sb,
+			     Object requestor, 
+			     Class serviceClass)
+    {
+	if (serviceClass == Service.class) {
+	    return new ServiceProxy();
+	} else {
+	    return null;
+	}
+    }
+
+    public void releaseService(ServiceBroker sb,
+			       Object requestor,
+			       Class serviceClass,
+			       Object service)
+    {
+
+	if (serviceClass == Service.class) {
+	    // no-op for this example
+	}
+    }
+
+
 
 
     protected String getProtocolType() {

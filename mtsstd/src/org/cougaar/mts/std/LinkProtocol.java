@@ -21,11 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.component.BindingSite;
+import org.cougaar.core.component.ContainerAPI;
+import org.cougaar.core.component.ContainerSupport;
+import org.cougaar.core.component.PropagatingServiceBroker;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
 
 /**
@@ -43,11 +44,24 @@ import org.cougaar.core.mts.MessageAddress;
  * DestinationLinks, so the class is declared to extend AspectFactory,
  * in order to allow aspects to be added to the Links.  The aspect
  * attachment is handled in each specific transport class.  */
-public abstract class LinkProtocol extends AspectFactory
+abstract public class LinkProtocol 
+    extends ContainerSupport
+    implements ContainerAPI, DebugFlags, ServiceProvider
 {
     protected MessageDeliverer deliverer;
     protected MessageTransportRegistry registry;
     protected NameSupport nameSupport;
+    private AspectSupport aspectSupport;
+    private BindingSite bindingSite;
+    
+    protected class ServiceProxy 
+	implements LinkProtocolService
+    {
+	public boolean addressKnown(MessageAddress address) {
+	    return LinkProtocol.this.addressKnown(address);
+	}
+    }
+ 
 
 
     // LinkProtocol implementations must supply these!
@@ -86,10 +100,43 @@ public abstract class LinkProtocol extends AspectFactory
 
 
 
-
+    
 
     protected LinkProtocol(AspectSupport aspectSupport) {
-	super(aspectSupport);
+	this.aspectSupport = aspectSupport;
+    }
+
+    protected BindingSite getBindingSite() {
+	return bindingSite;
+    }
+
+
+
+    // Allow subclasses to provide their own load()
+    protected void super_load() {
+	super.load();
+    }
+
+
+    public Object getService(ServiceBroker sb,
+			     Object requestor, 
+			     Class serviceClass)
+    {
+	return null;
+    }
+
+    public void releaseService(ServiceBroker sb,
+			       Object requestor,
+			       Class serviceClass,
+			       Object service)
+    {
+    }
+
+
+
+
+    public Object attachAspects(Object delegate, Class type) {
+	return aspectSupport.attachAspects(delegate, type);
     }
 
     public void setRegistry(MessageTransportRegistry registry) {
@@ -106,6 +153,31 @@ public abstract class LinkProtocol extends AspectFactory
     }
 
 
+
+
+   
+    // ContainerAPI
+
+    public void requestStop() {}
+
+    public ContainerAPI getContainerProxy() {
+	return this;
+    }
+
+    protected String specifyContainmentPoint() {
+	return "messagetransportservice.aspect";
+    }
+
+    public final void setBindingSite(BindingSite bs) {
+        super.setBindingSite(bs);
+	this.bindingSite = bs;
+        setChildServiceBroker(new PropagatingServiceBroker(bs));
+    }
+
+
+
     
+
+
 
 }

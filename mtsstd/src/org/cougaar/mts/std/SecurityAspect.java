@@ -21,13 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
 
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageSecurityManager;
+import org.cougaar.core.node.DummyMessageSecurityManager;
 import org.cougaar.core.node.SecureMessage;
 
 import java.beans.Beans;
@@ -56,13 +51,17 @@ public class SecurityAspect extends StandardAspect
 	    } catch (Exception ex) {
 		ex.printStackTrace();
 	    }
-	}
+	} else {
+	    msm = new DummyMessageSecurityManager();
+ 	}
 	return msm;
     }
 
 
 
     private boolean enabled = false;
+    
+
 
     public SecurityAspect() {
 	enabled = ensure_msm() != null;
@@ -87,9 +86,6 @@ public class SecurityAspect extends StandardAspect
     // Temporarily package access, rather than private, until we get
     // rid of MessageTransportClassic
     Message unsecure(Message message) {
-	if (!(message instanceof SecureMessage)) return message;
-
-
 	if (msm == null) {
 	    System.err.println("MessageTransport "+this+
 			       " received SecureMessage "+message+
@@ -114,10 +110,7 @@ public class SecurityAspect extends StandardAspect
     {
 	if (type ==  DestinationLink.class) {
 	    DestinationLink link = (DestinationLink) delegate;
-	    if (link.getProtocolClass() == LoopbackLinkProtocol.class)
-		return null;
-	    else
-		return new SecureDestinationLink(link);
+	    return new SecureDestinationLink(link);
 	} else {
 	    return null;
 	}

@@ -30,9 +30,7 @@ import org.cougaar.core.mts.MessageAddress;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Method;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
 
@@ -67,6 +65,29 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	}
     }
 
+    private static final int  UBYTE_MAX = (1<<8) - 1;
+    private static final int  USHORT_MAX = (1<<16) - 1;
+
+    private boolean isUnsignedByte(String string, int start, int end) {
+	String s = string.substring(start, end);
+	try {
+	    int x = Integer.parseInt(s);
+	    return x >= 0 && x < UBYTE_MAX;
+	} catch (NumberFormatException ex) {
+	    return false;
+	}
+    }
+
+    private boolean isUnsignedShort(String string, int start, int end) {
+	String s = string.substring(start, end);
+	try {
+	    int x = Integer.parseInt(s);
+	    return x >= 0 && x < USHORT_MAX;
+	} catch (NumberFormatException ex) {
+	    return false;
+	}
+    }
+
     private String extractInetAddr(String raw) {
 	if (raw.startsWith("IOR:")) {
 	    // CORBA ior; handle this later.  Just return null for
@@ -75,45 +96,42 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	}
 
 	int i = 0;
-	while (i<raw.length()) {
-	    if (Character.isDigit(raw.charAt(i++))) {
-		try {
-		    // found a digit
-		    String sub = raw.substring(i-1);
-		    StringTokenizer tk1 = new StringTokenizer(sub, " ;/,]})>");
-		    if (tk1.hasMoreTokens()) {
-			String data = tk1.nextToken();
-			// Now verify it's a.b.c.d:e
-			StringTokenizer tk2 = new StringTokenizer(data, ".");
-			if (tk2.countTokens() == 4) {
-			    Integer.parseInt(tk2.nextToken());
-			    Integer.parseInt(tk2.nextToken());
-			    Integer.parseInt(tk2.nextToken());
-			    // three valid ints (should check 0-255)
+	int end = raw.length();
+	while (i<end) {
+	    if (Character.isDigit(raw.charAt(i))) {
+		int start = i;
 
-			    StringTokenizer tk3 = 
-				new StringTokenizer(tk2.nextToken(), ":");
-			    if (tk3.countTokens() == 2) {
-				Integer.parseInt(tk3.nextToken());
-				Integer.parseInt(tk3.nextToken());
+		int substart = i;
+		i = raw.indexOf('.', substart);
+		if (i == -1) break;
+		if (!isUnsignedByte(raw, substart, i)) continue;
 
-				// Done!
-				return data;
-			    } else {
-				// System.out.println("#### More than two tokens");
-			    }
-			} else {
-			    //System.out.println("#### More than four tokens");
-			}
-		    } else {
-			//System.out.println("#### No tokens");
-		    }
-		} catch (NumberFormatException ex) {
-		    // wrong format (most likely not an integer)
-		    // ex.printStackTrace();
-		}
+		substart = i+1;
+		i = raw.indexOf('.', substart);
+		if (i == -1) break;
+		if (!isUnsignedByte(raw, substart, i)) continue;
+
+		substart = i+1;
+		i = raw.indexOf('.', substart);
+		if (i == -1) break;
+		if (!isUnsignedByte(raw, substart, i)) continue;
+
+		substart = i+1;
+		i = raw.indexOf(':', substart);
+		if (i == -1) break;
+		if (!isUnsignedByte(raw, substart, i)) continue;
+
+		substart = i+1;
+		while (i<end-1 && Character.isDigit(raw.charAt(++i)));
+		if (!isUnsignedShort(raw, substart, i)) continue;
+
+		return raw.substring(start, i);
+
+	    } else {
+		++i;
 	    }
 	}
+
 	return null;
     }
 

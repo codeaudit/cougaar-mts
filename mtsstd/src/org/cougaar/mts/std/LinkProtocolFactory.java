@@ -21,10 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
+import org.cougaar.core.component.Container;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -47,14 +44,15 @@ public final class LinkProtocolFactory
 	"org.cougaar.message.protocol.classes";
     private static LinkProtocolFactory theFactory;
 
-    private ArrayList protocols;
     private AspectSupport aspectSupport;
     private String id;
     private MessageTransportRegistry registry;
     private MessageDeliverer deliverer;
     private NameSupport nameSupport;
+    private Container container;
 
     public LinkProtocolFactory(String id, 
+			       Container container,
 			       MessageTransportRegistry registry,
 			       NameSupport nameSupport,
 			       AspectSupport aspectSupport)
@@ -63,6 +61,7 @@ public final class LinkProtocolFactory
 	this.registry = registry;
 	this.nameSupport = nameSupport;
 	this.aspectSupport = aspectSupport;
+	this.container = container;
 	theFactory = this;
     }
 
@@ -74,7 +73,8 @@ public final class LinkProtocolFactory
 	protocol.setDeliverer(deliverer);
 	protocol.setRegistry(registry);
 	protocol.setNameSupport(nameSupport);
-	protocols.add(protocol);
+	registry.addLinkProtocol(protocol);
+	container.add(protocol);
     }
 
 
@@ -98,10 +98,7 @@ public final class LinkProtocolFactory
 	return protocol;
     }
 
-    public  ArrayList getProtocols() {
-	if (protocols != null) return protocols;
-
-	protocols = new ArrayList();
+    public void loadProtocols() {
 
 	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
 	if (protocol_classes == null || protocol_classes.equals("")) {
@@ -119,8 +116,6 @@ public final class LinkProtocolFactory
 	    }
 	}
 
-
-	return protocols;
     }
 
 

@@ -66,26 +66,10 @@ class DestinationQueueImpl
 	this.selectionPolicy = selectionPolicy;
 
 	// cache DestinationLinks, per transport
-	destinationLinks = new ArrayList();
-	getDestinationLinks();
+	destinationLinks = registry.getDestinationLinks(destination);
     }
 
 
-    /**
-     * Here we ask each transport for DestinationLink.  The links will
-     * be used later to find the cheapest transport for any given
-     * message. */
-    private void getDestinationLinks() 
-    {
-	Iterator itr = protocolFactory.getProtocols().iterator();
-	DestinationLink link;
-	while (itr.hasNext()) {
-	    LinkProtocol lp = (LinkProtocol) itr.next();
-	    // Class lp_class = lp.getClass();
-	    link = lp.getDestinationLink(destination);
-	    destinationLinks.add(link);
-	}
-    }
 
     /**
      * Enqueues the given message. */

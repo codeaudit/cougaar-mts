@@ -26,10 +26,6 @@ import org.cougaar.core.service.*;
 import org.cougaar.core.node.*;
 
 import org.cougaar.core.component.StateObject;
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageEnvelope;
-import org.cougaar.core.mts.MulticastMessageAddress;
 
 import java.util.*;
 
@@ -99,13 +95,21 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	getBindingSite().getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
     }
 
-    // aspect implementation
+    // aspect implementation: forward linkage (send side)
     public Object getDelegate(Object delegate, Class type) {
 	if (type == SendQueue.class) {
 	    maskingQDelegate = new MaskingQueueDelegate((SendQueue) delegate);
 	    return maskingQDelegate;
-	} else if (type == MessageDeliverer.class) {
-	    return new MaskingDelivererDelegate((MessageDeliverer) delegate);
+	} else {
+	    return null;
+	}
+    }
+
+
+    // aspect implementation: reverse linkage (receive side)
+    public Object getReverseDelegate(Object delegate, Class type) {
+	if (type == ReceiveLink.class) {
+	    return new MaskingReceiveLinkDelegate((ReceiveLink) delegate);
 	} else {
 	    return null;
 	}
@@ -358,14 +362,15 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       
 
     // Delgate on Deliverer (sees incoming messages)
-    public class MaskingDelivererDelegate extends MessageDelivererDelegateImplBase {
+    public class MaskingReceiveLinkDelegate 
+	extends ReceiveLinkDelegateImplBase 
+    {
     
-	public MaskingDelivererDelegate (MessageDeliverer deliverer) {
-	    super(deliverer);
+	public MaskingReceiveLinkDelegate (ReceiveLink link) {
+	    super(link);
 	}
     
-	public void deliverMessage(Message msg, MessageAddress dest) 
-	    throws MisdeliveredMessageException
+	public void deliverMessage(Message msg) 
 	{
 	    if (msg instanceof MaskingMessageEnvelope) {
 		Message internalmsg = ((MaskingMessageEnvelope) msg).getContents();
@@ -388,7 +393,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		// drop it on the floor.
 	    } else {
 		// any other kind of message enveloper just gets passed through
-		deliverer.deliverMessage(msg, dest);
+		super.deliverMessage(msg);
 	    }
 	} 
     }  // end of MaskingDelivererDelegate inner class

@@ -21,14 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.node.Node;
-
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +34,8 @@ import java.util.Map;
  * The MessageTransportRegistry singleton is a utility instance that
  * helps certain pieces of the message transport subsystem to find one
  * another. */
-public class MessageTransportRegistry implements DebugFlags
+public class MessageTransportRegistry 
+    implements DebugFlags
 {
     private static MessageTransportRegistry instance;
 
@@ -70,7 +66,7 @@ public class MessageTransportRegistry implements DebugFlags
     private String name;
     private HashMap receiveLinks = new HashMap(89);
     private MessageTransportServiceProvider serviceProvider;
-    private LinkProtocolFactory protocolFactory;
+    private ArrayList linkProtocols = new ArrayList();
     private ReceiveLinkFactory receiveLinkFactory;
     private NameSupport nameSupport;
 
@@ -85,8 +81,8 @@ public class MessageTransportRegistry implements DebugFlags
 	this.nameSupport = nameSupport;
     }
 
-    void setProtocolFactory(LinkProtocolFactory factory) {
-	this.protocolFactory = factory;
+    void addLinkProtocol(LinkProtocol lp) {
+	linkProtocols.add(lp);
     }
 
     void setReceiveLinkFactory(ReceiveLinkFactory receiveLinkFactory) {
@@ -196,7 +192,7 @@ public class MessageTransportRegistry implements DebugFlags
 
     private void registerClientWithSociety(MessageTransportClient client) {
 	// register with each component transport
-	Iterator protocols = protocolFactory.getProtocols().iterator();
+	Iterator protocols = linkProtocols.iterator();
 	while (protocols.hasNext()) {
 	    LinkProtocol protocol = (LinkProtocol) protocols.next();
 	    protocol.registerClient(client);
@@ -206,7 +202,7 @@ public class MessageTransportRegistry implements DebugFlags
 
     private void unregisterClientWithSociety(MessageTransportClient client) {
 	// register with each component transport
-	Iterator protocols = protocolFactory.getProtocols().iterator();
+	Iterator protocols = linkProtocols.iterator();
 	while (protocols.hasNext()) {
 	    LinkProtocol protocol = (LinkProtocol) protocols.next();
 	    protocol.unregisterClient(client);
@@ -238,7 +234,7 @@ public class MessageTransportRegistry implements DebugFlags
 
 	// Give each LinkProtocol a chance to register some object
 	// using the MTS address (but *not* in the MTS DirContext).
-	Iterator protocols = protocolFactory.getProtocols().iterator();
+	Iterator protocols = linkProtocols.iterator();
 	while (protocols.hasNext()) {
 	    LinkProtocol protocol = (LinkProtocol) protocols.next();
 	    protocol.registerMTS(mts_address);
@@ -252,13 +248,29 @@ public class MessageTransportRegistry implements DebugFlags
 
 
     boolean addressKnown(MessageAddress address) {
-	Iterator protocols = protocolFactory.getProtocols().iterator();
+	Iterator protocols = linkProtocols.iterator();
 	while (protocols.hasNext()) {
 	    LinkProtocol protocol = (LinkProtocol) protocols.next();
 	    if (protocol.addressKnown(address)) return true;
 	}
 	return false;
     }
+
+    ArrayList getDestinationLinks(MessageAddress destination) 
+    {
+	ArrayList destinationLinks = new ArrayList();
+	Iterator itr = linkProtocols.iterator();
+	DestinationLink link;
+	while (itr.hasNext()) {
+	    LinkProtocol lp = (LinkProtocol) itr.next();
+	    // Class lp_class = lp.getClass();
+	    link = lp.getDestinationLink(destination);
+	    destinationLinks.add(link);
+	}
+	return destinationLinks;
+    }
+
+
 
 
 

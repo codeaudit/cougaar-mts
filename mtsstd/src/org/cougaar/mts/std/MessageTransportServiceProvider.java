@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.cougaar.core.component.BinderFactory;
 import org.cougaar.core.component.BindingSite;
@@ -36,8 +30,13 @@ import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.NamingService;
-import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.service.MessageStatisticsService;
+import org.cougaar.core.service.MessageTransportService;
+import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.core.node.Node;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -131,7 +130,7 @@ public class MessageTransportServiceProvider
 	aspectSupport.addAspect(new FlushAspect());
 
         // Traffic Masking Generator
-        aspectSupport.addAspect(new TrafficMaskingGeneratorAspect());
+        // aspectSupport.addAspect(new TrafficMaskingGeneratorAspect());
         
 
 	// Now read user-supplied aspects
@@ -139,12 +138,12 @@ public class MessageTransportServiceProvider
     }
 
     private void createFactories() {
-	protocolFactory = 
-	    new LinkProtocolFactory(id, registry, nameSupport, aspectSupport);
+	protocolFactory = new LinkProtocolFactory(id, this,
+						  registry, nameSupport, 
+						  aspectSupport);
 	receiveLinkFactory = new ReceiveLinkFactory(aspectSupport);
 
 	registry.setReceiveLinkFactory(receiveLinkFactory);
-	registry.setProtocolFactory(protocolFactory);
 
 	delivererFactory = new MessageDelivererFactory(registry,aspectSupport);
 	deliverer = delivererFactory.getMessageDeliverer(id+"/Deliverer");
@@ -167,7 +166,7 @@ public class MessageTransportServiceProvider
 
 	protocolFactory.setDeliverer(deliverer);
 	// force transports to be created here
-	protocolFactory.getProtocols();
+	protocolFactory.loadProtocols();
     }
 
     private LinkSelectionPolicy createSelectionPolicy() {

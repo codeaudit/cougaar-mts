@@ -20,10 +20,6 @@
  */
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ContainerAPI;
 import org.cougaar.core.component.ContainerSupport;
