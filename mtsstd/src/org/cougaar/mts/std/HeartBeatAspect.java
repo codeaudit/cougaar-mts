@@ -34,13 +34,12 @@ public class HeartBeatAspect
 {
   
     private final String I_AM_A_HEARTBEAT_ATTRIBUTE = "i am a heartbeat";
-    private final MessageAddress HB_DEST = 
-	MessageAddress.getMessageAddress("FWD-MGMT-NODE");
-    private final long delay = 1000;
-    private final long timeout = 1000;
-    private final long sendInterval = 500;
-    long msgCount = 0;
 
+    private MessageAddress hb_dest;
+    private long delay;
+    private long timeout;
+    private long sendInterval;
+    private long msgCount = 0;
     private SendQueue sendq;
     private MessageAddress us;
 
@@ -48,6 +47,15 @@ public class HeartBeatAspect
 	super();
     }
   
+    public void load() {
+	super.load();
+	String dstAddr = getParameter("dstAddr","NODE1");
+	hb_dest = MessageAddress.getMessageAddress(dstAddr);
+	delay = getParameter("delay",1000);
+	timeout = getParameter("timeout",1000);
+	sendInterval = getParameter("sendInterval",500);
+	
+    }
   
     synchronized void maybeStartSending(SendQueue queue) {
 	if (sendq != null) return;
@@ -73,7 +81,7 @@ public class HeartBeatAspect
 
     public void run() {
 	if (sendq != null) {
-	    Message message = new HBMessage(us, HB_DEST);
+	    Message message = new HBMessage(us, hb_dest);
 	    AttributedMessage a_message = new AttributedMessage(message);
 	    a_message.setAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE, 
 				   new Long(System.currentTimeMillis() + timeout));
