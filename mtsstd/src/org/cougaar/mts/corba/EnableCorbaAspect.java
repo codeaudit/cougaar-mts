@@ -32,6 +32,8 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
+ * This test Aspect prefers CORBA over RMI after a delay, by cutting
+ * the cost of the former 10 seconds in.
  */
 public class EnableCorbaAspect
     extends StandardAspect

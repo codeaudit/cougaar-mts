@@ -44,6 +44,9 @@ import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.std.AttributedMessage;
 
+/**
+ * Pulled out of HTTPLinkProtocol to simplify maintenance.
+ */
 class HTTPLinkProtocolServlet 
     extends HttpServlet 
 {

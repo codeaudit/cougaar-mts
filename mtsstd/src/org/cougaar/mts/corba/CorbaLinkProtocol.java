@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  Copyright 1997-2004 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -29,9 +29,10 @@ import org.cougaar.core.mts.SerializationUtils;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DontRetryException;
-import org.cougaar.mts.base.RPCLinkProtocol;
+import org.cougaar.mts.base.LinkProtocol; // javadoc
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
@@ -42,7 +43,7 @@ import org.omg.PortableServer.POAHelper;
 import java.net.URI;
 
 /**
- * MTS via iiop
+ * This {@link LinkProtocol} use CORBA for communication.
  */
 public class CorbaLinkProtocol 
     extends RPCLinkProtocol
