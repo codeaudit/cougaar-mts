@@ -20,7 +20,7 @@ import java.util.Iterator;
  * NameServers from the rest of the message transport subsystem.  */
 public interface NameSupport {
     public static final String MTS_DIR =  "MessageTransports";
-    public static final String CLUSTER_DIR =  "clusters";
+    public static final String AGENT_DIR =  "Agents";
 
     MessageAddress  getNodeMessageAddress();
 

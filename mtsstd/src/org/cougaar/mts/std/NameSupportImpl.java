@@ -92,7 +92,7 @@ public class NameSupportImpl implements NameSupport
     {	
 	MessageAddress addr = client.getMessageAddress();
 	try {
-	    String key = makeName(CLUSTER_DIR, addr, transportType);
+	    String key = makeName(AGENT_DIR, addr, transportType);
 	    _registerWithSociety(key, proxy);
 	} catch (Exception e) {
 	    System.err.println("Failed to add Client "+ addr + 
@@ -107,7 +107,7 @@ public class NameSupportImpl implements NameSupport
     {	
 	MessageAddress addr = client.getMessageAddress();
 	try {
-	    String key = makeName(CLUSTER_DIR, addr, transportType);
+	    String key = makeName(AGENT_DIR, addr, transportType);
 	    _registerWithSociety(key, null);
 	} catch (Exception e) {
 	    System.err.println("Failed to remove Client "+ addr + 
@@ -131,7 +131,7 @@ public class NameSupportImpl implements NameSupport
 	    e.printStackTrace();
 	}
 
-	name = makeName(CLUSTER_DIR, myNodeAddress, transportType);
+	name = makeName(AGENT_DIR, myNodeAddress, transportType);
 	try {
 	    _registerWithSociety(name, proxy);
 	} catch (Exception e) {
@@ -144,7 +144,7 @@ public class NameSupportImpl implements NameSupport
 					    String transportType)
     {
 	MessageAddress addr = address;
-	String key = makeName(CLUSTER_DIR, addr, transportType);
+	String key = makeName(AGENT_DIR, addr, transportType);
 	Object object;
 	DirContext ctx = null;
        
@@ -169,7 +169,7 @@ public class NameSupportImpl implements NameSupport
 
 	// If we get here the lookup returned an address.  Use it as a
 	// forwarding pointer.
-	key = makeName(CLUSTER_DIR, addr, transportType);
+	key = makeName(AGENT_DIR, addr, transportType);
 	try {
 	    object = ctx.lookup(key);
 	    if (object instanceof MessageAddress) {
