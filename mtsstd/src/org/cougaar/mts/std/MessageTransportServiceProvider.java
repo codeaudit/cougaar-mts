@@ -225,7 +225,6 @@ implements ServiceProvider, MessageTransportClient
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
-	AttributedMessage.setLoggingService(loggingService);
     }
 
     public void loadHighPriorityComponents() {

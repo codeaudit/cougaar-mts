@@ -34,6 +34,9 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.MessageProtectionService;
 
@@ -53,15 +56,7 @@ public class AttributedMessage
     implements Externalizable, MessageAttributes
 {
 
-    // Static log hack, so we can log security exceptions in the
-    // receiver.
-
-    private static LoggingService loggingService;
-
-    static void setLoggingService(LoggingService svc) {
-	loggingService = svc;
-    }
-
+    private transient Logger logger = Logging.getLogger(getClass().getName());
 
     private String FILTERS_ATTRIBUTE = "Filters";
 
@@ -158,15 +153,28 @@ public class AttributedMessage
 
     
     synchronized void restoreSnapshot() {
-	if (snapshot != null) attributes = snapshot;
+	if (snapshot != null)
+	    attributes = (MessageAttributes) snapshot.cloneAttributes();
     }
 
 
 
 
     void addFilter(StandardAspect aspect) {
-	pushValue(FILTERS_ATTRIBUTE, 
-		 aspect.getClass().getName());
+	String name = aspect.getClass().getName();
+	if (logger.isDebugEnabled()) {
+	    Object old = getAttribute(FILTERS_ATTRIBUTE);
+	    if (old != null) {
+		if (old instanceof ArrayList) {
+		    ArrayList list = (ArrayList) old;
+		    if (list.contains(name)) 
+			logger.debug("Duplicated filter " +name);
+		} else {
+		    logger.debug("Filters attribute is not a list!");
+		}
+	    }
+	}
+	pushValue(FILTERS_ATTRIBUTE,  name);
 
     }
 
@@ -408,11 +416,11 @@ public class AttributedMessage
     private void throwDelayedException(java.io.IOException ex) 
 	throws java.io.IOException
     {
-	    if (loggingService != null) {
+	    if (logger != null) {
 		MessageAddress src = getOriginator();
 		MessageAddress dst = getTarget();
 		String msg = "Receiver Exception " +src+ "->" +dst;
-		loggingService.error(msg, ex);
+		logger.error(msg, ex);
 	    }
 
 	    // There's a problem here.  If we throw the exception
