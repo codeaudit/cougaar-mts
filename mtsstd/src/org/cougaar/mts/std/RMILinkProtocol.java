@@ -359,12 +359,30 @@ public class RMILinkProtocol
 		remote = null;
 		throw mis;
 	    }
+	    catch (java.rmi.RemoteException ex) {
+		Throwable cause = ex.getCause();
+		if (cause instanceof java.rmi.UnmarshalException) {
+		    Throwable specific_cause = cause.getCause();
+		    if (specific_cause instanceof MessageSecurityException) {
+			// Remote security exception.  Wrap the
+			// UnmarshalException, rather than the
+			// original RemoteException, in a CommFailure
+			throw new CommFailureException((Exception) cause);
+		    }
+		}
+		// Assume anything else is an ordinary comm failure
+		// force recache of remote
+		remote = null;
+		if (Debug.isErrorEnabled(loggingService,COMM)) 
+		    loggingService.error(null, ex);
+		throw new CommFailureException(ex);
+	    }
 	    catch (Exception ex) {
 		// force recache of remote
 		if (Debug.isErrorEnabled(loggingService,COMM)) 
 		    loggingService.error(null, ex);
 		remote = null;
-		// Assume anything else is a comm failure
+		//  Ordinary comm failure
 		throw new CommFailureException(ex);
 	    }
 	}

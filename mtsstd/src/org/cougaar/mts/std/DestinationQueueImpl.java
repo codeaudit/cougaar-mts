@@ -149,32 +149,15 @@ final class DestinationQueueImpl
 	    } catch (CommFailureException comm_failure) {
 		Exception exception = comm_failure.getException();
 		Throwable cause = exception.getCause();
-		boolean remote = false;
 		// A local security exception will be wrapped in a
-		// MarshalException.  In this case 'exception' is the
-		// MarshalException. and 'cause' is the
-		// MessageSecurityException.
+		// MarshalException.  A remote security exception will
+		// be wrapped in am UnmarshalException.  The
+		// DestinationLink is responsible for the latter.  See
+		// RMILinkProtcol for an example.
 		//
-		// A remote security exception will be wrapped in an
-		// RemoteException which will in turn be wrapped by an
-		// UnmarshalException.  In this case 'exception' is
-		// the RemoteException, 'cause' is the
-		// UnmarshalException and 'cause.getCause' is the
-		// MessageSecurityException.
-		//
-		// Finally, the original GeneralSecurityException is
-		// the cause of the MessageSecurityException.
-		//
-		// What could be simpler?
-		//
-		if (cause instanceof java.rmi.UnmarshalException) {
-		    cause = cause.getCause();
-		    remote = true;
-		}
 		if (cause instanceof MessageSecurityException) {
 		    // Always log these.
-		    String tag = remote ? "Remote " : "Local ";
-		    tag += "Security Exception " 
+		    String tag = "Security Exception " 
 			+message.getOriginator()+ "->" 
 			+message.getTarget();
 		    loggingService.error(tag, cause.getCause());
