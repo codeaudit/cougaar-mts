@@ -32,8 +32,9 @@ import org.cougaar.core.mts.MessageAddress;
 /**
  * This Servlet displays the remote MTS statistics, as returned by the
  * {@link AgentStatusService}, for the Agent in which it's loaded.
- * It's created by the {@link StatisticsPlugin}.  Also @see
- * AgentLocalStatusServlet.
+ * It's created by the {@link StatisticsPlugin}.
+ *
+ * @see AgentLocalStatusServlet
  */
 public class AgentRemoteStatusServlet extends AgentStatusServlet
 {

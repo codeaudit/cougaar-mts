@@ -49,7 +49,7 @@ public interface QueueProviderService extends Service
     /**
      * Add the given listener to the list of those receiving callbacks
      * for queue events.  Listeners will be notified of queue events
-     * via callback. @see QueueListener.
+     * via callback.
      */
     void addListener(QueueListener listener);
 

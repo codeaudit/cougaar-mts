@@ -31,9 +31,9 @@ import org.cougaar.core.mts.MessageAddress;
 /**
  * This MTS-internal Service can be used to 'single-step' a message
  * through the stations.  Its only real use so far is through a Swing
- * gui, but in principle it could have other uses (@see
- * StepperControlExampleAspect).  The implementation is in the
- * {@link StepperAspect}.
+ * gui, but in principle it could have other uses (e.g., @{link
+ * StepperControlExampleAspect}).  The implementation is in the {@link
+ * StepperAspect}.
  */
 public interface StepService extends Service
 {
