@@ -40,17 +40,8 @@ public class PrioritizedThreadsAspect
     implements ThreadListener
 {
 
-    private HashMap priorities;
-    private HashMap threads;
-
-    // Maps Threads to their priorities
-    private Mapper threadMapper = 
-	new Mapper() {
-	    public Object map(Object x) {
-		return threads.get(x);
-	    }
-	};
-
+    private HashMap agent_priorities;
+    private HashMap thread_priorities;
 
     private Comparator priorityComparator =
 	new Comparator() {
@@ -58,9 +49,12 @@ public class PrioritizedThreadsAspect
 		return x == this;
 	    }
 
-	    public int compare(Object x, Object y) {
+	    public int compare(Object o1, Object o2) {
+		Object x = thread_priorities.get(o1);
+		Object y = thread_priorities.get(o2);
+
 		// Entries placed on the queue before our listener
-		// starts won't be found by the mapper.  Deal with
+		// starts won't be found by the map.  Deal with
 		// that here.
 		if (x == null && y == null) return 0;
 		if (x == null) return -1;
@@ -75,8 +69,8 @@ public class PrioritizedThreadsAspect
     public void load() {
 	super.load();
 	
-	threads = new HashMap();
-	priorities = new HashMap();
+	thread_priorities = new HashMap();
+	agent_priorities = new HashMap();
 	Properties p = new Properties();
 	String priorities_file = 
 	    System.getProperty("org.cougaar.lib.quo.priorities");
@@ -96,7 +90,7 @@ public class PrioritizedThreadsAspect
 	    Object key = entry.getKey();
 	    String priority = (String) entry.getValue();
 	    if (priority != null) {
-		priorities.put(key, new Integer(Integer.parseInt(priority)));
+		agent_priorities.put(key, new Integer(Integer.parseInt(priority)));
 	    }
 	}
 	
@@ -112,9 +106,7 @@ public class PrioritizedThreadsAspect
 
 	// Whack the queue
 	listenerService.addListener(threadService, this);
-	controlService.setQueueComparator(threadService,
-					  priorityComparator,
-					  threadMapper);
+	controlService.setQueueComparator(threadService, priorityComparator);
 
 	// we should release the services now.
 
@@ -136,7 +128,8 @@ public class PrioritizedThreadsAspect
 	    // queue.  The comparator will use this later. 
 	    DestinationQueue q  = (DestinationQueue) consumer;
 	    MessageAddress address = q.getDestination();
-	    threads.put(thread, priorities.get(address.toString()));
+	    Object priority =  agent_priorities.get(address.toString());
+	    thread_priorities.put(thread, priority);
 	}
     }
 

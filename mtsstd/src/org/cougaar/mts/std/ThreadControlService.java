@@ -22,15 +22,14 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
+
 import java.util.Comparator;
 
 public interface ThreadControlService extends Service
 {
     // General
     void setMaxRunningThreadCount(ThreadService proxy, int count);
-    void setQueueComparator(ThreadService proxy, 
-			    Comparator comparator,
-			    Mapper mapper);
+    void setQueueComparator(ThreadService proxy, Comparator comparator);
 
     // Status
     int runningThreadCount(ThreadService proxy);

@@ -147,13 +147,12 @@ class ThreadServiceImpl
 	}
 
 	public void setQueueComparator(ThreadService svc, 
-				       Comparator comparator,
-				       Mapper mapper)
+				       Comparator comparator)
 	{
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
 		ControllablePool pool = proxy.threadPool;
-		pool.setQueueComparator(comparator, mapper);
+		pool.setQueueComparator(comparator);
 	    }
 	}
 
@@ -276,10 +275,9 @@ class ThreadServiceImpl
 				      MaxRunningCountDefault);
 	}
 
-	private synchronized void setQueueComparator(Comparator comparator,
-						     Mapper mapper)
+	private synchronized void setQueueComparator(Comparator comparator)
 	{
-	    pendingThreads.setComparator(comparator, mapper);
+	    pendingThreads.setComparator(comparator);
 	}
 
 	protected ReusableThread constructReusableThread() {
@@ -291,16 +289,12 @@ class ThreadServiceImpl
 	    return maxRunningThreads;
 	}
 
-	private void setMaxRunningThreadCount(int count) {
-	    boolean more = false;
-	    synchronized (this) {
-		more = maxRunningThreads < count;
-		maxRunningThreads = count;
-	    }
+	private synchronized void setMaxRunningThreadCount(int count) {
+	    maxRunningThreads = count;
 	    
-	    if (more) {
-		// we can run some pending threads
-		runMoreThreads();
+	    // Maybe we can run some pending threads
+	    while (canStartThread() && !pendingThreads.isEmpty()) {
+		runNextThread();
 	    }
 	}
 
@@ -322,24 +316,15 @@ class ThreadServiceImpl
 	}
 
 
-	private void runMoreThreads() {
-	    ControllableThread thread = null;
-	    while (true) {
-		synchronized (this) {
-		    if (!pendingThreads.isEmpty()  && canStartThread()) {
-			thread = (ControllableThread)pendingThreads.next();
-		    } else {
-			return;
-		    }
-		}
-		thread.start();
-	    }
+	private void runNextThread() {
+	    ((ControllableThread)pendingThreads.next()).start();
 	}
+
 
 	private void removeRunningThread(ControllableThread thread) {
 	    synchronized (this) {
 		--runningThreadCount; 
-		runMoreThreads();
+		if (!pendingThreads.isEmpty()) runNextThread();
 	    }
 	    proxy.notifyEnd(thread);
 	}
@@ -347,7 +332,7 @@ class ThreadServiceImpl
 	private synchronized void yieldRunningThread(ControllableThread thread)
 	{
 	    --runningThreadCount; 
-	    runMoreThreads();
+	    if (!pendingThreads.isEmpty()) runNextThread();
 	}
 
 	private synchronized boolean resumeYieldedThread(ControllableThread thread)

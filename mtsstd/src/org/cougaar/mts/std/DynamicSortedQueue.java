@@ -28,33 +28,20 @@ import java.util.Iterator;
 /**
  * A simple queue, built on array list, that uses a Comparator to
  * determine which elements is next (the smallest, according to the
- * Comparator).  For generality, it also requires a Mapper, which is
- * used to enqueue one kind of object while running the Comparator on
- * another kind of object.  Note that this is not a Collection.  Also
- * note that the methods are not synchronized.  It's the caller's
- * reponsibility to handle synchronization.
+ * Comparator).  Note that this is not a Collection.  Also note that
+ * the methods are not synchronized.  It's the caller's reponsibility
+ * to handle synchronization.
  */
 public class DynamicSortedQueue
 {
     private Comparator comparator;
-    private Mapper mapper;
     private ArrayList store;
     
 
-    private static Mapper IdentityMapper = new Mapper() {
-	    public Object map(Object x) {
-		return x;
-	    }
-	};
 
     public DynamicSortedQueue(Comparator comparator) {
-	this(comparator, IdentityMapper);
-    }
-
-    public DynamicSortedQueue(Comparator comparator, Mapper mapper) {
 	store = new ArrayList();
 	this.comparator = comparator;
-	this.mapper = mapper;
     }
 
 
@@ -62,9 +49,8 @@ public class DynamicSortedQueue
 	return "<DQ[" +store.size()+ "] " +store.toString()+ ">";
     }
 
-    public void setComparator(Comparator comparator, Mapper mapper) {
+    public void setComparator(Comparator comparator) {
 	this.comparator = comparator;
-	this.mapper = mapper;
     }
 
     public int size() {
@@ -87,6 +73,7 @@ public class DynamicSortedQueue
 	return store.isEmpty();
     }
 
+
     public Object next() {
 	Iterator itr = store.iterator();
 	Object min = null;
@@ -95,8 +82,7 @@ public class DynamicSortedQueue
 	    if (min == null) {
 		min = candidate;
 	    } else {
-		int comp = comparator.compare(mapper.map(min), 
-					      mapper.map(candidate));
+		int comp = comparator.compare(min, candidate);
 		if (comp > 0) min = candidate;
 	    }
 	}
