@@ -21,7 +21,7 @@
 
 package org.cougaar.core.mts;
 
-
+import org.cougaar.core.agent.Agent;
 import org.cougaar.core.component.BinderFactory;
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ComponentDescriptions;
@@ -208,6 +208,7 @@ public final class MessageTransportServiceProvider
 	    sb.getService(this, InitializerService.class, null);
 	try {
 	    String cp = specifyContainmentPoint();
+	    // Want only items _below_. Could filter (not doing so now)
 	    return new ComponentDescriptions(is.getComponentDescriptions(id,cp));
 	} catch (org.cougaar.core.node.InitializerServiceException e) {
 	    if (loggingService.isInfoEnabled()) {
@@ -389,7 +390,7 @@ public final class MessageTransportServiceProvider
 
     // We're not using this yet but leave it in anyway.
     protected String specifyContainmentPoint() {
-	return "Node.AgentManager.Agent.MessageTransport";
+	return Agent.INSERTION_POINT + ".MessageTransport";
     }
 
     public void requestStop() {}
