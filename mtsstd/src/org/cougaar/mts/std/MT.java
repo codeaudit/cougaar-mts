@@ -13,7 +13,6 @@ package org.cougaar.core.mts;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import java.util.*;
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
   

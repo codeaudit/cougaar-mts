@@ -15,7 +15,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import org.cougaar.core.component.*;
+import org.cougaar.core.component.BindingSite;
+import org.cougaar.core.component.ContainerSupport;
+import org.cougaar.core.component.ContainerAPI;
+import org.cougaar.core.component.PropagatingServiceBroker;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.naming.NamingService;
 import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.Node;
