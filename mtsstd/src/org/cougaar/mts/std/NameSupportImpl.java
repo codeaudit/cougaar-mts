@@ -104,7 +104,7 @@ public final class NameSupportImpl implements ServiceProvider
 	{
 	    this.id = id;
 	    this.loggingService = loggingService;
-	    myNodeAddress = new MessageAddress(id);
+	    myNodeAddress = new MessageAddress(id+"(MTS)");
 	    this.namingService = namingService;
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
