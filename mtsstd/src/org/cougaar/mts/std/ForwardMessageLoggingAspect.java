@@ -70,7 +70,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 		try {
 		    // found a digit
 		    String sub = raw.substring(i-1);
-		    StringTokenizer tk1 = new StringTokenizer(sub, " ,]})>");
+		    StringTokenizer tk1 = new StringTokenizer(sub, " ;/,]})>");
 		    if (tk1.hasMoreTokens()) {
 			String data = tk1.nextToken();
 			// Now verify it's a.b.c.d:e
