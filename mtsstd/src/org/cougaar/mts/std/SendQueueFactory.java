@@ -24,9 +24,9 @@ public class SendQueueFactory extends AspectFactory
     private MessageTransportRegistry registry;
 
     SendQueueFactory(MessageTransportRegistry registry,
-		     ArrayList aspects)
+		     AspectSupport aspectSupport)
     {
-	super(aspects);
+	super(aspectSupport);
 	this.registry = registry;
     }
 

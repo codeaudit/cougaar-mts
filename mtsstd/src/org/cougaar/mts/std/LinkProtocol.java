@@ -42,8 +42,8 @@ public abstract class LinkProtocol extends AspectFactory
 
 
 
-    protected LinkProtocol(java.util.ArrayList aspects) {
-	super(aspects);
+    protected LinkProtocol(AspectSupport aspectSupport) {
+	super(aspectSupport);
     }
 
     public void setRegistry(MessageTransportRegistry registry) {

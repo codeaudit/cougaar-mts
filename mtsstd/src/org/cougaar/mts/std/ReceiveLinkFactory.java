@@ -24,9 +24,9 @@ public class ReceiveLinkFactory extends AspectFactory
     private MessageTransportRegistry registry;
 	
     ReceiveLinkFactory(MessageTransportRegistry registry,
-		       java.util.ArrayList aspects)
+		       AspectSupport aspectSupport)
     {
-	super(aspects);
+	super(aspectSupport);
 	links = new HashMap();
 	this.registry = registry;
     }

@@ -26,8 +26,8 @@ class LoopbackLinkProtocol
 
     private DestinationLink link;
 
-    public LoopbackLinkProtocol(String id, java.util.ArrayList aspects) {
-	super(aspects);
+    public LoopbackLinkProtocol(String id, AspectSupport aspectSupport) {
+	super(aspectSupport);
     }
 
     public DestinationLink getDestinationLink(MessageAddress address) {

@@ -24,9 +24,9 @@ public class ReceiveQueueFactory extends AspectFactory
     private MessageTransportRegistry registry;
 
     ReceiveQueueFactory(MessageTransportRegistry registry,
-			ArrayList aspects)
+			AspectSupport aspectSupport)
     {
-	super(aspects);
+	super(aspectSupport);
 	this.registry = registry;
     }
 

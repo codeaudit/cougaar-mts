@@ -24,9 +24,9 @@ public class MessageDelivererFactory extends AspectFactory
     private MessageTransportRegistry registry;
 
     MessageDelivererFactory(MessageTransportRegistry registry,
-			    ArrayList aspects)
+			    AspectSupport aspectSupport)
     {
-	super(aspects);
+	super(aspectSupport);
 	this.registry = registry;
     }
 

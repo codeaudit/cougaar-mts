@@ -53,8 +53,8 @@ public class RMILinkProtocol
     private HashMap links;
 
 
-    public RMILinkProtocol(String id, java.util.ArrayList aspects) {
-	super(aspects); 
+    public RMILinkProtocol(String id, AspectSupport aspectSupport) {
+	super(aspectSupport); 
 	links = new HashMap();
 	RMISocketFactory socfac = RMISocketFactory.getSocketFactory();
 	if (! (socfac instanceof SocketFactory)) {

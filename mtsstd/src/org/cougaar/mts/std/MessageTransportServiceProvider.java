@@ -28,9 +28,8 @@ import org.cougaar.core.society.Node;
  * The underlying implementation class for the
  * MessageTransportService.  It consists almost exclusively of
  * factories, each of which is described elsewhere.  The only
- * interesting local functions are those required for ServiceBrokers,
- * and a method to create the aspects from the
- * org.cougaar.message.transport.aspects property. */
+ * interesting local functions are those required for
+ * ServiceBrokers. */
 
 public class MessageTransportServiceProvider 
     extends ContainerSupport
@@ -39,8 +38,14 @@ public class MessageTransportServiceProvider
 
     private final static String POLICY_PROPERTY =
 	"org.cougaar.message.transport.policy";
+
+    // Some special aspect classes
     private final static String STATISTICS_ASPECT = 
 	"org.cougaar.core.mts.StatisticsAspect";
+    private final static String WATCHER_ASPECT = 
+	"org.cougaar.core.mts.WatcherAspect";
+    private final static String MULTICAST_ASPECT = 
+	"org.cougaar.core.mts.MulticastAspect";
 
     // Factories
     private LinkProtocolFactory protocolFactory;
@@ -56,7 +61,7 @@ public class MessageTransportServiceProvider
     private NameSupport nameSupport;
     private MessageTransportRegistry registry;
     private AspectSupport aspectSupport;
-    private ArrayList aspects;
+
     // Assuming one policy per provider, but could also be one per
     // sender
     private LinkSelectionPolicy selectionPolicy;
@@ -84,17 +89,16 @@ public class MessageTransportServiceProvider
         if (sb == null) throw new RuntimeException("No service broker");
 	Object svc = sb.getService(this, NamingService.class, null);
         Object ns = new NameSupportImpl(id, (NamingService) svc);
-	ns = AspectFactory.attachAspects(aspects, ns, NameSupport.class, null);
+	ns = aspectSupport.attachAspects(ns, NameSupport.class, null);
 	return (NameSupport) ns;
     }
 
     public void initialize() {
-	
+	ServiceBroker sb = getServiceBroker();
+ 	
 	registry = MessageTransportRegistry.makeRegistry(id, this);
 
-	aspectSupport = new AspectSupportImpl(getServiceBroker());
-	aspectSupport.readAspects();
-	aspects = aspectSupport.getAspects();
+	aspectSupport = new AspectSupportImpl(sb);
 
         nameSupport = createNameSupport(id);
 	registry.setNameSupport(nameSupport);
@@ -103,15 +107,14 @@ public class MessageTransportServiceProvider
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
 	watcherAspect =  new WatcherAspect();
-	aspectSupport.add(watcherAspect);
+	aspectSupport.addAspect(watcherAspect, WATCHER_ASPECT);
 
 	// Multicast Aspect is always required.
-	aspectSupport.add(new MulticastAspect());
+	aspectSupport.addAspect(new MulticastAspect(), MULTICAST_ASPECT);
 
 	protocolFactory = 
-	    new LinkProtocolFactory(id, registry, nameSupport, aspects);
-	receiveLinkFactory = new ReceiveLinkFactory(registry,
-						    aspects);
+	    new LinkProtocolFactory(id, registry, nameSupport, aspectSupport);
+	receiveLinkFactory = new ReceiveLinkFactory(registry, aspectSupport);
 
 	registry.setReceiveLinkFactory(receiveLinkFactory);
 	registry.setProtocolFactory(protocolFactory);
@@ -145,7 +148,7 @@ public class MessageTransportServiceProvider
 
     private void wireComponents(String id) {
 	getSelectionPolicy();
-	delivererFactory = new MessageDelivererFactory(registry, aspects);
+	delivererFactory = new MessageDelivererFactory(registry,aspectSupport);
 	deliverer = delivererFactory.getMessageDeliverer(id+"/Deliverer");
 
 
@@ -153,15 +156,13 @@ public class MessageTransportServiceProvider
 	    new LinkSenderFactory(registry, protocolFactory, selectionPolicy);
 	
 	destQFactory = 
-	    new DestinationQueueFactory(registry, 
-					linkSenderFactory,
-					aspects);
+	    new DestinationQueueFactory(registry, linkSenderFactory, aspectSupport);
 	routerFactory =
-	    new RouterFactory(registry, destQFactory, aspects);
+	    new RouterFactory(registry, destQFactory, aspectSupport);
 
 	router = routerFactory.getRouter();
 
-	sendQFactory = new SendQueueFactory(registry, aspects);
+	sendQFactory = new SendQueueFactory(registry, aspectSupport);
 	sendQ = sendQFactory.getSendQueue(id+"/OutQ", router);
 
     }
@@ -175,7 +176,7 @@ public class MessageTransportServiceProvider
 	if (proxy != null) return proxy;
 	proxy = new MessageTransportServiceProxy(client,registry,sendQ);
 	rawProxies.put(addr, proxy);
-	proxy = AspectFactory.attachAspects(aspects, proxy, 
+	proxy = aspectSupport.attachAspects(proxy, 
 					    MessageTransportService.class,
 					    null);
 	proxies.put(addr, proxy);

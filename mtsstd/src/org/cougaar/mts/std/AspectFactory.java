@@ -10,8 +10,6 @@
 
 package org.cougaar.core.mts;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.lang.reflect.Constructor;
 
 /**
@@ -24,42 +22,15 @@ import java.lang.reflect.Constructor;
  * interface. */
 abstract public class AspectFactory 
 {
-    private ArrayList aspects;
+    private AspectSupport aspectSupport;
 
-    /**
-     * Loops through the aspects, allowing each one to attach an
-     * aspect delegate in a cascaded series.  If any aspects attach a
-     * delegate, the final aspect delegate is returned.  If no aspects
-     * attach a delegate, the original object, as created by the
-     * factory, is returned.  */
-    public static Object attachAspects (ArrayList aspects,
-					Object delegate, 
-					Class type, 
-					LinkProtocol protocol)
-    {
-	if (aspects != null) {
-	    Iterator itr = aspects.iterator();
-	    while (itr.hasNext()) {
-		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) itr.next();
-		if (protocol != null && aspect.rejectProtocol(protocol, type))
-		    continue; //skip it
 
-		Object candidate = aspect.getDelegate(delegate, type);
-		if (candidate != null) delegate = candidate;
-		if (Debug.debugAspects()) 
-		    System.out.println("======> " + delegate);
-	    }
-	}
-	return delegate;
-    }
-
-    protected AspectFactory(ArrayList aspects) {
-	this.aspects = aspects;
+    protected AspectFactory(AspectSupport aspectSupport) {
+	this.aspectSupport = aspectSupport;
     }
 
     public Object attachAspects(Object delegate, Class type) {
-	return attachAspects(aspects, delegate, type, null);
+	return aspectSupport.attachAspects(delegate, type, null);
     }
 
 
@@ -67,7 +38,7 @@ abstract public class AspectFactory
 				Class type, 
 				LinkProtocol protocol)
     {
-	return attachAspects(aspects, delegate, type, protocol);
+	return aspectSupport.attachAspects(delegate, type, protocol);
     }
 
 

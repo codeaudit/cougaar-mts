@@ -27,9 +27,9 @@ public class DestinationQueueFactory extends  AspectFactory
     
     DestinationQueueFactory(MessageTransportRegistry registry,
 			    LinkSenderFactory linkSenderFactory,
-			    java.util.ArrayList aspects) 
+			    AspectSupport aspectSupport) 
     {
-	super(aspects);
+	super(aspectSupport);
 	queues = new HashMap();
 	this.registry = registry;
 	this.linkSenderFactory = linkSenderFactory;

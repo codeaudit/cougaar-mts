@@ -23,9 +23,9 @@ public class RouterFactory extends AspectFactory
 
     RouterFactory(MessageTransportRegistry registry,
 		  DestinationQueueFactory destQFactory,
-		  java.util.ArrayList aspects)
+		  AspectSupport aspectSupport)
     {
-	super(aspects);
+	super(aspectSupport);
 	this.registry = registry;
 	this.destQFactory = destQFactory;
     }

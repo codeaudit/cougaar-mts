@@ -32,7 +32,7 @@ public final class LinkProtocolFactory
 
 
     private ArrayList protocols;
-    private ArrayList aspects;
+    private AspectSupport aspectSupport;
     private String id;
     private LinkProtocol defaultProtocol, loopbackProtocol;
     private MessageTransportRegistry registry;
@@ -40,14 +40,14 @@ public final class LinkProtocolFactory
     private NameSupport nameSupport;
 
     public LinkProtocolFactory(String id, 
-				   MessageTransportRegistry registry,
-				   NameSupport nameSupport,
-				   ArrayList aspects)
+			       MessageTransportRegistry registry,
+			       NameSupport nameSupport,
+			       AspectSupport aspectSupport)
     {
 	this.id = id;
 	this.registry = registry;
 	this.nameSupport = nameSupport;
-	this.aspects = aspects;
+	this.aspectSupport = aspectSupport;
     }
 
     void setDeliverer(MessageDeliverer deliverer) {
@@ -57,11 +57,9 @@ public final class LinkProtocolFactory
     private LinkProtocol makeProtocol(String classname) {
 	// Assume for now all transport classes have a constructor of
 	// one argument (the id string).
-	Class[] types = { String.class, ArrayList.class };
+	Class[] types = { String.class, AspectSupport.class };
 	Object[] args = 
-	    { registry.getIdentifier(),
-	      aspects
-	    };
+	    { registry.getIdentifier(),  aspectSupport };
 	LinkProtocol protocol = null;
 	try {
 	    Class protocol_class = Class.forName(classname);
@@ -111,13 +109,13 @@ public final class LinkProtocolFactory
 
 	// No preferred transport, make all the usual ones.
 
-	loopbackProtocol = new LoopbackLinkProtocol(id, aspects);
+	loopbackProtocol = new LoopbackLinkProtocol(id, aspectSupport);
 	loopbackProtocol.setDeliverer(deliverer);
 	loopbackProtocol.setRegistry(registry);
 	loopbackProtocol.setNameSupport(nameSupport);
 	protocols.add(loopbackProtocol);
 	
-	defaultProtocol = new RMILinkProtocol(id, aspects);
+	defaultProtocol = new RMILinkProtocol(id, aspectSupport);
 	defaultProtocol.setDeliverer(deliverer);
 	defaultProtocol.setRegistry(registry);
 	defaultProtocol.setNameSupport(nameSupport);
