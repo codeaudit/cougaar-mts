@@ -49,7 +49,16 @@ public class MinCostLinkSelectionPolicy
 	while (links.hasNext()) {
 	    DestinationLink link = (DestinationLink) links.next();
 	    int cost = link.cost(message);
-	    if (cost == Integer.MAX_VALUE) continue; // skip these
+	    
+	    // If a link reports 0 cost, use it.  With proper
+	    // ordering, this allows us to skip relatively expensive
+	    // cost calculations (eg rmi) that can't be any better
+	    // anyway.
+	    if (cost == 0) return link;
+
+	    // If a link reports MAX_VALUE, ignore it.
+	    if (cost == Integer.MAX_VALUE) continue;
+
 	    if (cheapest == null || cost < min_cost) {
 		cheapest = link;
 		min_cost = cost;
