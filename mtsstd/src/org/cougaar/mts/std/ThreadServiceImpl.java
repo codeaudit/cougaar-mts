@@ -159,14 +159,14 @@ class ThreadServiceImpl
 	public void setMaxRunningThreadCount(ThreadService svc, int count) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		proxy.setMaxRunningThreadCount(count);
+		proxy.threadPool.setMaxRunningThreadCount(count);
 	    }
 	}
 
 	public int maxRunningThreadCount(ThreadService svc) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		return proxy.maxRunningThreadCount();
+		return proxy.threadPool.maxRunningThreadCount();
 	    } else {
 		return -1;
 	    }
@@ -175,7 +175,7 @@ class ThreadServiceImpl
 	public int runningThreadCount(ThreadService svc) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		return proxy.runningThreadCount();
+		return proxy.threadPool.runningThreadCount();
 	    } else {
 		return -1;
 	    }
@@ -185,7 +185,7 @@ class ThreadServiceImpl
 	public int activeThreadCount(ThreadService svc) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		return proxy.activeThreadCount();
+		return proxy.threadPool.activeThreadCount();
 	    } else {
 		return -1;
 	    }
@@ -195,7 +195,7 @@ class ThreadServiceImpl
 	public int pendingThreadCount(ThreadService svc) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		return proxy.pendingThreadCount();
+		return proxy.threadPool.pendingThreadCount();
 	    } else {
 		return -1;
 	    }
@@ -379,6 +379,7 @@ class ThreadServiceImpl
     {
 	private ControllablePool pool;
 	private long timestamp;
+	private Object consumer;
 
 	ControllableThread(ControllablePool pool) 
 	{
@@ -415,13 +416,11 @@ class ThreadServiceImpl
      */
     private static class ThreadServiceProxy implements ThreadService {
 	private ControllablePool threadPool;
-	private HashMap consumers;
 	private ArrayList listeners;
 	private ThreadGroup group;
 
 	private ThreadServiceProxy(ThreadServiceClient client) {
 	    listeners = new ArrayList();
-	    consumers = new HashMap();
 	    group = client.getGroup();
 
 	    int initialSize = PropertyParser.getInt(InitialPoolSizeProp, 
@@ -438,39 +437,14 @@ class ThreadServiceImpl
 	}
 
 
-	private void setMaxRunningThreadCount(int count) {
-	    threadPool.setMaxRunningThreadCount(count);
-	}
-
-	private int maxRunningThreadCount() {
-	    return threadPool.maxRunningThreadCount();
-	}
-
-	private int runningThreadCount() {
-	    return threadPool.runningThreadCount();
-	}
-
-	private int pendingThreadCount() {
-	    return threadPool.pendingThreadCount();
-	}
-
-	private int activeThreadCount() {
-	    return threadPool.activeThreadCount();
-	}
-
-	private Thread consumeThread(Thread thread, 
-				     Object consumer) 
-	{
-	    consumers.put(thread, consumer);
+	private Thread consumeThread(Thread thread,  Object consumer) {
+	    ((ControllableThread) thread).consumer = consumer;
 	    return thread;
 	}
 
-	private Object threadConsumer(Thread thread) {
-	    return consumers.get(thread);
-	}
 
-	synchronized void notifyPending(Thread thread) {
-	    Object consumer = threadConsumer(thread);
+	synchronized void notifyPending(ControllableThread thread) {
+	    Object consumer = thread.consumer;
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
 		ThreadListener listener = (ThreadListener) itr.next();
@@ -478,8 +452,8 @@ class ThreadServiceImpl
 	    }
 	}
 
-	synchronized void notifyStart(Thread thread) {
-	    Object consumer = threadConsumer(thread);
+	synchronized void notifyStart(ControllableThread thread) {
+	    Object consumer = thread.consumer;
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
 		ThreadListener listener = (ThreadListener) itr.next();
@@ -487,8 +461,8 @@ class ThreadServiceImpl
 	    }
 	}
 
-	synchronized void notifyEnd(Thread thread) {
-	    Object consumer = threadConsumer(thread);
+	synchronized void notifyEnd(ControllableThread thread) {
+	    Object consumer = thread.consumer;
   	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
 		ThreadListener listener = (ThreadListener) itr.next();
