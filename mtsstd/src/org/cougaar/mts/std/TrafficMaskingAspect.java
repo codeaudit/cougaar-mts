@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.MessageEnvelope;
+import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.*;
 
@@ -191,8 +192,8 @@ public class TrafficMaskingAspect extends StandardAspect
       // get a request for an address before the timer 
       // has run the first time
       nodelist = new ArrayList();
-      //Iterator iter = registry.findNodes();
-      Iterator iter = registry.findRemoteMulticastTransports(null);
+      Iterator iter = registry.findRemoteMulticastTransports(
+                                    (MulticastMessageAddress)MessageAddress.SOCIETY);
       while (iter.hasNext()) {
         MessageAddress anAddress = (MessageAddress) iter.next();
         if (! anAddress.equals(myAddress)) {
@@ -203,8 +204,8 @@ public class TrafficMaskingAspect extends StandardAspect
           
     public void run() {
       //update the node list
-      //Iterator nodeIt = registry.findNodes();
-      Iterator nodeIt = registry.findRemoteMulticastTransports(null);
+      Iterator nodeIt = registry.findRemoteMulticastTransports(
+                                      (MulticastMessageAddress)MessageAddress.SOCIETY);
       ArrayList tmpnodes = new ArrayList();
       while (nodeIt.hasNext()) {
         MessageAddress nodeAddress = (MessageAddress) nodeIt.next();
