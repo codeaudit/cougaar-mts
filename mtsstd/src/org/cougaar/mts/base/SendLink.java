@@ -58,7 +58,7 @@ public interface SendLink
      *
      * @param message The AttributedMessage to be sent.
      * @see SendQueue#sendMessage(AttributedMessage)
-     * @see MessageTransportService#sendMessage(Message)
+     * @see org.cougaar.core.service.MessageTransportService#sendMessage(Message)
      */
     void sendMessage(AttributedMessage message);
 

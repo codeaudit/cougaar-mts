@@ -23,6 +23,7 @@ package org.cougaar.mts.base;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.core.mts.Attributes; //for javadoc
 
 /**
  * This is the final station in the sender for serializling
@@ -41,7 +42,7 @@ import org.cougaar.mts.std.AttributedMessage;
  * The previous stop is DestinationLink. The next stop is MessageReader
  * on the receiving side.
  * 
- * @see AttributedMessage#addFilter(StandardAspect)
+ * @see AttributedMessage#addFilter(Object)
  * @see Attributes#pushValue(String, Object)
  * @see SendLink
  * @see SendQueue

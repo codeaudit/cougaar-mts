@@ -22,6 +22,7 @@
 package org.cougaar.mts.base;
 import java.io.InputStream;
 import java.io.ObjectInput;
+import org.cougaar.core.mts.Attributes; //for javadoc
 
 import org.cougaar.mts.std.AttributedMessage;
 
@@ -42,7 +43,7 @@ import org.cougaar.mts.std.AttributedMessage;
  * The previous stop is MessageWriter on the sending side.
  * The next stop is MessageDeliverer.
  * 
- * @see AttributedMessage#addFilter(StandardAspect)
+ * @see AttributedMessage#addFilter(Object)
  * @see Attributes#pushValue(String, Object)
  * @see SendLink
  * @see SendQueue
@@ -74,7 +75,7 @@ public interface MessageReader
    * getObjectInputStream and after finalizeAttributes.
    *
    * @see #finalizeAttributes(AttributedMessage)
-   * @see #getObjectInputStream(ObjectOutput)
+   * @see #getObjectInputStream(ObjectInput)
    */
     void preProcess();
 
