@@ -34,12 +34,42 @@ public abstract class LinkProtocol extends AspectFactory
     protected MessageTransportRegistry registry;
     protected NameSupport nameSupport;
 
-    // abstract public void routeMessage(Message message);
+
+    // LinkProtocol implementations must supply these!
+
+    /**
+     * Create a DestinationLink for the given protocol/destination
+     * pair.
+     */
     abstract public DestinationLink getDestinationLink(MessageAddress destination);
+
+
+    /** 
+     * Handle any required local and/or nameservice registration for
+     * the given client.
+     */
     abstract public void registerClient(MessageTransportClient client);
-    abstract public void registerNode();
+
+    /** 
+     * Handle any required local and/or nameservice de-registration
+     * for the given client.
+     */
     abstract public void unregisterClient(MessageTransportClient client);
+
+
+    /**
+     * Register an MTS pseudo-agent to handle incoming multicasts.
+     */
+    abstract public void registerMTS(MessageAddress address);
+
+
+    /**
+     * Determine whether or not the given protocol understands the
+     * given address. */
     abstract public boolean addressKnown(MessageAddress address);
+
+
+
 
 
 

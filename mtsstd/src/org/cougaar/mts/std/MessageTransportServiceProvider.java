@@ -119,6 +119,9 @@ public class MessageTransportServiceProvider
 	protocolFactory.setDeliverer(deliverer);
 	// force transports to be created here
 	protocolFactory.getProtocols();
+
+	registry.registerMTS();
+
         super.initialize();
     }
 

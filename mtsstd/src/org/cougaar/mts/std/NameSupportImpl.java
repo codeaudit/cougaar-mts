@@ -105,10 +105,9 @@ public final class NameSupportImpl implements NameSupport
     
 
     public void registerAgentInNameServer(Object proxy, 
-					  MessageTransportClient client, 
+					  MessageAddress addr, 
 					  String transportType)
     {	
-	MessageAddress addr = client.getMessageAddress();
 	try {
 	    String key = makeName(AGENT_DIR, addr, transportType);
 	    _registerWithSociety(key, proxy);
@@ -120,10 +119,9 @@ public final class NameSupportImpl implements NameSupport
     }
 
     public void unregisterAgentInNameServer(Object proxy, 
-					    MessageTransportClient client, 
+					    MessageAddress addr, 
 					    String transportType)
     {	
-	MessageAddress addr = client.getMessageAddress();
 	try {
 	    String key = makeName(AGENT_DIR, addr, transportType);
 	    _registerWithSociety(key, null);
@@ -135,29 +133,19 @@ public final class NameSupportImpl implements NameSupport
 	}
     }
 
-    public void registerNodeInNameServer(Object proxy, 
-					 String transportType) 
+    public void registerMTS(MessageAddress mts_address) 
     {
 	// Register Node address as MTS multicast handler
-	String name = makeName(MTS_DIR, myNodeAddress, transportType);
+	String name = makeName(MTS_DIR, mts_address, "");
 	try {
 	    BasicAttributes mts_attr = new BasicAttributes();
 	    mts_attr.put(MTS_ATTR, Boolean.TRUE);
-	    mts_attr.put(ADDRESS_ATTR, myNodeAddress);
-	    _registerWithSociety(name, proxy, mts_attr);
+	    mts_attr.put(ADDRESS_ATTR, mts_address);
+	    _registerWithSociety(name, mts_address, mts_attr);
 	} catch (Exception e) {
 	    System.err.println("Failed to register " +  name);
 	    e.printStackTrace();
 	}
-
-	// Register Node address as Agent.  Is this used?
-// 	name = makeName(AGENT_DIR, myNodeAddress, transportType);
-// 	try {
-// 	    _registerWithSociety(name, proxy);
-// 	} catch (Exception e) {
-// 	    System.err.println("Failed to register " + name);
-// 	    e.printStackTrace();
-// 	}
     }
 
     public Object lookupAddressInNameServer(MessageAddress address, 

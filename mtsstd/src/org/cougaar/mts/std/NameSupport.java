@@ -25,15 +25,14 @@ public interface NameSupport {
     MessageAddress  getNodeMessageAddress();
 
     void registerAgentInNameServer(Object proxy, 
-                                   MessageTransportClient client, 
+                                   MessageAddress address, 
                                    String transportType);
 
     void unregisterAgentInNameServer(Object proxy, 
-				     MessageTransportClient client, 
+				     MessageAddress address, 
 				     String transportType);
 
-    void registerNodeInNameServer(Object proxy, 
-				  String transportType);
+    void registerMTS(MessageAddress address);
 
     Object lookupAddressInNameServer(MessageAddress address, 
                                      String transportType);

@@ -67,7 +67,10 @@ public class RMILinkProtocol
 		ex.printStackTrace();
 	    }
 	}
+
+
     }
+
 
 
     private MT lookupRMIObject(MessageAddress address) throws Exception {
@@ -89,20 +92,25 @@ public class RMILinkProtocol
     }
 
 
-    public final void registerNode() 
-    {
-	synchronized (this) {
-	    if (myProxy != null) return;  // once only
+    private void makeMT() {
+	if (myProxy != null) return;
+	try {
+	    MessageAddress myAddress = nameSupport.getNodeMessageAddress();
+	    MTImpl impl = new MTImpl(myAddress, deliverer);
+	    myProxy = getServerSideProxy(impl);
+	} catch (java.rmi.RemoteException ex) {
+	    ex.printStackTrace();
+	}
+    }
 
-	    try {
-		MessageAddress myAddress = nameSupport.getNodeMessageAddress();
-		MTImpl impl = new MTImpl(myAddress, deliverer);
-		myProxy = getServerSideProxy(impl);
-	    } catch (java.rmi.RemoteException ex) {
-		ex.printStackTrace();
-		return;
-	    }
-	    nameSupport.registerNodeInNameServer(myProxy, PROTOCOL_TYPE);
+    public final void registerMTS(MessageAddress addr) {
+	makeMT();
+	try {
+	    Object proxy = myProxy;
+	    nameSupport.registerAgentInNameServer(proxy,addr,PROTOCOL_TYPE);
+	} catch (Exception e) {
+	    System.err.println("Error registering MessageTransport:");
+	    e.printStackTrace();
 	}
     }
 
@@ -110,7 +118,8 @@ public class RMILinkProtocol
 	try {
 	    // Assume node-redirect
 	    Object proxy = myProxy;
-	    nameSupport.registerAgentInNameServer(proxy,client,PROTOCOL_TYPE);
+	    MessageAddress addr = client.getMessageAddress();
+	    nameSupport.registerAgentInNameServer(proxy,addr,PROTOCOL_TYPE);
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
 	    e.printStackTrace();
@@ -122,7 +131,8 @@ public class RMILinkProtocol
 	try {
 	    // Assume node-redirect
 	    Object proxy = myProxy;
-	    nameSupport.unregisterAgentInNameServer(proxy,client,PROTOCOL_TYPE);
+	    MessageAddress addr = client.getMessageAddress();
+	    nameSupport.unregisterAgentInNameServer(proxy,addr,PROTOCOL_TYPE);
 	} catch (Exception e) {
 	    System.err.println("Error unregistering MessageTransport:");
 	    e.printStackTrace();

@@ -54,7 +54,6 @@ public final class LinkProtocolFactory
 	protocol.setDeliverer(deliverer);
 	protocol.setRegistry(registry);
 	protocol.setNameSupport(nameSupport);
-	protocol.registerNode();
 	protocols.add(protocol);
     }
 

@@ -44,11 +44,6 @@ class LoopbackLinkProtocol
 	// by MessageTransportServerImpl
     }
 
-    public void registerNode() {
-	// Does nothing because the Database of local clients is held
-	// by MessageTransportServerImpl
-    }
-
     public void unregisterClient(MessageTransportClient client) {
 	// Does nothing because the Database of local clients is held
 	// by MessageTransportServerImpl
@@ -57,6 +52,10 @@ class LoopbackLinkProtocol
     public boolean addressKnown(MessageAddress address) {
 	// true iff the address is local
 	return registry.isLocalClient(address);
+    }
+
+
+    public void registerMTS(MessageAddress address) {
     }
    
 

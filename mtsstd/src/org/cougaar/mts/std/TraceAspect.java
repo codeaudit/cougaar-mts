@@ -90,26 +90,25 @@ public class TraceAspect
 	}
 
 	public void registerAgentInNameServer(Object proxy, 
-					      MessageTransportClient client, 
+					      MessageAddress addr, 
 					      String type)
 	{
 	    log("NameSupport", "Register Agent" + proxy);
-	    server.registerAgentInNameServer(proxy, client, type);
+	    server.registerAgentInNameServer(proxy, addr, type);
 	}
 
 	public void unregisterAgentInNameServer(Object proxy, 
-						MessageTransportClient client, 
+						MessageAddress addr, 
 						String type) 
 	{
 	    log("NameSupport", "Unregister Agent " + proxy);
-	    server.unregisterAgentInNameServer(proxy, client, type);
+	    server.unregisterAgentInNameServer(proxy, addr, type);
 	}
 
-	public void registerNodeInNameServer(Object proxy, 
-					     String type)
+	public void registerMTS(MessageAddress addr)
 	{
-	    log("NameSupport", "Register Node " + proxy);
-	    server.registerNodeInNameServer(proxy, type);
+	    log("NameSupport", "Register MTS " + addr);
+	    server.registerMTS(addr);
 	}
 
 	public Object lookupAddressInNameServer(MessageAddress address, 

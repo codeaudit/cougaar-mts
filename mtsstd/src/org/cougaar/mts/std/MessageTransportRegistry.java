@@ -192,7 +192,22 @@ class MessageTransportRegistry
     }
 
 
+    void registerMTS() {
+	MessageAddress mts_address = nameSupport.getNodeMessageAddress();
 
+	// Give each LinkProtocol a chance to register some object
+	// using the MTS address (but *not* in the MTS DirContext).
+	Iterator protocols = protocolFactory.getProtocols().iterator();
+	while (protocols.hasNext()) {
+	    LinkProtocol protocol = (LinkProtocol) protocols.next();
+	    protocol.registerMTS(mts_address);
+	}
+	
+	// Now register the single MTS entry for this Node in the MTS
+	// DirContext
+	nameSupport.registerMTS(mts_address);
+
+    }
 
 
     boolean addressKnown(MessageAddress address) {
