@@ -21,7 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.MessageProtectionService;
 
 import java.io.ByteArrayInputStream;
@@ -54,11 +53,6 @@ public class AttributedMessage
     extends  Message
     implements Externalizable, MessageAttributes
 {
-
-    private static LoggingService loggingService;
-    static void setLoggingService(LoggingService svc) {
-	loggingService = svc;
-    }
 
     private String FILTERS_ATTRIBUTE = "Filters";
 
@@ -234,13 +228,11 @@ public class AttributedMessage
     }
 
 
-
-
-    private void logSecurityException(String msg, Throwable thr) {
-	loggingService.error(msg, thr);
+    void securityException(String msg, Throwable thr) {
+	throw new MessageSecurityException(msg, thr);
     }
 
-    private boolean sendAttributes(ObjectOutput out) 
+    private void sendAttributes(ObjectOutput out) 
 	throws java.io.IOException
     {
  	MessageProtectionService svc =
@@ -260,20 +252,17 @@ public class AttributedMessage
 					  getOriginator(),
 					  getTarget());
 	    } catch (GeneralSecurityException gse) {
-		logSecurityException("Can't send message attributes", gse);
-		return false;
+		securityException("Can't send message attributes", gse);
 	    } catch (java.io.IOException ioe) {
-		logSecurityException("Can't send message attributes", ioe);
-		return false;
+		securityException("Can't send message attributes", ioe);
 	    }
 	    out.writeObject(bytes);
 	} else {
 	    out.writeObject(attributes);
 	}
-	return true;
     }
 
-    private boolean readAttributes(ObjectInput in) 
+    private void readAttributes(ObjectInput in) 
 	throws java.io.IOException, ClassNotFoundException
     {
  	MessageProtectionService svc =
@@ -287,11 +276,9 @@ public class AttributedMessage
 					    getOriginator(),
 					    getTarget());
 	    } catch (GeneralSecurityException gse) {
-		logSecurityException("Can't send message attributes", gse);
-		return false;
+		securityException("Can't read message attributes", gse);
 	    } catch (java.io.IOException ioe) {
-		logSecurityException("Can't send message attributes", ioe);
-		return false;
+		securityException("Can't read message attributes", ioe);
 	    }
 
 	    ByteArrayInputStream bis = new ByteArrayInputStream(data);
@@ -301,7 +288,6 @@ public class AttributedMessage
 	} else {
 	    attributes = (SimpleMessageAttributes) in.readObject();
 	}
-	return true;
     }
 
 
@@ -337,10 +323,7 @@ public class AttributedMessage
 	
 	    writer.finalizeAttributes(this);
 
-	    if (!sendAttributes(rawOut)) {
-		// security exception -- bail
-		return;
-	    }
+	    sendAttributes(rawOut);
 
 	    if (replyOnly()) return;
 
@@ -391,11 +374,7 @@ public class AttributedMessage
 	    setOriginator((MessageAddress) rawIn.readObject());
 	    setTarget((MessageAddress) rawIn.readObject());
 
-	    if (!readAttributes(rawIn)) {
-		// security exception -- bail
-		return;
-	    }
-	    
+	    readAttributes(rawIn);
 
 	    if (replyOnly()) return;
 

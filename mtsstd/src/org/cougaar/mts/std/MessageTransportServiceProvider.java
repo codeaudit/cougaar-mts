@@ -246,9 +246,6 @@ public final class MessageTransportServiceProvider
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
-	// AttributedMessages need to log but can't be components.
-	AttributedMessage.setLoggingService(loggingService);
-
 	Debug.load(loggingService);
 
 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
