@@ -37,6 +37,7 @@ public class MessageTransportServiceProxy
 {
     private SendLink link;
     private MessageTransportClient client;
+    private boolean registered = false;
 
     public MessageTransportServiceProxy(MessageTransportClient client,
 					SendLink link) 
@@ -47,6 +48,9 @@ public class MessageTransportServiceProxy
 
 
     void release() {
+	synchronized (this) {
+	    if (registered) unregisterClient(client);
+	}
 	client = null;
 	link.release();
 	link = null;
@@ -90,7 +94,15 @@ public class MessageTransportServiceProxy
      * Redirects the request to the MessageTransportRegistry. */
     public synchronized void registerClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
-	link.registerClient(client);
+	if (!registered) {
+	    link.registerClient(client);
+	    registered=true;
+	}
+	else {
+	    throw new IllegalStateException("Client "
+					    +client.getMessageAddress()+
+					    " is already registered in the MTS");
+	}
     }
 
 
@@ -98,13 +110,23 @@ public class MessageTransportServiceProxy
      * Redirects the request to the MessageTransportRegistry. */
     public synchronized void unregisterClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
-	link.unregisterClient(client);
-
+	if (registered){
+	    link.unregisterClient(client);
+	    registered = false;
+	}
+	else {
+	    throw new IllegalStateException("Client "
+					    +client.getMessageAddress()+
+					    " is not registed in the MTS");
+	}
+	    
+	
 	// NB: The proxy (as opposed to the client) CANNOT be
 	// unregistered here.  If it were, messageDelivered callbacks
 	// wouldn't be delivered and flush could block forever.
 	// Unregistering the proxy can only happen as part of
 	// releasing the service (see release());
+       
     }
     
    

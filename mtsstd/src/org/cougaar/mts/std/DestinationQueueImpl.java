@@ -174,7 +174,8 @@ final class DestinationQueueImpl
 		return;
 	    }
 	} else if (Debug.isDebugEnabled(loggingService,POLICY)) {
-	    loggingService.debug("No Protocol selected ");
+	    loggingService.debug("No Protocol selected for Agent" +
+				 message.getTarget());
 	}
 
 

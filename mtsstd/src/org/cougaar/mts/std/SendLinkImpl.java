@@ -58,6 +58,9 @@ final public class SendLinkImpl
 
     // Default is no-op, all the real work is done in FlushAspect
     public void flushMessages(ArrayList droppedMessages) {
+	if (loggingService.isErrorEnabled()) {
+	    loggingService.error("FlushMessage base impl called should have been caught by a Flush aspect for " + getAddress());
+	}
     }
 
     public MessageAddress getAddress() {

@@ -60,6 +60,8 @@ public class FlushAspect extends StandardAspect
 	    return new SendLinkDelegate((SendLink) delegate);
 	} else if (type == DestinationLink.class) {
 	    return new DestinationLinkDelegate((DestinationLink) delegate);
+	} else if (type == DestinationQueue.class) {
+	    return new DestinationQueueDelegate((DestinationQueue) delegate);
 	} else {
 	    return null;
 	}
@@ -83,7 +85,8 @@ public class FlushAspect extends StandardAspect
 	    SendLinkDelegate sendLink = findSendLink(message);
 	    if (sendLink == null && loggingService.isErrorEnabled()) {
 		loggingService.error("Warning: No SendLink for " +
-					  message.getOriginator());
+					  message.getOriginator(),
+				     new RuntimeException("call stack"));
 	    }
 	    try {
 		MessageAttributes meta = super.forwardMessage(message);
@@ -115,6 +118,17 @@ public class FlushAspect extends StandardAspect
 
     }
 
+    public class DestinationQueueDelegate
+	extends DestinationQueueDelegateImplBase {
+	public DestinationQueueDelegate(DestinationQueue queue) {
+	    super(queue);
+	}
+
+	public void dispatchNextMessage(AttributedMessage message) {
+	    super.dispatchNextMessage(message);	
+	}
+    }
+
     public class SendLinkDelegate extends SendLinkDelegateImplBase {
 	
 	private int outstandingMessages;
@@ -128,9 +142,18 @@ public class FlushAspect extends StandardAspect
 	    registerSendLink(this, getAddress());
 	}
 	
+	public  void unregisterClient(MessageTransportClient client) {
+	    super.unregisterClient(client);
+	    if (Debug.isDebugEnabled(loggingService,FLUSH)) {
+		loggingService.info("Unregistered " + 
+				    getAddress());
+	    } 
+	}
 	public void release() {
-	    droppedMessages = null;
 	    unregisterSendLink(this, getAddress());
+	    if (Debug.isDebugEnabled(loggingService,FLUSH)) {
+		loggingService.info("Released " + getAddress());
+	    }
 	    super.release();
 	}
 
@@ -173,8 +196,8 @@ public class FlushAspect extends StandardAspect
 	    if (!flushing) return; // do nothing in this case
 
 	    --outstandingMessages;
-	    if (Debug.isDebugEnabled(loggingService,FLUSH)) showPending("Message dropped");
-	    if (droppedMessages == null) droppedMessages = new ArrayList();
+	    if (Debug.isDebugEnabled(loggingService,FLUSH)) 
+		showPending("Message dropped");
 	    droppedMessages.add(message);
 	    if (outstandingMessages <= 0) this.notify();
 
@@ -198,9 +221,9 @@ public class FlushAspect extends StandardAspect
 	    return super.okToSend(message);
 	}
 
-	public synchronized ArrayList flushMessages() {
+	public synchronized void flushMessages(ArrayList droppedMessages) {
 	    flushing = true;
-	    droppedMessages = new ArrayList();
+	    this.droppedMessages = droppedMessages;
 	    while (outstandingMessages > 0) {
 		if (Debug.isDebugEnabled(loggingService,FLUSH)) {
 		    loggingService.debug(getAddress() + 
@@ -215,7 +238,7 @@ public class FlushAspect extends StandardAspect
 					  ": All messages flushed.");
 	    }
 	    flushing = false;
-	    return droppedMessages;
+	    this.droppedMessages = null;
 	}
     }
 

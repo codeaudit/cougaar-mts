@@ -302,7 +302,6 @@ public final class MessageTransportServiceProvider
 		    (MessageTransportServiceProxy) proxies.get(addr);
 		if (svc != service) return; // ???
 		proxies.remove(addr);
-		svc.unregisterClient(client);
 		proxy.release();
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
