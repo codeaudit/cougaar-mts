@@ -39,7 +39,7 @@ class ValueGossip
 	private Metric metric;
     }
 
-    void update(GossipUpdateService updateService) {
+    synchronized void update(GossipUpdateService updateService) {
 	// get the key/metric pairs and pass them through
 	Iterator itr = iterator();
 	while (itr.hasNext()) {
@@ -51,12 +51,12 @@ class ValueGossip
     }
 
 
-    void add(String key, Metric data) {
+    synchronized void add(String key, Metric data) {
 	addEntry(key, new Data(data));
     }
 
 
-    String prettyPrint() {
+    synchronized String prettyPrint() {
 	StringBuffer buf = new StringBuffer();
 	Iterator itr = iterator();
 	while (itr.hasNext()) {

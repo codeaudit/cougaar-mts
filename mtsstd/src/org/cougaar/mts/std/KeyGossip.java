@@ -36,7 +36,7 @@ class KeyGossip  extends Gossip
     }
 
 
-    void add(String key, int propagationDistance) {
+    synchronized void add(String key, int propagationDistance) {
 	Data old = (Data) lookupValue(key);
 	if (old == null) {
 	    addEntry(key, new Data(propagationDistance));
@@ -46,7 +46,7 @@ class KeyGossip  extends Gossip
     }
 
     // union?
-    void add(KeyGossip gossip) { 
+    synchronized void add(KeyGossip gossip) { 
 	Iterator itr = gossip.iterator();
 	while (itr.hasNext()) {
 	    Map.Entry entry = (Map.Entry) itr.next();
@@ -58,7 +58,7 @@ class KeyGossip  extends Gossip
 
     // Return a gossip set to propagate.  Items are included if the're
     // not already in the addendum and if the propagation count is > 0.
-    KeyGossip computeAddendum(KeyGossip addendum) {
+    synchronized KeyGossip computeAddendum(KeyGossip addendum) {
 	KeyGossip result = null;
 	Iterator itr = iterator();
 	while (itr.hasNext()) {
@@ -74,7 +74,7 @@ class KeyGossip  extends Gossip
 	return result;
     }
 
-    String prettyPrint() {
+    synchronized String prettyPrint() {
 	StringBuffer buf = new StringBuffer();
 	Iterator itr = iterator();
 	while (itr.hasNext()) {
