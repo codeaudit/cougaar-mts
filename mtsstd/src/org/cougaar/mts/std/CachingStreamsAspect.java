@@ -56,9 +56,25 @@ public class CachingStreamsAspect extends StandardAspect
 	public void write(int b)
 	    throws java.io.IOException
 	{
-	    super.write(b);
+	    out.write(b);
 	    other.write(b);
 	}
+
+	public void write(byte[] b, int off, int len)
+	    throws java.io.IOException 
+	{
+	    out.write(b, off, len);
+	    other.write(b, off, len);
+	}
+
+
+	public void write(byte[] b)
+	    throws java.io.IOException 
+	{
+	    out.write(b);
+	    other.write(b);
+	}
+
     }
 
 

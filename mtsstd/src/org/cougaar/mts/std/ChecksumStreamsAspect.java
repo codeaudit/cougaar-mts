@@ -155,6 +155,24 @@ public class ChecksumStreamsAspect extends StandardAspect
 		checksum += b;
 	    }
 
+
+ 	    public void write(byte[] b, int off, int len)
+		throws java.io.IOException 
+	    {
+ 		out.write(b, off, len);
+		int end = Math.min(off+len, b.length);
+		for (int i=off; i<end; i++) checksum += b[i];
+ 	    }
+
+
+ 	    public void write(byte[] b)
+		throws java.io.IOException 
+	    {
+ 		out.write(b);
+		int end = b.length;
+		for (int i=0; i<end; i++) checksum += b[i];
+ 	    }
+
 	}
 
 	ChecksumMessageWriter(MessageWriter delegatee) {
@@ -201,13 +219,13 @@ public class ChecksumStreamsAspect extends StandardAspect
 
 
 	    public int read() throws IOException {
-		int b = super.read();
+		int b = in.read();
 		checksum += b;
 		return b;
 	    }
 
 	    public int read(byte[] b, int off, int len) throws IOException {
-		int count = super.read(b, off, len);
+		int count = in.read(b, off, len);
 
 		// Even though these are bytes rather than ints (as in
 		// read()), we don't need to worry about sign
@@ -220,6 +238,17 @@ public class ChecksumStreamsAspect extends StandardAspect
 
 		return count;
 	    }
+
+
+
+	    public int read(byte[] b) throws IOException {
+		int count = in.read(b);
+		for (int i=0; i<count; i++) checksum += b[i];
+
+		return count;
+	    }
+
+
 	}
 
 	ChecksumMessageReader(MessageReader delegatee) {
