@@ -281,9 +281,10 @@ implements ServiceProvider
 
 	// MessageTransportService isn't available at this point, so
 	// do the calls manually (ugh).
-	MessageTransportRegistryService registry = 
-	    (MessageTransportRegistryService)
-	    csb.getService(this, MessageTransportRegistryService.class,  null);
+//	What's the point of getting a service and never using it?
+//      MessageTransportRegistryService registry = 
+//	    (MessageTransportRegistryService)
+//	    csb.getService(this, MessageTransportRegistryService.class,  null);
 
 
 	NodeControlService ncs = (NodeControlService)

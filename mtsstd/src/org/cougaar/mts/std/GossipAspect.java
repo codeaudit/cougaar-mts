@@ -304,12 +304,12 @@ public class GossipAspect
 
     private boolean getGossipLock(MessageAddress neighbor)
     {
-	boolean result = false;
+//	boolean result = false;
 	synchronized (neighbor) {
 	    Boolean locked = (Boolean) neighborLocks.get(neighbor);
 	    if (locked == null || !locked.booleanValue()) {
 		neighborLocks.put(neighbor, Boolean.TRUE);
-		result = true;
+//		result = true;
 	    }
 	}
 	return true; // result;

@@ -217,7 +217,7 @@ public final class MessageTimeoutAspect
 	public void sendMessage(AttributedMessage message)
 	{ 
             // convert relative timeouts to absolute
-	    long the_timeout = convertTimeout(message);
+//	    long the_timeout = convertTimeout(message);
       
 	    if(timedOut(message, "SendLink")) {
 		// drop message silently

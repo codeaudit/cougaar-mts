@@ -65,7 +65,7 @@ public class MetricsTestAspect
     public void update(Observable o, Object arg) {
 	long now = System.currentTimeMillis();
 	long updateDelta = now-lastUpdate;
-	long value = ((Metric) arg).longValue();
+//	long value = ((Metric) arg).longValue();
 	    
 	System.out.println("Update Time=" +updateDelta +
 			   " Value =" + arg);

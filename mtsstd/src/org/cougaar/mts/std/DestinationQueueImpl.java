@@ -144,7 +144,7 @@ final class DestinationQueueImpl
 				     link.getProtocolClass());
 	    try {
 		link.addMessageAttributes(message);
-		MessageAttributes meta = link.forwardMessage(message);
+		link.forwardMessage(message);
 		resetState();
 		return;
 	    } catch (UnregisteredNameException no_name) {
