@@ -225,7 +225,7 @@ public class MessageTransportServiceProvider
 		(StatisticsAspect) findAspect(STATISTICS_ASPECT);
 	    return aspect;
 	} else if (serviceClass == MessageWatcherService.class) {
-	    return watcherAspect;
+	    return new MessageWatcherServiceImpl(watcherAspect);
 	} else {
 	    return null;
 	}
@@ -253,9 +253,12 @@ public class MessageTransportServiceProvider
 		proxy.release();
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
-	    // TO BE DONE
+	    // The only resource used here is the StatisticsAspect,
+	    // which stays around.  
 	} else if (serviceClass == MessageWatcherService.class) {
-	    // TO BE DONE
+	    if (service instanceof MessageWatcherServiceImpl) {
+		((MessageWatcherServiceImpl) service).release();
+	    }
 	} 
     }
 
