@@ -45,8 +45,6 @@ import java.util.HashMap;
  * factories, each of which is described elsewhere.  The only
  * interesting local functions are those required for
  * ServiceBrokers.
- * @property org.cougaar.message.transport.policy Sets the message
- * transport policy to instance o the specified class.
  */
 
 
@@ -56,8 +54,6 @@ public final class MessageTransportServiceProvider
     implements ContainerAPI, ServiceProvider, MessageTransportClient, StateObject
 {
 
-    private final static String POLICY_PROPERTY =
-	"org.cougaar.message.transport.policy";
 
     // Some special aspect classes
     private final static String STATISTICS_ASPECT = 
@@ -162,11 +158,13 @@ public final class MessageTransportServiceProvider
 	MessageDeliverer deliverer = 
 	    delivererFactory.getMessageDeliverer(id+"/Deliverer");
 
-	LinkSelectionPolicy selectionPolicy = createSelectionPolicy();
+	LinkSelectionPolicyServiceProvider lspsp =
+	    new LinkSelectionPolicyServiceProvider();
+	sb.addService(LinkSelectionPolicy.class, lspsp);
 
 	
 	DestinationQueueFactory	destQFactory = 
-	    new DestinationQueueFactory(sb, protocolFactory, selectionPolicy);
+	    new DestinationQueueFactory(sb, protocolFactory);
 	RouterFactory routerFactory =
 	    new RouterFactory(sb, destQFactory);
 
@@ -178,26 +176,6 @@ public final class MessageTransportServiceProvider
 	protocolFactory.setDeliverer(deliverer);
 	// force transports to be created here
 	protocolFactory.loadProtocols();
-    }
-
-    private LinkSelectionPolicy createSelectionPolicy() {
-	String policy_classname = System.getProperty(POLICY_PROPERTY);
-	if (policy_classname == null) {
-	    return new MinCostLinkSelectionPolicy();
-	} else {
-	    try {
-		Class policy_class = Class.forName(policy_classname);
-		LinkSelectionPolicy selectionPolicy = 
-		    (LinkSelectionPolicy) policy_class.newInstance();
-		if (Debug.debug(DebugFlags.POLICY))
-		    System.out.println("% Created " +  policy_classname);
-
-		return selectionPolicy;
-	    } catch (Exception ex) {
-		ex.printStackTrace();
-		return new MinCostLinkSelectionPolicy();
-	    }
-	}	       
     }
 
 

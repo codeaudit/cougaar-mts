@@ -39,15 +39,16 @@ public class DestinationQueueFactory extends  AspectFactory
     private LinkSelectionPolicy selectionPolicy;
 
     DestinationQueueFactory(ServiceBroker sb,
-			    LinkProtocolFactory protocolFactory,
-			    LinkSelectionPolicy selectionPolicy) 
+			    LinkProtocolFactory protocolFactory) 
     {
 	super(sb);
 	queues = new HashMap();
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	this.protocolFactory = protocolFactory;
-	this.selectionPolicy = selectionPolicy;
+	selectionPolicy =
+	(LinkSelectionPolicy)
+	    sb.getService(this, LinkSelectionPolicy.class, null);
     }
 
     /**
