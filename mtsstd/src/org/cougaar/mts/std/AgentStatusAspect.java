@@ -30,10 +30,12 @@ import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.qos.metrics.Constants;
 import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
 import org.cougaar.core.qos.metrics.MetricsUpdateService;
+import org.cougaar.core.service.LoggingService;
 
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
@@ -253,6 +255,21 @@ public class AgentStatusAspect
 	    super(link);
 	}
 
+	public void release() {
+	    MessageAddress addr = getAddress().getPrimary();
+	    synchronized (localStates) {
+		localStates.remove(addr);
+	    }
+	}
+
+
+	public void registerClient(MessageTransportClient client)
+	{
+	    super.registerClient(client);
+	    ensureLocalState(getAddress().getPrimary());
+	}
+
+
 	public void flushMessages(ArrayList messages) {
 	    super.flushMessages(messages);
 	    Iterator i = messages.iterator();
@@ -298,8 +315,17 @@ public class AgentStatusAspect
 	    MessageAddress remoteAddr = message.getTarget().getPrimary();
 	    AgentState remoteState = ensureRemoteState(remoteAddr);
 	    MessageAddress localAddr = message.getOriginator().getPrimary();
-	    AgentState localState = ensureLocalState(localAddr);
+	    AgentState localState = getLocalState(localAddr);
 	    
+	    if (localState == null) {
+		// Leftover message from an unregistered agent
+		LoggingService lsvc = getLoggingService();
+		if (lsvc.isErrorEnabled())
+		    lsvc.error("Forwarding leftover message from unregistered agent " 
+			       +localAddr);
+		return super.forwardMessage(message);
+	    }
+
 	    try {
 		long startTime = System.currentTimeMillis();
 		synchronized (remoteState) {
@@ -428,11 +454,19 @@ public class AgentStatusAspect
 	    }
 		    
 	    AgentState localState = 
-		ensureLocalState(message.getTarget().getPrimary());
-	    synchronized (localState) {
-		localState.receivedCount++;
-		localState.receivedBytes+=msgBytes;
+		getLocalState(message.getTarget().getPrimary());
+	    if (localState != null) {
+		synchronized (localState) {
+		    localState.receivedCount++;
+		    localState.receivedBytes+=msgBytes;
+		}
+	    }else {
+		LoggingService lsvc = getLoggingService();
+		if (lsvc.isInfoEnabled())
+		    lsvc.info("Received message for non-local agent "
+			       +message.getTarget());
 	    }
+
 
 	    return super.deliverMessage(message, dest);
 	}
@@ -452,25 +486,32 @@ public class AgentStatusAspect
 	    MessageAddress remoteAddr = message.getTarget().getPrimary();
 	    AgentState remoteState = ensureRemoteState(remoteAddr);
 	    MessageAddress localAddr = message.getOriginator().getPrimary();
-	    AgentState localState = ensureLocalState(localAddr);
+	    AgentState localState = getLocalState(localAddr);
 
 	    synchronized (remoteState) {
 		remoteState.sendCount++;
 		remoteState.queueLength++;
 	    }	
 
-	    synchronized (localState) {
-		localState.sendCount++;
-	    }	
+	    if (localState != null) {
+		synchronized (localState) {
+		    localState.sendCount++;
+		}	
 
-	    //Local agent sending message means that the MTS has
-	    //"heard from" the local agent
-	    String localAgent = localAddr.getAddress();
-	    String heard_key = "Agent" +KEY_SEPR+ localAgent 
-		+KEY_SEPR+ "HeardTime";
-	    long receiveTime = System.currentTimeMillis();
-	    metricsUpdateService.updateValue(heard_key, 
-					     longMetric(receiveTime));
+		//Local agent sending message means that the MTS has
+		//"heard from" the local agent
+		String localAgent = localAddr.getAddress();
+		String heard_key = "Agent" +KEY_SEPR+ localAgent 
+		    +KEY_SEPR+ "HeardTime";
+		long receiveTime = System.currentTimeMillis();
+		metricsUpdateService.updateValue(heard_key, 
+						 longMetric(receiveTime));
+	    } else {
+		LoggingService lsvc = getLoggingService();
+		if (lsvc.isErrorEnabled())
+		    lsvc.error("SendQueue sending leftover message from " 
+			       +localAddr);
+	    }
 
 	    super.sendMessage(message);
 	}
