@@ -30,15 +30,22 @@ import org.cougaar.util.CircularQueue;
  * runs its own thread to pop messages off that queue.  The method
  * <strong>dispatch</strong>, provided by instantiable subclasses, is
  * invoked on each message as it's popped off. */
-abstract class MessageQueue extends Thread
+abstract class MessageQueue implements Runnable
 {
     private CircularQueue queue;
+    private Thread thread;
+    private String name;
 
     MessageQueue(String name) {
-	super(name);
+	this.name = name;
 	queue = new CircularQueue();
-	setDaemon(true);
-	start();
+	thread = new Thread(this, name);
+	thread.setDaemon(true);
+	thread.start();
+    }
+
+    String getName() {
+	return name;
     }
 
     public void run() {
