@@ -189,7 +189,8 @@ public class MessageTransportServiceProvider
     private boolean validateRequestor(Object requestor, 
 				      Class serviceClass) 
     {
-	return requestor instanceof Node &&
+	return 
+	    requestor instanceof MessageTransportClient &&
 	    serviceClass == MessageTransportService.class;
     }
 
