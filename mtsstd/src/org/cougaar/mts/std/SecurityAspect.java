@@ -43,10 +43,12 @@ import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * First attempt at a security aspect.  The message is secured by a
- * RemoteProxy aspect delegate and unsecued by a RemoteImpl aspect
- * delegate.
- * @property org.cougaar.message.security Controls the MessageTransport SecurityAspect.
+ * This Aspect uses the (obsolete?) {@link MessageSecurityManager}
+ * interface to secure message traffic in a simple way.
+ *
+ * @property org.cougaar.message.security specifies the implementation
+ * class of the {@link MessageSecurityManager}.  If unspecified the
+ * dummy implementation {@link DummyMessageSecurityManager} is used.
  */
 public class SecurityAspect extends StandardAspect
 {

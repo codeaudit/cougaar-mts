@@ -38,8 +38,11 @@ import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.base.MT;
 import org.cougaar.mts.base.MTImpl;
 
-/** actual RMI remote object providing the implementation of MessageTransport client
- **/
+/**
+ * Implementation of the {@link SerializedMT} rmi interface.  It
+ * accepts a byte-array that can be deserialized into an
+ * AttributedMessage, rather than an actual AttributedMessage.
+*/
 public class SerializedMTImpl extends MTImpl
     implements SerializedMT 
 {

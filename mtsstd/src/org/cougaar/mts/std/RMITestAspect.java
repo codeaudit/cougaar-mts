@@ -37,8 +37,8 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This aspect adds simple statistics gathering to the client side
- * OutputStream of RMI connections.
+ * This test Aspect uses the {@link RMISocketControlService} to set
+ * socket timeouts.
  */
 public class RMITestAspect
     extends StandardAspect

@@ -25,9 +25,15 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.mts.base.SocketFactory;
-import org.cougaar.mts.base.AbstractSocketControlPolicy;
 
+import org.cougaar.mts.base.AbstractSocketControlPolicy;
+import org.cougaar.mts.base.SocketControlPolicy; // javadoc 
+import org.cougaar.mts.base.SocketFactory;
+
+/**
+ * This Component is an example of {@link SocketControlPolicy}.  It does
+ * nothing other than log requests.
+ */
 public class SampleSocketControlPolicy extends AbstractSocketControlPolicy 
 {
 

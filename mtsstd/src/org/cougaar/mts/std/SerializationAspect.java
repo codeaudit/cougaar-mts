@@ -39,10 +39,10 @@ import org.cougaar.mts.base.CougaarIOException;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This is a debugging aspect.  By attaching it in a single-node
- * society (ie one in which all messages go through the Loopback
- * transport), we can check for issues related to serialization that
- * wouldn't arise otherwise.  */
+ * This is debugging Aspect forces serialization on the {@link
+ * LoopbackLinkProtocol}.  This can help check for issues related to
+ * serialization that wouldn't arise otherwise.  
+ */
 public class SerializationAspect extends StandardAspect
 {
 

@@ -31,10 +31,10 @@ import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * Scrambles the messages 
- * This is a test for SequenceAspect.java
+ * This test Aspect scrambles the order of messages.  Its main purpose
+ * is to test the effectiveness of the {@link SequenceAspect}.
  * 
- * */
+ */
 public class ScrambleAspect extends StandardAspect
 {
     public ScrambleAspect() {

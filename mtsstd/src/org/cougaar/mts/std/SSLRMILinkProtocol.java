@@ -25,11 +25,14 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.mts.base.SocketFactory;
+
+import org.cougaar.mts.base.LinkProtocol; // javadoc only
 import org.cougaar.mts.base.RMILinkProtocol;
+import org.cougaar.mts.base.SocketFactory;
 
 /**
- * Simple extension to RMILinkProtocol which uses ssl.
+ * This {@link LinkProtocol} supports rmi over ssl.  It's implemented
+ * as a simple extension of {@link RMILinkProtocol}.
  */
 public class SSLRMILinkProtocol extends RMILinkProtocol
 {

@@ -29,6 +29,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SerializationUtils;
 import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.LinkProtocol; // javadoc
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.MT;
 import org.cougaar.mts.base.MTImpl;
@@ -38,7 +39,10 @@ import org.cougaar.mts.base.CougaarIOException;
 
 
 /**
- * Simple extension to RMILinkProtocol which uses pre-serialization.
+ * This {@link LinkProtocol} is a simple extension of {@link
+ * RMILinkProtocol} that uses preserialization to send byte-arrays via
+ * the {@link SerializedMT} interface rather than AttributedMessages via the
+ * {@link MT} interface.
  */
 public class SerializedRMILinkProtocol extends RMILinkProtocol
 {

@@ -45,10 +45,9 @@ import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * First attempt at a security aspect.  The message is secured by a
- * RemoteProxy aspect delegate and unsecued by a RemoteImpl aspect
- * delegate.
- * */
+ * This Aspect adds sequence numbers to messages, and enforces
+ * sequencing based on those numbers.
+ */
 public class SequenceAspect extends StandardAspect
 { 
 

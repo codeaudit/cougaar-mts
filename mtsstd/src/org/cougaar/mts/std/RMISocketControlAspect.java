@@ -40,8 +40,10 @@ import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This aspect adds simple statistics gathering to the client side
- * OutputStream of RMI connections.
+ * This Aspect creates a ServiceProvider for and implementation of the
+ * RMISocketControlService.  As currently defined, this  service is
+ * mostly for setting socket timeouts.   It can also be used to get a
+ * List of open sockets from a given MessageAddress.  
  */
 public class RMISocketControlAspect
     extends StandardAspect
