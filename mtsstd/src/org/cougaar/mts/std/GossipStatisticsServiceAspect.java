@@ -117,6 +117,10 @@ final public class GossipStatisticsServiceAspect
 	stats.values_rcvd += gossip.size();
     }
 
+    private boolean hasGossip(Gossip gossip)
+    {
+	return gossip != null && !gossip.isEmpty();
+    }
 
 
     private class Impl implements GossipStatisticsService {
@@ -149,10 +153,10 @@ final public class GossipStatisticsServiceAspect
 		message.getAttribute(GossipAspect.REQUEST_GOSSIP_ATTR);
 	    ValueGossip valueGossip = (ValueGossip) 
 		message.getAttribute(GossipAspect.VALUE_GOSSIP_ATTR);
-	    if (keyGossip != null) requestsSent(keyGossip);
-	    if (valueGossip != null) valuesSent(valueGossip);
+	    if (hasGossip(keyGossip)) requestsSent(keyGossip);
+	    if (hasGossip(valueGossip)) valuesSent(valueGossip);
 	    ++stats.msg_sent;
-	    if ((keyGossip != null) || (valueGossip != null))
+	    if (hasGossip(keyGossip) || hasGossip(valueGossip))
 		++stats.msg_with_gossip_sent;
 	    return result;
 	}
@@ -176,14 +180,14 @@ final public class GossipStatisticsServiceAspect
 		message.getAttribute(GossipAspect.REQUEST_GOSSIP_ATTR);
 	    ValueGossip valueGossip = (ValueGossip) 
 		message.getAttribute(GossipAspect.VALUE_GOSSIP_ATTR);
-	     if (keyGossip != null) requestsReceived(keyGossip);
-	     if (valueGossip != null) valuesReceived(valueGossip);
-	     ++stats.msg_rcvd;
-	     if ((keyGossip != null) || (valueGossip != null))
-		 ++stats.msg_with_gossip_rcvd;
+	    if (hasGossip(keyGossip)) requestsReceived(keyGossip);
+	    if (hasGossip(valueGossip)) valuesReceived(valueGossip);
+	    ++stats.msg_rcvd;
+	    if (hasGossip(keyGossip) || hasGossip(valueGossip))
+		++stats.msg_with_gossip_rcvd;
 	    return super.deliverMessage(message, dest);
 	}
-    }
+	}
 
 }
 
