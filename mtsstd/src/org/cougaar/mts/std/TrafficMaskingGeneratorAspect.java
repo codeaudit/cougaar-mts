@@ -41,9 +41,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   private NodeKeeperTimerTask nodeKeeper;
   private MessageAddress myAddress;
   private ReplyTimerTask replyTimerTask;
-  private HashMap nodeTimerMap = new HashMap(6);
+  private HashMap nodeTimerTaskMap = new HashMap(6);
   private ArrayList statsList = new ArrayList();
   private Timer myTimer = new Timer(true);
+  private Random random = new Random();
+
 
   public TrafficMaskingGeneratorAspect() {
     super();
@@ -123,14 +125,14 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     }
 
      // if we already have a timer going for this node - cancel the current one
-    if (nodeTimerMap.get(node) != null) {
+    if (nodeTimerTaskMap.get(node) != null) {
       cancelTimerTask(node);
     }
     // start up a request masking timer for this node
     MaskingTimerTask mtt = new MaskingTimerTask(node, avgSize, avgPeriod);
     myTimer.scheduleAtFixedRate(mtt, avgPeriod, avgPeriod);
     // register with timer
-    nodeTimerMap.put(node, mtt);
+    nodeTimerTaskMap.put(node, mtt);
     
     // if this is the first timer task we need to turn on the reply 
     // timer task.
@@ -175,9 +177,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   // utility methods
   //
   private void cancelTimerTask(MessageAddress node) {
-    TimerTask theTimerTask = (TimerTask) nodeTimerMap.get(node);
+    TimerTask theTimerTask = (TimerTask) nodeTimerTaskMap.get(node);
     theTimerTask.cancel();
-    nodeTimerMap.remove(node);
+    nodeTimerTaskMap.remove(node);
   }
 
   private void startReplyTimerTask() {
@@ -257,7 +259,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
   // Delgate on Deliverer (sees incoming messages)
   public class MaskingDelivererDelegate extends MessageDelivererDelegateImplBase {
-    private Random random = new Random();
     
     public MaskingDelivererDelegate (MessageDeliverer deliverer) {
       super(deliverer);
@@ -316,7 +317,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     private int requestSize;
     private MessageAddress destination;
     private TrafficMaskingStatistics mystats;
-    private Random random = new Random();
 
     public MaskingTimerTask(MessageAddress node, int size, int period) {
       super();
@@ -376,21 +376,21 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   // creates fake-requests on a timer - requests are a random size
   // used for auto masking setup up by system properties
   public class AutoMaskingTimerTask extends TimerTask {
-    private Random contentsGenerator = new Random();
   
     public void run() {
       MessageAddress fakedest = nodeKeeper.getRandomNodeAddress();
       // make sure we have other nodes to send to
       if (fakedest != null) {
+        TrafficMaskingStatistics mystats = getStatsObject(fakedest);
         //bound by 18K right now
-        int randomSize = contentsGenerator.nextInt(18000);
+        int randomSize = random.nextInt(18000);
         // if its less than 800 do a little hacking to make 
         //sure its not too small.
         if (randomSize < 800) {
           randomSize = randomSize + 800;
         }
         byte[] contents = new byte[randomSize];
-        contentsGenerator.nextBytes(contents);
+        random.nextBytes(contents);
         FakeRequestMessage request = 
           new FakeRequestMessage(myAddress, fakedest, contents);
         maskingQDelegate.sendMessage(request);
@@ -400,8 +400,29 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
                              " to: "+fakedest+" size of byte array: "+
                              contents.length);
         }
+        // add to stats
+        mystats.incrementCount();
+        mystats.incrementTotalBytes(contents.length);
       }
     }
+
+    // find the stats object for this node destination
+    private TrafficMaskingStatistics getStatsObject(MessageAddress dest) {
+      Collection allStats = getStatistics();
+      if (!allStats.isEmpty()) {
+        Iterator statsIt = allStats.iterator();
+        while (statsIt.hasNext()) {
+          TrafficMaskingStatistics aStat = (TrafficMaskingStatistics)statsIt.next();
+          if (aStat.getNode().equals(dest)) {
+            return aStat;
+          }
+        }
+      }
+      // create one for this node if we don't have one yet
+      return new TrafficMaskingStatistics(dest, requestRate, 9000);
+    }
+      
+
   }   // end of AutoMaskingTimerTask inner class
 
   // keeps list of nodes up to date and generates random node addresses
