@@ -278,20 +278,21 @@ public class GossipAspect
 	    addRequests(message, localRequests);
 
 	    // Neighbor requests (excluding the recipient)
-	    Iterator itr = neighborsRequests.entrySet().iterator();
-	    MessageAddress neighbor = agentNode(message.getTarget());
-	    while (itr.hasNext()) {
-		Map.Entry entry = (Map.Entry) itr.next();
-		MessageAddress addr = (MessageAddress) entry.getKey();
-		KeyGossip gossip = (KeyGossip) entry.getValue();
-		if (!addr.equals(neighbor)) {
-		    addRequests(message, gossip);
+	    synchronized (GossipAspect.this) {
+		Iterator itr = neighborsRequests.entrySet().iterator();
+		MessageAddress neighbor = agentNode(message.getTarget());
+		while (itr.hasNext()) {
+		    Map.Entry entry = (Map.Entry) itr.next();
+		    MessageAddress addr = (MessageAddress) entry.getKey();
+		    KeyGossip gossip = (KeyGossip) entry.getValue();
+		    if (!addr.equals(neighbor)) {
+			addRequests(message, gossip);
+		    }
 		}
-	    }
 
-	    // Now add any updates for the destination
-	    addGossipValues(neighbor, message);
-	    
+		// Now add any updates for the destination
+		addGossipValues(neighbor, message);
+	    }
 
 	    MessageAttributes result = super.forwardMessage(message);
 	    
