@@ -34,6 +34,7 @@ import javax.net.ssl.SSLSocketFactory;
 import org.cougaar.core.component.ComponentSupport;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.service.SocketFactoryService;
 
 /**
@@ -45,16 +46,30 @@ public final class SocketFactorySPC
 {
   private SFSP _sfsp;
   private SFS _sfs;
+  private ServiceBroker rootsb;
 
   public void load() {
     super.load();
+    // get root service broker
+    ServiceBroker sb = getServiceBroker();
+    NodeControlService ncs = (NodeControlService)
+      sb.getService(this, NodeControlService.class, null);
+    if (ncs == null) {
+      throw new RuntimeException(
+          "Unable to obtain NodeControlService");
+    }
+    rootsb = ncs.getRootServiceBroker();
+    sb.releaseService(this,  NodeControlService.class, ncs);
+    // advertise service
     _sfsp = new SFSP();
     _sfs = new SFS();
-    getServiceBroker().addService(SocketFactoryService.class, _sfsp);
+    rootsb.addService(SocketFactoryService.class, _sfsp);
   }
 
   public void unload() {
-    getServiceBroker().revokeService(SocketFactoryService.class, _sfsp);
+    if (rootsb != null) {
+      rootsb.revokeService(SocketFactoryService.class, _sfsp);
+    }
     _sfsp = null;
     _sfs = null;
     super.unload();
