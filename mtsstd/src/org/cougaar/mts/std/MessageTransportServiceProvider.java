@@ -37,7 +37,7 @@ import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.core.thread.ThreadServiceProvider;
-import org.cougaar.core.thread.PercentageLatencyPolicy;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;

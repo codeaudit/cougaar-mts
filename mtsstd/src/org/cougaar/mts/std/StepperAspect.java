@@ -33,7 +33,6 @@ import org.cougaar.core.component.Service;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.thread.CougaarThread;
 
 
 public final class StepperAspect 
@@ -410,7 +409,12 @@ public final class StepperAspect
 	    } else {
 		synchronized (lock) {
 		    widget.messageWait(msg);
-		    CougaarThread.wait(lock); 
+		    // We're now locking up one of the available
+		    // Threads!
+		    try {
+			lock.wait(); 
+		    } catch (InterruptedException ex) {
+		    }
 		}
 		widget.clearMessage();
 		super.dispatchNextMessage(msg);
