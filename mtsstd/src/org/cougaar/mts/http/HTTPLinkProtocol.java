@@ -49,15 +49,17 @@ import org.cougaar.core.service.ServletService;
 import org.cougaar.lib.web.service.RootServletService;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.LinkProtocol;
+import org.cougaar.mts.base.LinkProtocol; // javadoc only
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
+
 /**
- * There is no javadoc on this class.
+ * This {@link LinkProtocol} uses the Cougaar's {@link
+ * ServletService} (Tomcat) for communication via http.
  */
 public class HTTPLinkProtocol extends RPCLinkProtocol 
 {

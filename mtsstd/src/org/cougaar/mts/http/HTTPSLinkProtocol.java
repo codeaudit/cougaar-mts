@@ -25,8 +25,13 @@
 package org.cougaar.mts.http;
 
 import org.cougaar.core.service.ServletService;
+import org.cougaar.mts.base.LinkProtocol; // javadoc only
 import org.cougaar.mts.std.AttributedMessage;
 
+/**
+ * This {@link LinkProtocol} uses the Cougaar's {@link ServletService}
+ * (Tomcat) for communication via https (ssl).
+ */
 public class HTTPSLinkProtocol extends HTTPLinkProtocol {
   public HTTPSLinkProtocol() {
     super();

@@ -43,7 +43,7 @@ import org.omg.PortableServer.POAHelper;
 import java.net.URI;
 
 /**
- * This {@link LinkProtocol} use CORBA for communication.
+ * This {@link LinkProtocol} uses CORBA for communication.
  */
 public class CorbaLinkProtocol 
     extends RPCLinkProtocol
