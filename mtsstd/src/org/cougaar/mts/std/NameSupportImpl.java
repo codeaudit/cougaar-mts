@@ -270,6 +270,23 @@ public final class NameSupportImpl implements ServiceProvider
 	    }
 	}
 
+	/**
+	 * The naming db is all strings now.  Define an interface to
+	 * be used in a NamingIterator which can restore the proper
+	 * type (AddressCoercer is the only example so far)
+	 */
+	interface Coercer {
+	    Object coerce(String raw);
+	}
+
+	static class AddressCoercer implements Coercer {
+	    public Object coerce(String raw) {
+		return new MessageAddress(raw);
+	    }
+	}
+
+	static AddressCoercer addressCoercer = new AddressCoercer();
+
 
 	/**
 	 * Hides the messy details of a NamingEnumeration.  This version
@@ -278,10 +295,15 @@ public final class NameSupportImpl implements ServiceProvider
 	public class NamingIterator implements Iterator {
 	    private NamingEnumeration e;
 	    private String attribute;
+	    private Coercer coercer;
 
-	    NamingIterator(NamingEnumeration e, String attribute) {
+	    NamingIterator(NamingEnumeration e, 
+			   String attribute,
+			   Coercer coercer) 
+	    {
 		this.e = e;
 		this.attribute = attribute;
+		this.coercer = coercer;
 	    }
 
 	    public boolean hasNext() {
@@ -303,7 +325,12 @@ public final class NameSupportImpl implements ServiceProvider
 			return attrs;
 		    } else {
 			Attribute attr = attrs.get(attribute);
-			return attr != null ? attr.get() : null;
+			if (attr == null) return null;
+			Object raw = attr.get();
+			if (coercer != null) 
+			    return coercer.coerce((String) raw);
+			else
+			    return raw;
 		    }
 		} catch (NamingException ex) {
 		    loggingService.error(null, ex);
@@ -323,6 +350,8 @@ public final class NameSupportImpl implements ServiceProvider
 	private static final String[] MC_RETATTR = { ADDRESS_ATTR };
 
 
+	
+
 	public Iterator lookupMulticast(MulticastMessageAddress address) {
 	    try {
 		DirContext ctx = namingService.getRootContext();
@@ -330,7 +359,7 @@ public final class NameSupportImpl implements ServiceProvider
 						 MC_MATCH, 
 						 MC_RETATTR);
 		// Return an Iterator instead of the messy NamingEnumeration
-		return new NamingIterator(e, ADDRESS_ATTR);
+		return new NamingIterator(e, ADDRESS_ATTR, addressCoercer);
 	    } catch (NamingException ne) {
 		loggingService.error(null, ne);
 		return null;

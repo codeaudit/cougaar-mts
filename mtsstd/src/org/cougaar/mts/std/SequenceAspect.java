@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.service.LoggingService;
 
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -38,11 +39,17 @@ public class SequenceAspect extends StandardAspect
     private static int  count=1;
     private static final String SEQ = 
 	"org.cougaar.message.transport.sequencenumber";
+    private static final String SEQ_SEND_MAP_ATTR =
+	"org.cougaar.message.transport.sequence.send";
+    private static final String SEQ_RECV_MAP_ATTR =
+	"org.cougaar.message.transport.sequence.recv";
+
     private static final Integer ONE = new Integer(1);
     private static final Integer TWO = new Integer(2);
 
-
     
+    private static Comparator comparator = new MessageComparator();
+
     public SequenceAspect() {
 	
     }
@@ -77,9 +84,30 @@ public class SequenceAspect extends StandardAspect
 	extends SendLinkDelegateImplBase 
     {
 	HashMap sequenceNumbers;
+
 	private SequencedSendLink(SendLink link) {
 	    super(link);
-	    sequenceNumbers = new HashMap();
+	}
+
+
+	// This can't be done in the constructor, since that runs when
+	// the client first requests the MessageTransportService (too
+	// early).  Wait for registration.
+	public synchronized void registerClient(MessageTransportClient client)
+	{
+	    super.registerClient(client);
+
+	    MessageAddress myAddress = getAddress();
+	    AgentState myState = getRegistry().getAgentState(myAddress);
+	    
+	    synchronized (myState) {
+		sequenceNumbers = (HashMap)
+		    myState.getAttribute(SEQ_SEND_MAP_ATTR);
+		if (sequenceNumbers == null) {
+		    sequenceNumbers = new HashMap();
+		    myState.setAttribute(SEQ_SEND_MAP_ATTR, sequenceNumbers);
+		}
+	    }
 	}
 
 	private Integer nextSeq(AttributedMessage msg) {
@@ -104,7 +132,9 @@ public class SequenceAspect extends StandardAspect
 	}
     }
 
-    private static class MessageComparator implements Comparator{
+    private static class MessageComparator 
+	implements Comparator, java.io.Serializable
+    {
 	public int compare(Object msg1, Object msg2){
 	    int seq1 = getSequenceNumber(msg1);
 	    int seq2 = getSequenceNumber(msg2);
@@ -122,25 +152,30 @@ public class SequenceAspect extends StandardAspect
 
     }
 
-    private class SequencedReceiveLink extends ReceiveLinkDelegateImplBase {
-	HashMap conversationState;
-
-	private class ConversationState {
+	private static class ConversationState
+	    implements java.io.Serializable 
+	{
 	    int nextSeqNum;
 	    TreeSet heldMessages;
 
 	    public  ConversationState (){
 		nextSeqNum = 1;
-		heldMessages = new TreeSet(new MessageComparator());
+		heldMessages = new TreeSet(comparator);
 	    }
 
-	    private void stripAndDeliver(AttributedMessage  message){
+	    private void stripAndDeliver(AttributedMessage  message,
+					SequencedReceiveLink link)
+	    {
 		// message.removeAttribute(SEQ);
-		superDeliverMessage(message);
+		link.superDeliverMessage(message);
 		nextSeqNum++;
 	    }
      
-	    private MessageAttributes handleNewMessage(AttributedMessage message) {
+	    private MessageAttributes handleNewMessage
+		(AttributedMessage message,
+		 SequencedReceiveLink link,
+		 LoggingService loggingService)
+	    {
 		MessageAttributes meta = new SimpleMessageAttributes();
 		String delivery_status = null;
 		int msgSeqNum = getSequenceNumber(message);
@@ -157,7 +192,7 @@ public class SequenceAspect extends StandardAspect
 		    delivery_status =
 			MessageAttributes.DELIVERY_STATUS_DROPPED_DUPLICATE;
 		} else  if (nextSeqNum == msgSeqNum) {
-		    stripAndDeliver(message);
+		    stripAndDeliver(message, link);
 		    Iterator itr  = heldMessages.iterator();
 		    while (itr.hasNext()) {
 			AttributedMessage next = 
@@ -166,7 +201,7 @@ public class SequenceAspect extends StandardAspect
 			    if (loggingService.isDebugEnabled())
 				loggingService.debug("delivered held message" 
 						     + next); 
-			    stripAndDeliver(next);
+			    stripAndDeliver(next, link);
 			    itr.remove();
 			}
 		    }//end while
@@ -189,9 +224,23 @@ public class SequenceAspect extends StandardAspect
 	}
 
 
+    private class SequencedReceiveLink extends ReceiveLinkDelegateImplBase {
+	HashMap conversationState;
+
 	private SequencedReceiveLink(ReceiveLink link) {
 	    super(link);
-	    conversationState = new HashMap();
+
+	    MessageAddress myAddress = getClient().getMessageAddress();
+	    AgentState myState = getRegistry().getAgentState(myAddress);
+	    synchronized (myState) {
+		conversationState = (HashMap)
+		    myState.getAttribute(SEQ_RECV_MAP_ATTR);
+		if (conversationState == null) {
+		    conversationState = new HashMap();
+		    myState.setAttribute(SEQ_RECV_MAP_ATTR, conversationState);
+		}
+	    }
+	    // conversationState = new HashMap();
 	}
 
 	private void superDeliverMessage(AttributedMessage message) {
@@ -209,7 +258,8 @@ public class SequenceAspect extends StandardAspect
 		    conversationState.put (src, conversation);
 		}
 	     
-		return conversation.handleNewMessage(message);
+		return conversation.handleNewMessage(message, this,
+						     loggingService);
 	    }
 	    else {
 		if (loggingService.isErrorEnabled())

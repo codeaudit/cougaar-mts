@@ -72,5 +72,10 @@ abstract public class SendLinkDelegateImplBase
 	return link.addressKnown(address);
     }
 
+
+    public AgentState getAgentState() {
+	return link.getAgentState();
+    }
+
 }
 

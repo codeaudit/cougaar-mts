@@ -73,6 +73,7 @@ final class MessageTransportRegistry
     
 	private String name;
 	private HashMap receiveLinks = new HashMap(89);
+	private HashMap agentStates = new HashMap();
 	private ArrayList linkProtocols = new ArrayList();
 	private ReceiveLinkProviderService receiveLinkProvider;
 	private NameSupport nameSupport;
@@ -82,23 +83,21 @@ final class MessageTransportRegistry
 	private ServiceImpl(String name, ServiceBroker sb) {
 	    this.name = name;
 	    this.sb = sb;
-	    loggingService = 
-		(LoggingService) sb.getService(this, LoggingService.class, null);
+	    loggingService = (LoggingService) 
+		sb.getService(this, LoggingService.class, null);
 	}
 
 	private NameSupport nameSupport() {
 	    if (nameSupport == null) 
-		nameSupport = (NameSupport) sb.getService(this, 
-							  NameSupport.class,
-							  null);
+		nameSupport = (NameSupport) 
+		    sb.getService(this, NameSupport.class, null);
 	    return nameSupport;
 	}
 
 
 	private ReceiveLink makeReceiveLink(MessageTransportClient client) {
 	    if (receiveLinkProvider == null) {
-		receiveLinkProvider =
-		    (ReceiveLinkProviderService) 
+		receiveLinkProvider = (ReceiveLinkProviderService) 
 		    sb.getService(this, 
 				  ReceiveLinkProviderService.class,
 				  null);
@@ -156,6 +155,9 @@ final class MessageTransportRegistry
 	}
 
 
+	public boolean hasLinkProtocols() {
+	    return linkProtocols.size() > 0;
+	}
 
 	public void addLinkProtocol(LinkProtocol lp) {
 	    linkProtocols.add(lp);
@@ -166,6 +168,25 @@ final class MessageTransportRegistry
 	    return name;
 	}
 
+
+	public synchronized AgentState getAgentState(MessageAddress id) {
+	    Object raw =  agentStates.get(id);
+	    if (raw == null) {
+		AgentState state = new SimpleMessageAttributes();
+		agentStates.put(id, state);
+		return state;
+	    } else if (raw instanceof AgentState) {
+		return (AgentState) raw;
+	    } else {
+		throw new RuntimeException("Cached state for " +id+
+					   "="  +raw+ 
+					   " which is not an AgentState instance");
+	    }
+	}
+
+	public synchronized void removeAgentState(MessageAddress id) {
+	    agentStates.remove(id);
+	}
 
 	public boolean isLocalClient(MessageAddress id) {
 	    synchronized (this) {

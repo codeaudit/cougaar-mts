@@ -21,22 +21,27 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
+import java.io.Serializable;
 
-/**
- * A cost-based selection policy that chooses the cheapest link.  */
-abstract public class AbstractLinkSelectionPolicy 
-    extends BoundComponent
-    implements LinkSelectionPolicy
+public interface Attributes extends Serializable, AttributeConstants
 {
+ 
+    Object getAttribute(String attribute);
 
-    public void load() {
-	super.load();
+    void setAttribute(String attribute, Object value);
+    void removeAttribute(String attribute);
+    void addValue(String attribute, Object value);
+    void pushValue(String attribute, Object value);
+    void removeValue(String attribute, Object value);
 
-	ServiceBroker sb = getServiceBroker();
-	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
-	    sb.getService(this, LinkSelectionProvisionService.class, null);
-	lsp.setPolicy(this);
-    }
-	
+    void setLocalAttribute(String attribute, Object value);
+    void removeLocalAttribute(String attribute);
+    void addLocalValue(String attribute, Object value);
+    void pushLocalValue(String attribute, Object value);
+    void removeLocalValue(String attribute, Object value);
+
+    Attributes cloneAttributes();
+    void clearAttributes();
+    void mergeAttributes(Attributes attributes);
+
 }

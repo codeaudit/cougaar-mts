@@ -35,5 +35,8 @@ public interface SendLink
     void unregisterClient(MessageTransportClient client);
     String getIdentifier();
     boolean addressKnown(MessageAddress a);
+
+    AgentState getAgentState();
+
 }
 

@@ -21,25 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import java.io.Serializable;
 
-public interface MessageAttributes extends Serializable, AttributeConstants
+public interface MessageAttributes extends Attributes
 {
  
-    Object getAttribute(String attribute);
-
-    void setAttribute(String attribute, Object value);
-    void removeAttribute(String attribute);
-    void addValue(String attribute, Object value);
-    void pushValue(String attribute, Object value);
-    void removeValue(String attribute, Object value);
-
-    void setLocalAttribute(String attribute, Object value);
-    void removeLocalAttribute(String attribute);
-    void addLocalValue(String attribute, Object value);
-    void pushLocalValue(String attribute, Object value);
-    void removeLocalValue(String attribute, Object value);
-
-    MessageAttributes cloneAttributes();
 
 }

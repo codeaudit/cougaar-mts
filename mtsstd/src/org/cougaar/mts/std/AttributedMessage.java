@@ -100,7 +100,8 @@ public class AttributedMessage
 	      contents == null ? null : contents.getTarget());
 	this.contents = contents;
 	if (initialAttributes != null)
-	    attributes = initialAttributes.cloneAttributes();
+	    attributes = (MessageAttributes) 
+		initialAttributes.cloneAttributes();
 	else
 	    attributes = new SimpleMessageAttributes();
 	attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
@@ -117,7 +118,8 @@ public class AttributedMessage
     {
 	super(msg.getOriginator(), msg.getTarget());
 	this.contents = msg.contents;
-	attributes = msg.attributes.cloneAttributes();
+	attributes = (MessageAttributes)
+	    msg.attributes.cloneAttributes();
     }
 
 
@@ -129,7 +131,8 @@ public class AttributedMessage
     {
 	super(source.getTarget(), source.getOriginator());
 	this.contents = null;
-	attributes = source.attributes.cloneAttributes();
+	attributes = (MessageAttributes)
+	    source.attributes.cloneAttributes();
     }
 
 
@@ -146,12 +149,13 @@ public class AttributedMessage
 	super(contents == null ? null : contents.getOriginator(), 
 	      contents == null ? null : contents.getTarget());
 	this.contents = contents;
-	attributes = initialAttributes.attributes.cloneAttributes();
+	attributes = (MessageAttributes)
+	    initialAttributes.attributes.cloneAttributes();
     }
 
 
     synchronized void snapshotAttributes() {
-	snapshot = attributes.cloneAttributes();
+	snapshot = (MessageAttributes) attributes.cloneAttributes();
     }
 
     
@@ -187,7 +191,7 @@ public class AttributedMessage
     // Delegate all calls 
 
 
-    public MessageAttributes cloneAttributes() {
+    public Attributes cloneAttributes() {
 	return attributes.cloneAttributes();
     }
 
@@ -237,6 +241,16 @@ public class AttributedMessage
     public void removeLocalValue(String attribute, Object value) {
 	attributes.removeLocalValue(attribute, value);
     }
+
+    public void clearAttributes() {
+	attributes.clearAttributes();
+    }
+
+    public void mergeAttributes(Attributes attributes) {
+	this.attributes.mergeAttributes(attributes);
+    }
+
+
 
 
     private void sendAttributes(ObjectOutput out) 

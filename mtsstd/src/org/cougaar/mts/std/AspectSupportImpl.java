@@ -25,6 +25,7 @@ package org.cougaar.core.mts;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
@@ -85,45 +86,58 @@ final class AspectSupportImpl implements ServiceProvider
 
 
 
-    private class ServiceImpl implements AspectSupport, DebugFlags
+    private class ServiceImpl 
+	implements AspectSupport, DebugFlags
     {
 
 	private ArrayList aspects;
+	private ArrayList aspect_classnames;
 	private HashMap aspects_table;
 	private Container container;
 	private LoggingService loggingService;
 
 
-	private ServiceImpl(Container container, LoggingService loggingService) {
+	private ServiceImpl(Container container,
+			    LoggingService loggingService) 
+	{
 	    aspects = new ArrayList();
+	    aspect_classnames = new ArrayList();
 	    aspects_table = new HashMap();
 	    this.container = container;
 	    this.loggingService = loggingService;
 	}
     
  
+	private void loadAspectClass(String classname) {
+	    MessageTransportAspect aspect = findAspect(classname);
+	    if (aspect != null && loggingService.isErrorEnabled()) {
+		loggingService.error("Ignoring duplicate aspect "+
+				     classname);
+		return;
+	    }
+	    try {
+		Class aspectClass = Class.forName(classname);
+		aspect =(MessageTransportAspect) aspectClass.newInstance();
+		container.add(aspect);
+	    }
+	    catch (Exception ex) {
+		loggingService.error(null, ex);
+	    }
+	}
+
 	public void readAspects() {
+	    Iterator itr = aspect_classnames.iterator();
+	    while (itr.hasNext()) {
+		String classname = (String) itr.next();
+		loadAspectClass(classname);
+	    }
+
 	    String classes = System.getProperty(ASPECTS_PROPERTY);
-
 	    if (classes == null) return;
-
 	    StringTokenizer tokenizer = new StringTokenizer(classes, ",");
 	    while (tokenizer.hasMoreElements()) {
 		String classname = tokenizer.nextToken();
-		MessageTransportAspect aspect = findAspect(classname);
-		if (aspect != null && loggingService.isErrorEnabled()) {
-		    loggingService.error("Ignoring duplicate aspect "+
-					      classname);
-		    continue;
-		}
-		try {
-		    Class aspectClass = Class.forName(classname);
-		    aspect =(MessageTransportAspect) aspectClass.newInstance();
-		    addAspect(aspect);
-		}
-		catch (Exception ex) {
-		    loggingService.error(null, ex);
-		}
+		loadAspectClass(classname);
 	    }
 	}
 
@@ -139,7 +153,6 @@ final class AspectSupportImpl implements ServiceProvider
 	public void addAspect(MessageTransportAspect aspect)
 	{
 	    String classname = aspect.getClass().getName();
-	    container.add(aspect);
 	    synchronized (this) {
 		aspects.add(aspect);
 		aspects_table.put(classname, aspect);

@@ -45,6 +45,7 @@ abstract public class LinkProtocol
 {
     private MessageDeliverer deliverer;
     
+
     protected class ServiceProxy 
 	implements LinkProtocolService
     {
@@ -94,6 +95,7 @@ abstract public class LinkProtocol
     
 
     protected LinkProtocol() {
+	// System.out.println("Made LinkProtocol " +this);
     }
 
     protected MessageDeliverer getDeliverer() {
@@ -109,6 +111,7 @@ abstract public class LinkProtocol
     // Allow subclasses to provide their own load()
     protected void super_load() {
 	super.load();
+	getRegistry().addLinkProtocol(this);
     }
 
     public void load() {

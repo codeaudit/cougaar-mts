@@ -20,6 +20,7 @@
  */
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.ServiceBroker;
 
 /**
  * Default base Aspect class, which will accept any transport at any
@@ -29,6 +30,19 @@ abstract public class StandardAspect
     extends BoundComponent
     implements MessageTransportAspect
 {
+
+    public void load() {
+	super.load();
+	
+	ServiceBroker sb = getServiceBroker();
+	AspectSupport aspectSupport = (AspectSupport)
+	    sb.getService(this, AspectSupport.class, null);
+	if (aspectSupport != null) {
+	    aspectSupport.addAspect(this);
+	}
+    }
+	
+
 
     public Object getDelegate(Object delegate, Class type) 
     {

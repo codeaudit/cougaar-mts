@@ -24,10 +24,14 @@ package org.cougaar.core.mts;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Map;
 
+// Despite the name, this is the standard implementation of
+// Attributes, not just MessageAttributes.
 public class SimpleMessageAttributes    
-    implements MessageAttributes, Serializable
+    implements MessageAttributes, AgentState, Serializable
 {
     private HashMap data;
     private transient HashMap local_data;
@@ -37,6 +41,24 @@ public class SimpleMessageAttributes
 	local_data = new HashMap();
     }
 
+
+    private void dumpMap(HashMap map) {
+	Iterator itr = map.entrySet().iterator();
+	while (itr.hasNext()) {
+	    Map.Entry entry = (Map.Entry) itr.next();
+	    String key = (String) entry.getKey();
+	    Object value = entry.getValue();
+	    System.out.println(key +"->"+ value);
+	}
+    }
+
+    public void listAttributes() {
+	System.out.println("Attributes");
+	dumpMap(data);
+	System.out.println("\nTransient attributes");
+	dumpMap(local_data);
+    }
+	
 
     private void readObject(ObjectInputStream ois)
 	throws java.io.IOException, ClassNotFoundException
@@ -48,11 +70,46 @@ public class SimpleMessageAttributes
 
     // MessageAttributes interface
 
-    public MessageAttributes cloneAttributes() {
+    public Attributes cloneAttributes() {
 	SimpleMessageAttributes clone = new SimpleMessageAttributes();
 	clone.data.putAll(data);
 	clone.local_data.putAll(local_data);
 	return clone;
+    }
+
+    public void clearAttributes() {
+	data.clear();
+	local_data.clear();
+    }
+
+    public void mergeAttributes(Attributes attributes) {
+	if (!(attributes instanceof SimpleMessageAttributes)) {
+	    throw new RuntimeException("SimpleMessageAttributes cannot merge wih " 
+				       + attributes);
+	}
+
+	SimpleMessageAttributes attrs = (SimpleMessageAttributes) attributes;
+	merge(data, attrs.data);
+	merge(local_data, attrs.local_data);
+    }
+
+    private void merge(HashMap current, HashMap merge) {
+	Iterator itr = merge.entrySet().iterator();
+	while (itr.hasNext()) {
+	    Map.Entry entry = (Map.Entry) itr.next();
+	    String key = (String) entry.getKey();
+	    Object value = entry.getValue();
+	    if (value instanceof ArrayList) {
+		Iterator i2 = ((ArrayList) value).iterator();
+		while (i2.hasNext()) addValue(key, i2.next(), current);
+	    } else if (current.get(key) == null) {
+		// Don't make the merged value into a List if there's
+		// no current value.
+		setAttribute(key, value, current);
+	    } else {
+		addValue(key, value, current);
+	    }
+	}
     }
 
 

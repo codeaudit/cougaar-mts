@@ -21,22 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.Service;
 
-/**
- * A cost-based selection policy that chooses the cheapest link.  */
-abstract public class AbstractLinkSelectionPolicy 
-    extends BoundComponent
-    implements LinkSelectionPolicy
+public interface LinkSelectionProvisionService extends Service
 {
-
-    public void load() {
-	super.load();
-
-	ServiceBroker sb = getServiceBroker();
-	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
-	    sb.getService(this, LinkSelectionProvisionService.class, null);
-	lsp.setPolicy(this);
-    }
-	
+    void setPolicy(LinkSelectionPolicy policy);
+    LinkSelectionPolicy getPolicy();
 }

@@ -75,6 +75,7 @@ final public class SendLinkImpl
     }
 
     public void release() {
+	registry.removeAgentState(addr);
 	sendq = null;
 	registry = null;
     }
@@ -95,7 +96,7 @@ final public class SendLinkImpl
 	
     /**
      * Redirects the request to the MessageTransportRegistry. */
-    public synchronized void registerClient(MessageTransportClient client) {
+    public void registerClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
 	registry.registerClient(client);
     }
@@ -103,9 +104,14 @@ final public class SendLinkImpl
 
     /**
      * Redirects the request to the MessageTransportRegistry. */
-    public synchronized void unregisterClient(MessageTransportClient client) {
+    public void unregisterClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
-	registry.unregisterClient(client);
+
+	// The synchronization is to prevent a race condition with the
+	// deliverMessage() method of MessageDelivererImpl.
+	synchronized (registry) {
+	    registry.unregisterClient(client);
+	}
 
 	// NB: The proxy (as opposed to the client) CANNOT be
 	// unregistered here.  If it were, messageDelivered callbacks
@@ -125,6 +131,10 @@ final public class SendLinkImpl
      * Redirects the request to the MessageTransportRegistry. */
     public boolean addressKnown(MessageAddress a) {
 	return registry.addressKnown(a);
+    }
+
+    public AgentState getAgentState() {
+	return registry.getAgentState(addr);
     }
 
 }

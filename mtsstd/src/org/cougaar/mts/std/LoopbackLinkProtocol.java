@@ -26,7 +26,7 @@ import java.util.HashMap;
 
 /**
  * This protocol handles all intra-node message traffic.   */
-class LoopbackLinkProtocol 
+public class LoopbackLinkProtocol 
     extends LinkProtocol
 {
 

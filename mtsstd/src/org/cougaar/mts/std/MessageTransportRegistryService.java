@@ -38,6 +38,7 @@ public interface MessageTransportRegistryService extends Service
     // public void setReceiveLinkFactory(ReceiveLinkFactory receiveLinkFactory);
 
     void addLinkProtocol(LinkProtocol lp);
+    boolean hasLinkProtocols(); // only useful for the LinkProtocolFactory
     String getIdentifier();
     boolean isLocalClient(MessageAddress id);
     ReceiveLink findLocalReceiveLink(MessageAddress id);
@@ -48,4 +49,6 @@ public interface MessageTransportRegistryService extends Service
     void registerMTS(MessageTransportClient client);
     boolean addressKnown(MessageAddress address);
     ArrayList getDestinationLinks(MessageAddress destination);
+    AgentState getAgentState(MessageAddress agent);
+    void removeAgentState(MessageAddress agent);
 }

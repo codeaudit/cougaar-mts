@@ -24,18 +24,22 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.BinderFactory;
 import org.cougaar.core.component.BindingSite;
+import org.cougaar.core.component.ComponentDescriptions;
 import org.cougaar.core.component.ContainerSupport;
 import org.cougaar.core.component.ContainerAPI;
 import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.StateObject;
+import org.cougaar.core.node.InitializerService;
+import org.cougaar.core.node.NodeControlService;
+import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.ThreadControlService;
-import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
+import org.cougaar.core.service.ThreadControlService;
+import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.ThreadServiceProvider;
 
 
@@ -86,8 +90,7 @@ public final class MessageTransportServiceProvider
 
 
 
-    public MessageTransportServiceProvider(String id) {
-        this.id = id;
+    public MessageTransportServiceProvider() {
 	proxies = new HashMap();
 	BinderFactory bf = new MTSBinderFactory();
 	if (!attachBinderFactory(bf)) {
@@ -124,39 +127,12 @@ public final class MessageTransportServiceProvider
     }
 
 
-    private void createAspectSupport() {
+    private void loadAspects() {
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
 
-	AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
-	sb.addService(AspectSupport.class, impl);
 	aspectSupport = 
 	    (AspectSupport) sb.getService(this, AspectSupport.class, null);
-
-	// Do the standard set first, since they're assumed to be more
-	// generic than the user-specified set.
-
-	// For the MessageWatcher service
-	watcherAspect =  new WatcherAspect();
-	aspectSupport.addAspect(watcherAspect);
-
-	// Keep track of Agent state
-	agentStatusAspect =  new AgentStatusAspect();
-	aspectSupport.addAspect(agentStatusAspect);
-
-	// Handling multicast messages
-	aspectSupport.addAspect(new MulticastAspect());
-
-	// Handling flushMessage();
-        if ("false".equalsIgnoreCase(
-              System.getProperty(USE_NEW_FLUSH, "true")))
-	    aspectSupport.addAspect(new FlushAspect());
-
-        // Traffic Masking Generator
-        // aspectSupport.addAspect(new TrafficMaskingGeneratorAspect());
-        
-
-	// Now read user-supplied aspects
 	aspectSupport.readAspects();
     }
 
@@ -172,7 +148,7 @@ public final class MessageTransportServiceProvider
 	
 
 	LinkSelectionPolicyServiceProvider lspsp =
-	    new LinkSelectionPolicyServiceProvider(loggingService, this);
+	    new LinkSelectionPolicyServiceProvider(sb, this);
 	sb.addService(LinkSelectionPolicy.class, lspsp);
 	
 	DestinationQueueFactory	destQFactory = 
@@ -226,32 +202,100 @@ public final class MessageTransportServiceProvider
     }
 
 
+    protected ComponentDescriptions findExternalComponentDescriptions() {
+	ServiceBroker sb = getServiceBroker();
+	InitializerService is = (InitializerService) 
+	    sb.getService(this, InitializerService.class, null);
+	try {
+	    String cp = specifyContainmentPoint();
+	    return new ComponentDescriptions(is.getComponentDescriptions(id,cp));
+	} catch (org.cougaar.core.node.InitializerServiceException e) {
+	    if (loggingService.isInfoEnabled()) {
+		loggingService.info("\nUnable to add "+id+"'s plugins ",e);
+	    }
+	    return null;
+	} finally {
+	    sb.releaseService(this, InitializerService.class, is);
+	}
+    }
+
+
     public void initialize() {
-        super.initialize();
-
-        ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
-
+	super.initialize();
+	ServiceBroker sb = getServiceBroker();
+	NodeIdentificationService nis = (NodeIdentificationService)
+	    sb.getService(this, NodeIdentificationService.class, null);
+	id = nis.getNodeIdentifier().toString();
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
 	AttributedMessage.setLoggingService(loggingService);
 	Debug.load(loggingService);
+    }
 
-	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
-	tsp.provideServices(sb);
-	
+    public void loadHighPriorityComponents() {
+	super.loadHighPriorityComponents();
+
+	ServiceBroker sb = getServiceBroker();
+
+	AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
+	sb.addService(AspectSupport.class, impl);
+
+	// Do the standard set first, since they're assumed to be more
+	// generic than the user-specified set.
+
+	// For the MessageWatcher service
+	watcherAspect =  new WatcherAspect();
+	add(watcherAspect);
+
+	// Keep track of Agent state
+	agentStatusAspect =  new AgentStatusAspect();
+	add(agentStatusAspect);
+
+	// Handling multicast messages
+	add(new MulticastAspect());
+
+	// Handling flushMessage();
+        if ("false".equalsIgnoreCase(
+              System.getProperty(USE_NEW_FLUSH, "true")))
+	    add(new FlushAspect());
+
+	// could do this as a ComponentDescription
+// 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
+// 	tsp.provideServices(sb);
+
+	// Could use a ComponentDescription
+	ThreadServiceProvider tsp = new ThreadServiceProvider();
+	tsp.setParameter("name=MTS");
+	add(tsp);
+
+
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);
 
-	MessageTransportRegistryService registry = 
-	    (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class,  null);
+	LinkSelectionProvision lsp = new LinkSelectionProvision();
+	sb.addService(LinkSelectionProvisionService.class, lsp);
 
-	createAspectSupport();
+   }
+
+    // CSMART Aspects (INTERNAL priority) will load between
+    // HighPriority and ComponentPriority.  CSMART LinkProtocols and
+    // LinkSelectionPolicys (COMPONENT priority) will load in the
+    // super.loadComponentPriorityComponents
+
+    public void loadComponentPriorityComponents() {
+	// CSMART LinkProtocols will be loaded in the super,
+        super.loadComponentPriorityComponents();
+
+	// backward compatibility for -D option
+	loadAspects(); 
+
+	// The rest of the services depend on aspects.
         createNameSupport(id);
 	createFactories();
 
-	// The MTS itself as a client
+        ServiceBroker sb = getServiceBroker();
+
 	NameSupport nameSupport = 
 	    (NameSupport) 
 	    sb.getService(this, NameSupport.class, null);
@@ -259,10 +303,22 @@ public final class MessageTransportServiceProvider
 
 	// MessageTransportService isn't available at this point, so
 	// do the calls manually (ugh).
+	MessageTransportRegistryService registry = 
+	    (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class,  null);
 	MessageTransportService svc = 
 	    (MessageTransportService) findOrMakeProxy(this);
 	svc.registerClient(this);
 	registry.registerMTS(this);
+
+
+	NodeControlService ncs = (NodeControlService)
+	    sb.getService(this, NodeControlService.class, null);
+	ServiceBroker rootsb = ncs.getRootServiceBroker();
+	rootsb.addService(MessageTransportService.class, this);
+	rootsb.addService(MessageStatisticsService.class, this);
+	rootsb.addService(MessageWatcherService.class, this);
+	rootsb.addService(AgentStatusService.class, this);
     }
 
 
@@ -333,7 +389,7 @@ public final class MessageTransportServiceProvider
 
     // We're not using this yet but leave it in anyway.
     protected String specifyContainmentPoint() {
-	return "Node.MessageTransport";
+	return "Node.AgentManager.Agent.MessageTransport";
     }
 
     public void requestStop() {}

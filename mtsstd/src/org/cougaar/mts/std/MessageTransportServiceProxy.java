@@ -89,6 +89,10 @@ public class MessageTransportServiceProxy
 
 
 
+    public AgentState getAgentState() {
+	return link.getAgentState();
+    }
+
 
     /**
      * Redirects the request to the MessageTransportRegistry. */

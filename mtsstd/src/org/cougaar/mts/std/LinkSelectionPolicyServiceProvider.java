@@ -42,11 +42,15 @@ public class LinkSelectionPolicyServiceProvider
     private LinkSelectionPolicy policy;
     private LoggingService loggingService;
 
-    LinkSelectionPolicyServiceProvider(LoggingService loggingService,
+    LinkSelectionPolicyServiceProvider(ServiceBroker sb,
 				       Container container) 
     {
-	policy = createSelectionPolicy(container);
-	this.loggingService = loggingService;
+	loggingService = (LoggingService)
+	    sb.getService(this, LoggingService.class, null);
+	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
+	    sb.getService(this, LinkSelectionProvisionService.class, null);
+	if (policy == null) createSelectionPolicy(container);
+	policy = lsp.getPolicy();
     }
 
 

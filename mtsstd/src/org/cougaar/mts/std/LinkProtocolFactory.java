@@ -44,26 +44,19 @@ final class LinkProtocolFactory
     private static final String CLASSES_PROPERTY =
 	"org.cougaar.message.protocol.classes";
 
-    private MessageTransportRegistryService registry;
-    private NameSupport nameSupport;
     private LoggingService loggingService;
     private Container container;
 
     LinkProtocolFactory(Container container, ServiceBroker sb)
     {
-	registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
-	nameSupport = (NameSupport)
-	    sb.getService(this, NameSupport.class, null);
 	loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
 	this.container = container;
-	loadProtocols();
+	loadProtocols(sb);
     }
 
 
     private void initProtocol(LinkProtocol protocol) {
-	registry.addLinkProtocol(protocol);
 	container.add(protocol);
     }
 
@@ -82,9 +75,16 @@ final class LinkProtocolFactory
 	return protocol;
     }
 
-    private void loadProtocols() {
+    private void loadProtocols(ServiceBroker sb) {
 	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
 	if (protocol_classes == null || protocol_classes.equals("")) {
+
+	    MessageTransportRegistryService reg =(MessageTransportRegistryService)
+		sb.getService(this, MessageTransportRegistryService.class, null);
+	    // If any Protocols are already loaded (via CSMART), don't
+	    // make the standard ones.
+	    if (reg.hasLinkProtocols()) return;
+
 	    // Make the two standard protocols if none specified.
 	    LinkProtocol protocol =new LoopbackLinkProtocol();
 	    initProtocol(protocol);
