@@ -58,7 +58,6 @@ import java.util.HashMap;
 public class RMILinkProtocol 
     extends LinkProtocol
 {
-    public static final String PROTOCOL_TYPE = "-RMI";
 
     // private MessageAddress myAddress;
     private MT myProxy;
@@ -68,20 +67,29 @@ public class RMILinkProtocol
     public RMILinkProtocol(String id, AspectSupport aspectSupport) {
 	super(aspectSupport); 
 	links = new HashMap();
-	socfac = new SocketFactory();
-// 	try {
-// 	    RMISocketFactory.setSocketFactory(socfac);
-// 	}
-// 	catch (java.io.IOException ex) {
-// 	    ex.printStackTrace();
-// 	}
+	socfac = getSocketFactory();
+    }
+
+
+    protected String getProtocolType() {
+	return "-RMI";
+    }
+
+    protected SocketFactory getSocketFactory() {
+	return new SocketFactory(false);
+    }
+
+
+    // If this is called, we've already found the remote reference.
+    protected int computeCost(Message message) {
+	return 1000;
     }
 
 
 
     private MT lookupRMIObject(MessageAddress address) throws Exception {
 	Object object = 
-	    nameSupport.lookupAddressInNameServer(address, PROTOCOL_TYPE);
+	    nameSupport.lookupAddressInNameServer(address, getProtocolType());
 
 	if (object == null) {
 	    return null;
@@ -113,7 +121,8 @@ public class RMILinkProtocol
 	makeMT();
 	try {
 	    Object proxy = myProxy;
-	    nameSupport.registerAgentInNameServer(proxy,addr,PROTOCOL_TYPE);
+	    nameSupport.registerAgentInNameServer(proxy,addr,
+						  getProtocolType());
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
 	    e.printStackTrace();
@@ -125,7 +134,8 @@ public class RMILinkProtocol
 	    // Assume node-redirect
 	    Object proxy = myProxy;
 	    MessageAddress addr = client.getMessageAddress();
-	    nameSupport.registerAgentInNameServer(proxy,addr,PROTOCOL_TYPE);
+	    nameSupport.registerAgentInNameServer(proxy,addr,
+						  getProtocolType());
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
 	    e.printStackTrace();
@@ -138,7 +148,8 @@ public class RMILinkProtocol
 	    // Assume node-redirect
 	    Object proxy = myProxy;
 	    MessageAddress addr = client.getMessageAddress();
-	    nameSupport.unregisterAgentInNameServer(proxy,addr,PROTOCOL_TYPE);
+	    nameSupport.unregisterAgentInNameServer(proxy,addr,
+						    getProtocolType());
 	} catch (Exception e) {
 	    System.err.println("Error unregistering MessageTransport:");
 	    e.printStackTrace();
@@ -156,8 +167,6 @@ public class RMILinkProtocol
 	}
 	return false;
     }
-
-
 
 
     // Factory methods:
@@ -189,20 +198,14 @@ public class RMILinkProtocol
     }
 
 
-
-
-
-    /**
-     * The DestinationLink class for this transport.  Forwarding a
-     * message with this link means looking up the MT proxy for a
-     * remote MTImpl, and calling rerouteMessage on it.  The cost is
-     * currently hardwired at an arbitrary value of 1000. */
-    class Link implements DestinationLink {
+    class Link implements DestinationLink
+    {
 	
 	private MessageAddress target;
 	private MT remote;
 
-	Link(MessageAddress destination) {
+	protected Link(MessageAddress destination)
+	{
 	    this.target = destination;
 	}
 
@@ -229,14 +232,14 @@ public class RMILinkProtocol
 
     
 	public Class getProtocolClass() {
-	    return RMILinkProtocol.class;
+	    return RMILinkProtocol.this.getClass();
 	}
 	
 
 	public int cost (Message message) {
 	    try {
 		cacheRemote();
-		return 1000;
+		return computeCost(message);
 	    }
 	    catch (Exception ex) {
 		// not found
@@ -268,8 +271,8 @@ public class RMILinkProtocol
 		throw new CommFailureException(ex);
 	    }
 	}
+
     }
 
-
 }
-   
+

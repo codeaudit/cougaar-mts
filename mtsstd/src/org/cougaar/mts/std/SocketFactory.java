@@ -27,6 +27,8 @@ import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLServerSocketFactory;
 
 
 /**
@@ -47,9 +49,10 @@ public class SocketFactory
     // happens.  Instead, this instance variable will be grabbed from
     // the singleton on the fly, vie ensureAspects.
     private transient AspectSupport aspectSupport;
+    private boolean use_ssl;
 
-    public SocketFactory() {
-	
+    public SocketFactory(boolean use_ssl) {
+	this.use_ssl = use_ssl;
     }
 
     private void ensureAspects() {
@@ -61,7 +64,17 @@ public class SocketFactory
 	throws IOException, UnknownHostException 
     {
 	ensureAspects();
-	Socket s = new Socket(host, port);
+	Socket s = null;
+	if (use_ssl) {
+	    try {
+		s = SSLSocketFactory.getDefault().createSocket(host, port);
+	    } catch (IOException ex) {
+		ex.printStackTrace();
+		return null;
+	    }
+	} else {
+	    s = new Socket(host, port);
+	}
 	s = (Socket) aspectSupport.attachAspects(s, Socket.class);
 	return s;
     }
@@ -71,7 +84,17 @@ public class SocketFactory
     {
 	ensureAspects();
 	// return getDefaultSocketFactory().createServerSocket(port);
-	ServerSocket s = new ServerSocket(port);
+	ServerSocket s = null;
+	if (use_ssl) {
+	    try {
+		s=SSLServerSocketFactory.getDefault().createServerSocket(port);
+	    } catch (IOException ex) {
+		ex.printStackTrace();
+		return null;
+	    }
+	} else {
+	    s = new ServerSocket(port);
+	}
 	s = (ServerSocket) aspectSupport.attachAspects(s, ServerSocket.class);
 	return s;
     }
