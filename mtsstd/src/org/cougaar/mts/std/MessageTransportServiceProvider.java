@@ -63,6 +63,8 @@ public final class MessageTransportServiceProvider
     private final static String STATISTICS_ASPECT = 
 	"org.cougaar.core.mts.StatisticsAspect";
 
+    private final static String NOT_A_CLIENT =
+	"Requestor is not a MessageTransportClient";
 
     // MTS address
     private MessageAddress address;
@@ -267,7 +269,7 @@ public final class MessageTransportServiceProvider
 	    if (requestor instanceof MessageTransportClient) {
 		return findOrMakeProxy(requestor);
 	    } else {
-		return null;
+		throw new IllegalArgumentException(NOT_A_CLIENT);
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
 	    StatisticsAspect aspect = 
