@@ -23,8 +23,8 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
 
-public interface ThreadControlService extends Service
+public interface ThreadListenerService extends Service
 {
-    void setClientPriority(ThreadService client, int priority);
-    int activeThreadCount(ThreadService proxy);
+    void addListener(ThreadService svc, ThreadListener listener);
+    void removeListener(ThreadService svc,ThreadListener listener);
 }

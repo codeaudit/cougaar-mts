@@ -44,6 +44,7 @@ class ThreadServiceImpl
 	ThreadServiceProvider provider = new ThreadServiceProvider();
 	sb.addService(ThreadService.class, provider);
 	sb.addService(ThreadControlService.class, provider);
+	sb.addService(ThreadListenerService.class, provider);
     }
 
 
@@ -103,7 +104,10 @@ class ThreadServiceImpl
 		}
 	    } else if (serviceClass == ThreadControlService.class) {
 		// Later this will be tightly restricted
-		return new ThreadController(this);
+		return new ThreadController();
+	    } else if (serviceClass == ThreadListenerService.class) {
+		// Later this will be tightly restricted
+		return new ThreadListenerImpl();
 	    } else {
 		return null;
 	    }
@@ -128,18 +132,51 @@ class ThreadServiceImpl
      */
     private static class ThreadController implements ThreadControlService {
 
-	private ThreadServiceProvider provider;
-
-	ThreadController(ThreadServiceProvider provider) {
-	    this.provider = provider;
+	ThreadController() {
 	}
 
-	public void setClientPriority(Object client, int priority) {
-	    Object raw = provider.getProxyForClient(client);
-	    if (raw != null && raw instanceof ThreadServiceProxy) {
-		ThreadServiceProxy proxy = (ThreadServiceProxy) raw;
-		// etc
+	public void setClientPriority(ThreadService svc, int priority) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		// Now set the priority of all the threads in proxy's
+		// ThreadGroup.
 	    }
+	}
+
+	public int activeThreadCount(ThreadService svc) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		return proxy.activeThreadCount();
+	    } else {
+		return -1;
+	    }
+	}
+
+
+    }
+
+
+    /**
+     * The proxy implementation of ThreadControlService.
+     */
+    private static class ThreadListenerImpl implements ThreadListenerService {
+
+
+	ThreadListenerImpl() {
+	}
+
+	public void addListener(ThreadService svc, ThreadListener listener) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		proxy.addListener(listener);
+	    }
+	}
+
+	public void removeListener(ThreadService svc,ThreadListener listener) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		proxy.removeListener(listener);
+	    } 
 	}
 
 
@@ -218,10 +255,12 @@ class ThreadServiceImpl
 	private HashMap consumers;
 	private ArrayList listeners;
 	private ThreadGroup group;
+	private int activeThreadCount;
 
 	private ThreadServiceProxy(ThreadServiceClient client) {
 	    listeners = new ArrayList();
 	    consumers = new HashMap();
+	    activeThreadCount = 0;
 	    group = client.getGroup();
 
 	    int initialSize = PropertyParser.getInt(InitialPoolSizeProp, 
@@ -240,6 +279,10 @@ class ThreadServiceImpl
 						  maxSize);
 	}
 
+	private int activeThreadCount() {
+	    return activeThreadCount;
+	}
+
 	private Thread consumeThread(Thread thread, Object consumer) {
 	    consumers.put(thread, consumer);
 	    return thread;
@@ -250,6 +293,7 @@ class ThreadServiceImpl
 	}
 
 	synchronized void notifyStart(Thread thread) {
+	    ++activeThreadCount;
 	    Object consumer = threadConsumer(thread);
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -259,6 +303,7 @@ class ThreadServiceImpl
 	}
 
 	synchronized void notifyEnd(Thread thread) {
+	    --activeThreadCount;
 	    Object consumer = threadConsumer(thread);
   	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -270,12 +315,12 @@ class ThreadServiceImpl
 
 
 
-	public synchronized void addListener(ThreadListener listener) {
+	synchronized void addListener(ThreadListener listener) {
 	    listeners.add(listener);
 	}
 
 
-	public synchronized void removeListener(ThreadListener listener) {
+	synchronized void removeListener(ThreadListener listener) {
 	    listeners.remove(listener);
 	}
 

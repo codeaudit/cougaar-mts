@@ -25,8 +25,6 @@ import org.cougaar.core.component.Service;
 
 public interface ThreadService extends Service
 {
-    void addListener(ThreadListener listener);
-    void removeListener(ThreadListener listener);
     Thread getThread(Object consumer, Runnable runnable);
     Thread getThread(Object consumer, Runnable runnable, String name);
 }
