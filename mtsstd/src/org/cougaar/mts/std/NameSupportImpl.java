@@ -211,7 +211,7 @@ public class NameSupportImpl implements NameSupport
     public Iterator lookupMulticast(MulticastMessageAddress address) {
 	try {
 	    DirContext ctx = namingService.getRootContext();
-	    String name = null;
+	    String name = "";
 	    String filter = "MTS=true";
 	    SearchControls cons = new SearchControls();
 	    cons.setSearchScope(SearchControls.SUBTREE_SCOPE);
