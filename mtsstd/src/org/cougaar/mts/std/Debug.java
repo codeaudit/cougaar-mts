@@ -66,8 +66,8 @@ public class Debug implements DebugFlags
 			Flags |= SERVICE;
 		    else if (dbg.equalsIgnoreCase("statistics")) 
 			Flags |= STATISTICS;
-                    else if (dbg.equalsIgnoreCase("traffic_masking"))
-                        Flags |= TRAFFIC_MASKING;
+                    else if (dbg.equalsIgnoreCase("traffic_masking_generator"))
+                        Flags |= TRAFFIC_MASKING_GENERATOR;
 		    else if (dbg.equalsIgnoreCase("watcher")) 
 			Flags |= WATCHER;
 		    else

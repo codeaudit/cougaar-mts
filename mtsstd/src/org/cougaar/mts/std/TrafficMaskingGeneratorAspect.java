@@ -28,7 +28,7 @@ import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.*;
 
-public class TrafficMaskingAspect extends StandardAspect
+public class TrafficMaskingGeneratorAspect extends StandardAspect
 {
 
   private MaskingQueueDelegate maskingQDelegate;
@@ -40,11 +40,11 @@ public class TrafficMaskingAspect extends StandardAspect
   private MessageAddress myAddress;
   private ReplyTimerTask replyTimerTask;
 
-  public TrafficMaskingAspect() {
+  public TrafficMaskingGeneratorAspect() {
     super();
     registry = MessageTransportRegistry.getRegistry();
-    if (Debug.debug(TRAFFIC_MASKING))
-      System.out.println("\n $$$ TrafficMaskingAspect constructed");
+    if (Debug.debug(TRAFFIC_MASKING_GENERATOR))
+      System.out.println("\n $$$ TrafficMaskingGeneratorAspect constructed");
   }
 
 
@@ -97,7 +97,7 @@ public class TrafficMaskingAspect extends StandardAspect
         MessageAddress dest = msg.getTarget();
         msg = new MaskingMessageEnvelope(msg, dest);
       }
-      if (Debug.debug(TRAFFIC_MASKING))
+      if (Debug.debug(TRAFFIC_MASKING_GENERATOR))
         System.out.println("\n %%%%% MaskingQueue sending message: "+msg);
       queue.sendMessage(msg);
     }
@@ -133,7 +133,7 @@ public class TrafficMaskingAspect extends StandardAspect
                                                           replyContents);
             //maskingQDelegate.sendMessage(reply);
             replyTimerTask.addMessage(reply);
-            if (Debug.debug(TRAFFIC_MASKING)) {
+            if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
               System.out.println("\n$$$ Masking Deliverer got Fake Request: "+request+
                                  " size: "+request.getContents().length +
                                  "\n Queueing Fake Reply: "+reply +
@@ -195,7 +195,7 @@ public class TrafficMaskingAspect extends StandardAspect
         FakeRequestMessage request = 
           new FakeRequestMessage(myAddress, fakedest, contents);
         maskingQDelegate.sendMessage(request);
-        if (Debug.debug(TRAFFIC_MASKING)) {        
+        if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {        
           System.out.println("\n&&& Masking About to send FakeRequest from: "+myAddress+
                              " to: "+fakedest+" size of byte array: "+
                              contents.length);
@@ -245,7 +245,7 @@ public class TrafficMaskingAspect extends StandardAspect
     public MessageAddress getRandomNodeAddress() {
       MessageAddress winner = null;
       synchronized(nodelist) {
-        if (Debug.debug(TRAFFIC_MASKING))        
+        if (Debug.debug(TRAFFIC_MASKING_GENERATOR))        
           System.out.println("\n$$$ nodelist.size is: "+nodelist.size());
         if (nodelist.size() > 0) {
           int randomIndex = generator.nextInt(nodelist.size());
@@ -257,7 +257,7 @@ public class TrafficMaskingAspect extends StandardAspect
 
     //safely update the list while no one else is using it
     private void updateNodeList(Collection newNodes) {
-      if (Debug.debug(TRAFFIC_MASKING))      
+      if (Debug.debug(TRAFFIC_MASKING_GENERATOR))      
         System.out.println("\n$$$ Masking: Updating Node List");
       synchronized(nodelist) {
         nodelist.clear();
@@ -278,7 +278,7 @@ public class TrafficMaskingAspect extends StandardAspect
           Message replymsg = (Message) replyQueue.get(0);
           // put message on real MTS SendQueue
           maskingQDelegate.sendMessage(replymsg);
-          if (Debug.debug(TRAFFIC_MASKING)) {
+          if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
             System.out.println("\n $$$ Masking: ReplyTimer sending reply: " +
                                replymsg + " size: "+ 
                                ((FakeReplyMessage)replymsg).getContents().length);
