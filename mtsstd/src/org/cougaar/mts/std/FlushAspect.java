@@ -137,6 +137,10 @@ public class FlushAspect extends StandardAspect
 			       " now pending");
 	}
 
+	public synchronized void sendMessage(Message message) {
+	    ++outstandingMessages;
+	}
+
 	synchronized void messageDelivered(Message m) {
 	    --outstandingMessages;
 	    if (Debug.debug(FLUSH)) showPending("Message delivered");
