@@ -83,6 +83,8 @@ public final class Debug implements DebugFlags
 			flags |= STATISTICS;
 		    } else if (dbg.equalsIgnoreCase("traffic_masking_generator")) {
 			flags |= TRAFFIC_MASKING_GENERATOR;
+		    } else if (dbg.equalsIgnoreCase("thread")) {
+			flags |= THREAD;
 		    } else if (dbg.equalsIgnoreCase("watcher")) {
 			flags |= WATCHER;
 		    } else {
@@ -104,7 +106,7 @@ public final class Debug implements DebugFlags
     }
 
     public static boolean isDebugEnabled(LoggingService ls, int mask) {
-	if (ls != null && !ls.isDebugEnabled())
+	if (ls == null || !ls.isDebugEnabled())
 	    return false;
 	else
 	    return ((flags & mask) == mask);

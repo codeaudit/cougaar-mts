@@ -45,21 +45,20 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     private int requestRate = 0;
     private int replyRate = 333;
     private int replySize = 0;
-    boolean timerOn = false;
-    private NodeKeeperTimerTask nodeKeeper;
+    private NodeKeeperTask nodeKeeper;
     private MessageAddress myAddress;
     private ReplyTimerTaskController replyTimerTaskController;
     private HashMap nodeTimerTaskMap = new HashMap(6);
     private ArrayList statsList = new ArrayList();
-    private Timer myTimer = new Timer(true);
     private Random random = new Random();
     private ExpRandom expRandom = new ExpRandom();
     private ArrayList nodelist;
+    private boolean timerOn;
 
     public TrafficMaskingGeneratorAspect() {
 	super();
 	nodelist = new ArrayList();
-
+	timerOn = false; // can't start timer yet (need NameSupport)
 
 
 	//get any properties
@@ -88,10 +87,16 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	// sibling aspects can access it.
 	getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
 
+	//start up the reply timer
+	startReplyTimerTask();
+
+
 	if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR))
 	    loggingService.debug("TrafficMaskingGeneratorAspect "+
 			       "... request is: "+ requestRate + 
 			       " reply is: "+replyRate);
+
+
     }
 
     // aspect implementation: forward linkage (send side)
@@ -156,11 +161,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	nodeTimerTaskMap.put(node, mtt);
 	mtt.makeNextTask();
     
-	// if this is the first timer task we need to turn on the reply 
-	// timer task.
-	if (replyTimerTaskController == null) {
-	    startReplyTimerTask();
-	}
     }
 
     /** Set the Think Time and size parameters for Fake Replies coming 
@@ -208,24 +208,22 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
     // TimerTasks to create fake request and reply tasks
     private void setupTimerTasks() {
-	timerOn = true;
 
 	// start up the node keeper - this guys gets his own Timer too
-	Timer nodeKeeperTimer = new Timer(true);
+
 	// for now only update every minute and get a new one after 2 seconds
-	nodeKeeper = new NodeKeeperTimerTask();
+	nodeKeeper = new NodeKeeperTask();
 	// Get the list in 10 seconds to allow for other nodes to startup
 	// then check every 30 seconds - these probably need tweaking
 	// important thing is not to wait too long to get all the initial nodes
-	nodeKeeperTimer.schedule(nodeKeeper, 10000, 30000);
+	TimerTask tTask = threadService.getTimerTask(this, nodeKeeper);
+	threadService.schedule(tTask, 10000, 30000);
 
 	// start up the masking task - delay start by the requestRate 
 	AutoMaskingTimerTaskController amtt = 
 	    new AutoMaskingTimerTaskController(requestRate);
 	amtt.makeNextTask();
 
-	//start up the reply timer
-	startReplyTimerTask();
     }
 
     // create random contents for message  
@@ -336,12 +334,17 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	// synchronized so that this aspect's timer thread that sends fake messages
 	// does not interact with a real outgoing message.
 	public synchronized void sendMessage(Message msg) {
-	    //The first time we see a message, setup the auto 
-	    //timer to send fake messages(only if system properties were set)
+	    // Getting the address requires NameSupport, which won't be
+	    // available at load() time for Aspects.  So defer this call.
+	    //
+	    // The first time we see a message, setup the auto timer to
+	    //send fake messages(only if system properties were set)
 	    if (requestRate > 0 && !timerOn) {
 		myAddress = getRegistry().getLocalAddress();
 		setupTimerTasks();
+		timerOn = true;
 	    }
+
 	    queue.sendMessage(msg);
 	}
 
@@ -391,7 +394,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		    }
 		} catch (Throwable th) {
 		    if (loggingService.isErrorEnabled()) 
-			loggingService.error("Demasking error " + th);
+			loggingService.error("Demasking error ", th);
 		}
 		//if its a fake reply (the other kind of masking message)
 		// drop it on the floor.
@@ -420,17 +423,17 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    this.generator = generator;
 	}
 
-	abstract TimerTask makeTask();
+	abstract Runnable makeTask();
 
 	void makeNextTask() {
 	    // randomize period, then run a new task once at that time
 	    int delay = generator.nextInt(period); // randomize
-	    TimerTask newTask = makeTask();
+	    TimerTask newTask = threadService.getTimerTask(this, makeTask());
 	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		loggingService.debug("Scheduling " +newTask+ " at "
 					  +delay);
 	    }
-	    myTimer.schedule(newTask, delay);
+	    threadService.schedule(newTask, delay);
 	    synchronized (this) {
 		lastTask = newTask;
 	    }
@@ -463,12 +466,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
       
 
-	TimerTask makeTask() {
+	Runnable makeTask() {
 	    return new Task();
 	}
 
       
-	private class Task extends TimerTask {
+	private class Task implements Runnable {
 	    public void run() {
 		byte[] contents = randomContents(requestSize);
 		myAddress = getRegistry().getLocalAddress();
@@ -498,7 +501,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    super(new ExpRandom(), period);
 	}
 
-	TimerTask makeTask() {
+	Runnable makeTask() {
 	    return new Task();
 	}
 
@@ -516,7 +519,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	}
 
 
-	class Task extends TimerTask {
+	class Task implements Runnable {
 	    public void run() {
 		if (!replyQueue.isEmpty()) {
 		    synchronized(replyQueue) {
@@ -564,11 +567,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    return new TrafficMaskingStatistics(dest, requestRate, 9000);
 	}
 
-	TimerTask makeTask() {
-	    return new Task();
+	Runnable makeTask() {
+	    return  new Task();
 	}
       
-	class Task extends TimerTask {
+	class Task implements Runnable {
 	    public void run() {
 		MessageAddress fakedest = nodeKeeper.getRandomNodeAddress();
 		// make sure we have other nodes to send to
@@ -599,11 +602,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // keeps list of nodes up to date and generates random node addresses
     // from the current list - only used in auto mode when
     // system properties are defined
-    public class NodeKeeperTimerTask extends TimerTask {
+    public class NodeKeeperTask implements Runnable {
 	private Random generator = new Random();
 
 	//constructor
-	public NodeKeeperTimerTask() {
+	public NodeKeeperTask() {
 	    super();
 	    // one-time initialize node list so we don't 
 	    // get a request for an address before the timer 

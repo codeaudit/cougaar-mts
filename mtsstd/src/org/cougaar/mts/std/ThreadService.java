@@ -22,9 +22,26 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
+import java.util.TimerTask;
 
 public interface ThreadService extends Service
 {
     Thread getThread(Object consumer, Runnable runnable);
     Thread getThread(Object consumer, Runnable runnable, String name);
+
+    TimerTask getTimerTask(Object consumer, Runnable runnable);
+
+    void schedule(TimerTask task, long delay);
+    void schedule(TimerTask task, long delay, long interval);
+    void scheduleAtFixedRate(TimerTask task, long delay, long interval);
+
+    // Like sleep() but opens a thread slot
+    void suspendCurrentThread(long millis);
+
+    // Like yield() but opens a thread slot
+    void yieldCurrentThread();
+
+    // Like wait but opens a thread slot
+    void blockCurrentThread(Object lock, long millis);
+    void blockCurrentThread(Object lock);
 }

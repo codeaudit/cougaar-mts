@@ -58,6 +58,10 @@ public class DynamicSortedQueue
     }
 
 
+    public String toString() {
+	return "<DQ[" +store.size()+ "] " +store.toString()+ ">";
+    }
+
     public void setComparator(Comparator comparator, Mapper mapper) {
 	this.comparator = comparator;
 	this.mapper = mapper;

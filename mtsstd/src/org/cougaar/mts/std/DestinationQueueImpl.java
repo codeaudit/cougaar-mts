@@ -140,8 +140,7 @@ final class DestinationQueueImpl
 
 
 	    retryCount++;
-	    try { Thread.sleep(delay);}
-	    catch (InterruptedException ex){}
+	    threadService.suspendCurrentThread(delay);
 	    if (delay < MAX_DELAY) delay += delay;
 	}
     }

@@ -21,16 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageEnvelope;
 
 import java.util.HashMap;
-import java.util.Timer;
 import java.util.TimerTask;
 
 /**
@@ -40,9 +32,7 @@ import java.util.TimerTask;
  * */
 public class ScrambleAspect extends StandardAspect
 {
-    protected Timer timer;
     public ScrambleAspect() {
-	timer = new Timer();
     }
 
     public Object getDelegate(Object delegate, Class type) 
@@ -58,7 +48,7 @@ public class ScrambleAspect extends StandardAspect
 	extends SendLinkDelegateImplBase 
     {
 	
-	SendMessageTimerTask timerTask;
+	TimerTask timerTask;
 	Message heldMessage;
 	
 	int heldMessageCount;
@@ -81,10 +71,10 @@ public class ScrambleAspect extends StandardAspect
 	}
 
 	
-	private class SendMessageTimerTask extends TimerTask {
+	private class SendMessageTask implements Runnable {
 	    private ScrambledSendLink link;
 
-	    public SendMessageTimerTask ( ScrambledSendLink link ){
+	    public SendMessageTask ( ScrambledSendLink link ){
 		super();
 		this.link = link;
 	    }
@@ -97,8 +87,9 @@ public class ScrambleAspect extends StandardAspect
     
 	//================util methods
 	private void holdMessage(Message message){
-	    timerTask = new SendMessageTimerTask (this);
-	    timer.schedule(timerTask, 3000); //schedule a timer task
+	    Runnable r = new SendMessageTask (this);
+	    timerTask = threadService.getTimerTask(this, r);
+	    threadService.schedule(timerTask, 3000); //schedule a timer task
 	    heldMessage = message;
 	    heldMessageCount++;
 	    if (loggingService.isDebugEnabled())

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.TimerTask;
 
 /**
  * This class creates and registers the ServiceProvider for the
@@ -52,9 +53,11 @@ class ThreadServiceImpl
     private static final int MaxRunningCountDefault = Integer.MAX_VALUE;
 
 
-
     ThreadServiceImpl(ServiceBroker sb) {
-	ThreadServiceProvider provider = new ThreadServiceProvider();
+	LoggingService loggingService = (LoggingService)
+	    sb.getService(this, LoggingService.class, null);
+	ThreadServiceProvider provider = 
+	    new ThreadServiceProvider(loggingService);
 	sb.addService(ThreadService.class, provider);
 	sb.addService(ThreadControlService.class, provider);
 	sb.addService(ThreadListenerService.class, provider);
@@ -73,16 +76,18 @@ class ThreadServiceImpl
     private static class ThreadServiceProvider implements ServiceProvider {
 
 	private HashMap proxies;
-	private LoggingService log;
+	private LoggingService loggingService;
 
-	ThreadServiceProvider() {
+	ThreadServiceProvider(LoggingService loggingService) {
 	    proxies = new HashMap();
+	    this.loggingService = loggingService;
 	}
 
 	private synchronized Object findOrMakeProxyForClient (Object client) {
 	    Object p = proxies.get(client);
 	    if (p == null) {
-		p =  new ThreadServiceProxy((ThreadServiceClient)client);
+		p =  new ThreadServiceProxy((ThreadServiceClient)client,
+					    loggingService);
 		proxies.put(client, p);
 	    }
 	    return p;
@@ -104,11 +109,8 @@ class ThreadServiceImpl
 		if (requestor instanceof ThreadServiceClient) {
 		    return findOrMakeProxyForClient(requestor);
 		} else {
-		    if (log == null) {
-			log = (LoggingService)
-			    sb.getService(this, LoggingService.class, null);
-		    }
-		    log.error(requestor + " is not a ThreadServiceClient");
+		    loggingService.error(requestor + 
+					 " is not a ThreadServiceClient");
 		    return null;
 		}
 	    } else if (serviceClass == ThreadControlService.class) {
@@ -315,18 +317,8 @@ class ThreadServiceImpl
 	    return runningThreadCount + pendingThreads.size();
 	}
 
-	private synchronized boolean canStartThread() {
+	private boolean canStartThread() {
 	    return runningThreadCount < maxRunningThreads;
-	}
-
-	private void runNextPendingThread() {
-	    ControllableThread thread = null;
-	    synchronized (this) {
-		if (!pendingThreads.isEmpty()) {
-		    thread = (ControllableThread)pendingThreads.next();
-		}
-	    }
-	    if (thread != null) thread.start();
 	}
 
 
@@ -345,11 +337,29 @@ class ThreadServiceImpl
 	}
 
 	private void removeRunningThread(ControllableThread thread) {
-	    synchronized (this) { 
+	    synchronized (this) {
 		--runningThreadCount; 
+		runMoreThreads();
 	    }
 	    proxy.notifyEnd(thread);
-	    runNextPendingThread();
+	}
+
+	private synchronized void yieldRunningThread(ControllableThread thread)
+	{
+	    --runningThreadCount; 
+	    runMoreThreads();
+	}
+
+	private synchronized boolean resumeYieldedThread(ControllableThread thread)
+	{
+	    if (canStartThread()) {
+		++runningThreadCount;
+		return true;
+	    } else {
+		// couldn'resume - place the thread back on the queue
+		addPendingThread(thread);
+		return false;
+	    }
 	}
 
 	private void startRunningThread(ControllableThread thread) {
@@ -359,11 +369,21 @@ class ThreadServiceImpl
 	    proxy.notifyStart(thread);
 	}
  
-	private synchronized void addPendingThread(ControllableThread thread) 
+	private void addPendingThread(ControllableThread thread) 
 	{
 	    thread.timestamp = System.currentTimeMillis();
 	    proxy.notifyPending(thread);
 	    pendingThreads.add(thread);
+	    if (Debug.isDebugEnabled(proxy.loggingService, Debug.THREAD))
+		proxy.loggingService.debug("Added to queue " + pendingThreads);
+	}
+
+	private synchronized void startOrQueue(ControllableThread thread) {
+	    if (canStartThread()) {
+		thread.thread_start();
+	    } else {
+		addPendingThread(thread);
+	    }
 	}
 
     }
@@ -380,12 +400,16 @@ class ThreadServiceImpl
 	private ControllablePool pool;
 	private long timestamp;
 	private Object consumer;
+	private boolean suspended;
+	private Object suspendLock;
 
 	ControllableThread(ControllablePool pool) 
 	{
 	    super(pool);
 	    this.pool = pool;
+	    this.suspendLock = new Object();
 	}
+
 
 
 	protected void claim() {
@@ -394,17 +418,80 @@ class ThreadServiceImpl
 	    pool.startRunningThread(this);
 	}
 
+
+	private void suspend(long millis) {
+	    pool.yieldRunningThread(this);
+	    try { sleep(millis); }
+	    catch (InterruptedException ex) {}
+	    attemptResume();
+	}
+
+
+	// The argument is only here to avoid overriding yield(),
+	// 
+	// The semantics is not the same as Thread.yield, since a
+	// lower priority thread may get control.  Fix this later.
+	private void yield(Object ignore) {
+	    pool.yieldRunningThread(this);
+	    attemptResume();
+	}
+
+	// Must be called from a block that's synchronized on lock.
+	private void wait(Object lock, long millis) {
+	    pool.yieldRunningThread(this);
+	    try { lock.wait(millis); }
+	    catch (InterruptedException ex) {}
+	    attemptResume();
+	}
+
+	// Must be called from a block that's synchronized on lock.
+	private void wait(Object lock) {
+	    pool.yieldRunningThread(this);
+	    try { lock.wait(); }
+	    catch (InterruptedException ex) {}
+	    attemptResume();
+	}
+
+
+	private void attemptResume() {
+	    suspended = true;
+	    synchronized (suspendLock) {
+		suspended = !pool.resumeYieldedThread(this);
+		if (suspended) {
+		    // Couldn't be resumed - requeued instead
+		    while (true) {
+			try {
+			    // When the thread is pulled off the
+			    // queue, a notify will wake up this wait.
+			    suspendLock.wait();
+			    break;
+			} catch (InterruptedException ex) {
+			}
+		    }
+		    suspended = false;
+		} 
+	    }
+	}
+
+
 	protected void reclaim() {
 	    // thread is done
 	    pool.removeRunningThread(this);
 	    super.reclaim();
 	}
 
-	public void start() throws IllegalThreadStateException {
-	    if (pool.canStartThread()) {
-		super.start();
+	private void thread_start() {
+	    super.start();
+	}
+
+	public void start() {
+	    if (suspended) {
+		synchronized (suspendLock) {
+		    suspendLock.notify();
+		    return;
+		}
 	    } else {
-		pool.addPendingThread(this);
+		pool.startOrQueue(this);
 	    }
 	}
 
@@ -418,10 +505,16 @@ class ThreadServiceImpl
 	private ControllablePool threadPool;
 	private ArrayList listeners;
 	private ThreadGroup group;
+	private TimerRunnable timer;
+	private LoggingService loggingService;
 
-	private ThreadServiceProxy(ThreadServiceClient client) {
+	private ThreadServiceProxy(ThreadServiceClient client,
+				    LoggingService loggingService) 
+	{
+	    this.loggingService = loggingService;
 	    listeners = new ArrayList();
 	    group = client.getGroup();
+	    timer = new TimerRunnable(this, loggingService);
 
 	    int initialSize = PropertyParser.getInt(InitialPoolSizeProp, 
 						    InitialPoolSizeDefault);
@@ -434,6 +527,11 @@ class ThreadServiceImpl
 					      group, 
 					      initialSize,
 					      maxSize);
+
+	    // Use a special Thread for the timer
+	    Thread thread = new Thread(group, timer, "Timer");
+	    thread.setDaemon(true);
+	    thread.start();
 	}
 
 
@@ -494,6 +592,57 @@ class ThreadServiceImpl
 	    return consumeThread(threadPool.getThread(runnable, name), 
 				 consumer);
 	}
+
+
+	public TimerTask getTimerTask(Object consumer, Runnable runnable) {
+	    return timer.getTimerTask(consumer, runnable);
+	}
+
+	public void schedule(TimerTask task, long delay) {
+	    timer.schedule(task, delay);
+	}
+
+
+	public void schedule(TimerTask task, long delay, long interval) {
+	    timer.schedule(task, delay, interval);
+	}
+
+	public void scheduleAtFixedRate(TimerTask task, 
+					long delay, 
+					long interval)
+	{
+	    timer.scheduleAtFixedRate(task, delay, interval);
+	}
+
+
+	public void suspendCurrentThread(long millis) {
+	    Thread thread = Thread.currentThread();
+	    if (thread instanceof ControllableThread) {
+		((ControllableThread) thread).suspend(millis);
+	    }
+	}
+
+
+	public void yieldCurrentThread() {
+	    Thread thread = Thread.currentThread();
+	    if (thread instanceof ControllableThread) {
+		((ControllableThread) thread).yield(null);
+	    }
+	}
+	public void blockCurrentThread(Object lock, long millis) {
+	    Thread thread = Thread.currentThread();
+	    if (thread instanceof ControllableThread) {
+		((ControllableThread) thread).wait(lock, millis);
+	    }
+	}
+	public void blockCurrentThread(Object lock) {
+	    Thread thread = Thread.currentThread();
+	    if (thread instanceof ControllableThread) {
+		((ControllableThread) thread).wait(lock);
+	    }
+	}
+
+
     }
 
 }

@@ -76,7 +76,7 @@ abstract class MessageQueue
 	synchronized (queue) {
 	    queue.add(m);
 	    if (thread == null) {
-		thread = threadService.getThread(this, this);
+		thread = threadService.getThread(this, this, name);
 		thread.start();
 	    }
 	}

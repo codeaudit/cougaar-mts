@@ -408,13 +408,7 @@ public final class StepperAspect
 	    } else {
 		synchronized (lock) {
 		    widget.messageWait(msg);
-		    while (true) {
-			try { 
-			    lock.wait(); 
-			    break;
-			}
-			catch (InterruptedException ex) {}
-		    }
+		    getThreadService().blockCurrentThread(lock); 
 		}
 		widget.clearMessage();
 		super.dispatchNextMessage(msg);

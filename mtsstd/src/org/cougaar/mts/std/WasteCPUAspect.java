@@ -85,11 +85,15 @@ public class WasteCPUAspect extends StandardAspect
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
 		count++;
 	    }
-	    Thread.yield();
+
+	    threadService.yieldCurrentThread();
+
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
 		count++;
 	    }
-	    Thread.yield();
+
+	    threadService.yieldCurrentThread();
+
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
 		count++;
 	    }

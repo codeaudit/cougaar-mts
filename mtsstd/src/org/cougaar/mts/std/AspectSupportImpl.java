@@ -139,11 +139,11 @@ final class AspectSupportImpl implements ServiceProvider
 	public void addAspect(MessageTransportAspect aspect)
 	{
 	    String classname = aspect.getClass().getName();
+	    container.add(aspect);
 	    synchronized (this) {
 		aspects.add(aspect);
 		aspects_table.put(classname, aspect);
 	    }
-	    container.add(aspect);
 	    if (Debug.isDebugEnabled(loggingService,ASPECTS))
 		loggingService.debug("Added aspect " + aspect);
 	}

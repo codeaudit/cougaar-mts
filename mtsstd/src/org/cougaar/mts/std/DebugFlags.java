@@ -38,5 +38,6 @@ public interface DebugFlags
     int TRAFFIC_MASKING_GENERATOR = 1<<9;
     int QUO = 1<<10;
     int RMS = 1<<11;
+    int THREAD = 1<<12;
 
 }
