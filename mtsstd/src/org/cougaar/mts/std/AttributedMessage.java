@@ -440,5 +440,15 @@ public class AttributedMessage
 
 	    throw ex;
     }
+
+
+    String logString()
+    {
+	return "<From: " + getOriginator().getAddress()+
+	    " To: " + getTarget().getAddress()+
+	    " Hash: " + hashCode()+
+	    " Id: " + getContentsId()+
+	    ">";
+    }
 }
 
