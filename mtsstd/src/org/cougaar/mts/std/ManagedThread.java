@@ -21,7 +21,7 @@
 
 package org.cougaar.core.mts;
 
-public interface ManagedThread extends Prioritized
+public interface ManagedThread 
 {
     public void start();
 }

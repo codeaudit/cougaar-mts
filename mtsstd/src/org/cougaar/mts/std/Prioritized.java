@@ -21,17 +21,10 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-
-public interface ThreadControlService extends Service
+public interface Prioritized
 {
-    void setCougaarPriority(ManagedThread thread, int priority);
-    int getCougaarPriority(ManagedThread thread);
-    // void setThreadPriority(ManagedThread thread, int priority);
-    // int getThreadPriority(ManagedThread thread);
-    int runningThreadCount(ThreadService proxy);
-    int pendingThreadCount(ThreadService proxy);
-    int activeThreadCount(ThreadService proxy);
-    int maxRunningThreadCount(ThreadService proxy);
-    void setMaxRunningThreadCount(ThreadService proxy, int count);
+    long getTimestamp();
+    int getCougaarPriority();
+    void setCougaarPriority(int priority);
+    void resetCougaarPriority();
 }

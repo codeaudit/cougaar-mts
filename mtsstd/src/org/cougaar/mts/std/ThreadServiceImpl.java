@@ -145,12 +145,16 @@ class ThreadServiceImpl
 	}
 
 	public void setCougaarPriority(ManagedThread thread, int priority) {
-	    thread.setCougaarPriority(priority);
+	    ManagedControllableThread thr = 
+		(ManagedControllableThread) thread;
+	    thr.rawThread.setCougaarPriority(priority);
 	}
 
 
 	public int getCougaarPriority(ManagedThread thread) {
-	    return thread.getCougaarPriority();
+	    ManagedControllableThread thr = 
+		(ManagedControllableThread) thread;
+	    return thr.rawThread.getCougaarPriority();
 	}
 
 	public void setMaxRunningThreadCount(ThreadService svc, int count) {
@@ -311,10 +315,10 @@ class ThreadServiceImpl
 	}
 
 	private void runNextPendingThread() {
-	    ManagedThread thread = null;
+	    ControllableThread thread = null;
 	    synchronized (this) {
 		if (!pendingThreads.isEmpty()) {
-		    thread = (ManagedThread) pendingThreads.next();
+		    thread = (ControllableThread) pendingThreads.next();
 		}
 	    }
 	    if (thread != null) thread.start();
@@ -322,11 +326,11 @@ class ThreadServiceImpl
 
 
 	private void runMoreThreads() {
-	    ManagedThread thread = null;
+	    ControllableThread thread = null;
 	    while (true) {
 		synchronized (this) {
 		    if (!pendingThreads.isEmpty()  && canStartThread()) {
-			thread = (ManagedThread) pendingThreads.next();
+			thread = (ControllableThread) pendingThreads.next();
 		    } else {
 			return;
 		    }
@@ -352,9 +356,9 @@ class ThreadServiceImpl
  
 	private synchronized void addPendingThread(ControllableThread thread) {
 	    ManagedControllableThread mThread = thread.mThread;
-	    mThread.timestamp = System.currentTimeMillis();
+	    thread.timestamp = System.currentTimeMillis();
 	    proxy.notifyPending(mThread);
-	    pendingThreads.add(mThread);
+	    pendingThreads.add(thread);
 	}
 
     }
@@ -363,35 +367,12 @@ class ThreadServiceImpl
     private static class ManagedControllableThread
 	implements ManagedThread
     {
-	private static final int DEFAULT_COUGAAR_PRIORITY = 5;
 	private ControllableThread rawThread;
-	private long timestamp;
-	private int priority;
 
 	ManagedControllableThread(ControllableThread rawThread) 
 	{
 	    this.rawThread = rawThread;
 	    rawThread.setManagedThread(this);
-
-	    priority = DEFAULT_COUGAAR_PRIORITY;
-	}
-
-	// Prioritized
-	public int getCougaarPriority() {
-	    return priority;
-	}
-
-	public void setCougaarPriority(int priority) {
-	    this.priority = priority;
-	}
-
-
-	public void resetCougaarPriority() {
-	    priority = DEFAULT_COUGAAR_PRIORITY;
-	}
-
-	public long getTimestamp() {
-	    return timestamp;
 	}
 
 	public void start() {
@@ -405,18 +386,43 @@ class ThreadServiceImpl
      * the beginning and end of the internal run method of the thread.
      */
     private static class ControllableThread
-	extends ReusableThread 
+	extends ReusableThread
+	implements Prioritized
     {
+	private static final int DEFAULT_COUGAAR_PRIORITY = 5;
 	private ControllablePool pool;
 	ManagedControllableThread mThread;
+	private int priority;
+	private long timestamp;
 
 	ControllableThread(ControllablePool pool) 
 	{
 	    super(pool);
 	    this.pool = pool;
+	    priority = DEFAULT_COUGAAR_PRIORITY;
 	}
 
 	
+	// Prioritized
+	public long getTimestamp() {
+	    return timestamp;
+	}
+
+
+	public int getCougaarPriority() {
+	    return priority;
+	}
+
+	public void setCougaarPriority(int priority) {
+	    this.priority = priority;
+	}
+
+
+	public void resetCougaarPriority() {
+	    priority = DEFAULT_COUGAAR_PRIORITY;
+	}
+
+
 	void setManagedThread(ManagedControllableThread mThread) {
 	    this.mThread = mThread;
 	}
@@ -430,7 +436,7 @@ class ThreadServiceImpl
 	protected void reclaim() {
 	    // thread is done
 	    pool.removeRunningThread(this);
-	    mThread.resetCougaarPriority();
+	    resetCougaarPriority();
 	    super.reclaim();
 	}
 
