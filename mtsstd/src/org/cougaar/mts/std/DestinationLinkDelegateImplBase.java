@@ -62,4 +62,8 @@ abstract public class DestinationLinkDelegateImplBase
 	return link.getDestination();
     }
 
+    public Object getRemoteReference() {
+	return link.getRemoteReference();
+    }
+
 }

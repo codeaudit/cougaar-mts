@@ -29,10 +29,8 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 
 /**
- * This protocol handles all intra-node message traffic.  It can act
- * as its own DestinationLink, since this transport only sees traffic
- * for one destination.  The cost function is minimal (0) for local
- * traffic, and maximal (Integer.MAX_VALUE) for any other traffic. */
+ * Debugging aid - fails by design after serializing.
+ */
 class FutileSerializingLinkProtocol 
     extends LinkProtocol
     
@@ -145,6 +143,12 @@ class FutileSerializingLinkProtocol
 	public Class getProtocolClass() {
 	    return FutileSerializingLinkProtocol.class;
 	}
+
+
+	public Object getRemoteReference() {
+	    return null;
+	}
+
     }
 
 }

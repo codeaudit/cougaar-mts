@@ -41,7 +41,7 @@ public final class LinkProtocolFactory
 {
     private static final String CLASSES_PROPERTY =
 	"org.cougaar.message.protocol.classes";
-    static LinkProtocolFactory theFactory;
+    private static LinkProtocolFactory theFactory;
 
     private ArrayList protocols;
     private AspectSupport aspectSupport;

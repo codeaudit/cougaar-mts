@@ -110,6 +110,11 @@ class LoopbackLinkProtocol
 	}
 
 
+
+	public Object getRemoteReference() {
+	    return null;
+	}
+
     }
 
 }

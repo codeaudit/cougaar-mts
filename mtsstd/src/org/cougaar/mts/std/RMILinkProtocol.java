@@ -202,10 +202,6 @@ public class RMILinkProtocol
 	return link;
     }
 
-    // new pseudo-interface method
-    public Object getRemoteReference(MessageAddress address) {
-	return remoteRefs.get(address);
-    }
 
 
     // Hook to attach aspects to the client-side stub for the remote
@@ -271,6 +267,7 @@ public class RMILinkProtocol
 		return computeCost(message);
 	    }
 	    catch (Exception ex) {
+
 		// not found
 		return Integer.MAX_VALUE;
 	    }
@@ -305,6 +302,13 @@ public class RMILinkProtocol
 		throw new CommFailureException(ex);
 	    }
 	}
+
+
+
+	public Object getRemoteReference() {
+	    return remoteRefs.get(target);
+	}
+
 
     }
 

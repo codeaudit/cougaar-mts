@@ -66,4 +66,10 @@ public interface DestinationLink
      */
     public MessageAddress getDestination();
 
+
+    /**
+     * Return some form of remote reference for the destination, if it
+     * has one (rmi server stub, smtp url, CORBA ior, etc) */
+    public Object getRemoteReference();
+
 }

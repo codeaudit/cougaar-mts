@@ -64,6 +64,12 @@ public class ForwardMessageLoggingAspect extends StandardAspect
     }
 
     private String extractInetAddr(String raw) {
+	if (raw.startsWith("IOR:")) {
+	    // CORBA ior; handle this later.  Just return null for
+	    // now.
+	    return null;
+	}
+
 	int i = 0;
 	while (i<raw.length()) {
 	    if (Character.isDigit(raw.charAt(i++))) {
@@ -114,36 +120,16 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	Class pclass = link.getProtocolClass();
 	LinkProtocol protocol = null;
 	long now = System.currentTimeMillis();
-	Object remote = null;
-	String remoteIP = null;
-
+	Object remote = link.getRemoteReference();
+	String remoteIP = 
+	    remote == null ? null : extractInetAddr(remote.toString());
 	Attributes match = new BasicAttributes(NameSupport.AGENT_ATTR, dst);
 	String attr = NameSupport.NODE_ATTR;
 	Iterator itr = 
 	    NameSupportImpl.instance().lookupInTopology(match, attr);	   
 	if (itr != null && itr.hasNext()) dst_node = (String) itr.next();
 
-	itr = LinkProtocolFactory.theFactory.getProtocols().iterator();
-	while (itr.hasNext()) {
-	    Object p = itr.next();
-	    if (p.getClass() == pclass) {
-		protocol = (LinkProtocol) p;
-		break;
-	    }
-	}
 
-	if (protocol != null) {
-	    Class[] parameters = { MessageAddress.class } ;
-	    Object [] args = { dst };
-	    try {
-		Method meth = pclass.getMethod("getRemoteReference", 
-					       parameters);
-		if (meth != null) remote = meth.invoke(protocol, args);
-		remoteIP = extractInetAddr(remote.toString());
-	    } catch (Exception ex) {
-		// ignore errors
-	    }
-	}
 
 	synchronized(this) {
 	    log.print(now);
