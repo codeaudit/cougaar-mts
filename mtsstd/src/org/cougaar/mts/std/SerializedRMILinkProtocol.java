@@ -44,11 +44,10 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
     }
 
     protected MTImpl makeMTImpl(MessageAddress myAddress,
-				MessageDeliverer deliverer,
 				SocketFactory socfac)
 	throws java.rmi.RemoteException
     {
-	return new SerializedMTImpl(myAddress, deliverer, socfac);
+	return new SerializedMTImpl(myAddress, getServiceBroker(), socfac);
     }
 
     protected MessageAttributes doForwarding(MT remote, 

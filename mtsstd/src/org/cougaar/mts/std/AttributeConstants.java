@@ -36,9 +36,11 @@ public interface AttributeConstants
     String DELIVERY_STATUS_STORE_AND_FORWARD  =
 	"Store&Forward";
     String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
-    
+    String DELIVERY_STATUS_OLD_INCARNATION = "OldIncarnaion";
+
     String MESSAGE_BYTES_ATTRIBUTE = "MessageBytes";
     String SENT_BYTES_ATTRIBUTE = "SentBytes";
     String RECEIVED_BYTES_ATTRIBUTE = "ReceivedBytes";
 
+    String INCARNATION_ATTRIBUTE = "AgentIncarnationNumber";
 }

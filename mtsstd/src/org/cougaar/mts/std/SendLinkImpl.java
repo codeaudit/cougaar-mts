@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.TopologyReaderService;
 
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ final public class SendLinkImpl
     private MessageAddress addr;
     private MessageTransportRegistryService registry;
     private LoggingService loggingService;
+    private Long incarnation;
 
     SendLinkImpl(MessageAddress addr, ServiceBroker sb)
     {
@@ -53,6 +55,12 @@ final public class SendLinkImpl
 			  null);
 	loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
+
+	String agentID = addr.getAddress();
+	TopologyReaderService topologyService = (TopologyReaderService)
+	    sb.getService(this, TopologyReaderService.class, null);
+	long incn = topologyService.lookupIncarnationForAgent(agentID);
+	incarnation = new Long(incn);
     }
 
 
@@ -61,6 +69,8 @@ final public class SendLinkImpl
 	if (!addr.equals(orig)) {
 	    loggingService.error("SendLink saw a message whose originator (" +orig+ ") didn't match the MessageTransportClient address (" +addr+ ")");
 	}
+	message.setAttribute(AttributeConstants.INCARNATION_ATTRIBUTE,
+			     incarnation);
 	sendq.sendMessage(message);
     }
 

@@ -145,11 +145,10 @@ public class RMILinkProtocol
 
 
     protected MTImpl makeMTImpl(MessageAddress myAddress,
-				MessageDeliverer deliverer,
 				SocketFactory socfac)
 	throws java.rmi.RemoteException
     {
-	return new MTImpl(myAddress, deliverer, socfac);
+	return new MTImpl(myAddress, getServiceBroker(), socfac);
     }
 
     protected MessageAttributes doForwarding(MT remote, 
@@ -224,7 +223,7 @@ public class RMILinkProtocol
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
-	    MTImpl impl = makeMTImpl(myAddress, getDeliverer(), socfac);
+	    MTImpl impl = makeMTImpl(myAddress, socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
 	    loggingService.error(null, ex);
@@ -326,6 +325,12 @@ public class RMILinkProtocol
 	    this.target = destination;
 	}
 
+
+	// *** HACK ****.  This is called from MTImpl.  Should be part
+	// *** of the DestinationLink interface.
+	public void incarnationChanged() {
+	    remote = null;
+	}
 
 	private void cacheRemote() 
 	    throws NameLookupException, UnregisteredNameException
