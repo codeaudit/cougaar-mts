@@ -36,6 +36,11 @@ public class FakeReplyMessage extends Message {
     this.stuff = contents;
   }
 
+  // this may go away. .. but for now use the contents for the reply
+  protected byte[] getContents() {
+    return stuff;
+  }
+
   public String toString() {
     StringBuffer sb = new StringBuffer();
     sb.append("<FakeReplyMessage "+super.toString());

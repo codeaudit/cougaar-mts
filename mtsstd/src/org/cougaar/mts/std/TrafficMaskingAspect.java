@@ -34,9 +34,11 @@ public class TrafficMaskingAspect extends StandardAspect
   private MaskingQueueDelegate maskingQDelegate;
   public MessageTransportRegistry registry;
   private int requestRate = 333;
+  private int replyRate = 333;
   boolean timerOn = false;
   private NodeKeeperTimerTask nodeKeeper;
   private MessageAddress myAddress;
+  private ReplyTimerTask replyTimerTask;
 
   public TrafficMaskingAspect() {
     super();
@@ -129,11 +131,12 @@ public class TrafficMaskingAspect extends StandardAspect
             FakeReplyMessage reply = new FakeReplyMessage(request.getTarget(),
                                                           request.getOriginator(),
                                                           replyContents);
-            maskingQDelegate.sendMessage(reply);
+            //maskingQDelegate.sendMessage(reply);
+            replyTimerTask.addMessage(reply);
             if (Debug.debug(TRAFFIC_MASKING)) {
-              System.out.println("\n$$$ Deliverer got Fake Request: "+request+
+              System.out.println("\n$$$ Masking Deliverer got Fake Request: "+request+
                                  " size: "+request.getContents().length +
-                                 "\n Sending Fake Reply: "+reply +
+                                 "\n Queueing Fake Reply: "+reply +
                                  " size: "+replyContents.length);
             }
           }
@@ -165,6 +168,12 @@ public class TrafficMaskingAspect extends StandardAspect
     Timer maskingTimer = new Timer(true);
     // delay start by the requestRate 
     maskingTimer.scheduleAtFixedRate(new MaskingTimerTask(), requestRate, requestRate);
+
+    //start up the reply timer
+    Timer replyTimer = new Timer(true);
+    // delay start by replyRate
+    replyTimerTask = new ReplyTimerTask();
+    replyTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
   }
 
   // creates fake-requests on a timer of random size
@@ -187,7 +196,7 @@ public class TrafficMaskingAspect extends StandardAspect
           new FakeRequestMessage(myAddress, fakedest, contents);
         maskingQDelegate.sendMessage(request);
         if (Debug.debug(TRAFFIC_MASKING)) {        
-          System.out.println("\n&&&&&&& About to send FakeRequest from: "+myAddress+
+          System.out.println("\n&&& Masking About to send FakeRequest from: "+myAddress+
                              " to: "+fakedest+" size of byte array: "+
                              contents.length);
         }
@@ -249,7 +258,7 @@ public class TrafficMaskingAspect extends StandardAspect
     //safely update the list while no one else is using it
     private void updateNodeList(Collection newNodes) {
       if (Debug.debug(TRAFFIC_MASKING))      
-        System.out.println("\n$$$ Updating Node List");
+        System.out.println("\n$$$ Masking: Updating Node List");
       synchronized(nodelist) {
         nodelist.clear();
         nodelist.addAll(newNodes);
@@ -259,6 +268,33 @@ public class TrafficMaskingAspect extends StandardAspect
   }   // end of NodeKeeperTimerTask inner class
 
 
+  // this is the fake 'think' time for reply tasks
+  public class ReplyTimerTask extends TimerTask {
+    private ArrayList replyQueue = new ArrayList();
+
+    public void run() {
+      if (!replyQueue.isEmpty()) {
+        synchronized(replyQueue) {
+          Message replymsg = (Message) replyQueue.get(0);
+          // put message on real MTS SendQueue
+          maskingQDelegate.sendMessage(replymsg);
+          if (Debug.debug(TRAFFIC_MASKING)) {
+            System.out.println("\n $$$ Masking: ReplyTimer sending reply: " +
+                               replymsg + " size: "+ 
+                               ((FakeReplyMessage)replymsg).getContents().length);
+          }
+          replyQueue.remove(0);
+        }
+      }
+    }
+
+    public void addMessage(Message msg) {
+      synchronized(replyQueue) {
+        replyQueue.add(msg);
+      }
+    }
+  }
+                              
 
 }
 
