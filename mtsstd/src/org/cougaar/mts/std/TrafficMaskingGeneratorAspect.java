@@ -75,9 +75,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   public void load() {
    super.load();
    TrafficMaskingGeneratorServiceProvider tmgSP = 
-     new TrafficMaskingGeneratorServiceProvider(this);
-   getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
+       new TrafficMaskingGeneratorServiceProvider(this);
+   getBindingSite().getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
+   
   }
+
 
   public Object getDelegate(Object delegate, Class type) {
     if (type == SendQueue.class) {
@@ -285,6 +287,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     public void run() {
       byte[] contents = new byte[requestSize];
       random.nextBytes(contents);
+      myAddress = registry.getLocalAddress();
       FakeRequestMessage request = new FakeRequestMessage(myAddress, destination, contents);
       maskingQDelegate.sendMessage(request);
       if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {

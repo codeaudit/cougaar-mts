@@ -37,6 +37,11 @@ abstract public class StandardAspect
 {
 
 
+    private BindingSite bindingSite;
+
+    protected BindingSite getBindingSite() {
+	return bindingSite;
+    }
 
     public Object getDelegate(Object delegate, Class type) 
     {
@@ -49,9 +54,6 @@ abstract public class StandardAspect
 	return null;
     }
 	
-
-
-
 
     // ContainerAPI
 
@@ -67,6 +69,7 @@ abstract public class StandardAspect
 
     public final void setBindingSite(BindingSite bs) {
         super.setBindingSite(bs);
+	this.bindingSite = bs;
         setChildServiceBroker(new PropagatingServiceBroker(bs));
     }
 
