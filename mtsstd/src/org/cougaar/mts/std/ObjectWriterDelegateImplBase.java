@@ -54,9 +54,5 @@ public  class ObjectWriterDelegateImplBase
     }
 
 
-    public boolean proceed() {
-	return delegate.proceed();
-    }
-
 }
 

@@ -93,9 +93,5 @@ public  class ObjectWriterImpl
     }
 
 
-    public boolean proceed() {
-	return true;
-    }
-
 }
 

@@ -55,9 +55,5 @@ public  class ObjectReaderDelegateImplBase
     }
 
 
-    public boolean proceed() {
-	return delegate.proceed();
-    }
-
 }
 

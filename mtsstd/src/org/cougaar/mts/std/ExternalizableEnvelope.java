@@ -29,7 +29,7 @@ import java.io.OutputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
-import java.util.Properties;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 
@@ -40,7 +40,7 @@ public class ExternalizableEnvelope
 {
 
     private Message contents;
-    private Properties properties;
+    private HashMap properties;
 
     // Only invoked by server-side RMI when it's creating one of these
     // to correspond to one that was sent as data.
@@ -51,7 +51,7 @@ public class ExternalizableEnvelope
     {
 	super(contents.getOriginator(), contents.getTarget());
 	this.contents = contents;
-	properties = new Properties();
+	properties = new HashMap();
 	properties.put(FILTERS_PROPERTY, new ArrayList());
     }
 
@@ -139,7 +139,7 @@ public class ExternalizableEnvelope
 	    ois = (ObjectInputStream) is;
 	else
 	    ois = new ObjectInputStream(is);
-	properties = (Properties) ois.readObject();
+	properties = (HashMap) ois.readObject();
 	contents = (Message) ois.readObject();
 	setOriginator(contents.getOriginator());
 	setTarget(contents.getTarget());

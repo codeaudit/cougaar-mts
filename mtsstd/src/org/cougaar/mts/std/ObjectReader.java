@@ -33,8 +33,6 @@ public interface ObjectReader
     public void preProcess(ObjectInput in)
 	throws java.io.IOException, ClassNotFoundException;
 
-    public boolean proceed();
-
     public void postProcess(ObjectInput in)
 	throws java.io.IOException, ClassNotFoundException;
 

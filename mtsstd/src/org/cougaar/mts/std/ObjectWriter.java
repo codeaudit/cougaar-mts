@@ -33,8 +33,6 @@ public interface ObjectWriter
     public void preProcess(ObjectOutput out)
 	throws java.io.IOException;
 
-    public boolean proceed();
-
     public void postProcess(ObjectOutput out)
 	throws java.io.IOException;
 }

@@ -106,8 +106,5 @@ public  class ObjectReaderImpl
     }
 
 
-    public boolean proceed() {
-	return true;
-    }
 }
 
