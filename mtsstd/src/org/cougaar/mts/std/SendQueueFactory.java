@@ -34,13 +34,10 @@ import java.util.Iterator;
 public class SendQueueFactory extends AspectFactory
 {
     private ArrayList queues = new ArrayList();
-    private MessageTransportRegistryService registry;
 
     SendQueueFactory(ServiceBroker sb)
     {
 	super(sb);
-	registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
 
     }
 
@@ -51,14 +48,14 @@ public class SendQueueFactory extends AspectFactory
      * of creating the queue.  The final object returned is the
      * outermost aspect delegate, or the SendQueueImpl itself if there
      * are no aspects.  */
-    SendQueue getSendQueue(String name, Router router) {
+    SendQueue getSendQueue(String name) {
 	Iterator i = queues.iterator();
 	while (i.hasNext()) {
 	    SendQueue candidate = (SendQueue) i.next();
 	    if (candidate != null && candidate.matches(name)) return candidate;
 	}
 	// No match, make a new one
-	SendQueue queue = new SendQueueImpl(name, sb, router, registry);
+	SendQueue queue = new SendQueueImpl(name, sb);
 	queue = (SendQueue) attachAspects(queue, SendQueue.class);
 	queues.add(queue);
 	return queue;

@@ -156,7 +156,7 @@ public final class MessageTransportServiceProvider
 
 	MessageDelivererFactory delivererFactory = 
 	    new MessageDelivererFactory(sb, id);
-	sb.addService(MessageDelivererService.class, delivererFactory);
+	sb.addService(MessageDeliverer.class, delivererFactory);
 
 	LinkSelectionPolicyServiceProvider lspsp =
 	    new LinkSelectionPolicyServiceProvider();
@@ -170,10 +170,10 @@ public final class MessageTransportServiceProvider
 	// Router and SendQueue are singletons, though produced by
 	// factories.
 	RouterFactory routerFactory =  new RouterFactory(sb);
-	Router router = routerFactory.getRouter();
+	sb.addService(Router.class, routerFactory);
 
 	SendQueueFactory sendQFactory = new SendQueueFactory(sb);
-	sendQ = sendQFactory.getSendQueue(id+"/OutQ", router);
+	sendQ = sendQFactory.getSendQueue(id+"/OutQ");
 
 
 	// force transports to be created here

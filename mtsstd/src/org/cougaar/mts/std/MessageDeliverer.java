@@ -21,12 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.component.Service;
 
 
 /**
@@ -41,7 +36,7 @@ import org.cougaar.core.mts.MessageAddress;
  * messages onto the next stop, a ReceiveLink.
  * */
 
-public interface MessageDeliverer
+public interface MessageDeliverer extends Service
 {
     void deliverMessage(Message message, MessageAddress dest)
 	throws MisdeliveredMessageException;

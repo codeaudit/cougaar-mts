@@ -99,10 +99,9 @@ abstract public class LinkProtocol
     protected MessageDeliverer getDeliverer() {
 	if (deliverer == null) {
 	    ServiceBroker sb = getServiceBroker();
-	    MessageDelivererService delivererService = 
-		(MessageDelivererService) 
-		sb.getService(this,  MessageDelivererService.class, null);
-	    deliverer = delivererService.getMessageDeliverer(this);
+	    deliverer =
+		(MessageDeliverer) 
+		sb.getService(this,  MessageDeliverer.class, null);
 	}
 	return deliverer;
     }

@@ -21,12 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
+import org.cougaar.core.component.Service;
 
-import org.cougaar.core.node.*;
-
-
-import org.cougaar.core.mts.Message;
 
 
 /**
@@ -41,7 +37,7 @@ import org.cougaar.core.mts.Message;
  * Ordinarily this method would only be called from a SendQueue
  * implementation.
  **/
-interface Router
+interface Router extends Service
 {
 
     /** Used by SendQueue implementations to route an outgoing

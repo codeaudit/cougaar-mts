@@ -39,14 +39,13 @@ class SendQueueImpl extends MessageQueue implements SendQueue
     private Router router;
     private MessageTransportRegistryService registry;
 
-    SendQueueImpl(String name, 
-		  ServiceBroker sb,
-		  Router router, 
-		  MessageTransportRegistryService registry) 
+    SendQueueImpl(String name, ServiceBroker sb) 
     {
 	super(name, sb);
-	this.router = router;
-	this.registry = registry;
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
+	router = (Router)
+	    sb.getService(this, Router.class, null);
     }
 
 

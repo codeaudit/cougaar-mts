@@ -22,27 +22,50 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
-
-
+import org.cougaar.core.component.ServiceProvider;
 
 /**
  * A factory which makes Routers.  Since this factory is a subclass of
  * AspectFactory, aspects can be attached to a SendQueue when it's
  * first instantiated.  */
-public class RouterFactory extends AspectFactory
+public class RouterFactory 
+    extends AspectFactory
+    implements ServiceProvider
 {
+    private Router router;
+
     RouterFactory(ServiceBroker sb)
     {
 	super(sb);
+	router = new RouterImpl(sb);
+	router = (Router) attachAspects(router, Router.class);
     }
 
-    /**
-     * Make a RouterImpl abd attach all relevant aspects.  The final
-     * object returned is the outermost aspect delegate, or the
-     * RouterImpl itself if there are no aspects.  */
-    Router getRouter() {
-	Router router = new RouterImpl(sb);
-	router = (Router) attachAspects(router, Router.class);
-	return router;
+
+    public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	// Could restrict this request to the Router
+	if (serviceClass == Router.class) {
+	    if (requestor instanceof SendQueueImpl) {
+		return router;
+	    } else {
+		System.err.println("Ilegal request for Router"
+				   +  " from " +requestor);
+		return null;
+	    }
+	} else {
+	    return null;
+	}
     }
+
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
+
 }

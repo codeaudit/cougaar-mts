@@ -32,7 +32,7 @@ import java.util.Iterator;
  * there's onlyone Deliverer */
 public class MessageDelivererFactory 
     extends AspectFactory
-    implements MessageDelivererService, ServiceProvider
+    implements ServiceProvider
 {
     private MessageDeliverer deliverer;
 
@@ -49,17 +49,14 @@ public class MessageDelivererFactory
 	    (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
     }
 
-    public MessageDeliverer getMessageDeliverer(LinkProtocol lp) {
-	return deliverer;
-    }
 
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
     {
 	// Could restrict this request to LinkProtocols
-	if (serviceClass == MessageDelivererService.class) {
-	    return this;
+	if (serviceClass == MessageDeliverer.class) {
+	    return deliverer;
 	} else {
 	    return null;
 	}
