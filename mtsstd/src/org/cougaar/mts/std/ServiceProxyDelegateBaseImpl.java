@@ -26,12 +26,13 @@ import org.cougaar.core.society.MessageAddress;
 
 import java.util.ArrayList;
 
-abstract public class DelegatingServiceProxy implements MessageTransportService
+abstract public class ServiceProxyDelegateBaseImpl
+    implements MessageTransportService
 {
 
     protected MessageTransportService service;
 
-    protected DelegatingServiceProxy(MessageTransportService service) {
+    protected ServiceProxyDelegateBaseImpl(MessageTransportService service) {
 	this.service = service;
     }
 

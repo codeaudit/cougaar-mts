@@ -70,7 +70,7 @@ public class MulticastAspect extends StandardAspect
     }
 
 
-    public class ServiceDelegate extends DelegatingServiceProxy {
+    public class ServiceDelegate extends ServiceProxyDelegateBaseImpl {
 	
 	public ServiceDelegate (MessageTransportService service) {
 	    super(service);

@@ -28,11 +28,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 
-abstract public class DelegatingSocket extends Socket
+abstract public class SocketDelegateBaseImpl extends Socket
 {
     protected Socket socket;
 
-    protected DelegatingSocket(Socket socket) {
+    protected SocketDelegateBaseImpl(Socket socket) {
 	this.socket = socket;
     }
 
