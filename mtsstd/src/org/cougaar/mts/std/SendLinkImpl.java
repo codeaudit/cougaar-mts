@@ -31,7 +31,9 @@ final public class SendLinkImpl
     implements SendLink
 {
 
-    private SendQueue sendQ;
+    private SendQueue sendq;
+    private SendQueueImpl sendq_impl;
+    private DestinationQueueProviderService destq_factory;
     private MessageAddress addr;
     private MessageTransportRegistryService registry;
     private LoggingService loggingService;
@@ -41,8 +43,14 @@ final public class SendLinkImpl
 	this.addr = addr;
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
-	sendQ = (SendQueue)
+	sendq = (SendQueue)
 	    sb.getService(this, SendQueue.class, null);
+	sendq_impl = (SendQueueImpl)
+	    sb.getService(this, SendQueueImpl.class, null);
+	destq_factory = (DestinationQueueProviderService)
+	    sb.getService(this, 
+			  DestinationQueueProviderService.class, 
+			  null);
 	loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
     }
@@ -53,14 +61,13 @@ final public class SendLinkImpl
 	if (!addr.equals(orig)) {
 	    loggingService.error("SendLink saw a message whose originator (" +orig+ ") didn't match the MessageTransportClient address (" +addr+ ")");
 	}
-	sendQ.sendMessage(message);
+	sendq.sendMessage(message);
     }
 
-    // Default is no-op, all the real work is done in FlushAspect
+
     public void flushMessages(ArrayList droppedMessages) {
-	if (loggingService.isErrorEnabled()) {
-	    loggingService.error("FlushMessage base impl called should have been caught by a Flush aspect for " + getAddress());
-	}
+	sendq_impl.removeMessagesFrom(addr, droppedMessages);
+	destq_factory.removeMessagesFrom(addr, droppedMessages);
     }
 
     public MessageAddress getAddress() {
@@ -68,12 +75,12 @@ final public class SendLinkImpl
     }
 
     public void release() {
-	sendQ = null;
+	sendq = null;
 	registry = null;
     }
 
     public boolean okToSend(AttributedMessage message) {
-	if (sendQ == null) return false; // client has released the service
+	if (sendq == null) return false; // client has released the service
 
 	MessageAddress target = message.getTarget();
 	if (target == null || target.toString().equals("")) {

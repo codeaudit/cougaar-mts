@@ -33,6 +33,7 @@ public class SendQueueFactory
     implements ServiceProvider
 {
     private SendQueue queue;
+    private SendQueueImpl impl;
     private Container container;
     private String id;
 
@@ -44,8 +45,8 @@ public class SendQueueFactory
 
     public void load() {
 	super.load();
-	queue = new SendQueueImpl(id+"/OutQ", container);
-	queue = (SendQueue) attachAspects(queue, SendQueue.class);
+	impl = new SendQueueImpl(id+"/OutQ", container);
+	queue = (SendQueue) attachAspects(impl, SendQueue.class);
     }
 
 
@@ -53,9 +54,11 @@ public class SendQueueFactory
 			     Object requestor, 
 			     Class serviceClass) 
     {
-	// Could restrict this request to the Router
+	// Restrict this service
 	if (serviceClass == SendQueue.class) {
 	    if (requestor instanceof SendLinkImpl) return queue;
+	} else if (serviceClass == SendQueueImpl.class) {
+	    if (requestor instanceof SendLinkImpl) return impl;
 	}
 	return null;
     }

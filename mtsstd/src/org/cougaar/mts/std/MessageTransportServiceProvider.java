@@ -66,6 +66,9 @@ public final class MessageTransportServiceProvider
     private final static String NOT_A_CLIENT =
 	"Requestor is not a MessageTransportClient";
 
+    private final static String USE_NEW_FLUSH =
+	"org.cougaar.message.tranport.new_flush";
+
     // MTS address
     private MessageAddress address;
 
@@ -145,7 +148,8 @@ public final class MessageTransportServiceProvider
 	aspectSupport.addAspect(new MulticastAspect());
 
 	// Handling flushMessage();
-	aspectSupport.addAspect(new FlushAspect());
+	if (!Boolean.getBoolean(USE_NEW_FLUSH))
+	    aspectSupport.addAspect(new FlushAspect());
 
         // Traffic Masking Generator
         // aspectSupport.addAspect(new TrafficMaskingGeneratorAspect());
@@ -188,6 +192,7 @@ public final class MessageTransportServiceProvider
 	SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
 	add(sendQFactory);
 	sb.addService(SendQueue.class, sendQFactory);
+	sb.addService(SendQueueImpl.class, sendQFactory);
 
 
 	// load LinkProtocols

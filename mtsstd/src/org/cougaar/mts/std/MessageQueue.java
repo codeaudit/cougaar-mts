@@ -26,9 +26,13 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.core.thread.Schedulable;
-import org.cougaar.util.CircularQueue;
+
+// CircularQueue doesn't support remove so we can't use it here.
+// import org.cougaar.util.CircularQueue;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.TimerTask;
 
 /**
@@ -40,9 +44,20 @@ abstract class MessageQueue
     extends BoundComponent
     implements Runnable
 {
+
+    // Simplified queue
+    private static class SimpleQueue extends LinkedList {
+	Object next() {
+	    if (isEmpty()) return null;
+	    Object x = getFirst();
+	    removeFirst();
+	    return x;
+	}
+    }
+
     
     private TimerTask restartTask;
-    private CircularQueue queue;
+    private SimpleQueue queue;
     private Schedulable thread;
     private String name;
     private AttributedMessage pending;
@@ -52,7 +67,7 @@ abstract class MessageQueue
     MessageQueue(String name, Container container) {
 	this.name = name;
 	pending_lock = new Object();
-	queue = new CircularQueue();
+	queue = new SimpleQueue();
     }
 
 
@@ -71,7 +86,14 @@ abstract class MessageQueue
 
     void removeMessagesFrom(MessageAddress address, ArrayList removed) {
 	synchronized (queue) {
-	    
+	    Iterator itr = queue.iterator();
+	    while (itr.hasNext()) {
+		AttributedMessage msg = (AttributedMessage) itr.next();
+		if (msg.getOriginator().equals(address)) {
+		    removed.add(msg);
+		    itr.remove();
+		}
+	    }
 	}
 	synchronized (pending_lock) {
 	    if (pending != null && pending.getOriginator().equals(address)) {

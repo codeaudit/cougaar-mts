@@ -25,7 +25,9 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * A factory which makes DestinationQueues.  It uses the standard
@@ -37,12 +39,14 @@ public class DestinationQueueFactory
     implements DestinationQueueProviderService, ServiceProvider
 {
     private HashMap queues;
+    private ArrayList impls;
     private Container container;
 
     DestinationQueueFactory(Container container) 
     {
 	this.container = container;
 	queues = new HashMap();
+	impls = new ArrayList();
     }
 
     /**
@@ -61,22 +65,36 @@ public class DestinationQueueFactory
 	    q = (DestinationQueue) attachAspects(qimpl, 
 						 DestinationQueue.class);
 	    qimpl.setDelegate(q);
-	    queues.put(destination, q);
+	    synchronized (queues) {
+		queues.put(destination, q);
+		impls.add(qimpl);
+	    }
 	}
 	return q;
     }
 
 
 
+    public void removeMessagesFrom(MessageAddress address, ArrayList removed) {
+	synchronized (queues) {
+	    Iterator itr = impls.iterator();
+	    while (itr.hasNext()) {
+		MessageQueue queue = (MessageQueue) itr.next();
+		queue.removeMessagesFrom(address, removed);
+	    }
+	}
+    }
 
 
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
     {
-	// Could restrict this request to the Router
+	// Restrict this service
 	if (serviceClass == DestinationQueueProviderService.class) {
-	    if (requestor instanceof RouterImpl) return this;
+	    if (requestor instanceof RouterImpl ||
+		requestor instanceof SendLinkImpl) 
+		return this;
 	} 
 	return null;
     }
