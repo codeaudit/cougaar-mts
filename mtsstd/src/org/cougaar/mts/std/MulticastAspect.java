@@ -69,7 +69,7 @@ public class MulticastAspect extends StandardAspect
 		if (destination.equals(MessageAddress.LOCAL)) {
 		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
 			loggingService.debug("MCAST: Local multicast");
-		    nodeAddr = getRegistry().getLocalAddress();
+		    nodeAddr = getNameSupport().getNodeMessageAddress();
 		    copy = new AttributedMessage(msg);
 		    copy.setTarget(nodeAddr);
 		    super.sendMessage(copy);

@@ -21,7 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.node.NodeAgent;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
@@ -228,10 +227,6 @@ final class MessageTransportRegistry
 	public Iterator findRemoteMulticastTransports(MulticastMessageAddress addr)
 	{
 	    return nameSupport().lookupMulticast(addr);
-	}
-
-	public MessageAddress getLocalAddress() {
-	    return nameSupport().getNodeMessageAddress();
 	}
 
 

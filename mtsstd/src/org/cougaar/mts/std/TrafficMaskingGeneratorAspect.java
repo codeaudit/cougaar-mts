@@ -329,7 +329,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // The first time we see a message, setup the auto timer to
 	    //send fake messages(only if system properties were set)
 	    if (requestRate > 0 && !timerOn) {
-		myAddress = getRegistry().getLocalAddress();
+		myAddress = getNameSupport().getNodeMessageAddress();
 		setupTimerTasks();
 		timerOn = true;
 	    }
@@ -466,7 +466,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	private class Task implements Runnable {
 	    public void run() {
 		byte[] contents = randomContents(requestSize);
-		myAddress = getRegistry().getLocalAddress();
+		myAddress = getNameSupport().getNodeMessageAddress();
 		FakeRequestMessage request = 
 		    new FakeRequestMessage(myAddress, destination, contents);
 		maskingQDelegate.sendFakeMessage(request);

@@ -43,7 +43,6 @@ public interface MessageTransportRegistryService extends Service
     ReceiveLink findLocalReceiveLink(MessageAddress id);
     Iterator findLocalMulticastReceivers(MulticastMessageAddress addr);
     Iterator findRemoteMulticastTransports(MulticastMessageAddress addr);
-    MessageAddress getLocalAddress();
     void registerClient(MessageTransportClient client);
     void unregisterClient(MessageTransportClient client);
     void registerMTS(MessageTransportClient client);
