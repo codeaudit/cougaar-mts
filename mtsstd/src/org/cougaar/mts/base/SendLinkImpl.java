@@ -57,36 +57,10 @@ final public class SendLinkImpl
     private Long incarnation;
     private Object flush_lock = new Object();
 
-    private class BlockingWPCallback implements Callback {
-	boolean callback;
-	AddressEntry entry;
-	
-	BlockingWPCallback()
-	{
-	    callback = false;
-	}
-	
-	public void execute(Response response) 
-	{
-	    if (response.isSuccess()) {
-		if (loggingService.isInfoEnabled()) {
-		    loggingService.info("WP Response: "+response);
-		}
-		entry = ((Response.Get) response).getAddressEntry();
-		callback = true;
-		synchronized (this) {
-		    this.notify();
-		}
-	    } else {
-		loggingService.error("WP Error: "+response);
-	    }
-	}
-    }
-
-
-    SendLinkImpl(MessageAddress addr, ServiceBroker sb)
+    SendLinkImpl(MessageAddress addr, long incarnation, ServiceBroker sb)
     {
 	this.addr = addr;
+	this.incarnation = new Long(incarnation);
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	sendq_factory = (SendQueueProviderService)
@@ -98,37 +72,6 @@ final public class SendLinkImpl
 			  null);
 	loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
-
-	String agentID = addr.getAddress();
-	WhitePagesService wp = (WhitePagesService)
-	    sb.getService(this, WhitePagesService.class, null);
-	long incn = 0;
-	try {
-	    AddressEntry entry;
-	    BlockingWPCallback callback = new BlockingWPCallback();
-	    synchronized (callback) {
-		wp.get(agentID, VERSION, callback);
-		// Callback could be invoked in this thread!  Don't
-		// wait in that case.
-		while (!callback.callback) {
-		    SchedulableStatus.beginWait("Waiting for WP callback");
-		    try { callback.wait(); }
-		    catch (InterruptedException ex) {}
-		    SchedulableStatus.endBlocking();
-		}
-	    }
-	    entry = callback.entry;
-	    if (entry != null) {
-		String path = entry.getURI().getPath();
-		int end = path.indexOf('/', 1);
-		String incn_str = path.substring(1, end);
-		incn = Long.parseLong(incn_str);
-	    }
-	} catch (Exception ex) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("Failed Incarnation",ex);
-	}
-	incarnation = new Long(incn);
     }
 
 

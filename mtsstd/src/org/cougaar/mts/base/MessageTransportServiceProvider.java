@@ -271,11 +271,12 @@ implements ServiceProvider
     private Object findOrMakeProxy(Object requestor) {
         MessageTransportClient client = (MessageTransportClient) requestor;
         MessageAddress addr = client.getMessageAddress();
+        long incarnation = client.getIncarnationNumber();
         Object proxy = proxies.get(addr);
         if (proxy != null) return proxy;
 
         // Make SendLink and attach aspect delegates
-        SendLink link = new SendLinkImpl(addr, getChildServiceBroker());
+        SendLink link = new SendLinkImpl(addr, incarnation, getChildServiceBroker());
         Class c = SendLink.class;
         Object raw = aspectSupport.attachAspects(link, c);
         link = (SendLink) raw;
