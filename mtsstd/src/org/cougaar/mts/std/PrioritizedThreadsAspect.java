@@ -124,7 +124,7 @@ public class PrioritizedThreadsAspect
     
 
     // ThreadListener
-    public void threadPending(Schedulable thread, Object consumer) {
+    public void threadQueued(Schedulable thread, Object consumer) {
 	if (consumer instanceof DestinationQueue) {
 	    // Note the thread's priority just before it goes on the
 	    // queue.  The comparator will use this later. 
@@ -135,10 +135,19 @@ public class PrioritizedThreadsAspect
 	}
     }
 
+    public void threadDequeued(Schedulable thread, Object consumer) {
+    }
+
     public void threadStarted(Schedulable thread, Object consumer) {
     }
 
     public void threadStopped(Schedulable thread, Object consumer) {
+    }
+
+    public void rightGiven(String consumer) {
+    }
+
+    public  void rightReturned(String consumer) {
     }
 
 }

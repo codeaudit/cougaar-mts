@@ -249,6 +249,9 @@ public final class MessageTransportServiceProvider
 
 	Debug.load(loggingService);
 
+	// ######### Test only - get the root ThreadListenerService
+	// new TestListener(sb);
+
 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
 	tsp.provideServices(sb);
 	
