@@ -31,42 +31,18 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.servlet.ServletService;
 import org.cougaar.core.service.MessageStatisticsService;
 
-public class StatisticsServlet extends HttpServlet 
+public class StatisticsServlet extends BaseServlet
 {
 
     protected MessageStatisticsService statisticsService;
-    protected String nodeID;
-    protected DecimalFormat f4_2;
 
     public StatisticsServlet(ServiceBroker sb) {
-	ServletService servletService = (ServletService)
-	    sb.getService(this, ServletService.class, null);
-	if (servletService == null) {
-	    throw new RuntimeException("Unable to obtain ServletService");
-	}
-
-
+	super(sb);
 	statisticsService = (MessageStatisticsService)
 	    sb.getService(this, MessageStatisticsService.class, null);
-
-	NodeIdentificationService node_id_svc = (NodeIdentificationService)
-	    sb.getService(this, NodeIdentificationService.class, null);
-	nodeID = node_id_svc.getNodeIdentifier().toString();
-	
-
-	// register our servlet
-	try {
-	    servletService.register(myPath(), this);
-	} catch (Exception e) {
-	    throw new RuntimeException("Unable to register servlet at path <"
-				       +myPath()+ ">: " +e.getMessage());
-	}
-
-	f4_2 = new DecimalFormat("#0.00");
     }
 
     protected String myPath() {
@@ -78,8 +54,23 @@ public class StatisticsServlet extends HttpServlet
     }
 
     protected void outputPage(PrintWriter out,
-			      MessageStatistics.Statistics stats)
+			      HttpServletRequest request)
     {
+	String reset_string = request.getParameter("reset");
+	boolean reset = reset_string != null && 
+	    reset_string.equalsIgnoreCase("true");
+
+	MessageStatistics.Statistics stats = null;
+	if (statisticsService!=null) {
+	    stats = statisticsService.getMessageStatistics(reset);
+	}
+	if (stats == null) {
+	    out.print("<p><b>");
+	    out.print("ERROR: Message Statistics Service is not Available\n");
+	    out.print("</b><p> org.cougaar.core.mts.StatisticsAspect ");
+	    out.print("should be loaded into Node \n");
+	    return;
+	}
 	out.print("<table border=1>\n");
 	out.print("<tr><b>");
 	out.print("<td><b>AvgQueueLength</b></td>");
@@ -121,52 +112,6 @@ public class StatisticsServlet extends HttpServlet
 
 	    out.print("</b></tr>");
 	}
-
 	out.print("</table>");
-    }
-
-
-    public void doGet(HttpServletRequest request,
-		      HttpServletResponse response) 
-	throws java.io.IOException 
-    {
-
-	String refresh = request.getParameter("refresh");
-	int refreshSeconds = 
-	    ((refresh != null) ?
-	     Integer.parseInt(refresh) :
-	     0);
-	String reset_string = request.getParameter("reset");
-	boolean reset = reset_string != null && 
-	    reset_string.equalsIgnoreCase("true");
-
-	MessageStatistics.Statistics stats = 
-	    statisticsService.getMessageStatistics(reset);
-
-	response.setContentType("text/html");
-	PrintWriter out = response.getWriter();
-
-	out.print("<html><HEAD>");
-	if (refreshSeconds > 0) {
-	    out.print("<META HTTP-EQUIV=\"refresh\" content=\"");
-	    out.print(refreshSeconds);
-	    out.print("\">");
-	}
-	out.print("<TITLE>");
-	out.print(myTitle());
-	out.print("</TITLE></HEAD><body><H1>");
-	out.print(myTitle());
-	out.print("</H1>");
-
-	out.print("Date: ");
-	out.print(new java.util.Date());
-	
-	outputPage(out, stats);
-	out.print("<p><p><br>RefreshSeconds: ");	
-	out.print(refreshSeconds);
-
-	out.print("</body></html>\n");
-
-	out.close();
     }
 }

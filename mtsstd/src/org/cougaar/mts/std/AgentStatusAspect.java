@@ -55,7 +55,8 @@ public class AgentStatusAspect
 	AgentState state = (AgentState) states.get(address);
 	if (state == null) {
 	    state = new AgentState();
-	    
+	    System.out.println("Initializing State Agent"+address);
+	    // JAZ must be a better way to initialize an object
 	    state.timestamp = System.currentTimeMillis();
 	    state.status = UNREGISTERED;
 	    state.queueLength=0;
@@ -81,6 +82,33 @@ public class AgentStatusAspect
 	return state;
     }
 
+    // JAZ must be a better way to clone an object
+    public AgentState snapshotState(AgentState state) {
+	AgentState result = new AgentState();
+	synchronized (state) {
+	    result.timestamp = state.timestamp;
+	    result.status = state.status;
+	    result.queueLength = state.queueLength;
+	    result.receivedCount=state.receivedCount;
+	    result.receivedBytes=state.receivedBytes;
+	    result.lastReceivedBytes=state.lastReceivedBytes;
+	    result.sendCount =state.sendCount ;
+	    result.deliveredCount =state.deliveredCount ;
+	    result.deliveredBytes=state.deliveredBytes;
+	    result.lastDeliveredBytes=state.lastDeliveredBytes;
+	    result.deliveredLatencySum = state.deliveredLatencySum ;
+	    result.lastDeliveredLatency =state.lastDeliveredLatency ;
+	    result.averageDeliveredLatency =state.averageDeliveredLatency ;
+	    result.unregisteredNameCount =state.unregisteredNameCount ;
+	    result.nameLookupFailureCount =state.nameLookupFailureCount ;
+	    result.commFailureCount =state.commFailureCount ;
+	    result.misdeliveredMessageCount =state.misdeliveredMessageCount ;
+	    result.lastLinkProtocolTried =state.lastLinkProtocolTried ;
+	    result.lastLinkProtocolSuccess=state.lastLinkProtocolSuccess;
+	}
+	return result;
+    }
+ 
     private Metric longMetric(long value) {
 	return new MetricImpl(new Long(value),
 			      SEND_CREDIBILITY,
@@ -100,8 +128,15 @@ public class AgentStatusAspect
 	}
     }
 
+    // must snapshot state or caller will get a dynamic value.
     public AgentState getAgentState(MessageAddress address) {
-	return ensureState(address);
+	//AgentState state = (AgentState) states.get(address);
+	AgentState state = ensureState(address);
+	System.out.println("#########Agent Status="+address+
+			   "messageOut="+state.sendCount+
+			   "states="+states.size());
+	if (state != null) return snapshotState(state);
+	else return null;
     }
 
 
@@ -171,7 +206,9 @@ public class AgentStatusAspect
 			((1-alpha) * latency);
 		    state.lastLinkProtocolSuccess=getProtocolClass().getName();
 		}
-
+		System.out.println("Wrote Status="+addr+
+				   "messageOut="+state.sendCount+
+				   "states="+states.size());
 		return meta;
 
 	    } catch (UnregisteredNameException unreg) {
