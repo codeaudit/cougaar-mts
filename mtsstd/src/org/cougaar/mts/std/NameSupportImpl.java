@@ -25,14 +25,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.net.URI;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
-import org.cougaar.core.service.wp.Application;
-import org.cougaar.core.service.wp.Cert;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
@@ -42,9 +41,6 @@ import org.cougaar.core.service.wp.WhitePagesService;
  * NameServers from the rest of the message transport subsystem . */
 public final class NameSupportImpl implements ServiceProvider
 {
-    private static final long TTL = Long.MAX_VALUE;
-    private static final Cert CERT = Cert.NULL;
-
     private NameSupport service;
 
     NameSupportImpl(String id,  ServiceBroker sb) 
@@ -107,10 +103,10 @@ public final class NameSupportImpl implements ServiceProvider
 
 	private final void _register(String agent, 
 				     URI ref,
-				     String application) 
+				     String protocol) 
 	{
-	    Application app = Application.getApplication(application);
-	    AddressEntry entry = new AddressEntry(agent, app, ref, CERT, TTL);
+	    AddressEntry entry = 
+                AddressEntry.getAddressEntry(agent, protocol, ref);
 	    try {
               final LoggingService ls = loggingService;
               Callback cb = new Callback() {
@@ -133,10 +129,10 @@ public final class NameSupportImpl implements ServiceProvider
 
 	private final void _unregister(String agent, 
 				       URI ref,
-				       String application) 
+				       String protocol) 
 	{
-	    Application app = Application.getApplication(application);
-	    AddressEntry entry = new AddressEntry(agent, app, ref, CERT, TTL);
+	    AddressEntry entry =
+               AddressEntry.getAddressEntry(agent, protocol, ref);
 	    try {
 		wpService.unbind(entry);
 	    } catch (Exception ex) {
@@ -170,68 +166,42 @@ public final class NameSupportImpl implements ServiceProvider
 					     String protocol,
 					     long timeout)
 	{
-	    AddressEntry[] result = null;
+            AddressEntry entry;
 	    try {
-		result = wpService.get(address.getAddress(), timeout);
+		entry = wpService.get(address.getAddress(), protocol, timeout);
 	    } catch (Exception ex) {
+                entry = null;
 		loggingService.error(null, ex);
 	    }
-
-	    if (result == null) return null;
-
-	    for (int i=0; i<result.length; i++) {
-		AddressEntry entry = result[i];
-		if (entry.getApplication().toString().equals(protocol)) {
-		    return entry.getAddress();
-		}
-	    }
-
-	    // no match
-	    return null;
-	}
-
-
-
-	public class AddressIterator implements Iterator {
-	    private AddressEntry[] entries;
-	    private int index;
-
-	    AddressIterator(AddressEntry[] entries) 
-	    {
-		this.entries = entries;
-		this.index = 0;
-	    }
-
-	    public boolean hasNext() {
-		return index < entries.length;
-	    }
-
-	    public Object next() {
-		if (index >= entries.length) return null;
-		AddressEntry entry = entries[index++];
-		String node = entry.getApplication().toString();
-		return MessageAddress.getMessageAddress(node);
-	    }
-
-	    public void remove() {
-		throw new RuntimeException("No way Jose");
-	    }
-
+	    return (entry == null ? null : entry.getURI());
 	}
 
 
 	public void registerMTS(MessageAddress mts_address) {
-	    String name = mts_address.getAddress();
-	    URI reference = URI.create("mts://" +name);
-	    _register("MTS", reference, name);
+	    String node = mts_address.getAddress();
+	    URI reference = URI.create("mts://" +node);
+	    _register("MTS", reference, node);
 	}
 
 
 	public Iterator lookupMulticast(MulticastMessageAddress address) {
 	    try {
-		AddressEntry[] result = wpService.get("MTS");
+		Map result = wpService.getAll("MTS");
 		if (result == null) return null;
-		return new AddressIterator(result);
+                final Iterator iter = result.values().iterator();
+                return new Iterator() {
+                    public boolean hasNext() {
+                        return iter.hasNext();
+                    }
+                    public Object next() {
+                        AddressEntry entry = (AddressEntry) iter.next();
+                        String node = entry.getType();
+                        return MessageAddress.getMessageAddress(node);
+                    }
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
 	    } catch (Exception ex) {
 		loggingService.error(null, ex);
 		return null;

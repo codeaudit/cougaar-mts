@@ -28,7 +28,6 @@ import org.cougaar.core.qos.metrics.GossipKeyDistributionService;
 import org.cougaar.core.qos.metrics.GossipUpdateService;
 import org.cougaar.core.qos.metrics.MetricsService;
 import org.cougaar.core.service.wp.AddressEntry;
-import org.cougaar.core.service.wp.Application;
 import org.cougaar.core.service.wp.WhitePagesService;
 
 import java.util.ArrayList;
@@ -41,9 +40,7 @@ import java.util.Map;
 public class GossipAspect 
     extends StandardAspect
 {
-    private static final Application TOPOLOGY = 
-	Application.getApplication("topology");
-    private static final String SCHEME = "node";
+    private static final String TOPOLOGY = "topology";
     static final String VALUE_GOSSIP_ATTR = 
 	"org.cougaar.core.mts.value-gossip";
     static final String KEY_GOSSIP_ATTR = 
@@ -129,14 +126,14 @@ public class GossipAspect
     private MessageAddress agentNode(MessageAddress agentAddr) {
 	String agent = agentAddr.getAddress();
 	try {
-	    AddressEntry entry = wpService.get(agent, TOPOLOGY, SCHEME);
+	    AddressEntry entry = wpService.get(agent, TOPOLOGY);
 	    if (entry == null) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error("WhitePages returned null entry for agent " 
 					 +agent);
 		return LIMBO;
 	    } else {
-		String node = entry.getAddress().getPath().substring(1);
+		String node = entry.getURI().getPath().substring(1);
 		return MessageAddress.getMessageAddress(node);
 	    }
 	} catch (Exception ex) {

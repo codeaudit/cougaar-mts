@@ -28,13 +28,11 @@ import java.io.PrintStream;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.wp.AddressEntry;
-import org.cougaar.core.service.wp.Application;
 import org.cougaar.core.service.wp.WhitePagesService;
 
 public class ForwardMessageLoggingAspect extends StandardAspect
 {
-    static final Application TOPOLOGY = Application.getApplication("topology");
-    static final String SCHEME = "node";
+    static final String TOPOLOGY = "topology";
 
     private static final char SEPR = '\t';
 
@@ -158,11 +156,11 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    remote == null ? null : extractInetAddr(remote.toString());
         String dst_node =  null;
 	try {
-	    AddressEntry entry = wp.get(dst_agent, TOPOLOGY, SCHEME);
+	    AddressEntry entry = wp.get(dst_agent, TOPOLOGY);
 	    if (entry == null) {
 		dst_node = "???";
 	    } else {
-		dst_node = entry.getAddress().getPath().substring(1);
+		dst_node = entry.getURI().getPath().substring(1);
 	    }
 	} catch (Exception ex) {
 	    ex.printStackTrace();

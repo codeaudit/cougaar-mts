@@ -26,15 +26,13 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
-import org.cougaar.core.service.wp.Application;
 import org.cougaar.core.service.wp.WhitePagesService;
 
 
 final public class SendLinkImpl
     implements SendLink
 {
-    static final Application TOPOLOGY = Application.getApplication("topology");
-    static final String SCHEME = "version";
+    static final String VERSION = "version";
 
     private SendQueue sendq;
     private SendQueueImpl sendq_impl;
@@ -65,9 +63,9 @@ final public class SendLinkImpl
 	    sb.getService(this, WhitePagesService.class, null);
 	long incn = 0;
 	try {
-	    AddressEntry entry = wp.get(agentID, TOPOLOGY, SCHEME);
+	    AddressEntry entry = wp.get(agentID, VERSION);
 	    if (entry != null) {
-		String path = entry.getAddress().getPath();
+		String path = entry.getURI().getPath();
 		int end = path.indexOf('/', 1);
 		String incn_str = path.substring(1, end);
 		incn = Long.parseLong(incn_str);
