@@ -53,4 +53,6 @@ public interface MessageAttributes extends Serializable
     void pushLocalValue(String attribute, Object value);
     void removeLocalValue(String attribute, Object value);
 
+    MessageAttributes cloneAttributes();
+
 }

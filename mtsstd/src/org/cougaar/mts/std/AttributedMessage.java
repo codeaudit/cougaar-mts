@@ -56,11 +56,11 @@ public class AttributedMessage
     private String FILTERS_ATTRIBUTE = "Filters";
 
     private Message contents;
-    private SimpleMessageAttributes attributes;
+    private MessageAttributes attributes;
 
     // We control the externalization, so the 'transient' tag here is
     // really just documentation.
-    private transient SimpleMessageAttributes snapshot;
+    private transient MessageAttributes snapshot;
 
 
     /** 
@@ -93,7 +93,7 @@ public class AttributedMessage
     {
 	super(msg.getOriginator(), msg.getTarget());
 	this.contents = msg.contents;
-	attributes = new SimpleMessageAttributes(msg.attributes);
+	attributes = msg.attributes.cloneAttributes();
     }
 
 
@@ -105,7 +105,7 @@ public class AttributedMessage
     {
 	super(source.getOriginator(), source.getTarget());
 	this.contents = null;
-	attributes = new SimpleMessageAttributes(source.attributes);
+	attributes = source.attributes.cloneAttributes();
     }
 
 
@@ -122,19 +122,19 @@ public class AttributedMessage
 	super(contents == null ? null : contents.getOriginator(), 
 	      contents == null ? null : contents.getTarget());
 	this.contents = contents;
-	attributes = new SimpleMessageAttributes(initialAttributes.attributes);
+	attributes = initialAttributes.attributes.cloneAttributes();
     }
 
 
-    AttributedMessage(Message contents, SimpleMessageAttributes attributes) {
+    AttributedMessage(Message contents, MessageAttributes attributes) {
 	super(contents == null ? null : contents.getOriginator(), 
 	      contents == null ? null : contents.getTarget());
 	this.contents = contents;
-	this.attributes = new SimpleMessageAttributes(attributes);
+	this.attributes = attributes.cloneAttributes();
     }
 
     synchronized void snapshotAttributes() {
-	snapshot = new SimpleMessageAttributes(attributes);
+	snapshot = attributes.cloneAttributes();
     }
 
     
@@ -169,6 +169,10 @@ public class AttributedMessage
     // MessageAttributes interface
     // Delegate all calls 
 
+
+    public MessageAttributes cloneAttributes() {
+	return attributes.cloneAttributes();
+    }
 
     public Object getAttribute(String attribute) {
 	return attributes.getAttribute(attribute);

@@ -38,13 +38,6 @@ public class SimpleMessageAttributes
     }
 
 
-    public SimpleMessageAttributes(SimpleMessageAttributes attr) {
-	this();
-	data.putAll(attr.data);
-	local_data.putAll(attr.local_data);
-    }
-
-
     private void readObject(ObjectInputStream ois)
 	throws java.io.IOException, ClassNotFoundException
     {
@@ -54,6 +47,14 @@ public class SimpleMessageAttributes
 
 
     // MessageAttributes interface
+
+    public MessageAttributes cloneAttributes() {
+	SimpleMessageAttributes clone = new SimpleMessageAttributes();
+	clone.data.putAll(data);
+	clone.local_data.putAll(local_data);
+	return clone;
+    }
+
 
     public Object getAttribute(String attribute) {
 	Object value = getAttribute(attribute, local_data);
