@@ -174,6 +174,15 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
     
  
     /**
+     * HTTPS overrides this.
+     */
+    protected int getPort(RootServletService ss)
+    {
+	return ss.getHttpPort();
+    }
+
+
+    /**
      * This function binds the url in the wp early.  But the servlet
      * at that url can't be made until the ServletService is
      * available.  This is handled by registerServlet(), which won't
@@ -186,7 +195,7 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
 	ServiceBroker sb = getServiceBroker();
 	RootServletService ss = (RootServletService) 
 	    sb.getService(this, RootServletService.class, null);
-	int port = ss.getHttpPort();
+	int port = getPort(ss);
 	MessageAddress node_addr = getNameSupport().getNodeMessageAddress();
 	String node_name = node_addr.toAddress();
 	try {

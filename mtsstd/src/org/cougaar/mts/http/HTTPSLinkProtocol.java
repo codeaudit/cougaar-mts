@@ -24,7 +24,7 @@
  */ 
 package org.cougaar.mts.http;
 
-import org.cougaar.core.service.ServletService;
+import org.cougaar.lib.web.service.RootServletService;
 import org.cougaar.mts.base.LinkProtocol; // javadoc only
 import org.cougaar.mts.std.AttributedMessage;
 
@@ -36,18 +36,14 @@ public class HTTPSLinkProtocol extends HTTPLinkProtocol {
   public HTTPSLinkProtocol() {
     super();
   }
+  protected int getPort(RootServletService ss) {
+    return ss.getHttpsPort();
+  }
   public String getProtocolType() {
     return "-HTTPS"; 
   }
   public String getProtocol() {
     return "https";
-  }
-  protected void setPort(ServletService ss) {
-    int httpsPort = ss.getHttpsPort();
-    if(httpsPort == -1) {
-      throw new RuntimeException("link protocol requires https (see parameter org.cougaar.lib.web.https.port).");
-    }
-    _port = httpsPort;
   }
   /**
    * Returns TRUE
