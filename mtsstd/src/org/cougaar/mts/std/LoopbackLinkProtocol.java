@@ -21,29 +21,31 @@
 
 package org.cougaar.core.mts;
 
+import java.util.HashMap;
+
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
 
 
 /**
- * This protocol handles all intra-node message traffic.  It can act
- * as its own DestinationLink, since this transport only sees traffic
- * for one destination.  The cost function is minimal (0) for local
- * traffic, and maximal (Integer.MAX_VALUE) for any other traffic. */
+ * This protocol handles all intra-node message traffic.   */
 class LoopbackLinkProtocol 
     extends LinkProtocol
-    implements DestinationLink
 {
 
-    private DestinationLink link;
+    private HashMap links;
 
     public LoopbackLinkProtocol(String id, AspectSupport aspectSupport) {
 	super(aspectSupport);
+	links = new HashMap();
     }
 
-    public DestinationLink getDestinationLink(MessageAddress address) {
+    public synchronized DestinationLink getDestinationLink(MessageAddress address) {
+	DestinationLink link = (DestinationLink) links.get(address);
 	if (link == null) {
-	    link = (DestinationLink) attachAspects(this,DestinationLink.class);
+	    link = new Link(address);
+	    link = (DestinationLink) attachAspects(link,DestinationLink.class);
+	    links.put(address, link);
 	}
 	return link;
     }
@@ -69,34 +71,39 @@ class LoopbackLinkProtocol
    
 
 
+    private class Link implements DestinationLink {
+	MessageAddress address;
 
-    // DestinationLink interface
-
-    public int cost(Message msg) {
-	MessageAddress addr = msg.getTarget();
-	if (registry.isLocalClient(addr)) {
-	    return 0;
-	} else {
-	    return Integer.MAX_VALUE;
+	Link(MessageAddress address) {
+	    this.address = address;
 	}
-    }
+
+	public int cost(Message msg) {
+	    MessageAddress addr = msg.getTarget();
+	    if (registry.isLocalClient(addr)) {
+		return 0;
+	    } else {
+		return Integer.MAX_VALUE;
+	    }
+	}
 	
 
 
-    public void forwardMessage(Message message) 
-	throws MisdeliveredMessageException
-    {
-	deliverer.deliverMessage(message, message.getTarget());
-    }
+	public void forwardMessage(Message message) 
+	    throws MisdeliveredMessageException
+	{
+	    deliverer.deliverMessage(message, message.getTarget());
+	}
 
-    public boolean retryFailedMessage(Message message, int retryCount) {
-	return true;
-    }
+	public boolean retryFailedMessage(Message message, int retryCount) {
+	    return true;
+	}
 
     
-    public Class getProtocolClass() {
-	return LoopbackLinkProtocol.class;
-    }
+	public Class getProtocolClass() {
+	    return LoopbackLinkProtocol.class;
+	}
 
+    }
 
 }
