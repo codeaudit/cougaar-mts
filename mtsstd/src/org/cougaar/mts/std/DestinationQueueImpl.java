@@ -38,7 +38,9 @@ import java.util.Set;
  * including link selection, continuosly, gradually increasing the
  * delay between retries.  Once the message has been successfully
  * forwared, the ServiceProxy will be notified. */
-class DestinationQueueImpl extends MessageQueue implements DestinationQueue
+class DestinationQueueImpl 
+    extends MessageQueue 
+    implements DestinationQueue, DebugFlags
 {
     private static final int MAX_DELAY = 60 * 1000; // 1 minute
     private MessageAddress destination;
@@ -116,13 +118,13 @@ class DestinationQueueImpl extends MessageQueue implements DestinationQueue
 		    // nothing to say here
 		} catch (NameLookupException lookup_error) {
 		    lastException = lookup_error;
-		    lookup_error.printStackTrace();
+		    if (Debug.debug(COMM)) lookup_error.printStackTrace();
 		} catch (CommFailureException comm_failure) {
 		    lastException = comm_failure;
-		    comm_failure.printStackTrace();
+		    if (Debug.debug(COMM)) comm_failure.printStackTrace();
 		} catch (MisdeliveredMessageException misd) {
 		    lastException = misd;
-		    System.err.println(misd);
+		    if (Debug.debug(COMM)) System.err.println(misd);
 		}
 
 		if (!link.retryFailedMessage(message, retryCount)) break;

@@ -53,8 +53,8 @@ public class SequenceAspect extends StandardAspect
 
     public Object getDelegate(Object delegate, Class type) 
     {
-	if (type ==  DestinationLink.class) {
-	    return new SequencedDestinationLink((DestinationLink) delegate);
+	if (type ==  SendLink.class) {
+	    return new SequencedSendLink((SendLink) delegate);
 	} else {
 	    return null;
 	}
@@ -72,35 +72,33 @@ public class SequenceAspect extends StandardAspect
     
 
 
-    private class SequencedDestinationLink 
-	extends DestinationLinkDelegateImplBase 
+    private class SequencedSendLink 
+	extends SendLinkDelegateImplBase 
     {
 	HashMap sequenceNumbers;
-	private SequencedDestinationLink(DestinationLink link) {
+	private SequencedSendLink(SendLink link) {
 	    super(link);
 	    sequenceNumbers = new HashMap();
 	}
 
-	private int nextSeq(MessageAddress source) {
-	    Integer next = (Integer) sequenceNumbers.get(source);
+	private int nextSeq(Message msg) {
+	    // Verify that msg.getOriginator()  == getAddress() ?
+	    MessageAddress dest = msg.getTarget();
+	    Integer next = (Integer) sequenceNumbers.get(dest);
 	    if (next == null) {
-		sequenceNumbers.put(source, new Integer(1));
+		sequenceNumbers.put(dest, new Integer(1));
 		return 0;
 	    } else {
 		int n = next.intValue();
-		sequenceNumbers.put(source, new Integer(1+n));
+		sequenceNumbers.put(dest, new Integer(1+n));
 		return n;
 	    }
 	}
 
-	public void forwardMessage(Message message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
+	public void sendMessage(Message message) 
 	{
-	    int sequence_number = nextSeq(message.getOriginator());
-	    link.forwardMessage(new SequenceEnvelope(message, sequence_number));
+	    int sequence_number = nextSeq(message);
+	    link.sendMessage(new SequenceEnvelope(message, sequence_number));
 	}
 
 
