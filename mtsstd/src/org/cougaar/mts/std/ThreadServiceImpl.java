@@ -235,7 +235,7 @@ class ThreadServiceImpl
      */
     private static class ControllablePool extends ReusableThreadPool {
 	private ThreadServiceProxy proxy;
-	private CircularQueue pendingThreads;
+	private PrioritizedQueue pendingThreads;
 	private int maxRunningThreads;
 	private int runningThreadCount = 0;
 
@@ -245,7 +245,7 @@ class ThreadServiceImpl
 	{
 	    super(group, init, max);
 	    this.proxy = proxy;
-	    pendingThreads = new CircularQueue();
+	    pendingThreads = new PrioritizedQueue();
 	    maxRunningThreads = 
 		PropertyParser.getInt(MaxRunningCountProp, 
 				      MaxRunningCountDefault);
@@ -318,7 +318,7 @@ class ThreadServiceImpl
 	    }
 	}
 
-	private void removeRunningThread(Thread thread) {
+	private void removeRunningThread(ControllableThread thread) {
 	    synchronized (this) { 
 		--runningThreadCount; 
 	    }
@@ -326,16 +326,16 @@ class ThreadServiceImpl
 	    runNextPendingThread();
 	}
 
-	private void startRunningThread(Thread thread) {
+	private void startRunningThread(ControllableThread thread) {
 	    synchronized (this) {
 		++runningThreadCount; 
 	    }
 	    proxy.notifyStart(thread);
 	}
 
-	private synchronized void addPendingThread(Thread thread) {
-	    if (!pendingThreads.contains(thread))
-		pendingThreads.add(thread);
+	private synchronized void addPendingThread(ControllableThread thread) {
+	    thread.timestamp = System.currentTimeMillis();
+	    pendingThreads.add(thread);
 	}
 
     }
@@ -345,8 +345,12 @@ class ThreadServiceImpl
      * A special kind of ReusableThread which will notify listeners at
      * the beginning and end of the internal run method of the thread.
      */
-    private static class ControllableThread extends ReusableThread {
+    private static class ControllableThread
+	extends ReusableThread 
+	implements Prioritized
+    {
 	private ControllablePool pool;
+	private long timestamp;
 
 	ControllableThread(ControllablePool pool) 
 	{
@@ -354,6 +358,16 @@ class ThreadServiceImpl
 	    this.pool = pool;
 	}
 
+
+	// Prioritized
+	public int getPriority() {
+	    // For now just return the Thread priority
+	    return super.getPriority();
+	}
+
+	public long getTimestamp() {
+	    return timestamp;
+	}
 
 	public void start() throws IllegalThreadStateException {
 	    if (pool.canStartThread()) {
