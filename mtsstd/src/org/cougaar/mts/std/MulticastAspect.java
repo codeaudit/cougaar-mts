@@ -66,14 +66,14 @@ public class MulticastAspect extends StandardAspect
 		AttributedMessage copy;
 		MessageAddress nodeAddr;
  		if (destination.equals(MessageAddress.MULTICAST_LOCAL)) {
-		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
+		    if (loggingService.isDebugEnabled())
 			loggingService.debug("MCAST: Local multicast");
 		    nodeAddr = getNameSupport().getNodeMessageAddress();
 		    copy = new AttributedMessage(msg);
 		    copy.setTarget(nodeAddr);
 		    super.sendMessage(copy);
 		} else {
-		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
+		    if (loggingService.isDebugEnabled())
 			loggingService.debug("MCAST: Remote multicast to "
 						  + destination);
 		    MulticastMessageAddress dst = 
@@ -82,7 +82,7 @@ public class MulticastAspect extends StandardAspect
 			getRegistry().findRemoteMulticastTransports(dst);
 		    while (itr.hasNext()) {
 			nodeAddr = (MessageAddress) itr.next();
-			if (Debug.isDebugEnabled(loggingService,MULTICAST))
+			if (loggingService.isDebugEnabled())
 			    loggingService.debug("MCAST: next address = " 
 						      + nodeAddr);
 			copy = new AttributedMessage(msg);
@@ -115,7 +115,7 @@ public class MulticastAspect extends StandardAspect
 		(MulticastMessageAddress) msg.getAttribute(MCAST);
 	    
 	    if (mcastAddr != null) {
-		if (Debug.isDebugEnabled(loggingService,MULTICAST)) 
+		if (loggingService.isDebugEnabled()) 
 		    loggingService.debug("MCAST: Received multicast to "
 					      + mcastAddr);
 		Iterator i = 
@@ -125,7 +125,7 @@ public class MulticastAspect extends StandardAspect
 		    new AttributedMessage(msg.getRawMessage(), msg);
 		while (i.hasNext()) {
 		    localDestination = (MessageAddress) i.next();
-		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
+		    if (loggingService.isDebugEnabled())
 			loggingService.debug("MCAST: Delivering to "
 						  + localDestination);
 		    super.deliverMessage(copy, localDestination);

@@ -144,14 +144,14 @@ public class FlushAspect extends StandardAspect
 	
 	public  void unregisterClient(MessageTransportClient client) {
 	    super.unregisterClient(client);
-	    if (Debug.isDebugEnabled(loggingService,FLUSH)) {
+	    if (loggingService.isDebugEnabled()) {
 		loggingService.info("Unregistered " + 
 				    getAddress());
 	    } 
 	}
 	public void release() {
 	    unregisterSendLink(this, getAddress());
-	    if (Debug.isDebugEnabled(loggingService,FLUSH)) {
+	    if (loggingService.isDebugEnabled()) {
 		loggingService.info("Released " + getAddress());
 	    }
 	    super.release();
@@ -171,7 +171,7 @@ public class FlushAspect extends StandardAspect
 	public void sendMessage(AttributedMessage message) {
 	    synchronized (this) {
 		++outstandingMessages;
-		if (Debug.isDebugEnabled(loggingService,FLUSH)) 
+		if (loggingService.isDebugEnabled()) 
 		    showPending("Message queued");
 	    }
 	    super.sendMessage(message);
@@ -179,7 +179,7 @@ public class FlushAspect extends StandardAspect
 
 	synchronized void messageDelivered(AttributedMessage m) {
 	    --outstandingMessages;
-	    if (Debug.isDebugEnabled(loggingService,FLUSH)) 
+	    if (loggingService.isDebugEnabled()) 
 		showPending("Message delivered");
 	    if (outstandingMessages <= 0) this.notify();
 	}
@@ -196,7 +196,7 @@ public class FlushAspect extends StandardAspect
 	    if (!flushing) return; // do nothing in this case
 
 	    --outstandingMessages;
-	    if (Debug.isDebugEnabled(loggingService,FLUSH)) 
+	    if (loggingService.isDebugEnabled()) 
 		showPending("Message dropped");
 	    droppedMessages.add(message);
 	    if (outstandingMessages <= 0) this.notify();
@@ -225,7 +225,7 @@ public class FlushAspect extends StandardAspect
 	    flushing = true;
 	    this.droppedMessages = droppedMessages;
 	    while (outstandingMessages > 0) {
-		if (Debug.isDebugEnabled(loggingService,FLUSH)) {
+		if (loggingService.isDebugEnabled()) {
 		    loggingService.debug(getAddress() + 
 					      ": Waiting on " + 
 					      outstandingMessages +
@@ -233,7 +233,7 @@ public class FlushAspect extends StandardAspect
 		}
 		try { this.wait(); } catch (InterruptedException ex) {}
 	    }
-	    if (Debug.isDebugEnabled(loggingService,FLUSH)) {
+	    if (loggingService.isDebugEnabled()) {
 		loggingService.debug(getAddress() + 
 					  ": All messages flushed.");
 	    }

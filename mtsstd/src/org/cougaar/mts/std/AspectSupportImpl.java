@@ -84,7 +84,7 @@ final class AspectSupportImpl implements ServiceProvider
 
 
     private class ServiceImpl 
-	implements AspectSupport, DebugFlags
+	implements AspectSupport
     {
 
 	private ArrayList aspects;
@@ -154,7 +154,7 @@ final class AspectSupportImpl implements ServiceProvider
 		aspects.add(aspect);
 		aspects_table.put(classname, aspect);
 	    }
-	    if (Debug.isDebugEnabled(loggingService,ASPECTS))
+	    if (loggingService.isDebugEnabled())
 		loggingService.debug("Added aspect " + aspect);
 	}
 
@@ -198,7 +198,7 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (Debug.isDebugEnabled(loggingService,ASPECTS))
+		    if (loggingService.isDebugEnabled())
 			loggingService.debug("attached " + delegate);
 		}
 	    }
@@ -211,7 +211,7 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getReverseDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (Debug.isDebugEnabled(loggingService,ASPECTS))
+		    if (loggingService.isDebugEnabled())
 			loggingService.debug("reverse attached " 
 						  + delegate);
 		}

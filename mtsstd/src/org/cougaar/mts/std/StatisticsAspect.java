@@ -163,7 +163,7 @@ public class StatisticsAspect
 	public void dispatchNextMessage(AttributedMessage message) {
 	    --current_total_size;
 	    accumulateStatistics();
-	    if (Debug.isDebugEnabled(loggingService,STATISTICS)) {
+	    if (loggingService.isDebugEnabled()) {
 		MessageStatistics.Statistics result = 
 		    getMessageStatistics(false);
 		loggingService.debug("Count=" + result.totalMessageCount
@@ -258,7 +258,7 @@ public class StatisticsAspect
 	    //but before it is garbage collected
 	    msg.setAttribute(MESSAGE_BYTES_ATTRIBUTE, new Integer(byteCount));
 
-	    if (Debug.isDebugEnabled(loggingService,STATISTICS))
+	    if (loggingService.isDebugEnabled())
 		loggingService.debug("byteCount = " + byteCount);
 	}
 

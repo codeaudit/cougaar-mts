@@ -37,7 +37,7 @@ import org.cougaar.core.service.LoggingService;
  * helps certain pieces of the message transport subsystem to find one
  * another. */
 final class MessageTransportRegistry 
-    implements DebugFlags, ServiceProvider
+    implements ServiceProvider
 {
 
     private ServiceImpl service;
@@ -218,14 +218,14 @@ final class MessageTransportRegistry
 			MessageTransportClient client = link.getClient();
 			if (mclass.isAssignableFrom(client.getClass())) {
 			    result.add(entry.getKey());
-			    if (Debug.isDebugEnabled(loggingService,MULTICAST))
+			    if (loggingService.isDebugEnabled())
 				loggingService.debug("Client " +
 							  client + 
 							  " matches " +
 							  mclass + ", added " +
 							  entry.getKey());
 			} else {
-			    if (Debug.isDebugEnabled(loggingService,MULTICAST)) 
+			    if (loggingService.isDebugEnabled()) 
 				loggingService.debug("Client " +
 							  client +
 							  " doesn't match " +
@@ -233,7 +233,7 @@ final class MessageTransportRegistry
 			}
 		    }
 		}
-		if (Debug.isDebugEnabled(loggingService,MULTICAST)) 
+		if (loggingService.isDebugEnabled()) 
 		    loggingService.debug("result=" + result);
 		return result.iterator();
 

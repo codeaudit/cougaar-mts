@@ -33,7 +33,6 @@ import java.util.ArrayList;
  * interface. */
 abstract public class AspectFactory 
     extends BoundComponent
-    implements DebugFlags
 {
 
 

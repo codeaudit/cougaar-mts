@@ -42,7 +42,7 @@ import org.cougaar.core.component.ServiceRevokedListener;
  * attachment is handled in each specific transport class.  */
 abstract public class LinkProtocol 
     extends BoundComponent
-    implements DebugFlags, ServiceProvider
+    implements ServiceProvider
 {
     private MessageDeliverer deliverer;
     

@@ -32,7 +32,6 @@ package org.cougaar.core.mts;
  * messages in envelopes in the proper (ie reverse order).
  */
 public interface MessageTransportAspect 
-    extends DebugFlags
 {
     Object getDelegate(Object delegate, Class type);
 

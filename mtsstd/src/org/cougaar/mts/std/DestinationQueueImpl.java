@@ -38,7 +38,7 @@ import org.cougaar.core.service.LoggingService;
  * forwared, the ServiceProxy will be notified. */
 final class DestinationQueueImpl 
     extends MessageQueue 
-    implements DestinationQueue, DebugFlags
+    implements DestinationQueue
 {
     private static final int MAX_DELAY = 60 * 1000; // 1 minute
     private MessageAddress destination;
@@ -120,7 +120,7 @@ final class DestinationQueueImpl
 	    message.snapshotAttributes();
 	    previous = message;
 	} else {
-	    if (Debug.isDebugEnabled(loggingService,SERVICE))
+	    if (loggingService.isDebugEnabled())
 		loggingService.debug("Retrying " +message);
 	}
 
@@ -129,7 +129,7 @@ final class DestinationQueueImpl
 	    selectionPolicy.selectLink(links, message, previous,
 				       retryCount, lastException);
 	if (link != null) {
-	    if (Debug.isDebugEnabled(loggingService,POLICY))
+	    if (loggingService.isDebugEnabled())
 		loggingService.debug("Selected Protocol " +
 				     link.getProtocolClass());
 	    try {
@@ -142,7 +142,7 @@ final class DestinationQueueImpl
 		// nothing to say here
 	    } catch (NameLookupException lookup_error) {
 		lastException = lookup_error;
-		if (Debug.isErrorEnabled(loggingService,COMM)) 
+		if (loggingService.isErrorEnabled()) 
 		    loggingService.error(null, lookup_error);
 	    } catch (CommFailureException comm_failure) {
 		Exception cause = comm_failure.getException();
@@ -158,12 +158,12 @@ final class DestinationQueueImpl
 		    // This is some other kind of CommFailure, not
 		    // related to security.  Retry.
 		    lastException = comm_failure;
-		    if (Debug.isErrorEnabled(loggingService,COMM)) 
+		    if (loggingService.isErrorEnabled()) 
 			loggingService.error(null, comm_failure);
 		}
 	    } catch (MisdeliveredMessageException misd) {
 		lastException = misd;
-		if (Debug.isDebugEnabled(loggingService,COMM)) 
+		if (loggingService.isDebugEnabled()) 
 		    loggingService.debug(misd.toString());
 	    }
 
@@ -171,7 +171,7 @@ final class DestinationQueueImpl
 		resetState();
 		return;
 	    }
-	} else if (Debug.isDebugEnabled(loggingService,POLICY)) {
+	} else if (loggingService.isDebugEnabled()) {
 	    loggingService.debug("No Protocol selected for Agent" +
 				 message.getTarget());
 	}

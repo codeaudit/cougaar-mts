@@ -401,7 +401,7 @@ public class RMILinkProtocol
 		throw cfe;
 	    }
 	    catch (java.rmi.RemoteException ex) {
-		if (Debug.isErrorEnabled(loggingService,COMM)) 
+		if (loggingService.isErrorEnabled()) 
 		    loggingService.error(null, ex);
 		handleSecurityException(ex);
 		// If we get here it wasn't a security exception
@@ -410,7 +410,7 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// Ordinary comm failure.  Force recache of remote
-		if (Debug.isErrorEnabled(loggingService,COMM)) 
+		if (loggingService.isErrorEnabled()) 
 		    loggingService.error(null, ex);
 		remote = null;
 		//  Ordinary comm failure

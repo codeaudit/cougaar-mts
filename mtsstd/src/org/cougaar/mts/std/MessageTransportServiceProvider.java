@@ -184,7 +184,7 @@ implements ServiceProvider, MessageTransportClient
 	// Make proxy
 	proxy = new MessageTransportServiceProxy(client, link);
 	proxies.put(addr, proxy);
-	if (Debug.isDebugEnabled(loggingService, DebugFlags.SERVICE))
+	if (loggingService.isDebugEnabled())
 	    loggingService.debug("Created MessageTransportServiceProxy for " 
 				      +requestor+
 				      " with address "
@@ -226,7 +226,6 @@ implements ServiceProvider, MessageTransportClient
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
 	AttributedMessage.setLoggingService(loggingService);
-	Debug.load(loggingService);
     }
 
     public void loadHighPriorityComponents() {

@@ -33,7 +33,7 @@ import org.cougaar.core.service.LoggingService;
  * transport policy to instance o the specified class.
  */
 public class LinkSelectionPolicyServiceProvider
-    implements ServiceProvider, DebugFlags
+    implements ServiceProvider
 {
 
     private final static String POLICY_PROPERTY =
@@ -64,7 +64,7 @@ public class LinkSelectionPolicyServiceProvider
 		Class policy_class = Class.forName(policy_classname);
 		selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
-		if (Debug.isDebugEnabled(loggingService,POLICY))
+		if (loggingService.isDebugEnabled())
 		    loggingService.debug("Created " +  policy_classname);
 	    } catch (Exception ex) {
 		if (loggingService.isErrorEnabled())
