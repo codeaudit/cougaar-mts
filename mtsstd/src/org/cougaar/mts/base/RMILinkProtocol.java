@@ -611,6 +611,11 @@ public class RMILinkProtocol
 	public boolean isValid() {
 	    try {
 		cacheRemote();
+		// Ordinarily cacheRemote either throws an Exception
+		// or caches a non-null reference.  But with the
+		// addition of the IncarnationService callback, the
+		// reference can now be clobbered subsequently by
+		// another thread.  Deal with that here.
 		synchronized (remote_lock) {
 		    return remote != null;
 		}
@@ -648,8 +653,13 @@ public class RMILinkProtocol
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    cacheRemote();
 	    MT committed_mt = null;
+	    cacheRemote();
+	    // Ordinarily cacheRemote either throws an Exception or
+	    // caches a non-null reference.  But with the addition of
+	    // the IncarnationService callbacks, the reference can now
+	    // be clobbered subsequently by another thread.  Deal with
+	    // that here.
 	    synchronized (remote_lock) {
 		if (remote == null) {
 		    Exception cause = 
