@@ -43,5 +43,5 @@ interface Router
     /** Used by SendQueue implementations to route an outgoing
      * message, ordinarily to the DestinatonQueue corresponding to the
      * message's destintion.  */
-    public void routeMessage(Message message);
+    void routeMessage(Message message);
 }

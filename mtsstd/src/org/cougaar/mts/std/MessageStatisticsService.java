@@ -26,5 +26,5 @@ import org.cougaar.core.component.Service;
 
 public interface MessageStatisticsService extends Service
 {
-    public MessageStatistics.Statistics getMessageStatistics(boolean reset);
+  MessageStatistics.Statistics getMessageStatistics(boolean reset);
 }

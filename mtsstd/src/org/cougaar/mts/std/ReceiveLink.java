@@ -33,6 +33,6 @@ import org.cougaar.core.society.Message;
 public interface ReceiveLink
 {
     /** Deliver the message to the final recipient (an Agent). */
-    public void deliverMessage(Message message);
+    void deliverMessage(Message message);
 
 }

@@ -26,13 +26,12 @@ import org.cougaar.core.component.Service;
 
 public interface AgentStatusService extends Service
 {
-    public static final int UNKNOWN = 0;
-    public static final int UNREGISTERED = 1;
-    public static final int UNREACHABLE = 2;
-    public static final int ACTIVE = 3;
+  int UNKNOWN = 0;
+  int UNREGISTERED = 1;
+  int UNREACHABLE = 2;
+  int ACTIVE = 3;
 
-
-    public static class AgentState {
+  class AgentState {
 	public long timestamp;
 	public int status;
 	public int sendCount;
@@ -43,10 +42,8 @@ public interface AgentStatusService extends Service
 	public int nameLookupFailureCount;
 	public int commFailureCount;
 	public int misdeliveredMessageCount;
-    }
+  }
 
-
-    public AgentState getAgentState(MessageAddress address);
-
+  AgentState getAgentState(MessageAddress address);
 }
 

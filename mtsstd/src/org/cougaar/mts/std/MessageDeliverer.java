@@ -39,8 +39,8 @@ import org.cougaar.core.society.MessageAddress;
 
 public interface MessageDeliverer
 {
-    public void deliverMessage(Message message, MessageAddress dest)
+    void deliverMessage(Message message, MessageAddress dest)
 	throws MisdeliveredMessageException;
-    public boolean matches(String name);
+    boolean matches(String name);
 
 }

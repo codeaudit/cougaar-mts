@@ -48,19 +48,19 @@ public interface DestinationQueue
 {
     /**
      * Adds the message to the queue. */
-    public void holdMessage(Message message);
+    void holdMessage(Message message);
 
     /**
      * Handles the next message popped off the queue */
-    public void dispatchNextMessage(Message message);
+    void dispatchNextMessage(Message message);
 
     /**
      * Returns true iff this queue was created for the given
      * destination.  Used by the DestinationQueueFactory. */
-    public boolean matches(MessageAddress address);
+    boolean matches(MessageAddress address);
 
     /**
      * Number of messages waiting in the queue.
      */
-    public int size();
+    int size();
 }

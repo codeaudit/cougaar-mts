@@ -44,16 +44,16 @@ public interface SendQueue
     /**
      * Used by MessageTransportServerProxy's to queue outgoing
      * messages. */
-    public void sendMessage(Message message); 
+    void sendMessage(Message message); 
 
     /**
      * Used by a SendQueueFactory in its find-or-make algorithm to
      * avoid duplicating SendQueues.  */
-    public boolean matches(String name);
+    boolean matches(String name);
 
     /**
      * Number of messages waiting in the queue.
      */
-    public int size();
+    int size();
 
 }

@@ -26,5 +26,5 @@ import java.util.Iterator;
 
 public interface LinkSelectionPolicy
 {
-    public DestinationLink selectLink (Iterator links, Message msg);
+    DestinationLink selectLink (Iterator links, Message msg);
 }

@@ -45,16 +45,16 @@ public interface ReceiveQueue
 {
      /**
      * Used to queue a message that's just been received. */
-   public void deliverMessage(Message message);
+  void deliverMessage(Message message);
 
     /**
      * Used by a ReceiveQueueFactory in its find-or-make algorithm to
      * avoid duplicating ReceiveQueues.  */
-    public boolean matches(String name);
+  boolean matches(String name);
 
     /**
      * Number of messages waiting in the queue.
      */
-    public int size();
+  int size();
 
 }

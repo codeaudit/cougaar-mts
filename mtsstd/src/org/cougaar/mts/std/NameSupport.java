@@ -31,37 +31,37 @@ import javax.naming.directory.Attributes;
  * This is utility class which hides the grimy details of dealing with
  * NameServers from the rest of the message transport subsystem.  */
 public interface NameSupport {
-    public static final String MTS_DIR =  "MessageTransports";
-    public static final String AGENT_DIR =  "Agents";
-    public static final String TOPOLOGY_DIR = "Topology";
+    String MTS_DIR =  "MessageTransports";
+    String AGENT_DIR =  "Agents";
+    String TOPOLOGY_DIR = "Topology";
 
-    public static final String STATUS_ATTR = "Status";
-    public static final String HOST_ATTR = "Host";
-    public static final String NODE_ATTR = "Node";
-    public static final String AGENT_ATTR = "Agent";
-    public static final String REGISTERED_STATUS = "registered";
-    public static final String UNREGISTERED_STATUS = "unregistered";
+    String STATUS_ATTR = "Status";
+    String HOST_ATTR = "Host";
+    String NODE_ATTR = "Node";
+    String AGENT_ATTR = "Agent";
+    String REGISTERED_STATUS = "registered";
+    String UNREGISTERED_STATUS = "unregistered";
 
-    public MessageAddress  getNodeMessageAddress();
+    MessageAddress  getNodeMessageAddress();
 
-    public void registerAgentInNameServer(Object proxy, 
+    void registerAgentInNameServer(Object proxy, 
 					  MessageAddress address, 
 					  String transportType);
 
-    public void unregisterAgentInNameServer(Object proxy, 
+    void unregisterAgentInNameServer(Object proxy, 
 					    MessageAddress address, 
 					    String transportType);
 
-    public void registerMTS(MessageAddress address);
+    void registerMTS(MessageAddress address);
 
-    public Object lookupAddressInNameServer(MessageAddress address, 
+    Object lookupAddressInNameServer(MessageAddress address, 
 					    String transportType);
 
-    public Iterator lookupMulticast(MulticastMessageAddress address);
+    Iterator lookupMulticast(MulticastMessageAddress address);
 
-    public void addToTopology(MessageAddress addr);
-    public void removeFromTopology(MessageAddress addr);
-    public Iterator lookupInTopology(Attributes match, String attribute);
-    public Iterator lookupInTopology(Attributes match, String[] ret_attr);
+    void addToTopology(MessageAddress addr);
+    void removeFromTopology(MessageAddress addr);
+    Iterator lookupInTopology(Attributes match, String attribute);
+    Iterator lookupInTopology(Attributes match, String[] ret_attr);
 
 }

@@ -27,11 +27,11 @@ import java.util.ArrayList;
  * This is a utility class which supports loading aspects
  */
 public interface AspectSupport {
-    public MessageTransportAspect findAspect(String classname);
+    MessageTransportAspect findAspect(String classname);
 
-    public void addAspect(MessageTransportAspect aspect);
+    void addAspect(MessageTransportAspect aspect);
 
-    public Object attachAspects(Object delegate, 
-				Class type, 
-				LinkProtocol protocol);
+    Object attachAspects(Object delegate, 
+                         Class type, 
+                         LinkProtocol protocol);
 }
