@@ -106,6 +106,13 @@ class MessageTransportRegistry
 	serviceProxies.put(address, proxy);
     }
 
+    void unregisterServiceProxy(MessageTransportServiceProxy proxy,
+				MessageAddress address)
+    {
+	// Check for match before deleting?
+	serviceProxies.remove(address);
+    }
+
     MessageTransportServiceProxy findServiceProxy(MessageAddress address) {
 	return (MessageTransportServiceProxy) serviceProxies.get(address);
     }

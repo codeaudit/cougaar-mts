@@ -59,6 +59,7 @@ public class MessageTransportServiceProxy
 
 
     void release() {
+	registry.unregisterServiceProxy(this, client.getMessageAddress());
 	registry = null;
 	sendQ = null;
 	client = null;
@@ -182,6 +183,12 @@ public class MessageTransportServiceProxy
     public synchronized void unregisterClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
 	registry.unregisterClient(client);
+
+	// NB: The proxy (as opposed to the client) CANNOT be
+	// unregistered here.  If it were, messageDelivered callbacks
+	// wouldn't be delivered and flush could block forever.
+	// Unregistering the proxy can only happen as part of
+	// releasing the service (see release());
     }
     
    
