@@ -255,7 +255,10 @@ public class RMILinkProtocol
 
 
     public boolean addressKnown(MessageAddress address) {
-	return false;
+	if (loggingService.isErrorEnabled())
+	    loggingService.error("The addressKnown method of RMILinkProtocol is no longer supported");
+	Link link =  (Link) links.get(address);
+	return link != null && link.remote != null;
     }
 
 
@@ -439,8 +442,9 @@ public class RMILinkProtocol
 		throw cfe;
 	    }
 	    catch (java.rmi.RemoteException ex) {
-		if (loggingService.isErrorEnabled()) 
-		    loggingService.error(null, ex);
+		if (loggingService.isDebugEnabled()) {
+		    loggingService.debug(null, ex);
+		}
 		handleSecurityException(ex);
 		// If we get here it wasn't a security exception
 		decache();
@@ -448,8 +452,9 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// Ordinary comm failure.  Force recache of remote
-		if (loggingService.isErrorEnabled()) 
-		    loggingService.error(null, ex);
+		if (loggingService.isDebugEnabled()) {
+		    loggingService.debug(null, ex);
+		}
 		decache();
 		//  Ordinary comm failure
 		throw new CommFailureException(ex);
@@ -475,3 +480,4 @@ public class RMILinkProtocol
     }
 
 }
+
