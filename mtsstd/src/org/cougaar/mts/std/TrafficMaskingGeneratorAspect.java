@@ -58,9 +58,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     private Timer myTimer = new Timer(true);
     private Random random = new Random();
     private ExpRandom expRandom = new ExpRandom();
+    private ArrayList nodelist;
 
     public TrafficMaskingGeneratorAspect() {
 	super();
+	nodelist = new ArrayList();
 	registry = MessageTransportRegistry.getRegistry();
 	//get any properties
 	String requestPeriod = 
@@ -263,22 +265,35 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
     // Bursty Distribution
     // simplest stateful generator
+    //
+    // This class is not static because it depends on nodelist
     private static class BurstyRandom extends ExpRandom {
 	private int burstCount = 0;
 	private int insideBurstPeriod;
 	private int burstLength;
+	private double drift = 1;
+	private ArrayList nodelist;
 
-	BurstyRandom (int insideBurstPeriod, int burstLength) {
+	BurstyRandom (int insideBurstPeriod, int burstLength, ArrayList nodelist) {
 	    super();
 	    this.insideBurstPeriod = insideBurstPeriod;
 	    this.burstLength = burstLength;
+	    this.nodelist = nodelist;
+	    drift = .33 + 2.66 * nextDouble();
 	}
 
 	public int nextInt (int betweenBurstPeriod) {
 	    if (burstCount <= 0 ) {
 		// wait for next burst
 		burstCount=super.nextInt(burstLength);
-		return super.nextInt(betweenBurstPeriod);
+		int numNodes= Math.max(1, nodelist.size());
+		if (nextDouble() < .5) 
+		    drift *= 1.1;
+		else
+		    drift *= 0.9;
+		drift= Math.min(Math.max(drift, 3.0), 0.33);
+		return super.nextInt((int) Math.round(betweenBurstPeriod *
+						      numNodes * drift));
 	    } else {
 		// inside burst
 		--burstCount;
@@ -398,7 +413,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // randomize period, then run a new task once at that time
 	    int delay = generator.nextInt(period); // randomize
 	    TimerTask newTask = makeTask();
-	    // System.err.println("### Scheduling " +newTask+ " at " +delay);
+	    if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
+		System.out.println("=== Scheduling " +newTask+ " at " +delay);
+	    }
 	    myTimer.schedule(newTask, delay);
 	    synchronized (this) {
 		lastTask = newTask;
@@ -424,7 +441,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	private TrafficMaskingStatistics mystats;
 
 	MaskingTimerTaskController(MessageAddress node, int size, int period) {
-	    super(new BurstyRandom(period/10, 3),period);
+	    super(new BurstyRandom(period/10, 3, nodelist), period);
 	    destination = node;
 	    requestSize = size;
 	    mystats = new TrafficMaskingStatistics(node, period, size);
@@ -514,7 +531,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     public class AutoMaskingTimerTaskController extends TimerTaskController {
   
 	AutoMaskingTimerTaskController(int delay) {
-	    super(new BurstyRandom(delay/10,3),delay);
+	    super(new BurstyRandom(delay/10, 3, nodelist), delay);
 	}
 
 	// find the stats object for this node destination
@@ -570,7 +587,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // system properties are defined
     public class NodeKeeperTimerTask extends TimerTask {
 	private Random generator = new Random();
-	private ArrayList nodelist;
 
 	//constructor
 	public NodeKeeperTimerTask() {
@@ -578,7 +594,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // one-time initialize node list so we don't 
 	    // get a request for an address before the timer 
 	    // has run the first time
-	    nodelist = new ArrayList();
 	    Iterator iter = registry.findRemoteMulticastTransports(
 								   (MulticastMessageAddress)MessageAddress.SOCIETY);
 	    while (iter.hasNext()) {
