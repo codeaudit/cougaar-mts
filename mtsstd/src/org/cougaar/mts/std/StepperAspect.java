@@ -21,6 +21,8 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.ServiceBroker;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -37,6 +39,16 @@ public class StepperAspect
 
     private StepFrame frame;
     private ArrayList controllers;
+    private ThreadService threadService;
+
+
+    private ThreadService threadService() {
+	if (threadService != null) return threadService;
+	ServiceBroker sb = getServiceBroker();
+	threadService = 
+	    (ThreadService) sb.getService(this, ThreadService.class, null);
+	return threadService;
+    }
 
     public Object getDelegate(Object delegatee, Class type) 
     {
@@ -119,9 +131,11 @@ public class StepperAspect
 	private StepController widget;
 	private boolean stepping;
 	private Object lock = new Object();
+	private Runnable oneStep;
 
 	public DestinationQueueDelegate (DestinationQueue delegatee) {
 	    super(delegatee);
+	    oneStep = new OneStep();
 	}
 	
 
@@ -135,10 +149,23 @@ public class StepperAspect
 	    if (!stepping) step();
 	}
 
-	public void step() {
-	    synchronized (lock) {
-		lock.notify();
+	// Should probably happen in its own Thread so it doesn't
+	// block Swing.
+	private void lockStep() {
+	    synchronized (lock) { lock.notify();  }
+	}
+
+
+	private class OneStep implements Runnable {
+	    public void run() {
+		lockStep();
 	    }
+	}
+
+
+	public void step() {
+	    // lockStep();
+	    threadService().getThread(oneStep).start();
 	}
 
 
