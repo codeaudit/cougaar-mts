@@ -289,6 +289,7 @@ public final class NameSupportImpl implements NameSupport
 	attr.put(HOST_ATTR, hostname);
 	attr.put(NODE_ATTR, id);
 	attr.put(AGENT_ATTR, addr);
+	attr.put(INCARNATION_ATTR, Long.toString(System.currentTimeMillis()));
 	String key = TOPOLOGY_DIR + NS.DirSeparator + addr;
 	try {
 	    _registerWithSociety(key, addr, attr);

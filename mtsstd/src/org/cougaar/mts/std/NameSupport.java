@@ -39,6 +39,8 @@ public interface NameSupport {
     String HOST_ATTR = "Host";
     String NODE_ATTR = "Node";
     String AGENT_ATTR = "Agent";
+    String INCARNATION_ATTR = "Incarnation";
+
     String REGISTERED_STATUS = "registered";
     String UNREGISTERED_STATUS = "unregistered";
 
