@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -46,7 +47,6 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.BlackboardService;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ServletService;
-import org.cougaar.lib.web.service.RootServletService;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.LinkProtocol; // javadoc only
@@ -64,11 +64,19 @@ import org.cougaar.mts.std.AttributedMessage;
 public class HTTPLinkProtocol extends RPCLinkProtocol 
 {
   
+    public final String SERVLET_URI = "/httpmts";
+
+    /**
+     * The preferred ServletService API to get the http/https port,
+     * which we obtain through reflection to avoid a "webserver"
+     * module compile dependency.
+     */
+    private static final String ROOT_SERVLET_SERVICE_CLASS =
+      "org.cougaar.lib.web.service.RootServletService";
+
     private LoggingService logger;
     private ServletService _servletService;
     private boolean servant_made = false;
-    public final String SERVLET_URI = "/httpmts";
-     
 
     public void load() 
     {
@@ -172,16 +180,6 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
 	// invoked.
     }
     
- 
-    /**
-     * HTTPS overrides this.
-     */
-    protected int getPort(RootServletService ss)
-    {
-	return ss.getHttpPort();
-    }
-
-
     /**
      * This function binds the url in the wp early.  But the servlet
      * at that url can't be made until the ServletService is
@@ -193,10 +191,39 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
 	if (servant_made) return;
 
 	ServiceBroker sb = getServiceBroker();
-	RootServletService ss = (RootServletService) 
-	    sb.getService(this, RootServletService.class, null);
-	int port = getPort(ss);
-	MessageAddress node_addr = getNameSupport().getNodeMessageAddress();
+
+        // use the servlet service to get our local servlet port
+        int port = -1; 
+        Class ssClass;
+        try {
+          ssClass = Class.forName(ROOT_SERVLET_SERVICE_CLASS);
+        } catch (Exception e) {
+          ssClass = ServletService.class;
+        }
+        Object ss = sb.getService(this, ssClass, null);
+        if (ss != null) {
+          // port = ss.get<Protocol>Port();
+          try {
+            String s = getProtocol();
+            s = Character.toUpperCase(s.charAt(0))+s.substring(1);
+            s = "get"+s+"Port";
+            Method m = ssClass.getMethod(s, null);
+            Object ret = m.invoke(ss, null);
+            port = ((Integer) ret).intValue();
+          } catch (Exception e) {
+            if (logger.isWarnEnabled()) {
+              logger.warn("Unable to get "+getProtocol()+" port", e);
+            }
+          }
+          sb.releaseService(this, ssClass, ss); 
+        }
+        if (port < 0) {
+          if (logger.isWarnEnabled()) {
+            logger.warn(getProtocol()+" port is disabled");
+          }
+        }
+
+        MessageAddress node_addr = getNameSupport().getNodeMessageAddress();
 	String node_name = node_addr.toAddress();
 	try {
 	    InetAddress me = InetAddress.getLocalHost();
@@ -206,8 +233,6 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
-	sb.releaseService(this, RootServletService.class, ss); 
-
 
 	// Call registerServlet only if/when BlackboardService is
 	// available.  The BlackboardService is required because we
