@@ -23,7 +23,10 @@ package org.cougaar.core.mts;
 
 import java.util.HashMap;
 import org.cougaar.core.agent.Agent;
+import org.cougaar.core.component.Binder;
 import org.cougaar.core.component.BinderFactory;
+import org.cougaar.core.component.BinderFactorySupport;
+import org.cougaar.core.component.BinderSupport;
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ComponentDescription;
 import org.cougaar.core.component.ComponentDescriptions;
@@ -416,8 +419,20 @@ public final class MessageTransportServiceProvider
     public void setState(Object state) {
     }
 
-
-
+    private static class MTSBinderFactory 
+      extends BinderFactorySupport {
+        public Binder getBinder(Object child) {
+          return new MTSBinder(this, child);
+        }
+        private static class MTSBinder 
+          extends BinderSupport
+          implements BindingSite {
+            public MTSBinder(BinderFactory bf, Object child) {
+              super(bf, child);
+            }
+            protected final BindingSite getBinderProxy() {
+              return this;
+            }
+          }
+      }
 }
-
-    
