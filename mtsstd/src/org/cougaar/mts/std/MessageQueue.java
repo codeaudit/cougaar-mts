@@ -74,13 +74,13 @@ abstract class MessageQueue
 
     public void run() {
 	while (true) {
-	    Message m;
+	    AttributedMessage m;
 	    synchronized (queue) {
 		if (queue.isEmpty()) {
 		    thread = null;
 		    return;
 		}
-		m = (Message) queue.next(); // from top
+		m = (AttributedMessage) queue.next(); // from top
 	    }
 
 
@@ -90,7 +90,7 @@ abstract class MessageQueue
 
     /** 
      * Enqueue a message. */
-    void add(Message m) {
+    void add(AttributedMessage m) {
 	synchronized (queue) {
 	    queue.add(m);
 	    if (thread == null) {
@@ -103,7 +103,7 @@ abstract class MessageQueue
 
     /**
      * Process a dequeued message. */
-    abstract void dispatch(Message m);
+    abstract void dispatch(AttributedMessage m);
 
     /**
      * Number of messages waiting in the queue.

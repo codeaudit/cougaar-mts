@@ -41,7 +41,7 @@ final class RouterImpl implements Router
     /** Find or make a DestinationQueue for this message, then add the
      message to that queue.  The factory has a fairly efficient cache,
      so we do not have to cache here.  */
-    public void routeMessage(Message message) {
+    public void routeMessage(AttributedMessage message) {
 	MessageAddress destination = message.getTarget();
 	DestinationQueue queue = destQService.getDestinationQueue(destination);
 	queue.holdMessage(message);

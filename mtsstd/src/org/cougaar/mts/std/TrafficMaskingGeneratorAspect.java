@@ -41,6 +41,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   implements TrafficMaskingGeneratorService, StateObject 
 {
 
+    private static final String FAKE = "org.cougaar.message.transport.isfake";
+
     private MaskingQueueDelegate maskingQDelegate;
     private int requestRate = 0;
     private int replyRate = 333;
@@ -310,20 +312,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
 
 
-    //new envelope to wrap fake messages
-    public static class MaskingMessageEnvelope extends MessageEnvelope {
-	private Message message;
-
-	MaskingMessageEnvelope(Message message, MessageAddress destination) {
-	    super(message, message.getOriginator(), destination);
-	    this.message = message;
-	}
-
-	public String toString() {
-	    return new String("MaskingMessageEnvelope containing message: "+
-			      message.toString());
-	}
-    }
 
     // Delegate on SendQueue (sees outgoing messages)
     public class MaskingQueueDelegate extends SendQueueDelegateImplBase {
@@ -334,7 +322,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     
 	// synchronized so that this aspect's timer thread that sends fake messages
 	// does not interact with a real outgoing message.
-	public synchronized void sendMessage(Message msg) {
+	public synchronized void sendMessage(AttributedMessage msg) {
 	    // Getting the address requires NameSupport, which won't be
 	    // available at load() time for Aspects.  So defer this call.
 	    //
@@ -346,17 +334,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		timerOn = true;
 	    }
 
-	    queue.sendMessage(msg);
+	    super.sendMessage(msg);
 	}
 
-	private  void sendMessageInEnvelope(Message msg) {
-	    // If this is a fake message type - wrap it in an envelope
-	    if (msg instanceof FakeRequestMessage || 
-		msg instanceof FakeReplyMessage) 
-		{
-		    MessageAddress dest = msg.getTarget();
-		    msg = new MaskingMessageEnvelope(msg, dest);
-		}
+	private  void sendFakeMessage(Message fakemsg) {
+	    AttributedMessage msg = new AttributedMessage(fakemsg);
+	    msg.setAttribute(FAKE, Boolean.TRUE);
 	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR))
 		loggingService.debug("MaskingQueue sending message: "+msg);
 	    sendMessage(msg);
@@ -373,11 +356,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    super(link);
 	}
     
-	public void deliverMessage(Message msg) 
+	public void deliverMessage(AttributedMessage msg) 
 	{
-	    if (msg instanceof MaskingMessageEnvelope) {
+	    Boolean isFake = (Boolean) msg.getAttribute(FAKE);
+	    if (isFake != null && isFake.booleanValue()) {
 		try {
-		    Message internalmsg = ((MaskingMessageEnvelope) msg).getContents();
+		    Message internalmsg = msg.getRawMessage();
 		    if (internalmsg instanceof FakeRequestMessage) {
 			FakeRequestMessage request = (FakeRequestMessage)internalmsg;
 			byte[] contents = randomContents(replySize);
@@ -400,7 +384,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		//if its a fake reply (the other kind of masking message)
 		// drop it on the floor.
 	    } else {
-		// any other kind of message enveloper just gets passed through
+		// any other kind of message just gets passed through
 		super.deliverMessage(msg);
 	    }
 	} 
@@ -484,7 +468,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		myAddress = getRegistry().getLocalAddress();
 		FakeRequestMessage request = 
 		    new FakeRequestMessage(myAddress, destination, contents);
-		maskingQDelegate.sendMessageInEnvelope(request);
+		maskingQDelegate.sendFakeMessage(request);
 		if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		    loggingService.debug("MaskingTimer about to send FakeRequest"+
 				       "from: "+myAddress+" to: "+destination+
@@ -517,7 +501,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    return new Task();
 	}
 
-	public void addMessage(Message msg) {
+	public void addMessage(FakeReplyMessage msg) {
 	    synchronized(replyQueue) {
 		//only add if queue is not too big
 		if (replyQueue.size() < 10) {
@@ -535,9 +519,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    public void run() {
 		if (!replyQueue.isEmpty()) {
 		    synchronized(replyQueue) {
-			Message replymsg = (Message) replyQueue.get(0);
+			FakeReplyMessage replymsg = (FakeReplyMessage) replyQueue.get(0);
 			// put message on real MTS SendQueue
-			maskingQDelegate.sendMessageInEnvelope(replymsg);
+			maskingQDelegate.sendFakeMessage(replymsg);
 			if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 			    loggingService.debug("Masking: ReplyTimer sending reply: " +
 					       replymsg + " size: "+ 
@@ -597,7 +581,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		    byte[] contents = randomContents(-1);
 		    FakeRequestMessage request = 
 			new FakeRequestMessage(myAddress, fakedest, contents);
-		    maskingQDelegate.sendMessageInEnvelope(request);
+		    maskingQDelegate.sendFakeMessage(request);
 		    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {        
 			loggingService.debug("AutoMasking About to send "+
 					   "FakeRequest from: "+myAddress+

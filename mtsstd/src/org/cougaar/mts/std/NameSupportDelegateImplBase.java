@@ -33,7 +33,7 @@ import javax.naming.directory.Attributes;
 
 abstract public class NameSupportDelegateImplBase implements NameSupport 
 {
-    protected NameSupport nameSupport;
+    private NameSupport nameSupport;
 
     protected NameSupportDelegateImplBase (NameSupport nameSupport) {
 	this.nameSupport = nameSupport;

@@ -129,7 +129,10 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	return null;
     }
 
-    private void logMessage(Message msg, String tag, DestinationLink link) {
+    private void logMessage(AttributedMessage msg, 
+			    String tag, 
+			    DestinationLink link) 
+    {
 	ensureLog();
 	MessageAddress src = msg.getOriginator();
 	MessageAddress dst = msg.getTarget();
@@ -178,7 +181,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	}
 	
 
-	public void forwardMessage(Message msg) 
+	public void forwardMessage(AttributedMessage msg) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,

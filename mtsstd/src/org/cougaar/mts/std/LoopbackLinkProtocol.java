@@ -75,7 +75,7 @@ class LoopbackLinkProtocol
 	    this.address = address;
 	}
 
-	public int cost(Message msg) {
+	public int cost(AttributedMessage msg) {
 	    MessageAddress addr = msg.getTarget();
 	    if (getRegistry().isLocalClient(addr)) {
 		return 0;
@@ -86,13 +86,15 @@ class LoopbackLinkProtocol
 	
 
 
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws MisdeliveredMessageException
 	{
 	    getDeliverer().deliverMessage(message, message.getTarget());
 	}
 
-	public boolean retryFailedMessage(Message message, int retryCount) {
+	public boolean retryFailedMessage(AttributedMessage message,
+					  int retryCount) 
+	{
 	    return true;
 	}
 

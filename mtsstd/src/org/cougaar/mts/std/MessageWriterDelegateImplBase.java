@@ -22,74 +22,45 @@
 package org.cougaar.core.mts;
 
 import java.io.OutputStream;
-import java.io.ObjectOutputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 
-public  class ObjectWriterImpl
-    implements ObjectWriter 
+public  class MessageWriterDelegateImplBase
+    implements MessageWriter 
 {
+    private MessageWriter delegate;
 
-
-    static class SimpleObjectOutputStream extends ObjectOutputStream {
-	private ObjectOutput out;
-
-	SimpleObjectOutputStream(ObjectOutput out) 
-	    throws java.io.IOException
-	{
-	    this.out = out;
-	}
-
-	public void close()
-	    throws java.io.IOException
-	{
-	    out.close();
-	}
-
-
-	public void flush() 
-	    throws java.io.IOException
-	{
-	    out.flush();
-	}
-
-	public void write(int b)
-	    throws java.io.IOException
-	{
-	    out.write(b);
-	}
-
-	public void write(byte[] b)
-	    throws java.io.IOException
-	{
-	    out.write(b);
-	}
-
-	public void write(byte[] b, int off, int len)
-	    throws java.io.IOException
-	{
-	    out.write(b, off, len);
-	}
-
-
+    public MessageWriterDelegateImplBase(MessageWriter delegate) {
+	this.delegate = delegate;
     }
 
+    public void finalizeAttributes(AttributedMessage msg) {
+	delegate.finalizeAttributes(msg);
+    }
+
+    public void preProcess() 
+    {
+	delegate.preProcess();
+    }
 
 
     public OutputStream getObjectOutputStream(ObjectOutput out)
 	throws java.io.IOException
     {
-	if (out instanceof ObjectOutputStream) {
-	    return (OutputStream) out;
-	} else {
-	    return new SimpleObjectOutputStream(out);
-	}
+	return delegate.getObjectOutputStream(out);
     }
 
-    public void preProcess(ObjectOutput out) {
+    public void finishOutput() 
+	throws java.io.IOException
+    {
+	delegate.finishOutput();
     }
 
 
-    public void postProcess(ObjectOutput out) {
+
+    public void postProcess() 
+    {
+	delegate.postProcess();
     }
 
 

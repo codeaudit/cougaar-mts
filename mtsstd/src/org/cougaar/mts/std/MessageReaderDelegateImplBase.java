@@ -22,87 +22,44 @@
 package org.cougaar.core.mts;
 
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 
-public  class ObjectReaderImpl
-    implements ObjectReader 
+public  class MessageReaderDelegateImplBase
+    implements MessageReader 
 {
+    private MessageReader delegate;
 
-    static class SimpleObjectInputStream extends ObjectInputStream
+    public MessageReaderDelegateImplBase(MessageReader delegate) {
+	this.delegate = delegate;
+    }
+
+    public void finalizeAttributes(AttributedMessage msg) {
+	delegate.finalizeAttributes(msg);
+    }
+
+    public void preProcess() 
     {
-	private ObjectInput in;
-
-	SimpleObjectInputStream(ObjectInput in) 
-	    throws java.io.IOException
-	{
-	    this.in = in;
-	}
-
-	public int available() 
-	    throws java.io.IOException
-	{
-	    return in.available();
-	}
-
-	public void close() 
-	    throws java.io.IOException
-	{
-	    in.close();
-	}
-
-	public boolean markSupported() {
-	    return false;
-	}
-
-	public int read() 
-	    throws java.io.IOException 
-	{
-	    return in.read();
-	}
-
-	public int read(byte[] b) 
-	    throws java.io.IOException 
-	{
-	    return in.read(b);
-	}
-
-	public int read(byte[] b, int off, int len)
-	    throws java.io.IOException
-	{
-	    return in.read(b, off, len);
-	}
-
-	public synchronized void reset() 
-	    throws java.io.IOException
-	{
-	}
-
-	public long skip (long n)
-	    throws java.io.IOException
-	{
-	    return in.skip(n);
-	}
-
+	delegate.preProcess();
     }
 
 
     public InputStream getObjectInputStream(ObjectInput in) 
 	throws java.io.IOException, ClassNotFoundException
     {
-	if (in instanceof ObjectInputStream) {
-	    return (InputStream) in;
-	} else {
-	    return new SimpleObjectInputStream(in);
-	}
+	return delegate.getObjectInputStream(in);
     }
 
 
-    public void preProcess(ObjectInput in) {
+    public void finishInput()
+	throws java.io.IOException
+    {
+	delegate.finishInput();
     }
 
-
-    public void postProcess(ObjectInput in) {
+    public void postProcess() 
+    {
+	delegate.postProcess();
     }
 
 

@@ -109,14 +109,14 @@ public class SerializationAspect extends StandardAspect
 		    object = reader.readObject();
 		    if (loggingService.isInfoEnabled())
 			loggingService.info("Deserialized as " + object);
-		    link.forwardMessage((Message) object);
+		    super.forwardMessage((AttributedMessage) object);
 		} catch (Exception ex) {
 		    loggingService.error(null, ex);
 		}
 	    }
 	}
 
-	public synchronized void forwardMessage(Message message) 
+	public synchronized void forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -135,12 +135,12 @@ public class SerializationAspect extends StandardAspect
 			loggingService.info("Serialized " + message);
 		} catch (Exception ex) {
 		    loggingService.error(null, ex);
-		    link.forwardMessage(message);
+		    super.forwardMessage(message);
 		}
 	    } else {
 		if (loggingService.isInfoEnabled())
 		    loggingService.info("Forwarding " + message);
-		link.forwardMessage(message);
+		super.forwardMessage(message);
 	    }
 	}
 

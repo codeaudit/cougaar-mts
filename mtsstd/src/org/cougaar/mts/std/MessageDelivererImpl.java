@@ -21,14 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MulticastMessageAddress;
-
 
 
 import java.util.Iterator;
@@ -56,7 +48,7 @@ public class MessageDelivererImpl implements MessageDeliverer
      * Forward the message on to the appropriate ReceiveLink, or links
      * in the case of a MulticastMessageAddress.  The lookup is
      * handled by the MessageTransportRegistry. */
-    public void deliverMessage(Message message, MessageAddress addr) 
+    public void deliverMessage(AttributedMessage message, MessageAddress addr) 
 	throws MisdeliveredMessageException
     {
 	if (message == null) return;

@@ -22,17 +22,81 @@
 package org.cougaar.core.mts;
 
 import java.io.OutputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.ObjectOutput;
 
-public interface ObjectWriter
+public  class MessageWriterImpl
+    implements MessageWriter 
 {
+
+
+    static class SimpleObjectOutputStream extends ObjectOutputStream {
+	private ObjectOutput out;
+
+	SimpleObjectOutputStream(ObjectOutput out) 
+	    throws java.io.IOException
+	{
+	    this.out = out;
+	}
+
+	public void close()
+	    throws java.io.IOException
+	{
+	    out.close();
+	}
+
+
+	public void flush() 
+	    throws java.io.IOException
+	{
+	    out.flush();
+	}
+
+	public void write(int b)
+	    throws java.io.IOException
+	{
+	    out.write(b);
+	}
+
+	public void write(byte[] b)
+	    throws java.io.IOException
+	{
+	    out.write(b);
+	}
+
+	public void write(byte[] b, int off, int len)
+	    throws java.io.IOException
+	{
+	    out.write(b, off, len);
+	}
+
+
+    }
+
+
+    public void finalizeAttributes(AttributedMessage msg) {
+    }
+
+    public void preProcess() {
+    }
+
+
     public OutputStream getObjectOutputStream(ObjectOutput out)
-	throws java.io.IOException;
+	throws java.io.IOException
+    {
+	if (out instanceof ObjectOutputStream) {
+	    return (OutputStream) out;
+	} else {
+	    return new SimpleObjectOutputStream(out);
+	}
+    }
 
-    public void preProcess(ObjectOutput out)
-	throws java.io.IOException;
+    public void finishOutput() {
+    }
 
-    public void postProcess(ObjectOutput out)
-	throws java.io.IOException;
+    public void postProcess() {
+    }
+
+
 }
+

@@ -21,28 +21,21 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-
 
 abstract public class DestinationQueueDelegateImplBase 
     implements DestinationQueue 
 {
-    protected DestinationQueue queue;
+    private DestinationQueue queue;
 
     protected DestinationQueueDelegateImplBase(DestinationQueue queue) {
 	this.queue = queue;
     }
 
-    public void holdMessage(Message message) {
+    public void holdMessage(AttributedMessage message) {
 	queue.holdMessage(message);
     }
 
-    public void dispatchNextMessage(Message message) {
+    public void dispatchNextMessage(AttributedMessage message) {
 	queue.dispatchNextMessage(message);
     }
 

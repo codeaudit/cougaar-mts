@@ -43,7 +43,7 @@ public class SSLRMILinkProtocol extends RMILinkProtocol
 
     // If this is called, we've already found the remote reference.
     // Later this will be based on the destination, rss, etc.
-    protected int computeCost(Message message) {
+    protected int computeCost(AttributedMessage message) {
 	return super.computeCost(message) * 2;
     }
 

@@ -21,11 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.component.Service;
 
 public interface AgentStatusService extends Service

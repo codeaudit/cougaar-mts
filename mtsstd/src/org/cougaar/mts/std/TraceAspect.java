@@ -91,7 +91,7 @@ public class TraceAspect
 	}
 
 	public MessageAddress  getNodeMessageAddress() {
-	    return nameSupport.getNodeMessageAddress();
+	    return super.getNodeMessageAddress();
 	}
 
 	public void registerAgentInNameServer(Object proxy, 
@@ -99,7 +99,7 @@ public class TraceAspect
 					      String type)
 	{
 	    log("NameSupport", "Register Agent" + proxy);
-	    nameSupport.registerAgentInNameServer(proxy, addr, type);
+	    super.registerAgentInNameServer(proxy, addr, type);
 	}
 
 	public void unregisterAgentInNameServer(Object proxy, 
@@ -107,19 +107,19 @@ public class TraceAspect
 						String type) 
 	{
 	    log("NameSupport", "Unregister Agent " + proxy);
-	    nameSupport.unregisterAgentInNameServer(proxy, addr, type);
+	    super.unregisterAgentInNameServer(proxy, addr, type);
 	}
 
 	public void registerMTS(MessageAddress addr)
 	{
 	    log("NameSupport", "Register MTS " + addr);
-	    nameSupport.registerMTS(addr);
+	    super.registerMTS(addr);
 	}
 
 	public Object lookupAddressInNameServer(MessageAddress address, 
 						String type)
 	{
-	    Object res = nameSupport.lookupAddressInNameServer(address, type);
+	    Object res = super.lookupAddressInNameServer(address, type);
 	    log("NameSupport", "Lookup of " + address + " returned " + res);
 	    return res;
 	}
@@ -135,9 +135,9 @@ public class TraceAspect
 	    super(queue);
 	}
 	
-	public void sendMessage(Message message) {
+	public void sendMessage(AttributedMessage message) {
 	    log("SendQueue", message.toString()+" ("+this.size()+")");
-	    queue.sendMessage(message);
+	    super.sendMessage(message);
 	}
     }
 
@@ -149,9 +149,9 @@ public class TraceAspect
 	    super(router);
 	}
 	
-	public void routeMessage(Message message) {
+	public void routeMessage(AttributedMessage message) {
 	    log("Router", message.getTarget().toString());
-	    router.routeMessage(message);
+	    super.routeMessage(message);
 	}
 
     }
@@ -166,14 +166,14 @@ public class TraceAspect
 	}
 	
 
-	public void holdMessage(Message message) {
+	public void holdMessage(AttributedMessage message) {
 	    log("DestinationQueue", message.toString());
-	    queue.holdMessage(message);
+	    super.holdMessage(message);
 	}
 
-	public void dispatchNextMessage(Message message) {
+	public void dispatchNextMessage(AttributedMessage message) {
 	    log("DestinationQueue dispatch", message.toString());
-	    queue.dispatchNextMessage(message);
+	    super.dispatchNextMessage(message);
 	}
 	
     }
@@ -187,7 +187,7 @@ public class TraceAspect
 	    super(link);
 	}
 	
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -195,7 +195,7 @@ public class TraceAspect
 
 	{
 	    log("DestinationLink", message.toString());
-	    link.forwardMessage(message);
+	    super.forwardMessage(message);
 	}
 	
     }
@@ -208,11 +208,12 @@ public class TraceAspect
 	    super(deliverer);
 	}
 	
-	public void deliverMessage(Message message, MessageAddress dest) 
+	public void deliverMessage(AttributedMessage message, 
+				   MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
 	    log("MessageDeliverer", message.toString());
-	    deliverer.deliverMessage(message, dest);
+	    super.deliverMessage(message, dest);
 	}
 	
     }
@@ -224,9 +225,9 @@ public class TraceAspect
 	    super(link);
 	}
 	
-	public void deliverMessage(Message message) {
+	public void deliverMessage(AttributedMessage message) {
 	    log("ReceiveLink", message.toString());
-	    link.deliverMessage(message);
+	    super.deliverMessage(message);
 	}
 
     }

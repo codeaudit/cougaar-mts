@@ -21,21 +21,15 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-
 abstract public class SendQueueDelegateImplBase implements SendQueue 
 {
-    protected SendQueue queue;
+    private SendQueue queue;
 
     protected SendQueueDelegateImplBase(SendQueue queue) {
 	this.queue = queue;
     }
 
-    public void sendMessage(Message message) {
+    public void sendMessage(AttributedMessage message) {
 	queue.sendMessage(message);
     }
 

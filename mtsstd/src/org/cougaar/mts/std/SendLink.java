@@ -25,11 +25,11 @@ import java.util.ArrayList;
 
 public interface SendLink
 {
-    void sendMessage(Message message);
+    void sendMessage(AttributedMessage message);
     void flushMessages(ArrayList messsages);
     void release();
     MessageAddress getAddress();
-    boolean okToSend(Message message);
+    boolean okToSend(AttributedMessage message);
 
     void registerClient(MessageTransportClient client);
     void unregisterClient(MessageTransportClient client);

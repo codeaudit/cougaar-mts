@@ -33,25 +33,20 @@ import java.util.Comparator;
  * delegate.
  * */
 public class SequenceAspect extends StandardAspect
-{ private static int  count=1;
+{ 
+
+    private static int  count=1;
+    private static final String SEQ = 
+	"org.cougaar.message.transport.sequencenumber";
+    private static final Integer ONE = new Integer(1);
+    private static final Integer TWO = new Integer(2);
+
+
+    
     public SequenceAspect() {
 	
     }
 
-
-    private static class SequenceEnvelope extends MessageEnvelope {
-	int sequence_number;
-
-	SequenceEnvelope(Message message, int sequence_number) {
-	    super(message, message.getOriginator(), message.getTarget());
-	    this.sequence_number = sequence_number;
-	}
-
-	public String toString() {
-	    return "SequenceEnvelope:# " + sequence_number + " from " 
-		+ this.getOriginator() + " to " + this.getTarget() ;
-	}
-    }
 
     public Object getDelegate(Object delegate, Class type) 
     {
@@ -72,6 +67,12 @@ public class SequenceAspect extends StandardAspect
 	}
     }
 
+
+    private static int getSequenceNumber(Object message) {
+	AttributedMessage m = (AttributedMessage) message;
+	return ((Integer) m.getAttribute(SEQ)).intValue();
+    }
+
     private class SequencedSendLink 
 	extends SendLinkDelegateImplBase 
     {
@@ -81,34 +82,35 @@ public class SequenceAspect extends StandardAspect
 	    sequenceNumbers = new HashMap();
 	}
 
-	private int nextSeq(Message msg) {
+	private Integer nextSeq(AttributedMessage msg) {
 	    // Verify that msg.getOriginator()  == getAddress() ?
 	    MessageAddress dest = msg.getTarget();
 	    Integer next = (Integer) sequenceNumbers.get(dest);
 	    if (next == null) {
-		sequenceNumbers.put(dest, new Integer(2));
-		return 1;
+		sequenceNumbers.put(dest, TWO);
+		return ONE;
 	    } else {
 		int n = next.intValue();
 		sequenceNumbers.put(dest, new Integer(1+n));
-		return n;
+		return next;
 	    }
 	}
 
-	public void sendMessage(Message message) 
+	public void sendMessage(AttributedMessage message) 
 	{
-	    int sequence_number = nextSeq(message);
-	    link.sendMessage(new SequenceEnvelope(message, sequence_number));
+	    Integer sequence_number = nextSeq(message);
+	    message.setAttribute(SEQ, sequence_number);
+	    super.sendMessage(message);
 	}
     }
 
     private static class MessageComparator implements Comparator{
 	public int compare(Object msg1, Object msg2){
-	    SequenceEnvelope message1 =(SequenceEnvelope) msg1;
-	    SequenceEnvelope message2 =(SequenceEnvelope) msg2;
-	    if (message1.sequence_number == message2.sequence_number)
+	    int seq1 = getSequenceNumber(msg1);
+	    int seq2 = getSequenceNumber(msg2);
+	    if (seq1 == seq2)
 		return 0;
-	    else if ( message1.sequence_number< message2.sequence_number)
+	    else if ( seq1 < seq2)
 		return -1;
 	    else
 		return 1;
@@ -120,72 +122,89 @@ public class SequenceAspect extends StandardAspect
 
     }
 
-    private class ConversationState {
-	int nextSeqNum;
-	TreeSet heldMessages;
-	ReceiveLink link;
+    private class SequencedReceiveLink extends ReceiveLinkDelegateImplBase {
+	HashMap conversationState;
 
-	public  ConversationState (ReceiveLink link){
-	    nextSeqNum = 1;
-	    heldMessages = new TreeSet(new MessageComparator());
-	    this.link = link;
+	private class ConversationState {
+	    int nextSeqNum;
+	    TreeSet heldMessages;
+
+	    public  ConversationState (){
+		nextSeqNum = 1;
+		heldMessages = new TreeSet(new MessageComparator());
+	    }
+
+	    private void stripAndDeliver(AttributedMessage  message){
+		// message.removeAttribute(SEQ);
+		superDeliverMessage(message);
+		nextSeqNum++;
+	    }
+     
+	    private void handleNewMessage(AttributedMessage message) {
+		int msgSeqNum = getSequenceNumber(message);
+		if (nextSeqNum > msgSeqNum) {
+		    Message contents = message.getRawMessage();
+		    if (loggingService.isDebugEnabled())
+			loggingService.debug("Dropping duplicate " +
+					     " <" 
+					     +contents.getClass().getName()+ 
+					     " " +contents.hashCode()+ 
+					     " " +message.getOriginator()+ 
+					     "->" +message.getTarget()+
+					     " #" +msgSeqNum);
+		} else  if (nextSeqNum == msgSeqNum) {
+		    stripAndDeliver(message);
+		    Iterator itr  = heldMessages.iterator();
+		    while (itr.hasNext()) {
+			AttributedMessage next = 
+			    (AttributedMessage)itr.next();
+			if (getSequenceNumber(next) == nextSeqNum){
+			    if (loggingService.isDebugEnabled())
+				loggingService.debug("delivered held message" 
+						     + next); 
+			    stripAndDeliver(next);
+			    itr.remove();
+			}
+		    }//end while
+		} else {
+		    if (loggingService.isDebugEnabled())
+			loggingService.debug("holding out of sequence message"
+					     + message); 
+		    heldMessages.add(message);
+		}
+	    }
 	}
 
-	private void stripAndDeliver(SequenceEnvelope  message){
-	       link.deliverMessage(message.getContents());
-	       nextSeqNum++;
+
+	private SequencedReceiveLink(ReceiveLink link) {
+	    super(link);
+	    conversationState = new HashMap();
+	}
+
+	private void superDeliverMessage(AttributedMessage message) {
+	    super.deliverMessage(message);
 	}
      
-	private void handleNewMessage(SequenceEnvelope message) {
-	    if (nextSeqNum == message.sequence_number) {
-		stripAndDeliver(message);
-		Iterator itr  = heldMessages.iterator();
-		while (itr.hasNext()) {
-		    SequenceEnvelope next = (SequenceEnvelope)itr.next();
-		    if (next.sequence_number == nextSeqNum){
-			if (loggingService.isDebugEnabled())
-			    loggingService.debug("delivered held message" + 
-					       next); 
-			stripAndDeliver(next);
-			itr.remove();
-		    }
-		}//end while
+	public void deliverMessage(AttributedMessage message) {
+	    Object seq = message.getAttribute(SEQ);
+	    if ( seq != null ) {
+		MessageAddress src = message.getOriginator();
+		ConversationState conversation =   
+		    (ConversationState)conversationState.get(src);
+		if(conversation == null) {
+		    conversation = new ConversationState();
+		    conversationState.put (src, conversation);
+		}
+	     
+		conversation.handleNewMessage(message);
 	    }
 	    else {
-		if (loggingService.isDebugEnabled())
-		    loggingService.debug("holding a out of sequence message" + 
-				       message); 
-		heldMessages.add(message);
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("No Sequence tag: " + message);
+		super.deliverMessage(message);
 	    }
+
 	}
     }
-
- private class SequencedReceiveLink extends ReceiveLinkDelegateImplBase {
-     HashMap conversationState;
-
-     private SequencedReceiveLink(ReceiveLink link) {
-	 super(link);
-	 conversationState = new HashMap();
-     }
-     
-     public void deliverMessage(Message message) {
-	 if ( message instanceof SequenceEnvelope ) {
-	     MessageAddress src = message.getOriginator();
-	     ConversationState conversation =   (ConversationState)conversationState.get(src);
-	     if(conversation == null) {
-		 conversation = new ConversationState(link);
-		 conversationState.put (src, conversation);
-	     }
-	     
-	     conversation.handleNewMessage((SequenceEnvelope) message);
-	 }
-	 else {
-	     if (loggingService.isErrorEnabled())
-		 loggingService.error("Not a SequenceEnvelope: " + message);
-	     link.deliverMessage(message);
-	 }
-
-     }
- }
 
 }

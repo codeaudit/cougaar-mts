@@ -21,10 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
@@ -34,7 +30,7 @@ import java.net.SocketException;
 
 abstract public class SocketDelegateImplBase extends Socket
 {
-    protected Socket socket;
+    private Socket socket;
 
     protected SocketDelegateImplBase(Socket socket) {
 	this.socket = socket;

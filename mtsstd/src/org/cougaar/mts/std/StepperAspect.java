@@ -340,7 +340,7 @@ public final class StepperAspect
 	}
 
 	// Should these use SwingUtilities,invokeLater?
-	private void messageWait(final Message msg) {
+	private void messageWait(final AttributedMessage msg) {
 	    send.setEnabled(true);
 	    messageWindow.setText(msg.toString());
 	}
@@ -403,7 +403,7 @@ public final class StepperAspect
 	    }
 	}
 
-	public void dispatchNextMessage(Message msg) {
+	public void dispatchNextMessage(AttributedMessage msg) {
 	    ensureWidget(msg.getTarget());
 	    if (!stepping) {
 		super.dispatchNextMessage(msg);

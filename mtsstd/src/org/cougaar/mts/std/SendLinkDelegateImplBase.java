@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 
@@ -34,13 +28,13 @@ abstract public class SendLinkDelegateImplBase
     implements SendLink
 {
 
-    protected SendLink link;
+    private SendLink link;
 
     protected SendLinkDelegateImplBase(SendLink link) {
 	this.link = link;
     }
 
-    public void sendMessage(Message message) {
+    public void sendMessage(AttributedMessage message) {
 	link.sendMessage(message);
     }
 
@@ -57,7 +51,7 @@ abstract public class SendLinkDelegateImplBase
 	link = null;
     }
 
-    public boolean okToSend(Message message) {
+    public boolean okToSend(AttributedMessage message) {
 	return link.okToSend(message);
     }
 

@@ -133,7 +133,7 @@ public class RMILinkProtocol
 
 
     // If this is called, we've already found the remote reference.
-    protected int computeCost(Message message) {
+    protected int computeCost(AttributedMessage message) {
 	return 1000;
     }
 
@@ -146,7 +146,7 @@ public class RMILinkProtocol
 	return new MTImpl(myAddress, deliverer, socfac);
     }
 
-    protected void doForwarding(MT remote, Message message) 
+    protected void doForwarding(MT remote, AttributedMessage message) 
 	throws MisdeliveredMessageException, java.rmi.RemoteException
     {
 	remote.rerouteMessage(message);
@@ -302,7 +302,9 @@ public class RMILinkProtocol
 	    }
 	}
 
-	public boolean retryFailedMessage(Message message, int retryCount) {
+	public boolean retryFailedMessage(AttributedMessage message,
+					  int retryCount) 
+	{
 	    return true;
 	}
 
@@ -312,7 +314,7 @@ public class RMILinkProtocol
 	}
 	
 
-	public int cost (Message message) {
+	public int cost (AttributedMessage message) {
 	    try {
 		cacheRemote();
 		return computeCost(message);
@@ -330,7 +332,7 @@ public class RMILinkProtocol
 	}
 
 
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws NameLookupException, 
 		   UnregisteredNameException, 
 		   CommFailureException,

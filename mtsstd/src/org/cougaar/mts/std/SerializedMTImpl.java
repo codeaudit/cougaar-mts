@@ -21,14 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
 
 import java.rmi.RemoteException;
   
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 /** actual RMI remote object providing the implementation of MessageTransport client
  **/
@@ -46,8 +41,8 @@ public class SerializedMTImpl extends MTImpl
     public void rerouteMessage(byte[] messageBytes) 
 	throws MisdeliveredMessageException
     {
-	Message message = 
-	    (Message) SerializationUtils.fromByteArray(messageBytes);
+	AttributedMessage message = 
+	    (AttributedMessage) SerializationUtils.fromByteArray(messageBytes);
 	super.rerouteMessage(message);
     }
 

@@ -34,9 +34,9 @@ public class CachingStreamsAspect extends StandardAspect
 {
 
     public Object getDelegate(Object delegatee, Class type) {
-	if (type == ObjectWriter.class) {
-	    ObjectWriter wtr = (ObjectWriter) delegatee;
-	    return new CachingObjectWriter(wtr);
+	if (type == MessageWriter.class) {
+	    MessageWriter wtr = (MessageWriter) delegatee;
+	    return new CachingMessageWriter(wtr);
 	} else {
 	    return null;
 	}
@@ -64,13 +64,13 @@ public class CachingStreamsAspect extends StandardAspect
 
 
 
-    private class CachingObjectWriter extends ObjectWriterDelegateImplBase
+    private class CachingMessageWriter extends MessageWriterDelegateImplBase
     {
 
 	private ByteArrayOutputStream byte_os;
 	private byte[] cache;
 
-	CachingObjectWriter(ObjectWriter delegatee) {
+	CachingMessageWriter(MessageWriter delegatee) {
 	    super(delegatee);
 	}
 
@@ -82,12 +82,17 @@ public class CachingStreamsAspect extends StandardAspect
 	    return new TeeOutputStream(raw_os, byte_os);
 	}
 
-	public void postProcess(ObjectOutput out) 
+	public void finishOutput() 
 	    throws java.io.IOException
 	{
+	    super.finishOutput();
 	    byte_os.flush();
+	}
+
+	public void postProcess() 
+	{
+	    super.postProcess();
 	    cache = byte_os.toByteArray();
-	    super.postProcess(out);
 	}
 
     }

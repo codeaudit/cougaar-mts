@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +36,7 @@ public class FlushAspect extends StandardAspect
     }
 
 
-    private SendLinkDelegate findSendLink(Message message) {
+    private SendLinkDelegate findSendLink(AttributedMessage message) {
 	MessageAddress addr = message.getOriginator();
 	Object result =  delegates.get(addr);
 	return (SendLinkDelegate) result;
@@ -80,7 +74,7 @@ public class FlushAspect extends StandardAspect
 	    super(link);
 	}
 
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
@@ -92,7 +86,7 @@ public class FlushAspect extends StandardAspect
 					  message.getOriginator());
 	    }
 	    try {
-		link.forwardMessage(message);
+		super.forwardMessage(message);
 		if (sendLink != null) sendLink.messageDelivered(message);
 	    } catch (NameLookupException name_ex) {
 		if (sendLink != null) sendLink.messageFailed(message);
@@ -109,12 +103,13 @@ public class FlushAspect extends StandardAspect
 	    }
 	}
 
-	public boolean retryFailedMessage(Message message, int count) {
+	public boolean retryFailedMessage(AttributedMessage message, int count)
+	{
 	    SendLinkDelegate sendLink = findSendLink(message);
 	    if (sendLink != null)
 		return sendLink.retryFailedMessage(message, count);
 	    else
-		return link.retryFailedMessage(message, count);
+		return super.retryFailedMessage(message, count);
 	}
 
     }
@@ -149,16 +144,16 @@ public class FlushAspect extends StandardAspect
 	}
 
 
-	public void sendMessage(Message message) {
+	public void sendMessage(AttributedMessage message) {
 	    synchronized (this) {
 		++outstandingMessages;
 		if (Debug.isDebugEnabled(loggingService,FLUSH)) 
 		    showPending("Message queued");
 	    }
-	    link.sendMessage(message);
+	    super.sendMessage(message);
 	}
 
-	synchronized void messageDelivered(Message m) {
+	synchronized void messageDelivered(AttributedMessage m) {
 	    --outstandingMessages;
 	    if (Debug.isDebugEnabled(loggingService,FLUSH)) 
 		showPending("Message delivered");
@@ -173,7 +168,7 @@ public class FlushAspect extends StandardAspect
 	 * of that fact by return true.  Otherwise do nothing, at least
 	 * for now.
 	 */
-	synchronized void messageFailed(Message message) {
+	synchronized void messageFailed(AttributedMessage message) {
 	    if (!flushing) return; // do nothing in this case
 
 	    --outstandingMessages;
@@ -184,12 +179,14 @@ public class FlushAspect extends StandardAspect
 
 	}
 
-	synchronized boolean retryFailedMessage(Message message, int count) {
+	synchronized boolean retryFailedMessage(AttributedMessage message,
+						int count) 
+	{
 	    return !flushing;
 	}
 
 
-	public boolean okToSend(Message message) {
+	public boolean okToSend(AttributedMessage message) {
 	    synchronized (this) {
 		if (flushing && loggingService.isErrorEnabled()) {
 		    loggingService.error("sendMessage during flush!");
@@ -197,7 +194,7 @@ public class FlushAspect extends StandardAspect
 		} 
 	    }
 	    
-	    return link.okToSend(message);
+	    return super.okToSend(message);
 	}
 
 	public synchronized ArrayList flushMessages() {

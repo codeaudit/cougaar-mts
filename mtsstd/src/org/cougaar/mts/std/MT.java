@@ -36,7 +36,7 @@ import org.cougaar.core.mts.MessageAddress;
 
 public interface MT extends Remote {
   /** receive a message **/
-  void rerouteMessage(Message m) throws RemoteException;
+  void rerouteMessage(AttributedMessage m) throws RemoteException;
 
   /** @return the message address of this client **/
   MessageAddress getMessageAddress() throws RemoteException;

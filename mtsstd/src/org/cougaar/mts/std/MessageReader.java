@@ -21,14 +21,26 @@
 
 package org.cougaar.core.mts;
 
-public interface MessageProperties
-{
-    public static final String FILTERS_PROPERTY = "Filters";
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 
-    public Message getRawMessage();
-    public Object getProperty(String property);
-    public void setProperty(String property, Object value);
-    public void removeProperty(String property);
-    public void addValue(String property, Object value);
-    public void removeValue(String property, Object value);
+public interface MessageReader
+{
+    
+    public void finalizeAttributes(AttributedMessage msg);
+
+    public void preProcess();
+
+    // The argument is the next innermost stream in the nesting.
+    public InputStream getObjectInputStream(ObjectInput in) 
+	throws java.io.IOException, ClassNotFoundException;
+
+    // Could be reading from a cached stream, so could throw
+    // IOException.
+    public void finishInput()
+	throws java.io.IOException;
+
+    public void postProcess();
+
 }

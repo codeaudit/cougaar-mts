@@ -21,13 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageStatistics;
+import org.cougaar.core.service.MessageStatisticsService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -125,14 +119,14 @@ public class StatisticsAspect
 	}
 
 
-	public void holdMessage(Message m) {
+	public void holdMessage(AttributedMessage m) {
 	    ++current_total_size;
-	    queue.holdMessage(m);
+	    super.holdMessage(m);
 	    accumulateStatistics();
 	    countMessage();
 	}
 
-	public void dispatchNextMessage(Message message) {
+	public void dispatchNextMessage(AttributedMessage message) {
 	    --current_total_size;
 	    accumulateStatistics();
 	    if (Debug.isDebugEnabled(loggingService,STATISTICS)) {
@@ -143,7 +137,7 @@ public class StatisticsAspect
 				   + " Average Message Queue Length=" +
 				   result.averageMessageQueueLength);
 	    }
-	    queue.dispatchNextMessage(message);
+	    super.dispatchNextMessage(message);
 	}
 
 

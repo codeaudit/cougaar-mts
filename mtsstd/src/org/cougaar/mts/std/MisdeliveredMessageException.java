@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-
 import java.rmi.RemoteException;
 
 /**
@@ -39,7 +33,7 @@ import java.rmi.RemoteException;
  **/
 public class MisdeliveredMessageException extends RemoteException 
 {
-    public MisdeliveredMessageException(Message message) {
+    public MisdeliveredMessageException(AttributedMessage message) {
 	super(message + " misdelivered");
     }
 }

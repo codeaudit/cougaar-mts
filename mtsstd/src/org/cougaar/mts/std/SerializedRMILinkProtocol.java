@@ -39,7 +39,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
     }
 
     // Is this different?
-    protected int computeCost(Message message) {
+    protected int computeCost(AttributedMessage message) {
 	return super.computeCost(message);
     }
 
@@ -51,7 +51,7 @@ public class SerializedRMILinkProtocol extends RMILinkProtocol
 	return new SerializedMTImpl(myAddress, deliverer, socfac);
     }
 
-    protected void doForwarding(MT remote, Message message) 
+    protected void doForwarding(MT remote, AttributedMessage message) 
 	throws MisdeliveredMessageException, java.rmi.RemoteException
     {
 	if (remote instanceof SerializedMT) {

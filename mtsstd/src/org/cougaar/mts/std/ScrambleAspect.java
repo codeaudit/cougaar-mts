@@ -44,12 +44,13 @@ public class ScrambleAspect extends StandardAspect
 	}
     }
 
+
     private class ScrambledSendLink 
 	extends SendLinkDelegateImplBase 
     {
 	
 	TimerTask timerTask;
-	Message heldMessage;
+	AttributedMessage heldMessage;
 	
 	int heldMessageCount;
 	int flippedMessageCount;
@@ -61,45 +62,50 @@ public class ScrambleAspect extends StandardAspect
 	    //long  timeStarted = System.currentTimeMillis();
 	}
 	
-	
-	public synchronized void sendMessage(Message message) {
-	    messageCount++;
-	    if (heldMessage == null)//Case 1: On a new message //a -- No held messages yet
-		holdMessage(message);
-	    else if (heldMessage != null) //b --there is already a held messgae
-		flipMessage(message, heldMessage);
-	}
 
 	
 	private class SendMessageTask implements Runnable {
-	    private ScrambledSendLink link;
-
-	    public SendMessageTask ( ScrambledSendLink link ){
-		super();
-		this.link = link;
-	    }
-	
 	    public void run() {
-		link.forcedHeldMessage();
-
+		forcedHeldMessage();
 	    }
 	}
     
+
+
+
+
+	public synchronized void sendMessage(AttributedMessage message) {
+	    messageCount++;
+	    if (heldMessage == null)
+		holdMessage(message);
+	    else
+		flipMessage(message);
+	}
+
+	
 	//================util methods
-	private void holdMessage(Message message){
-	    Runnable r = new SendMessageTask (this);
+	private void holdMessage(AttributedMessage message){
+	    heldMessage = message;
+	    Runnable r = new SendMessageTask ();
 	    timerTask = threadService.getTimerTask(this, r, "ScrambleSender");
 	    threadService.schedule(timerTask, 3000); //schedule a timer task
-	    heldMessage = message;
 	    heldMessageCount++;
 	    if (loggingService.isDebugEnabled())
 		loggingService.debug("Holding message #" +printString()  
 				   + "  " +  heldMessageCount );
 	}
-	private void flipMessage(Message message, Message heldMessage){
+
+	private void flipMessage(AttributedMessage message)
+	{
 	    timerTask.cancel();
-	    link.sendMessage(message);
-	    link.sendMessage(heldMessage);
+	    // Cancelling the task doesn't guarantee that it won't
+	    // run.  But the only purpose of this aspect is to test
+	    // weird cases (messages out of order) so it might as well
+	    // test duplicates sometimes too...
+
+	    super.sendMessage(message);
+	    super.sendMessage(heldMessage);
+	    heldMessage = null;
 	    flippedMessageCount++;
 	    int previousCount = messageCount - 1;
 	    if (loggingService.isDebugEnabled())
@@ -107,12 +113,11 @@ public class ScrambleAspect extends StandardAspect
 				   " and #" + printString() +  
 				   " and " + message.getTarget() + "  "
 				   +  flippedMessageCount );
-	    heldMessage = null;
 	}
 
 	private synchronized void forcedHeldMessage() {
 	    if (heldMessage != null){
-		link.sendMessage(heldMessage);
+		super.sendMessage(heldMessage);
 		forcedMessageCount++;
 		if (loggingService.isDebugEnabled())
 		    loggingService.debug("Forcing message #" + printString() +

@@ -21,13 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
 
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MulticastMessageAddress;
+import org.cougaar.core.service.MessageTransportService;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -62,7 +57,8 @@ public class MessageTransportServiceProxy
 
     /**
      * Redirects the sendMessage to the SendQueue. */
-    public void sendMessage(Message message) {
+    public void sendMessage(Message rawMessage) {
+	AttributedMessage message = new AttributedMessage(rawMessage);
 	if (link.okToSend(message)) {
 	    link.sendMessage(message);
 	}
@@ -76,7 +72,13 @@ public class MessageTransportServiceProxy
     public synchronized ArrayList flushMessages() {
 	ArrayList droppedMessages = new ArrayList();
 	link.flushMessages(droppedMessages);
-	return droppedMessages;
+	ArrayList rawMessages = new ArrayList(droppedMessages.size());
+	Iterator itr = droppedMessages.iterator();
+	while (itr.hasNext()) {
+	    AttributedMessage m = (AttributedMessage) itr.next();
+	    rawMessages.add(m.getRawMessage());
+	}
+	return rawMessages;
     }
 
 

@@ -28,7 +28,7 @@ import java.util.Iterator;
 public interface LinkSelectionPolicy extends Service
 {
     DestinationLink selectLink (Iterator links, 
-				Message msg, 
+				AttributedMessage msg, 
 				int retryCount,
 				Exception lastException);
 }

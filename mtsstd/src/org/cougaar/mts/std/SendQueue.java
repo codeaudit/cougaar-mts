@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-
-
 
 /**
  * The first stop for an outgoing message is a SendQueue.  In theory a
@@ -48,7 +41,7 @@ public interface SendQueue
     /**
      * Used by MessageTransportServerProxy's to queue outgoing
      * messages. */
-    void sendMessage(Message message); 
+    void sendMessage(AttributedMessage message); 
 
     /**
      * Used by a SendQueueFactory in its find-or-make algorithm to

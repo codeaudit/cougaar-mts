@@ -21,11 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
 import java.util.Iterator;
 
 /**
@@ -34,7 +29,7 @@ public class MinCostLinkSelectionPolicy implements LinkSelectionPolicy
 {
 
     public DestinationLink selectLink (Iterator links, 
-				       Message message,
+				       AttributedMessage message,
 				       int retryCount,
 				       Exception lastException)
     {

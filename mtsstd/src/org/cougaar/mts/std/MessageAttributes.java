@@ -21,42 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import java.util.ArrayList;
-
-public final class ObjectStreamsFactory 
-    extends  AspectFactory
+public interface MessageAttributes
 {
-    private static ObjectStreamsFactory factory;
+    public static final String FILTERS_ATTRIBUTE = "Filters";
 
-    public static synchronized ObjectStreamsFactory makeFactory() {
-	factory = new ObjectStreamsFactory();
-	return factory;
-    }
-
-
-    public static synchronized ObjectStreamsFactory getFactory() {
-	return factory;
-    }
-
-
-    private ObjectStreamsFactory() 
-    {
-    }
-
-    public ObjectReader getObjectReader(ArrayList aspectNames)  {
-	ObjectReader rdr = new ObjectReaderImpl();
- 	return (ObjectReader) attachAspects(rdr, 
-					    ObjectReader.class,
-					    aspectNames);
-    }
-
-
-    public ObjectWriter getObjectWriter(ArrayList aspectNames)  {
-	ObjectWriter wtr = new ObjectWriterImpl();
- 	return (ObjectWriter) attachAspects(wtr, 
-					    ObjectWriter.class,
-					    aspectNames);
-    }
-
+    public Object getAttribute(String attribute);
+    public void setAttribute(String attribute, Object value);
+    public void removeAttribute(String attribute);
+    public void addValue(String attribute, Object value);
+    public void removeValue(String attribute, Object value);
 }
-

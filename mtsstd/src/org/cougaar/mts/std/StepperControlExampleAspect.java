@@ -49,7 +49,7 @@ public class StepperControlExampleAspect
 	    super(delegatee);
 	}
 
-	public void dispatchNextMessage(Message msg) {
+	public void dispatchNextMessage(AttributedMessage msg) {
 	    super.dispatchNextMessage(msg);
 	    if (++count == 2) {
 		// Seccond message to this destination has just gone

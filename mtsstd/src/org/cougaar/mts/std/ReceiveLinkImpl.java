@@ -40,10 +40,10 @@ public class ReceiveLinkImpl implements ReceiveLink
 	    sb.getService(this, LoggingService.class, null);
     }
 
-    public void deliverMessage(Message message)
+    public void deliverMessage(AttributedMessage message)
     {
 	try {
-	    client.receiveMessage(message);
+	    client.receiveMessage(message.getRawMessage());
 	} catch (Throwable th) {
 	    if (loggingService.isErrorEnabled())
 		loggingService.error("MessageTransportClient threw an exception in receiveMessage, not retrying.", th);

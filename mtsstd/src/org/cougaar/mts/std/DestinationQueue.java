@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-
 
 
 /**
@@ -52,11 +45,11 @@ public interface DestinationQueue
 {
     /**
      * Adds the message to the queue. */
-    void holdMessage(Message message);
+    void holdMessage(AttributedMessage message);
 
     /**
      * Handles the next message popped off the queue */
-    void dispatchNextMessage(Message message);
+    void dispatchNextMessage(AttributedMessage message);
 
     /**
      * Returns true iff this queue was created for the given

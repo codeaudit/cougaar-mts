@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 
 /**
@@ -35,13 +29,13 @@ import org.cougaar.core.mts.MessageAddress;
 abstract public class DestinationLinkDelegateImplBase
     implements DestinationLink
 {
-    protected DestinationLink link;
+    private DestinationLink link;
 
     protected DestinationLinkDelegateImplBase(DestinationLink link) {
 	this.link = link;
     }
 
-    public void forwardMessage(Message message) 
+    public void forwardMessage(AttributedMessage message) 
 	throws UnregisteredNameException, 
 	NameLookupException, 
 	CommFailureException,
@@ -50,7 +44,7 @@ abstract public class DestinationLinkDelegateImplBase
 	link.forwardMessage(message);
     }
 
-    public int cost(Message message) {
+    public int cost(AttributedMessage message) {
 	return link.cost(message);
     }
 
@@ -58,7 +52,9 @@ abstract public class DestinationLinkDelegateImplBase
 	return link.getProtocolClass();
     }
 
-    public boolean retryFailedMessage(Message message, int retryCount) {
+    public boolean retryFailedMessage(AttributedMessage message,
+				      int retryCount) 
+    {
 	return true;
     }
 

@@ -24,8 +24,6 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.Container;
-import org.cougaar.core.mts.Message;
-
 
 /**
  * The default, and for now only, implementation of SendQueue.  The
@@ -55,7 +53,7 @@ final class SendQueueImpl extends MessageQueue implements SendQueue
 
     /**
      * This is the callback from the internal thread.  */
-    void dispatch(Message message) {
+    void dispatch(AttributedMessage message) {
 	router.routeMessage(message);
     }
 
@@ -63,7 +61,7 @@ final class SendQueueImpl extends MessageQueue implements SendQueue
     /**
      * The implementation of this SendQueue method simply adds the
      * message to the internal queue (a CircularQueue).  */
-    public void sendMessage(Message message) {
+    public void sendMessage(AttributedMessage message) {
 	add(message);
     }
 

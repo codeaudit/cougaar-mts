@@ -43,5 +43,5 @@ interface Router extends Service
     /** Used by SendQueue implementations to route an outgoing
      * message, ordinarily to the DestinatonQueue corresponding to the
      * message's destintion.  */
-    void routeMessage(Message message);
+    void routeMessage(AttributedMessage message);
 }

@@ -21,22 +21,16 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-
-import org.cougaar.core.mts.Message;
 
 abstract public class RouterDelegateImplBase implements Router
 {
-    protected Router router;
+    private Router router;
 
     protected RouterDelegateImplBase(Router router) {
 	this.router = router;
     }
 
-    public void routeMessage(Message message) {
+    public void routeMessage(AttributedMessage message) {
 	router.routeMessage(message);
     }
 }

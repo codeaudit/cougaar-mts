@@ -33,7 +33,7 @@ public interface DestinationLink
      * This method is used to request the associated transport to do
      * its thing with the given message.  Only called during
      * processing of messages in DestinationQueueImpl.  */
-    void forwardMessage(Message message) 
+    void forwardMessage(AttributedMessage message) 
 	throws UnregisteredNameException, 
 	NameLookupException, 
 	CommFailureException,
@@ -43,7 +43,7 @@ public interface DestinationLink
      * This method returns a simple measure of the cost of sending the
      * given message via the associated transport. Only called during
      * processing of messages in DestinationQueueImpl. */
-    int cost(Message message);
+    int cost(AttributedMessage message);
 
     
     /**
@@ -55,7 +55,7 @@ public interface DestinationLink
     /**
      * Ask Link whether or not further retries should be attempted.
      */
-    boolean retryFailedMessage(Message message, int retryCount);
+    boolean retryFailedMessage(AttributedMessage message, int retryCount);
 
 
     /**

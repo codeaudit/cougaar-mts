@@ -32,12 +32,12 @@ public class BufferedStreamsAspect extends StandardAspect
 {
 
     public Object getDelegate(Object delegatee, Class type) {
-	if (type == ObjectWriter.class) {
-	    ObjectWriter wtr = (ObjectWriter) delegatee;
-	    return new BufferedObjectWriter(wtr);
-	} else if (type == ObjectReader.class) {
-	    ObjectReader rdr = (ObjectReader) delegatee;
-	    return new BufferedObjectReader(rdr);
+	if (type == MessageWriter.class) {
+	    MessageWriter wtr = (MessageWriter) delegatee;
+	    return new BufferedMessageWriter(wtr);
+	} else if (type == MessageReader.class) {
+	    MessageReader rdr = (MessageReader) delegatee;
+	    return new BufferedMessageReader(rdr);
 	} else {
 	    return null;
 	}
@@ -45,10 +45,10 @@ public class BufferedStreamsAspect extends StandardAspect
 
 
 
-    private class BufferedObjectWriter extends ObjectWriterDelegateImplBase
+    private class BufferedMessageWriter extends MessageWriterDelegateImplBase
     {
 
-	BufferedObjectWriter(ObjectWriter delegatee) {
+	BufferedMessageWriter(MessageWriter delegatee) {
 	    super(delegatee);
 	}
 
@@ -66,10 +66,10 @@ public class BufferedStreamsAspect extends StandardAspect
 
 
 
-    private class BufferedObjectReader extends ObjectReaderDelegateImplBase
+    private class BufferedMessageReader extends MessageReaderDelegateImplBase
     {
 
-	BufferedObjectReader(ObjectReader delegatee) {
+	BufferedMessageReader(MessageReader delegatee) {
 	    super(delegatee);
 	}
 

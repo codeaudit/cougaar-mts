@@ -21,9 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
+import org.cougaar.core.service.MessageWatcherService;
 
-import org.cougaar.core.node.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;

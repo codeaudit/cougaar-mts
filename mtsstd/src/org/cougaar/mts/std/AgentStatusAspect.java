@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-
 
 import java.util.HashMap;
 
@@ -86,7 +79,7 @@ public class AgentStatusAspect
 	    super(link);
 	}
 	
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 	    NameLookupException, 
 	    CommFailureException,
@@ -98,7 +91,7 @@ public class AgentStatusAspect
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
-		link.forwardMessage(message);
+		super.forwardMessage(message);
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
 		long latency = endTime - startTime;
@@ -152,13 +145,13 @@ public class AgentStatusAspect
 	    super(queue);
 	}
 	
-	public void sendMessage(Message message) {
+	public void sendMessage(AttributedMessage message) {
 	    MessageAddress addr = message.getTarget();
 	    AgentState state = ensureState(addr);
 	    synchronized (state) {
 		state.sendCount++;
 	    }	
-	    queue.sendMessage(message);
+	    super.sendMessage(message);
 	}
 	
     }

@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -67,7 +61,9 @@ public class WatcherAspect
     }
 
 
-    private void notifyWatchersOfSend(Message message) {
+    // Should the watchers see the AttributedMessage or its contents?
+    private void notifyWatchersOfSend(AttributedMessage message) {
+	Message rawMessage = message.getRawMessage();
 	Iterator itr = watchers.iterator();
 	synchronized (this) {
 	    while (itr.hasNext()) {
@@ -75,12 +71,13 @@ public class WatcherAspect
 		if (Debug.isDebugEnabled(loggingService,WATCHER)) {
 		    loggingService.debug("Notifying " + w + " of send");
 		}
-		w.messageSent(message);
+		w.messageSent(rawMessage);
 	    }
 	}
     }
 
-    private void notifyWatchersOfReceive(Message m) {
+    private void notifyWatchersOfReceive(AttributedMessage message) {
+	Message rawMessage = message.getRawMessage();
 	Iterator itr = watchers.iterator();
 	synchronized (this) {
 	    while ( itr.hasNext() ) {
@@ -89,7 +86,7 @@ public class WatcherAspect
 		    loggingService.debug("Notifying " + w + 
 					      " of receive");
 		}
-		w.messageReceived(m);
+		w.messageReceived(rawMessage);
 	    }
 	}
     }
@@ -101,8 +98,8 @@ public class WatcherAspect
 	    super(queue);
 	}
 	
-	public void sendMessage(Message message) {
-	    queue.sendMessage(message);
+	public void sendMessage(AttributedMessage message) {
+	    super.sendMessage(message);
 	    notifyWatchersOfSend(message);
 	}
 	
@@ -116,10 +113,11 @@ public class WatcherAspect
 	    super(deliverer);
 	}
 	
-	public void deliverMessage(Message message, MessageAddress dest) 
+	public void deliverMessage(AttributedMessage message, 
+				   MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    deliverer.deliverMessage(message, dest);
+	    super.deliverMessage(message, dest);
 	    notifyWatchersOfReceive(message);
 	}
 	

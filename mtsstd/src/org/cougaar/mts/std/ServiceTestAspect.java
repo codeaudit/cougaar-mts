@@ -51,12 +51,12 @@ public class ServiceTestAspect extends StandardAspect
 			       
     }
 
-    private Message send(Message message) {
+    private AttributedMessage send(AttributedMessage message) {
 	test("send", message.getTarget());
 	return message;
     }
 
-    private Message receive(Message message) {
+    private AttributedMessage receive(AttributedMessage message) {
 	test("receive", message.getOriginator());
 	return message;
     }
@@ -92,13 +92,13 @@ public class ServiceTestAspect extends StandardAspect
 	    super(link);
 	}
 
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    link.forwardMessage(send(message));
+	    super.forwardMessage(send(message));
 	}
 
 
@@ -111,10 +111,10 @@ public class ServiceTestAspect extends StandardAspect
 	    super(deliverer);
 	}
 
-	public void deliverMessage(Message m, MessageAddress dest) 
+	public void deliverMessage(AttributedMessage m, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    deliverer.deliverMessage(receive(m), dest);
+	    super.deliverMessage(receive(m), dest);
 	}
 
     }

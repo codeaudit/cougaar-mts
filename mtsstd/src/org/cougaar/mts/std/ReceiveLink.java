@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-
-
 /**
  * The final stop in the message transport system before an incoming
  * message is delivered to an Agent.  One ReceiveLink is instantiated
@@ -37,7 +30,7 @@ import org.cougaar.core.mts.Message;
 public interface ReceiveLink
 {
     /** Deliver the message to the final recipient (an Agent). */
-    void deliverMessage(Message message);
+    void deliverMessage(AttributedMessage message);
     MessageTransportClient getClient();
 
 }

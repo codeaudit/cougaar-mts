@@ -21,22 +21,16 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-
-
+ 
 abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink
 {
-    protected ReceiveLink link;
+    private ReceiveLink link;
 
     protected ReceiveLinkDelegateImplBase(ReceiveLink link) {
 	this.link = link;
     }
 
-    public void deliverMessage(Message message) {
+    public void deliverMessage(AttributedMessage message) {
 	link.deliverMessage(message);
     }
 

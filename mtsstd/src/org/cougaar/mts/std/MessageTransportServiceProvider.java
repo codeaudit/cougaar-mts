@@ -154,8 +154,8 @@ public final class MessageTransportServiceProvider
     private void createFactories() {
 	ServiceBroker sb = getServiceBroker();
 
-	ObjectStreamsFactory osFactory = ObjectStreamsFactory.makeFactory();
-	add(osFactory);
+	MessageStreamsFactory msgFactory = MessageStreamsFactory.makeFactory();
+	add(msgFactory);
 
 	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory();
 	add(receiveLinkFactory);

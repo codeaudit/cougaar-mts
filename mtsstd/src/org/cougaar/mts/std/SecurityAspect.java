@@ -72,11 +72,13 @@ public class SecurityAspect extends StandardAspect
 
     // Temporarily package access, rather than private, until we get
     // rid of MessageTransportClassic
-    Message secure(Message message) {
+    AttributedMessage secure(AttributedMessage message) {
 	if (msm != null) {
 	    if (Debug.isDebugEnabled(loggingService,SECURITY)) 
 		loggingService.debug("Securing message " + message);
-	    return msm.secureMessage(message);
+	    Message rawMessage =  message.getRawMessage();
+	    Message secureMsg = msm.secureMessage(rawMessage);
+	    return new AttributedMessage(secureMsg, message);
 	} else {
 	    return message;
 	}
@@ -84,7 +86,7 @@ public class SecurityAspect extends StandardAspect
 
     // Temporarily package access, rather than private, until we get
     // rid of MessageTransportClassic
-    Message unsecure(Message message) {
+    AttributedMessage unsecure(AttributedMessage message) {
 	if (msm == null) {
 	    if (loggingService.isErrorEnabled())
 		loggingService.error("MessageTransport "+this+
@@ -94,7 +96,10 @@ public class SecurityAspect extends StandardAspect
 	} else {
 	    if (Debug.isDebugEnabled(loggingService,SECURITY))
 		loggingService.debug("Unsecuring message " + message);
-	    Message msg = msm.unsecureMessage((SecureMessage) message);
+	    SecureMessage rawMessage = (SecureMessage) message.getRawMessage();
+	    Message originalMessage = msm.unsecureMessage(rawMessage);
+	    AttributedMessage msg = 
+		new AttributedMessage(originalMessage, message);
 	    if (msg == null && loggingService.isErrorEnabled()) {
 		loggingService.error("MessageTransport "+this+
 					  " received an unverifiable SecureMessage "
@@ -135,13 +140,13 @@ public class SecurityAspect extends StandardAspect
 	    super(link);
 	}
 
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 		   NameLookupException, 
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    link.forwardMessage(secure(message));
+	    super.forwardMessage(secure(message));
 	}
 
 
@@ -154,10 +159,10 @@ public class SecurityAspect extends StandardAspect
 	    super(deliverer);
 	}
 
-	public void deliverMessage(Message m, MessageAddress dest) 
+	public void deliverMessage(AttributedMessage m, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    deliverer.deliverMessage(unsecure(m), dest);
+	    super.deliverMessage(unsecure(m), dest);
 	}
 
     }

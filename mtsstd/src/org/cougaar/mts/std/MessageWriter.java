@@ -21,29 +21,22 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
+import java.io.OutputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 
-import org.cougaar.core.node.*;
-
-abstract public class MessageEnvelope extends Message 
+public interface MessageWriter
 {
+    public void finalizeAttributes(AttributedMessage msg);
 
-    private Message contents;
+    public void preProcess();
 
-    public MessageEnvelope(Message contents) {
-	super();
-	this.contents = contents;
-    }
+    // The argument is the next innermost stream in the nesting.
+    public OutputStream getObjectOutputStream(ObjectOutput out)
+	throws java.io.IOException;
+ 
+    public void finishOutput()
+	throws java.io.IOException;
 
-    public MessageEnvelope(Message contents, MessageAddress src, MessageAddress dst) {
-	super(src, dst);
-	this.contents = contents;
-    }
-
-    // Security issue?
-    public Message getContents() {
-	return contents;
-    }
-
+    public void postProcess();
 }
-

@@ -78,7 +78,7 @@ final class DestinationQueueImpl
 
     /**
      * Enqueues the given message. */
-    public void holdMessage(Message message) {
+    public void holdMessage(AttributedMessage message) {
 	add(message);
     }
 
@@ -93,11 +93,11 @@ final class DestinationQueueImpl
 
      /**
       * Processes the next dequeued message. */
-    void dispatch(Message message) {
+    void dispatch(AttributedMessage message) {
 	if (message != null) delegate.dispatchNextMessage(message);
     }
 
-    public void dispatchNextMessage(Message message) {
+    public void dispatchNextMessage(AttributedMessage message) {
 	int delay = 500; // comes from a property
 	Iterator links;
 	DestinationLink link;

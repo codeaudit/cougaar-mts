@@ -21,19 +21,42 @@
 
 package org.cougaar.core.mts;
 
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
+import java.util.ArrayList;
 
-public interface ObjectReader
+public final class MessageStreamsFactory 
+    extends  AspectFactory
 {
-    public InputStream getObjectInputStream(ObjectInput in) 
-	throws java.io.IOException, ClassNotFoundException;
+    private static MessageStreamsFactory factory;
 
-    public void preProcess(ObjectInput in)
-	throws java.io.IOException, ClassNotFoundException;
+    public static synchronized MessageStreamsFactory makeFactory() {
+	factory = new MessageStreamsFactory();
+	return factory;
+    }
 
-    public void postProcess(ObjectInput in)
-	throws java.io.IOException, ClassNotFoundException;
+
+    public static synchronized MessageStreamsFactory getFactory() {
+	return factory;
+    }
+
+
+    private MessageStreamsFactory() 
+    {
+    }
+
+    public MessageReader getMessageReader(ArrayList aspectNames)  {
+	MessageReader rdr = new MessageReaderImpl();
+ 	return (MessageReader) attachAspects(rdr, 
+					     MessageReader.class,
+					     aspectNames);
+    }
+
+
+    public MessageWriter getMessageWriter(ArrayList aspectNames)  {
+	MessageWriter wtr = new MessageWriterImpl();
+ 	return (MessageWriter) attachAspects(wtr, 
+					     MessageWriter.class,
+					     aspectNames);
+    }
 
 }
+

@@ -48,7 +48,7 @@ final public class SendLinkImpl
     }
 
 
-    public void sendMessage(Message message) {
+    public void sendMessage(AttributedMessage message) {
 	sendQ.sendMessage(message);
     }
 
@@ -65,7 +65,7 @@ final public class SendLinkImpl
 	registry = null;
     }
 
-    public boolean okToSend(Message message) {
+    public boolean okToSend(AttributedMessage message) {
 	MessageAddress target = message.getTarget();
 	if (target == null || target.toString().equals("")) {
 	    if (loggingService.isErrorEnabled())

@@ -28,6 +28,8 @@ import java.util.Iterator;
 public class MulticastAspect extends StandardAspect
 {
 
+    private static final String MCAST = 
+	"org.cougaar.message.transport.is-multicast";
 
     public Object getDelegate(Object delegatee, Class type) 
     {
@@ -50,16 +52,6 @@ public class MulticastAspect extends StandardAspect
 
 
 
-    private static class MulticastMessageEnvelope extends MessageEnvelope {
-    
-
-	MulticastMessageEnvelope(Message message, MessageAddress destination) {
-	    super(message, message.getOriginator(), destination);
-	}
-
-    
-    }
-
 
     public class SendLinkDelegate extends SendLinkDelegateImplBase {
 	
@@ -68,15 +60,19 @@ public class MulticastAspect extends StandardAspect
 	}
 	
 
-	public void sendMessage(Message msg) {
+	public void sendMessage(AttributedMessage msg) {
 	    MessageAddress destination = msg.getTarget();
 	    if (destination instanceof MulticastMessageAddress) {
+		msg.setAttribute(MCAST, destination);
+		AttributedMessage copy;
+		MessageAddress nodeAddr;
 		if (destination.equals(MessageAddress.LOCAL)) {
 		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
 			loggingService.debug("MCAST: Local multicast");
-		    destination = getRegistry().getLocalAddress();
-		    msg = new MulticastMessageEnvelope(msg,  destination);
-		    link.sendMessage(msg);
+		    nodeAddr = getRegistry().getLocalAddress();
+		    copy = new AttributedMessage(msg);
+		    copy.setTarget(nodeAddr);
+		    super.sendMessage(copy);
 		} else {
 		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
 			loggingService.debug("MCAST: Remote multicast to "
@@ -85,19 +81,18 @@ public class MulticastAspect extends StandardAspect
 			(MulticastMessageAddress) destination;
 		    Iterator itr = 
 			getRegistry().findRemoteMulticastTransports(dst);
-		    MulticastMessageEnvelope envelope;
-		    MessageAddress addr;
 		    while (itr.hasNext()) {
-			addr = (MessageAddress) itr.next();
+			nodeAddr = (MessageAddress) itr.next();
 			if (Debug.isDebugEnabled(loggingService,MULTICAST))
 			    loggingService.debug("MCAST: next address = " 
-						      + addr);
-			envelope = new MulticastMessageEnvelope(msg, addr);
-			link.sendMessage(envelope);
+						      + nodeAddr);
+			copy = new AttributedMessage(msg);
+			copy.setTarget(nodeAddr);
+			super.sendMessage(copy);
 		    }
 		}
 	    } else {
-		link.sendMessage(msg);
+		super.sendMessage(msg);
 	    }
 	}
 
@@ -109,28 +104,32 @@ public class MulticastAspect extends StandardAspect
 	extends MessageDelivererDelegateImplBase 
     {
 
-	public MessageDelivererDelegate (MessageDeliverer delegatee) {
-	    super(delegatee);
+	public MessageDelivererDelegate (MessageDeliverer deliverer) {
+	    super(deliverer);
 	}
 	
-	public void deliverMessage(Message msg, MessageAddress destination) 
+	public void deliverMessage(AttributedMessage msg, 
+				   MessageAddress destination) 
 	    throws MisdeliveredMessageException
 	{
-	    if (msg instanceof MulticastMessageEnvelope) {
-		msg = ((MulticastMessageEnvelope) msg).getContents();
-		MulticastMessageAddress addr = 
-		    (MulticastMessageAddress) msg.getTarget();
+	    MulticastMessageAddress mcastAddr = 
+		(MulticastMessageAddress) msg.getAttribute(MCAST);
+	    
+	    if (mcastAddr != null) {
 		if (Debug.isDebugEnabled(loggingService,MULTICAST)) 
 		    loggingService.debug("MCAST: Received multicast to "
-					      + addr);
-		Iterator i = getRegistry().findLocalMulticastReceivers(addr);
+					      + mcastAddr);
+		Iterator i = 
+		    getRegistry().findLocalMulticastReceivers(mcastAddr);
 		MessageAddress localDestination = null;
+		AttributedMessage copy = 
+		    new AttributedMessage(msg.getRawMessage(), msg);
 		while (i.hasNext()) {
 		    localDestination = (MessageAddress) i.next();
 		    if (Debug.isDebugEnabled(loggingService,MULTICAST))
 			loggingService.debug("MCAST: Delivering to "
 						  + localDestination);
-		    deliverer.deliverMessage(msg, localDestination);
+		    super.deliverMessage(copy, localDestination);
 		}
 	    } else {	
 		super.deliverMessage(msg, destination);

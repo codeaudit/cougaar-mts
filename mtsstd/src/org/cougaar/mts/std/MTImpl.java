@@ -21,17 +21,13 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
   
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
-/** actual RMI remote object providing the implementation of MessageTransport client
+/** actual RMI remote object providing the implementation of
+ * MessageTransport client
  **/
 
 public class MTImpl extends UnicastRemoteObject implements MT 
@@ -54,7 +50,7 @@ public class MTImpl extends UnicastRemoteObject implements MT
 	return socfac;
     }
 
-    public void rerouteMessage(Message message) 
+    public void rerouteMessage(AttributedMessage message) 
 	throws MisdeliveredMessageException
     {
 	deliverer.deliverMessage(message, message.getTarget());

@@ -75,7 +75,7 @@ class FutileSerializingLinkProtocol
 
 
     class Link implements DestinationLink {
-	private Message lastMessage;
+	private AttributedMessage lastMessage;
 	private MessageAddress address;
 	private int count;
 
@@ -88,7 +88,7 @@ class FutileSerializingLinkProtocol
 	}
 
 
-	public int cost(Message msg) {
+	public int cost(AttributedMessage msg) {
 	    if (lastMessage != msg) {
 		lastMessage = msg;
 		count = 1;
@@ -104,7 +104,7 @@ class FutileSerializingLinkProtocol
 	
 
 
-	private void serialize(Message message) {
+	private void serialize(AttributedMessage message) {
 	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	    ObjectOutputStream oos = null;
 
@@ -128,14 +128,16 @@ class FutileSerializingLinkProtocol
 		loggingService.info("Serialized " + message);
 	}
 
-	public void forwardMessage(Message message) 
+	public void forwardMessage(AttributedMessage message) 
 	    throws MisdeliveredMessageException
 	{
 	    serialize(message);
 	    throw new MisdeliveredMessageException(message);
 	}
 
-	public boolean retryFailedMessage(Message message, int retryCount) {
+	public boolean retryFailedMessage(AttributedMessage message, 
+					  int retryCount) 
+	{
 	    return true;
 	}
 

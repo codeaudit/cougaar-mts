@@ -21,23 +21,17 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 abstract public class MessageDelivererDelegateImplBase
     implements MessageDeliverer
 {
-    protected MessageDeliverer deliverer;
+    private MessageDeliverer deliverer;
 
     protected MessageDelivererDelegateImplBase(MessageDeliverer deliverer) {
 	this.deliverer = deliverer;
     }
 
-    public void deliverMessage(Message message, MessageAddress dest)
+    public void deliverMessage(AttributedMessage message, MessageAddress dest)
 	throws MisdeliveredMessageException
     {
 	deliverer.deliverMessage(message, dest);
