@@ -25,22 +25,22 @@ import java.io.Serializable;
 
 public interface MessageAttributes extends Serializable
 {
-    public static final String FILTERS_ATTRIBUTE = "Filters";
+    String FILTERS_ATTRIBUTE = "Filters";
 
-    public static final String DELIVERY_ATTRIBUTE = "DeliveryStatus";
-    public static final String DELIVERY_STATUS_DELIVERED = "Delivered";
-    public static final String DELIVERY_STATUS_CLIENT_ERROR = 
+    String DELIVERY_ATTRIBUTE = "DeliveryStatus";
+    String DELIVERY_STATUS_DELIVERED = "Delivered";
+    String DELIVERY_STATUS_CLIENT_ERROR = 
 	"ClientException";
-    public static final String DELIVERY_STATUS_DROPPED_DUPLICATE = 
+    String DELIVERY_STATUS_DROPPED_DUPLICATE = 
 	"DroppedDuplicate";
-    public static final String DELIVERY_STATUS_HELD = "Held";
-    public static final String DELIVERY_STATUS_STORE_AND_FORWARD  =
+    String DELIVERY_STATUS_HELD = "Held";
+    String DELIVERY_STATUS_STORE_AND_FORWARD  =
 	"Store&Forward";
-    public static final String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
+    String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
 
-    public Object getAttribute(String attribute);
-    public void setAttribute(String attribute, Object value);
-    public void removeAttribute(String attribute);
-    public void addValue(String attribute, Object value);
-    public void removeValue(String attribute, Object value);
+    Object getAttribute(String attribute);
+    void setAttribute(String attribute, Object value);
+    void removeAttribute(String attribute);
+    void addValue(String attribute, Object value);
+    void removeValue(String attribute, Object value);
 }

@@ -32,12 +32,12 @@ public interface RMISocketControlService extends Service
      * reference The side effect of this is that other agents that are
      * on the same node will also have their time out changed.
      */
-    public boolean setSoTimeout(MessageAddress addr, int timeout);
+    boolean setSoTimeout(MessageAddress addr, int timeout);
 
     /** 
      * The RMILinkProtocol calls this method, Other Aspects should not
      * call this method.
      */
-    public void setReferenceAddress(Remote reference, 
+    void setReferenceAddress(Remote reference, 
 				    MessageAddress addr);
 }

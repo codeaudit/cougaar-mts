@@ -28,19 +28,19 @@ import java.io.ObjectInputStream;
 public interface MessageReader
 {
     
-    public void finalizeAttributes(AttributedMessage msg);
+    void finalizeAttributes(AttributedMessage msg);
 
-    public void preProcess();
+    void preProcess();
 
     // The argument is the next innermost stream in the nesting.
-    public InputStream getObjectInputStream(ObjectInput in) 
+    InputStream getObjectInputStream(ObjectInput in) 
 	throws java.io.IOException, ClassNotFoundException;
 
     // Could be reading from a cached stream, so could throw
     // IOException.
-    public void finishInput()
+    void finishInput()
 	throws java.io.IOException;
 
-    public void postProcess();
+    void postProcess();
 
 }

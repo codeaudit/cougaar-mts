@@ -25,5 +25,5 @@ import org.cougaar.core.component.Service;
 
 public interface ReceiveLinkProviderService extends Service
 {
-    public ReceiveLink getReceiveLink(MessageTransportClient client);
+    ReceiveLink getReceiveLink(MessageTransportClient client);
 }

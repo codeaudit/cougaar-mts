@@ -27,16 +27,16 @@ import java.io.ObjectOutputStream;
 
 public interface MessageWriter
 {
-    public void finalizeAttributes(AttributedMessage msg);
+    void finalizeAttributes(AttributedMessage msg);
 
-    public void preProcess();
+    void preProcess();
 
     // The argument is the next innermost stream in the nesting.
-    public OutputStream getObjectOutputStream(ObjectOutput out)
+    OutputStream getObjectOutputStream(ObjectOutput out)
 	throws java.io.IOException;
  
-    public void finishOutput()
+    void finishOutput()
 	throws java.io.IOException;
 
-    public void postProcess();
+    void postProcess();
 }
