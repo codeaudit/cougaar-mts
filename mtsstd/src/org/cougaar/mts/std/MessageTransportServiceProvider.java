@@ -54,6 +54,7 @@ public class MessageTransportServiceProvider
     private Router router;
     private SendQueue sendQ;
     private ReceiveQueue recvQ;
+    private WatcherAspect watcherAspect;
 
     private String id;
     private HashMap proxies;
@@ -114,8 +115,7 @@ public class MessageTransportServiceProvider
 	//Watcher Aspect is special because the MTServicer interace
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
-	WatcherAspect watcherAspect =  new WatcherAspect();
-	registry.setWatcherManager(watcherAspect);
+	watcherAspect =  new WatcherAspect();
 	if (aspects == null) aspects = new ArrayList();
 	aspects.add(watcherAspect);
 
@@ -203,6 +203,8 @@ public class MessageTransportServiceProvider
 	    StatisticsAspect aspect = 
 		(StatisticsAspect) findAspect("org.cougaar.core.mts.StatisticsAspect");
 	    return aspect;
+	} else if (serviceClass == MessageWatcherService.class) {
+	    return watcherAspect;
 	} else {
 	    return null;
 	}

@@ -56,7 +56,6 @@ class MessageTransportRegistry
     private MessageTransportServiceProvider serviceProvider;
     private MessageTransportFactory transportFactory;
     private ReceiveLinkFactory receiveLinkFactory;
-    private WatcherAspect watcherAspect;
 
     private MessageTransportRegistry(String name, MessageTransportServiceProvider serviceProvider) {
 	this.name = name;
@@ -74,17 +73,6 @@ class MessageTransportRegistry
 
     String getIdentifier() {
 	return name;
-    }
-
-
-
-    void setWatcherManager(WatcherAspect watcherAspect) {
-	this.watcherAspect =watcherAspect;
-    }
- 
-
-    public WatcherAspect getWatcherManager() {
-	return watcherAspect;
     }
 
 

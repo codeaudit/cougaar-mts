@@ -35,10 +35,6 @@ public interface MessageTransportService extends Service
    **/
   void registerClient(MessageTransportClient client);
 
-  /**
-   * add a MessageTransportWatcher to the server.
-   **/
-  void addMessageTransportWatcher(MessageTransportWatcher watcher);
 
   /**
    * the name of the entity that this MessageTransport represents.

@@ -101,11 +101,6 @@ public class TraceAspect
 	    server.registerClient(client);
 	}
 
-	public void addMessageTransportWatcher(MessageTransportWatcher watcher)
-	{
-	    server.addMessageTransportWatcher(watcher);
-	}
-
 	public String getIdentifier() {
 	    return server.getIdentifier();
 	}

@@ -21,6 +21,7 @@ import java.util.Iterator;
  * delegates are implemented as inner classes.  */
 public class WatcherAspect 
     extends StandardAspect
+    implements MessageWatcherService
 {
     private ArrayList watchers;
 

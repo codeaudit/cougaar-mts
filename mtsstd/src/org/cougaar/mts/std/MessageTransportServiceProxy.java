@@ -65,13 +65,6 @@ public class MessageTransportServiceProxy
     }
     
 
-    public void addMessageTransportWatcher(MessageTransportWatcher watcher) {
-	WatcherAspect mgr = registry.getWatcherManager();
-	if (mgr != null)
-	    mgr.addMessageTransportWatcher(watcher);
-	else
-	    System.err.println("Call to addMessageTransportWatcher but no WatcherManager exists");
-    }
    
     /**
      * Redirects the request to the MessageTransportRegistry. */
