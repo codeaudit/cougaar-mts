@@ -100,7 +100,8 @@ public final class AspectSupportImpl
 	    aspects_table.put(classname, aspect);
 	}
 	container.add(aspect);
-	System.out.println("******* added aspect " + aspect);
+	if (Debug.debug(ASPECTS))
+	    System.out.println("******* added aspect " + aspect);
     }
 
 
@@ -110,7 +111,7 @@ public final class AspectSupportImpl
      * delegate, the final aspect delegate is returned.  If no aspects
      * attach a delegate, the original object, as created by the
      * factory, is returned.  */
-    public synchronized Object attachAspects (Object delegate, 
+    public Object attachAspects (Object delegate, 
 					      Class type)
     {
 	Iterator itr = aspects.iterator();
