@@ -66,15 +66,7 @@ public class PrioritizedThreadsAspect
 		if (x == null) return -1;
 		if (y == null) return 1;
 		
-		int p1 = ((Integer) x).intValue();
-		int p2 = ((Integer) y).intValue();
-
-		if (p1 < p1)
-		    return -1;
-		else if (p2 > p1)
-		    return 1;
-		else
-		    return 0;
+		return ((Comparable) y).compareTo(x);
 	    }
 	};
 
