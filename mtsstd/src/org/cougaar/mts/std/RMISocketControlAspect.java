@@ -29,6 +29,8 @@ import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TimerTask;
 
 
 /**
@@ -42,13 +44,13 @@ public class RMISocketControlAspect
     private Impl impl;
 
     public RMISocketControlAspect() {
-	impl = new Impl();
     }
 
     public void load() {
 	super.load();
 
 	Provider provider = new Provider();
+	impl = new Impl();
 	getServiceBroker().addService(RMISocketControlService.class, 
 				      provider);
     }
@@ -82,8 +84,11 @@ public class RMISocketControlAspect
     }
 
     private class Impl implements RMISocketControlService {
-	HashMap sockets, references, addresses, default_timeouts,
-	    referencesByKey;
+	HashMap sockets,      // host:port -> list of sockets
+	    references,       // MessageAddress -> Remote stub 
+	    addresses,        // Remote stub -> MessageAddress
+	    default_timeouts, // MessageAddress -> timeout
+	    referencesByKey;  // host:port -> Remote stub
 
 	private Impl() {
 	    sockets = new HashMap();
@@ -91,6 +96,12 @@ public class RMISocketControlAspect
 	    addresses = new HashMap();
 	    default_timeouts = new HashMap();
 	    referencesByKey = new HashMap();
+	    TimerTask reaper = new TimerTask() {
+		    public void run() {
+			reapClosedSockets();
+		    }
+		};
+	    getThreadService().schedule(reaper, 0, 5000);
 	}
 
 	private String getKey(String host, int port) {
@@ -142,7 +153,6 @@ public class RMISocketControlAspect
 	    Object ref = referencesByKey.get(key);
 	    Object addr = addresses.get(ref);
 	    Integer result = (Integer)default_timeouts.get(addr);
-	    System.out.println(" Key=" +key+ " ->" +result);
 	    return result;
 	}
 
@@ -157,7 +167,6 @@ public class RMISocketControlAspect
 		    // Don't care
 		}
 	    }
-	    // System.out.println("Caching socket under key " + key);
 	    synchronized (this) {
 		ArrayList skt_list = (ArrayList) sockets.get(key);
 		if (skt_list == null) {
@@ -165,6 +174,22 @@ public class RMISocketControlAspect
 		    sockets.put(key, skt_list);
 		}
 		skt_list.add(skt);
+	    }
+	}
+
+	synchronized void reapClosedSockets() {
+	    // Prune closed sockets
+	    Map.Entry entry;
+	    Socket socket;
+	    Iterator itr2;
+	    Iterator itr = sockets.entrySet().iterator();
+	    while (itr.hasNext()) {
+		entry = (Map.Entry) itr.next();
+		itr2 = ((ArrayList) entry.getValue()).iterator();
+		while (itr2.hasNext()) {
+		    socket = (Socket) itr2.next();
+		    if (socket.isClosed()) itr2.remove();
+		}
 	    }
 	}
 

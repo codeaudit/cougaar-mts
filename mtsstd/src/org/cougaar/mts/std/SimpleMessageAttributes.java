@@ -82,6 +82,7 @@ public class SimpleMessageAttributes
 	local_data.clear();
     }
 
+    // The attributes being merged in have precedence during load
     public void mergeAttributes(Attributes attributes) {
 	if (!(attributes instanceof SimpleMessageAttributes)) {
 	    throw new RuntimeException("SimpleMessageAttributes cannot merge wih " 
@@ -96,18 +97,21 @@ public class SimpleMessageAttributes
     private void merge(HashMap current, HashMap merge) {
 	Iterator itr = merge.entrySet().iterator();
 	while (itr.hasNext()) {
-	    Map.Entry entry = (Map.Entry) itr.next();
-	    String key = (String) entry.getKey();
-	    Object value = entry.getValue();
-	    if (value instanceof ArrayList) {
+	    Map.Entry merge_entry = (Map.Entry) itr.next();
+	    String key = (String) merge_entry.getKey();
+	    Object value = merge_entry.getValue();
+	    Object old = current.get(key);
+	    if (old == null) {
+		setAttribute(key, value, current);
+	    } else if (value instanceof ArrayList && old instanceof ArrayList){
+		// Both are multi-value -- merge the lists by adding
+		// the values to the end.
 		Iterator i2 = ((ArrayList) value).iterator();
 		while (i2.hasNext()) addValue(key, i2.next(), current);
-	    } else if (current.get(key) == null) {
-		// Don't make the merged value into a List if there's
-		// no current value.
-		setAttribute(key, value, current);
 	    } else {
-		addValue(key, value, current);
+		// Either one value is multi and one is single or both
+		// are single.  Either way, use the new value.
+		setAttribute(key, value, current);
 	    }
 	}
     }

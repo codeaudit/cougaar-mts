@@ -227,5 +227,22 @@ public class SocketFactory
 	}
     }
 
+    public int hashCode() {
+        if (use_ssl) {
+            if (use_aspects) return 0;
+            return 1;
+        } else {
+            if (use_aspects) return 2;
+            return 3;
+        }
+    }
 
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o.getClass() == this.getClass()) {
+            SocketFactory that = (SocketFactory) o;
+            return this.use_ssl == that.use_ssl && this.use_aspects == that.use_aspects;
+        }
+        return false;
+    }
 }

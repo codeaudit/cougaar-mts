@@ -178,14 +178,18 @@ public class AgentStatusAspect
 
     public Set getLocalAgents() {
 	Set result = new  java.util.HashSet();
-	result.addAll(localStates.keySet());
+	synchronized (localStates) {
+	    result.addAll(localStates.keySet());
+	}
 	return result;
     }
 
 
     public Set getRemoteAgents() {	
 	Set result = new java.util.HashSet();
-	result.addAll(remoteStates.keySet());
+	synchronized (remoteStates) {
+	    result.addAll(remoteStates.keySet());
+	}
 	return result;
     }
 
