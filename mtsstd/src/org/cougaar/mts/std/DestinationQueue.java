@@ -67,4 +67,7 @@ public interface DestinationQueue
      * Number of messages waiting in the queue.
      */
     int size();
+
+    MessageAddress getDestination();
+
 }

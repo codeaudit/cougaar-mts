@@ -53,4 +53,11 @@ abstract public class DestinationQueueDelegateImplBase
     public int size() {
 	return queue.size();
     }
+
+    public MessageAddress getDestination() {
+	return queue.getDestination();
+    }
+
+
+
 }

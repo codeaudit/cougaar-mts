@@ -68,6 +68,10 @@ final class DestinationQueueImpl
     }
 
 
+    public MessageAddress getDestination() {
+	return destination;
+    }
+
 
     /**
      * Enqueues the given message. */
