@@ -39,7 +39,7 @@ import org.cougaar.core.component.ServiceBroker;
  * messages in envelopes in the proper (ie reverse order).
  */
 public interface MessageTransportAspect 
-    extends ContainerAPI, DebugFlags
+    extends DebugFlags
 {
     Object getDelegate(Object delegate, Class type);
 

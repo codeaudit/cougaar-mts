@@ -66,7 +66,7 @@ class LoopbackLinkProtocol
 
     public boolean addressKnown(MessageAddress address) {
 	// true iff the address is local
-	return registry.isLocalClient(address);
+	return getRegistry().isLocalClient(address);
     }
 
 
@@ -84,7 +84,7 @@ class LoopbackLinkProtocol
 
 	public int cost(Message msg) {
 	    MessageAddress addr = msg.getTarget();
-	    if (registry.isLocalClient(addr)) {
+	    if (getRegistry().isLocalClient(addr)) {
 		return 0;
 	    } else {
 		return Integer.MAX_VALUE;

@@ -93,7 +93,7 @@ public class RMILinkProtocol
     // standard load() method without running any intervening ones.
     public void load() {
 	super_load();
-	ServiceBroker sb = getBindingSite().getServiceBroker();
+	ServiceBroker sb = getServiceBroker();
 	sb.addService(Service.class, this);
     }
 
@@ -159,7 +159,7 @@ public class RMILinkProtocol
 	throws Exception 
     {
 	Object object = 
-	    nameSupport.lookupAddressInNameServer(address, getProtocolType());
+	    getNameSupport().lookupAddressInNameServer(address, getProtocolType());
 
 	remoteRefs.put(address, object);
 
@@ -181,7 +181,7 @@ public class RMILinkProtocol
     private void findOrMakeMT() {
 	if (myProxy != null) return;
 	try {
-	    MessageAddress myAddress = nameSupport.getNodeMessageAddress();
+	    MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
 	    MTImpl impl = makeMTImpl(myAddress, deliverer, socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
@@ -193,7 +193,7 @@ public class RMILinkProtocol
 	findOrMakeMT();
 	try {
 	    Object proxy = myProxy;
-	    nameSupport.registerAgentInNameServer(proxy,addr,
+	    getNameSupport().registerAgentInNameServer(proxy,addr,
 						  getProtocolType());
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
@@ -206,7 +206,7 @@ public class RMILinkProtocol
 	    // Assume node-redirect
 	    Object proxy = myProxy;
 	    MessageAddress addr = client.getMessageAddress();
-	    nameSupport.registerAgentInNameServer(proxy,addr,
+	    getNameSupport().registerAgentInNameServer(proxy,addr,
 						  getProtocolType());
 	} catch (Exception e) {
 	    System.err.println("Error registering MessageTransport:");
@@ -220,7 +220,7 @@ public class RMILinkProtocol
 	    // Assume node-redirect
 	    Object proxy = myProxy;
 	    MessageAddress addr = client.getMessageAddress();
-	    nameSupport.unregisterAgentInNameServer(proxy,addr,
+	    getNameSupport().unregisterAgentInNameServer(proxy,addr,
 						    getProtocolType());
 	} catch (Exception e) {
 	    System.err.println("Error unregistering MessageTransport:");

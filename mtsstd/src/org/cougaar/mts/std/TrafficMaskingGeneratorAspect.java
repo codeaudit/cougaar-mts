@@ -93,7 +93,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    new TrafficMaskingGeneratorServiceProvider(this);
 	// add the service to my parent's service broker so my
 	// sibling aspects can access it.
-	getBindingSite().getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
+	getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
 
     }
 

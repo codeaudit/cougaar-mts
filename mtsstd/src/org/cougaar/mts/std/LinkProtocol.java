@@ -21,13 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.BindingSite;
-import org.cougaar.core.component.ContainerAPI;
-import org.cougaar.core.component.ContainerSupport;
-import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-
 
 /**
  * The parent class of all LinkProtocols.  Instantiable subclasses
@@ -45,14 +40,10 @@ import org.cougaar.core.component.ServiceProvider;
  * in order to allow aspects to be added to the Links.  The aspect
  * attachment is handled in each specific transport class.  */
 abstract public class LinkProtocol 
-    extends ContainerSupport
-    implements ContainerAPI, DebugFlags, ServiceProvider
+    extends BoundComponent
+    implements DebugFlags, ServiceProvider
 {
     protected MessageDeliverer deliverer;
-    protected MessageTransportRegistryService registry;
-    protected NameSupport nameSupport;
-    private AspectSupport aspectSupport;
-    private BindingSite bindingSite;
     
     protected class ServiceProxy 
 	implements LinkProtocolService
@@ -105,26 +96,11 @@ abstract public class LinkProtocol
     protected LinkProtocol() {
     }
 
-    protected BindingSite getBindingSite() {
-	return bindingSite;
-    }
-
 
 
     // Allow subclasses to provide their own load()
     protected void super_load() {
 	super.load();
-
-	ServiceBroker sb = getServiceBroker();
-	Object svc = null;
-
-	svc = sb.getService(this, MessageTransportRegistryService.class, null);
-	registry = (MessageTransportRegistryService) svc;
-	svc = sb.getService(this, NameSupport.class, null);
-	nameSupport = (NameSupport) svc;
-	svc = sb.getService(this, AspectSupport.class, null);
-	aspectSupport = (AspectSupport) svc;
-
     }
 
     public void load() {
@@ -153,40 +129,13 @@ abstract public class LinkProtocol
 
 
     public Object attachAspects(Object delegate, Class type) {
-	return aspectSupport.attachAspects(delegate, type);
+	return getAspectSupport().attachAspects(delegate, type);
     }
 
 
     public void setDeliverer(MessageDeliverer deliverer) {
 	this.deliverer = deliverer;
     }
-
-
-
-
-   
-    // ContainerAPI
-
-    public void requestStop() {}
-
-    public ContainerAPI getContainerProxy() {
-	return this;
-    }
-
-    protected String specifyContainmentPoint() {
-	return "messagetransportservice.aspect";
-    }
-
-    public final void setBindingSite(BindingSite bs) {
-        super.setBindingSite(bs);
-	this.bindingSite = bs;
-        setChildServiceBroker(new PropagatingServiceBroker(bs));
-    }
-
-
-
-    
-
 
 
 }

@@ -29,6 +29,7 @@ import org.cougaar.core.component.ContainerAPI;
 import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.component.StateObject;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
@@ -48,9 +49,11 @@ import java.util.HashMap;
  * transport policy to instance o the specified class.
  */
 
+
+
 public final class MessageTransportServiceProvider 
     extends ContainerSupport
-    implements ContainerAPI, ServiceProvider, MessageTransportClient
+    implements ContainerAPI, ServiceProvider, MessageTransportClient, StateObject
 {
 
     private final static String POLICY_PROPERTY =
@@ -258,6 +261,8 @@ public final class MessageTransportServiceProvider
     }
 
 
+    // ServiceProvider
+
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
@@ -321,10 +326,10 @@ public final class MessageTransportServiceProvider
 
     // Container
 
-    // may need to override ComponentFactory specifyComponentFactory()
 
+    // We're not using this yet but leave it in anyway.
     protected String specifyContainmentPoint() {
-	return "messagetransportservice.messagetransport";
+	return "Node.MessageTransport";
     }
 
     public void requestStop() {}
@@ -337,6 +342,20 @@ public final class MessageTransportServiceProvider
 
     public ContainerAPI getContainerProxy() {
 	return this;
+    }
+
+
+    // StateModel
+
+    // Return a (serializable) snapshot that can be used to
+    // reconstitute the state later.
+    public Object getState() {
+	// TBD
+	return null;
+    }
+
+    // Reconstitute from the previously returned snapshot.
+    public void setState(Object state) {
     }
 
 

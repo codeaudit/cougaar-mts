@@ -20,56 +20,15 @@
  */
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.BindingSite;
-import org.cougaar.core.component.ContainerAPI;
-import org.cougaar.core.component.ContainerSupport;
-import org.cougaar.core.component.PropagatingServiceBroker;
-import org.cougaar.core.component.ServiceBroker;
-
 
 /**
  * Default base Aspect class, which will accept any transport at any
  * cutpoint.
  */
 abstract public class StandardAspect 
-    extends ContainerSupport
+    extends BoundComponent
     implements MessageTransportAspect
 {
-
-
-    private MessageTransportRegistryService registry;
-    private NameSupport nameSupport;
-    private BindingSite bindingSite;
-
-    protected MessageTransportRegistryService getRegistry() {
-	if (registry != null) return registry;
-
-	ServiceBroker sb = getServiceBroker();
-	registry =
-	    (MessageTransportRegistryService)
-	    sb.getService(this,
-			  MessageTransportRegistryService.class,
-			  null);
-
-	return registry;
-    }
-
-
-    protected NameSupport getNameSupport() {
-	if (nameSupport != null) return nameSupport;
-
-	ServiceBroker sb = getServiceBroker();
-	nameSupport =
-	    (NameSupport) sb.getService(this, NameSupport.class,  null);
-
-	return nameSupport;
-    }
-
-
-
-    protected BindingSite getBindingSite() {
-	return bindingSite;
-    }
 
     public Object getDelegate(Object delegate, Class type) 
     {
@@ -82,24 +41,5 @@ abstract public class StandardAspect
 	return null;
     }
 	
-
-    // ContainerAPI
-
-    public void requestStop() {}
-
-    public ContainerAPI getContainerProxy() {
-	return this;
-    }
-
-    protected String specifyContainmentPoint() {
-	return "messagetransportservice.aspect";
-    }
-
-    public final void setBindingSite(BindingSite bs) {
-        super.setBindingSite(bs);
-	this.bindingSite = bs;
-        setChildServiceBroker(new PropagatingServiceBroker(bs));
-    }
-
 
 }
