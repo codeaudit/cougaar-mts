@@ -151,7 +151,7 @@ public class StatisticsAspect
 
 
 
-    private class StatisticsSocket extends SocketDelegateBaseImpl {
+    private class StatisticsSocket extends SocketDelegateImplBase {
 	private StatisticsSocket(Socket socket) {
 	    super(socket);
 	}
