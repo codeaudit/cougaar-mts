@@ -21,9 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Container;
-
-import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 
 /**
  * The root class of all aspect-ready factories.  Such factories have
@@ -41,6 +39,14 @@ abstract public class AspectFactory
 
     public Object attachAspects(Object delegate, Class type) {
 	return getAspectSupport().attachAspects(delegate, type);
+    }
+
+
+    public Object attachAspects(Object delegate, 
+				Class type, 
+				ArrayList aspectNames) 
+    {
+	return getAspectSupport().attachAspects(delegate, type, aspectNames);
     }
 
 

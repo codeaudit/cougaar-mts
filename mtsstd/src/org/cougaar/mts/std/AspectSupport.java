@@ -34,4 +34,5 @@ public interface AspectSupport extends Service
     void readAspects();
     void addAspect(MessageTransportAspect aspect);
     Object attachAspects(Object delegate,  Class type);
+    Object attachAspects(Object delegate,  Class type, ArrayList candidates);
 }

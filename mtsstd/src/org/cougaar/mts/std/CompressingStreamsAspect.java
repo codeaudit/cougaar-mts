@@ -43,9 +43,33 @@ public class CompressingStreamsAspect extends StandardAspect
 	} else if (type == ObjectReader.class) {
 	    ObjectReader rdr = (ObjectReader) delegatee;
 	    return new CompressingObjectReader(rdr);
+	} else if (type == DestinationLink.class) {
+	    DestinationLink link = (DestinationLink) delegatee;
+	    return new ForceCompression(link);
 	} else {
 	    return null;
 	}
+    }
+
+    private class ForceCompression extends DestinationLinkDelegateImplBase {
+	ForceCompression(DestinationLink delegatee) {
+	    super(delegatee);
+	}
+	
+	public void forwardMessage(Message message) 
+	    throws UnregisteredNameException, 
+		   NameLookupException, 
+		   CommFailureException,
+		   MisdeliveredMessageException
+	{
+	    if (message instanceof MessageProperties) {
+		MessageProperties props = (MessageProperties) message;
+		props.addValue(MessageProperties.FILTERS_PROPERTY,
+			       CompressingStreamsAspect.class.getName());
+	    }
+	    super.forwardMessage(message);
+	}
+	
     }
 
 
@@ -74,6 +98,11 @@ public class CompressingStreamsAspect extends StandardAspect
 	{
 	    def_os.finish();
 	    def_os.flush();
+
+	    System.out.println("Compressed " +deflater.getTotalIn()+
+			       " bytes to " +deflater.getTotalOut()+
+			       " bytes");
+
 	    super.postProcess(out);
 	}
 

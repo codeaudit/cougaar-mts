@@ -156,9 +156,31 @@ final class AspectSupportImpl implements ServiceProvider
 	 * attach a delegate, the original object, as created by the
 	 * factory, is returned.  */
 	public Object attachAspects (Object delegate, 
+				     Class type,
+				     ArrayList candidateClassNames)
+	{
+	    ArrayList candidates = new ArrayList(candidateClassNames.size());
+	    Iterator itr = candidateClassNames.iterator();
+	    while (itr.hasNext()) {
+		String candidateClassName = (String) itr.next();
+		Object candidate = findAspect(candidateClassName);
+		if (candidate != null) candidates.add(candidate);
+	    }
+	    return attach(delegate, type, candidates);
+	}
+
+
+	public Object attachAspects (Object delegate, 
 				     Class type)
 	{
-	    Iterator itr = aspects.iterator();
+	    return attach(delegate, type, aspects);
+	}
+
+	private Object attach (Object delegate, 
+			       Class type,
+			       ArrayList candidates)
+	{
+	    Iterator itr = candidates.iterator();
 	    while (itr.hasNext()) {
 		MessageTransportAspect aspect = 
 		    (MessageTransportAspect) itr.next();
@@ -171,7 +193,7 @@ final class AspectSupportImpl implements ServiceProvider
 		}
 	    }
 
-	    ListIterator litr = aspects.listIterator(aspects.size());
+	    ListIterator litr = candidates.listIterator(candidates.size());
 	    while (litr.hasPrevious()) {
 		MessageTransportAspect aspect = 
 		    (MessageTransportAspect) litr.previous();

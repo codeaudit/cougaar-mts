@@ -37,9 +37,6 @@ public class CachingStreamsAspect extends StandardAspect
 	if (type == ObjectWriter.class) {
 	    ObjectWriter wtr = (ObjectWriter) delegatee;
 	    return new CachingObjectWriter(wtr);
-	} else if (type == ObjectReader.class) {
-	    ObjectReader rdr = (ObjectReader) delegatee;
-	    return new CachingObjectReader(rdr);
 	} else {
 	    return null;
 	}
@@ -85,19 +82,6 @@ public class CachingStreamsAspect extends StandardAspect
 	    return new TeeOutputStream(raw_os, byte_os);
 	}
 
-	public boolean proceed() {
-	    return cache == null;
-	}
-
-	public void preProcess(ObjectOutput out) 
-	    throws java.io.IOException
-	{
-	    out.writeObject(cache);
-	    if (cache != null) System.err.println("Sending cache " + cache);
-	    super.preProcess(out);
-	}
-
-
 	public void postProcess(ObjectOutput out) 
 	    throws java.io.IOException
 	{
@@ -110,35 +94,6 @@ public class CachingStreamsAspect extends StandardAspect
 
 
 
-    private class CachingObjectReader extends ObjectReaderDelegateImplBase
-    {
-	Object cache;
-
-	CachingObjectReader(ObjectReader delegatee) {
-	    super(delegatee);
-	}
-
-	public InputStream getObjectInputStream(ObjectInput in) 
-	    throws java.io.IOException, ClassNotFoundException
-	{
-	    InputStream raw_is = super.getObjectInputStream(in);
-	    if (cache != null) {
-		System.err.println("Received cache " + cache);
-		return new ByteArrayInputStream((byte[]) cache);
-	    } else {
-		return raw_is;
-	    }
-	}
-
-	public void preProcess(ObjectInput in) 
-	    throws java.io.IOException, ClassNotFoundException
-	{
-	    cache = in.readObject();
-	    super.preProcess(in);
-	}
-
-
-    }
 
 
 
