@@ -18,8 +18,7 @@ import java.util.ArrayList;
 public interface AspectSupport {
     public MessageTransportAspect findAspect(String classname);
 
-    public void addAspect(MessageTransportAspect aspect,
-			  String classname);
+    public void addAspect(MessageTransportAspect aspect);
 
     public Object attachAspects(Object delegate, 
 				Class type, 

@@ -42,10 +42,6 @@ public class MessageTransportServiceProvider
     // Some special aspect classes
     private final static String STATISTICS_ASPECT = 
 	"org.cougaar.core.mts.StatisticsAspect";
-    private final static String WATCHER_ASPECT = 
-	"org.cougaar.core.mts.WatcherAspect";
-    private final static String MULTICAST_ASPECT = 
-	"org.cougaar.core.mts.MulticastAspect";
 
     // Factories
     private LinkProtocolFactory protocolFactory;
@@ -107,10 +103,10 @@ public class MessageTransportServiceProvider
 	//needs it.  So we have to make the Watcher Aspect all the
 	//time.
 	watcherAspect =  new WatcherAspect();
-	aspectSupport.addAspect(watcherAspect, WATCHER_ASPECT);
+	aspectSupport.addAspect(watcherAspect);
 
 	// Multicast Aspect is always required.
-	aspectSupport.addAspect(new MulticastAspect(), MULTICAST_ASPECT);
+	aspectSupport.addAspect(new MulticastAspect());
 
 	protocolFactory = 
 	    new LinkProtocolFactory(id, registry, nameSupport, aspectSupport);

@@ -33,14 +33,10 @@ public final class AspectSupportImpl implements AspectSupport
     public AspectSupportImpl(ServiceBroker sb) {
 	aspects = new ArrayList();
 	aspects_table = new HashMap();
-	this.sb =sb;
+	this.sb = sb;
 	readAspects();
     }
     
-    public MessageTransportAspect findAspect(String classname) {
-	return (MessageTransportAspect) aspects_table.get(classname);
-    }
-
  
     private void readAspects() {
 	String classes = System.getProperty(ASPECTS_PROPERTY);
@@ -54,7 +50,7 @@ public final class AspectSupportImpl implements AspectSupport
 		Class aspectClass = Class.forName(classname);
 		MessageTransportAspect aspect = 
 		    (MessageTransportAspect) aspectClass.newInstance();
-		addAspect(aspect, classname);
+		addAspect(aspect);
 	    }
 	    catch (Exception ex) {
 		ex.printStackTrace();
@@ -62,11 +58,22 @@ public final class AspectSupportImpl implements AspectSupport
 	    }
 	}
     }
-    public void addAspect(MessageTransportAspect aspect,
-			  String classname)
+
+    // Note that we allow multiple instances of a given aspect class
+    // but that only the most recent instance of any given class can
+    // be found by name.
+    public synchronized MessageTransportAspect findAspect(String classname) {
+	return (MessageTransportAspect) aspects_table.get(classname);
+    }
+
+
+    public void addAspect(MessageTransportAspect aspect)
     {
-	aspects.add(aspect);
-	aspects_table.put(classname, aspect);
+	String classname = aspect.getClass().getName();
+	synchronized (this) {
+	    aspects.add(aspect);
+	    aspects_table.put(classname, aspect);
+	}
 	aspect.setServiceBroker(sb);
 	System.out.println("******* added aspect " + aspect);
     }
@@ -78,23 +85,21 @@ public final class AspectSupportImpl implements AspectSupport
      * delegate, the final aspect delegate is returned.  If no aspects
      * attach a delegate, the original object, as created by the
      * factory, is returned.  */
-    public  Object attachAspects (Object delegate, 
-				  Class type, 
-				  LinkProtocol protocol)
+    public synchronized Object attachAspects (Object delegate, 
+					      Class type, 
+					      LinkProtocol protocol)
     {
-	if (aspects != null) {
-	    Iterator itr = aspects.iterator();
-	    while (itr.hasNext()) {
-		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) itr.next();
-		if (protocol != null && aspect.rejectProtocol(protocol, type))
-		    continue; //skip it
+	Iterator itr = aspects.iterator();
+	while (itr.hasNext()) {
+	    MessageTransportAspect aspect = 
+		(MessageTransportAspect) itr.next();
+	    if (protocol != null && aspect.rejectProtocol(protocol, type))
+		continue; //skip it
 
-		Object candidate = aspect.getDelegate(delegate, type);
-		if (candidate != null) delegate = candidate;
-		if (Debug.debugAspects()) 
-		    System.out.println("======> " + delegate);
-	    }
+	    Object candidate = aspect.getDelegate(delegate, type);
+	    if (candidate != null) delegate = candidate;
+	    if (Debug.debugAspects()) 
+		System.out.println("======> " + delegate);
 	}
 	return delegate;
     }
