@@ -38,25 +38,20 @@ import javax.net.ssl.SSLSocketFactory;
  * This is not really a factory, it just needs to use AspectFactory's
  * attachAspects method.  The purpose of this class is to create an
  * RMISocketFactory with aspectizable streams.
+ * <p>
+ * Instantiating this class creates the socket factory.
  *
- * Instantiating this class creates the socket factory and makes it
- * the default.  
- * @property org.cougaar.core.naming.useSSL Boolean-valued property
- * which controls whether or not ssl is used in communication to the
- * NameServer.  Defaults to 'false'.
-
+ * @property org.cougaar.core.security.ssl.KeyRingSSLFactory
+ *   SSL socket factory classname (default is JDK's impl).
+ * @property org.cougaar.core.security.ssl.KeyRingSSLServerFactory
+ *   SSL server socket factory classname (default is JDK's impl).
+ * @property org.cougaar.message.transport.server_socket_class
+ *   ServerSocketWrapper classname (default is no wrapper).
  */
 public class SocketFactory  
     extends RMISocketFactory
     implements java.io.Serializable
 {
-
-    // NamingService hooks
-    private final static String NS_USE_SSL_PROP = 
-	"org.cougaar.core.naming.useSSL";
-    private final static String NS_USE_SSL_DFLT = "false";
-    private final static boolean NS_UseSSL =
-        System.getProperty(NS_USE_SSL_PROP, NS_USE_SSL_DFLT).equals("true");
 
     // We're not using this anymore but keep it around for reference.
     private final static String SSL_INSTRUCTIONS = "\n"
@@ -90,19 +85,6 @@ public class SocketFactory
         + "      -Djavax.net.ssl.keyStorePassword=password\n"
         + "   Naturally, the passwords should match those used to create the\n"
         + "   keystore.\n";
-
-
-
-    private static SocketFactory nsInstance;
-
-    public synchronized static SocketFactory getNameServiceSocketFactory() {
-        if (nsInstance == null) {
-            nsInstance = new SocketFactory(NS_UseSSL, false);
-        }
-        return nsInstance;
-    }
-
-
 
     // NAI Linkage
 
@@ -141,7 +123,6 @@ public class SocketFactory
 	    return SSLServerSocketFactory.getDefault();
 	}
 
-	System.out.println("#### Using NAI's server socket factory"); 
 	try {
 	    Method meth = cls.getMethod("getDefault", FORMALS);
 	    return (ServerSocketFactory) meth.invoke(cls, ACTUALS);
