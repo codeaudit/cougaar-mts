@@ -33,5 +33,6 @@ public interface DebugFlags
     public static int POLICY = 1<<8;
     public static int TRAFFIC_MASKING_GENERATOR = 1<<9;
     public static int QUO = 1<<10;
+    public static int RMS = 1<<11;
 
 }

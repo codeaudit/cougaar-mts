@@ -73,6 +73,8 @@ public class Debug implements DebugFlags
 		    Flags |= POLICY;
 		} else if (dbg.equalsIgnoreCase("quo")) {
 		    Flags |= QUO;
+		} else if (dbg.equalsIgnoreCase("rms")) {
+		    Flags |= RMS;
 		} else if (dbg.equalsIgnoreCase("security")) {
 		    Flags |= SECURITY;
 		} else if (dbg.equalsIgnoreCase("service")) {
