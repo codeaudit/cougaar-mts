@@ -88,6 +88,12 @@ public class MessageTransportServiceProxy
     }
 
 
+    // Callback functions, called only from LinkSender.
+
+    /**
+     * Callback from LinkSender which tells us that the message has
+     * been successfully (?) delivered to the destination Node.
+     */
     synchronized void messageDelivered(Message m) {
 	--outstandingMessages;
 	if (Debug.DEBUG_FLUSH) {
@@ -100,7 +106,15 @@ public class MessageTransportServiceProxy
     }
 
 
-    synchronized void messageDropped(Message message) {
+    /**
+     * Callback from LinkSender which tells us that an unsuccessful
+     * attempt was made to deliver the message.  If this proxy is
+     * flushing, drop the message and notify the LinkSender of that
+     * fact by return true.  Otherwise do nothing, at least for now.
+     */
+    synchronized boolean messageFailed(Message message) {
+	if (!flushing) return false; // do nothing in this case
+
 	--outstandingMessages;
 	if (Debug.DEBUG_FLUSH) {
 	    System.out.println("%%% " + addr + 
@@ -111,8 +125,15 @@ public class MessageTransportServiceProxy
 	if (droppedMessages == null) droppedMessages = new ArrayList();
 	droppedMessages.add(message);
 	if (outstandingMessages <= 0) notify();
+
+	return true;  // tell LinkSender to abandon further send attempts
     }
 
+
+    /**
+     * Wait for all queued messages for our client to be either
+     * delivered or dropped.  Return the list of dropped messages.
+     */
     public synchronized ArrayList flushMessages() {
 	flushing = true;
 	while (outstandingMessages > 0) {
@@ -131,6 +152,9 @@ public class MessageTransportServiceProxy
 	return droppedMessages;
     }
 
+
+
+
     /**
      * Redirects the request to the MessageTransportRegistry. */
     public synchronized void registerClient(MessageTransportClient client) {
@@ -147,11 +171,6 @@ public class MessageTransportServiceProxy
 	registry.unregisterClient(client);
     }
     
-    public boolean isFlushing() {
-	return flushing;
-    }
-
-
    
     /**
      * Redirects the request to the MessageTransportRegistry. */

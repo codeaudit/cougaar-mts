@@ -118,10 +118,8 @@ public class LinkSender implements Runnable
 			}
 		    }
 
-		    if (serviceProxy != null && serviceProxy.isFlushing()) {
-			serviceProxy.messageDropped(message);
-			break;
-		    }
+		    if (serviceProxy != null)
+			if (serviceProxy.messageFailed(message)) break;
 
 		    try { Thread.sleep(delay);}
 		    catch (InterruptedException ex){}
