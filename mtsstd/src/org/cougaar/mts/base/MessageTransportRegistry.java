@@ -120,10 +120,12 @@ public final class MessageTransportRegistry
 
 	private void registerClientWithSociety(MessageTransportClient client) {
 	    // register with each component transport
-	    Iterator protocols = linkProtocols.iterator();
-	    while (protocols.hasNext()) {
-		LinkProtocol protocol = (LinkProtocol) protocols.next();
-		protocol.registerClient(client);
+	    synchronized (linkProtocols) {
+		Iterator protocols = linkProtocols.iterator();
+		while (protocols.hasNext()) {
+		    LinkProtocol protocol = (LinkProtocol) protocols.next();
+		    protocol.registerClient(client);
+		}
 	    }
 	}
 
@@ -131,10 +133,12 @@ public final class MessageTransportRegistry
 	private void unregisterClientWithSociety(MessageTransportClient client)
 	{
 	    // register with each component transport
-	    Iterator protocols = linkProtocols.iterator();
-	    while (protocols.hasNext()) {
-		LinkProtocol protocol = (LinkProtocol) protocols.next();
-		protocol.unregisterClient(client);
+	    synchronized (linkProtocols) {
+		Iterator protocols = linkProtocols.iterator();
+		while (protocols.hasNext()) {
+		    LinkProtocol protocol = (LinkProtocol) protocols.next();
+		    protocol.unregisterClient(client);
+		}
 	    }
 	}
 
@@ -162,11 +166,15 @@ public final class MessageTransportRegistry
 
 
 	public boolean hasLinkProtocols() {
-	    return linkProtocols.size() > 0;
+	    synchronized (linkProtocols) {
+		return linkProtocols.size() > 0;
+	    }
 	}
 
 	public void addLinkProtocol(LinkProtocol lp) {
-	    linkProtocols.add(lp);
+	    synchronized (linkProtocols) {
+		linkProtocols.add(lp);
+	    }
 	}
 
 
@@ -270,11 +278,24 @@ public final class MessageTransportRegistry
 	}
 
 
+	public void ipAddressChanged() {
+	    // inform each protocol
+	    synchronized (linkProtocols) {
+		Iterator protocols = linkProtocols.iterator();
+		while (protocols.hasNext()) {
+		    LinkProtocol protocol = (LinkProtocol) protocols.next();
+		    protocol.ipAddressChanged();
+		}
+	    }
+	}
+
 	public boolean addressKnown(MessageAddress address) {
-	    Iterator protocols = linkProtocols.iterator();
-	    while (protocols.hasNext()) {
-		LinkProtocol protocol = (LinkProtocol) protocols.next();
-		if (protocol.addressKnown(address)) return true;
+	    synchronized (linkProtocols) {
+		Iterator protocols = linkProtocols.iterator();
+		while (protocols.hasNext()) {
+		    LinkProtocol protocol = (LinkProtocol) protocols.next();
+		    if (protocol.addressKnown(address)) return true;
+		}
 	    }
 	    return false;
 	}
@@ -282,13 +303,15 @@ public final class MessageTransportRegistry
 	public ArrayList getDestinationLinks(MessageAddress destination) 
 	{
 	    ArrayList destinationLinks = new ArrayList();
-	    Iterator itr = linkProtocols.iterator();
-	    DestinationLink link;
-	    while (itr.hasNext()) {
-		LinkProtocol lp = (LinkProtocol) itr.next();
-		// Class lp_class = lp.getClass();
-		link = lp.getDestinationLink(destination);
-		destinationLinks.add(link);
+	    synchronized (linkProtocols) {
+		Iterator itr = linkProtocols.iterator();
+		DestinationLink link;
+		while (itr.hasNext()) {
+		    LinkProtocol lp = (LinkProtocol) itr.next();
+		    // Class lp_class = lp.getClass();
+		    link = lp.getDestinationLink(destination);
+		    destinationLinks.add(link);
+		}
 	    }
 	    return destinationLinks;
 	}

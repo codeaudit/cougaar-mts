@@ -58,4 +58,5 @@ public interface MessageTransportRegistryService extends Service
     ArrayList getDestinationLinks(MessageAddress destination);
     AgentState getAgentState(MessageAddress agent);
     void removeAgentState(MessageAddress agent);
+    void ipAddressChanged();
 }

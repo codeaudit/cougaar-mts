@@ -25,9 +25,11 @@
  */
 
 package org.cougaar.mts.base;
+import java.net.InetAddress;
 import java.net.URI;
 import java.rmi.Remote;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -76,6 +78,9 @@ public class RMILinkProtocol
     private HashMap links;
     private SocketFactory socfac;
     private RMISocketControlService controlService;
+    private Object ipAddrLock = new Object();
+    private ArrayList clients = new ArrayList();
+
 
     public RMILinkProtocol() {
 	super(); 
@@ -264,8 +269,8 @@ public class RMILinkProtocol
 	} 
     }
 
-
-    private synchronized void findOrMakeMT() {
+    // caller synchronizes on ipAddrLock
+    private void findOrMakeMT() {
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = 
@@ -283,29 +288,74 @@ public class RMILinkProtocol
 
 
 
+    // Unregister all current clients (inform the WP); close the RMI
+    // listener; remake the RMI impl; re-register clients (WP).
+    public void ipAddressChanged()
+    {
+	synchronized (ipAddrLock) {
+	    // update hostname property
+	    try {
+		InetAddress local = InetAddress.getLocalHost();
+		String hostaddr = local.getHostAddress();
+		System.setProperty("java.rmi.server.hostname", hostaddr);
+	    } catch (java.net.UnknownHostException ex) {
+		// log something
+		if (loggingService.isWarnEnabled())
+		    loggingService.warn("Couldn't get localhost: " 
+					+ ex.getMessage());
+	    }
+	    NameSupport ns = getNameSupport();
+	    String type = getProtocolType();
+	    MessageTransportClient client;
+	    for (int i=0; i<clients.size(); i++) {
+		client = (MessageTransportClient) clients.get(i);
+		ns.unregisterAgentInNameServer(ref, client.getMessageAddress(),
+					       type);
+	    }
+	    try {
+		UnicastRemoteObject.unexportObject(myProxy, true);
+	    } catch (java.rmi.NoSuchObjectException ex) {
+		// don't care
+	    }
+	    myProxy = null;
+	    findOrMakeMT();
+	    for (int i=0; i<clients.size(); i++) {
+		client = (MessageTransportClient) clients.get(i);
+		ns.registerAgentInNameServer(ref, client.getMessageAddress(),
+					     type);
+	    }
+	}
+    }
+
     public final void registerClient(MessageTransportClient client) {
-	findOrMakeMT();
-	try {
-	    // Assume node-redirect
-	    MessageAddress addr = client.getMessageAddress();
-	    getNameSupport().registerAgentInNameServer(ref,addr,
-						       getProtocolType());
-	} catch (Exception e) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("Error registering client", e);
+	synchronized (ipAddrLock) {
+	    findOrMakeMT();
+	    try {
+		// Assume node-redirect
+		MessageAddress addr = client.getMessageAddress();
+		getNameSupport().registerAgentInNameServer(ref,addr,
+							   getProtocolType());
+		clients.add(client);
+	    } catch (Exception e) {
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("Error registering client", e);
+	    }
 	}
     }
 
 
     public final void unregisterClient(MessageTransportClient client) {
-	try {
-	    // Assume node-redirect
-	    MessageAddress addr = client.getMessageAddress();
-	    getNameSupport().unregisterAgentInNameServer(ref,addr,
-							 getProtocolType());
-	} catch (Exception e) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("Error unregistering client", e);
+	synchronized (ipAddrLock) {
+	    try {
+		// Assume node-redirect
+		MessageAddress addr = client.getMessageAddress();
+		getNameSupport().unregisterAgentInNameServer(ref,addr,
+							     getProtocolType());
+		clients.remove(client);
+	    } catch (Exception e) {
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("Error unregistering client", e);
+	    }
 	}
     }
 

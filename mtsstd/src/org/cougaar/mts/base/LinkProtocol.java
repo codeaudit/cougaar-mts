@@ -118,7 +118,11 @@ abstract public class LinkProtocol
 	super_load();
     }
 
-
+    // Default is no-op. Socket based protocols (RMI, HTTP, CORBA,
+    // etc) will have work to do.
+    public void ipAddressChanged()
+    {
+    }
 
 
 
