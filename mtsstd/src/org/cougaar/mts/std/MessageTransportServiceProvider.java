@@ -41,7 +41,10 @@ import org.cougaar.core.society.Node;
  * MessageTransportService.  It consists almost exclusively of
  * factories, each of which is described elsewhere.  The only
  * interesting local functions are those required for
- * ServiceBrokers. */
+ * ServiceBrokers.
+ * @property org.cougaar.message.transport.policy Sets the message transport policy.
+ * @property org.cougaar.core.mts.StatisticsAspect Sets the statics aspect to use.
+ */
 
 public class MessageTransportServiceProvider 
     extends ContainerSupport

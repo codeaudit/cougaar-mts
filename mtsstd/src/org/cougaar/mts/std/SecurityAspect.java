@@ -32,7 +32,8 @@ import java.beans.Beans;
  * First attempt at a security aspect.  The message is secured by a
  * RemoteProxy aspect delegate and unsecued by a RemoteImpl aspect
  * delegate.
- * */
+ * @property org.cougaar.message.security Controls the MessageTransport SecurityAspect.
+ */
 public class SecurityAspect extends StandardAspect
 {
     private static final String SECURITY_CLASS_PROPERTY =

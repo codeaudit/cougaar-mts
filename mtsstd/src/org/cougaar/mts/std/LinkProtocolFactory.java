@@ -33,6 +33,8 @@ import java.lang.reflect.Constructor;
  * (LoopbackProtocol) and one for remote messages
  * (RMIProtocol).  It may also make others, one per
  * class, as listed in the property org.cougaar.message.protocol.classes.
+ * @property org.cougaar.message.protocol.classes Defines LinkProtocols. See class documentation
+ * for more information.
  */
 public final class LinkProtocolFactory 
 {
