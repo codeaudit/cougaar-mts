@@ -41,6 +41,7 @@ public final class LinkProtocolFactory
 {
     private static final String CLASSES_PROPERTY =
 	"org.cougaar.message.protocol.classes";
+    static LinkProtocolFactory theFactory;
 
     private ArrayList protocols;
     private AspectSupport aspectSupport;
@@ -58,6 +59,7 @@ public final class LinkProtocolFactory
 	this.registry = registry;
 	this.nameSupport = nameSupport;
 	this.aspectSupport = aspectSupport;
+	theFactory = this;
     }
 
     void setDeliverer(MessageDeliverer deliverer) {

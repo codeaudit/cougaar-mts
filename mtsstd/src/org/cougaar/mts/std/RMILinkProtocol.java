@@ -103,7 +103,8 @@ public class RMILinkProtocol
 
 
 
-    private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
+    // Not private because FWAspect wants to use it
+    MT lookupRMIObject(MessageAddress address, boolean getProxy) 
 	throws Exception 
     {
 	Object object = 
