@@ -103,13 +103,15 @@ public class RMILinkProtocol
 
 
 
-    private MT lookupRMIObject(MessageAddress address) throws Exception {
+    private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
+	throws Exception 
+    {
 	Object object = 
 	    nameSupport.lookupAddressInNameServer(address, getProtocolType());
 
-	if (object == null) {
-	    return null;
-	} 
+	if (object == null || !getProxy) return (MT) object;
+
+
 	object = getClientSideProxy(object);
 	if (object instanceof MT) {
 	    return (MT) object;
@@ -176,7 +178,7 @@ public class RMILinkProtocol
 
     public boolean addressKnown(MessageAddress address) {
 	try {
-	    return lookupRMIObject(address) != null;
+	    return lookupRMIObject(address, false) != null;
 	} catch (Exception e) {
 	    //System.err.println("Failed in addressKnown:"+e);
 	    //e.printStackTrace();
@@ -230,7 +232,7 @@ public class RMILinkProtocol
 	{
 	    if (remote == null) {
 		try {
-		    remote = lookupRMIObject(target);
+		    remote = lookupRMIObject(target, true);
 		}
 		catch (Exception lookup_failure) {
 		    throw new  NameLookupException(lookup_failure);
