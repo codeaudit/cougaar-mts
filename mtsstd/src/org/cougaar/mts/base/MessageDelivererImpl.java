@@ -31,9 +31,10 @@ import org.cougaar.mts.std.AttributedMessage;
 
 
 /**
- * The default, and for now only, implementation of MessageDeliverer.
- * The implementation of <strong>deliverMessage</strong> forwards each
- * message on to the appropriate DestinationLink. */
+ * The default, and for now only, implementation of {@link
+ * MessageDeliverer}.  The implementation of
+ * <strong>deliverMessage</strong> forwards each message on to the
+ * appropriate DestinationLink. */
 public class MessageDelivererImpl implements MessageDeliverer
 {
     public MessageTransportRegistryService registry;

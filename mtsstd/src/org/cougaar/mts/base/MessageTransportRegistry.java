@@ -41,9 +41,12 @@ import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
 
 /**
- * The MessageTransportRegistry singleton is a utility instance that
- * helps certain pieces of the message transport subsystem to find one
- * another. */
+ * The MessageTransportRegistry {@link ServiceProvider} singleton is a
+ * utility instance that helps certain pieces of the message transport
+ * subsystem to find one another.  It provides the {@link
+ * MessageTransportRegistryService}.  An inner class implements that
+ * service.
+ */
 public final class MessageTransportRegistry 
     implements ServiceProvider
 {

@@ -29,7 +29,7 @@ import org.cougaar.core.component.Service;
 
 /**
  * This MTS-internal service can be used to get and set the current
- * {@link LinkSelecionPolicy}.  It's provided by LinkSelectionProvision and
+ * {@link LinkSelectionPolicy}.  It's provided by LinkSelectionProvision and
  * implemented by an inner class.
  */
 public interface LinkSelectionProvisionService extends Service

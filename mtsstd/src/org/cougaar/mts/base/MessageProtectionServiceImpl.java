@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -40,6 +41,12 @@ import org.cougaar.core.mts.ProtectedInputStream;
 import org.cougaar.core.mts.ProtectedOutputStream;
 import org.cougaar.core.service.MessageProtectionService;
 
+/**
+ * This {@link ServiceProvider} both provides and implements the
+ * {@link MessageProtectionService}. It's only created as a default,
+ * if no other MessageProtection Service is available.  The service
+ * implementation does  nothing useful.
+ */
 public class MessageProtectionServiceImpl 
     implements MessageProtectionService, ServiceProvider
 {

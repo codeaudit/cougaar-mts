@@ -39,7 +39,8 @@ import org.cougaar.mts.std.AttributedMessage;
 /**
  * Currently the only implementation of MessageTransportService.  It
  * does almost nothing by itself - its work is accomplished by
- * redirecting calls to the corresponding SendLink.  */
+ * redirecting calls to the corresponding {@link SendLink}. 
+ */
 public class MessageTransportServiceProxy 
     implements MessageTransportService
 {

@@ -58,11 +58,9 @@ import org.cougaar.mts.std.MulticastAspect;
 import org.cougaar.mts.std.StatisticsAspect;
 
 /**
- * The underlying implementation class for the
- * MessageTransportService.  It consists almost exclusively of
- * factories, each of which is described elsewhere.  The only
- * interesting local functions are those required for
- * ServiceBrokers.
+ * This Component and Container is the ServiceProvider for the
+ * {@link MessageTransportService}.  This the overall organizing class
+ * for the MTS as a whole.
  */
 public final class MessageTransportServiceProvider 
 extends ContainerSupport

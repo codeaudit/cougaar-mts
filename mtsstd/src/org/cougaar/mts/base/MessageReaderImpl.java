@@ -31,6 +31,11 @@ import java.io.ObjectInputStream;
 
 import org.cougaar.mts.std.AttributedMessage;
 
+/**
+ * Default implementatiom of {@link MessageReader} that uses a trivial
+ * {@link ObjectInputStream} extension to delegate calls to the
+ * original {@link ObjectInput}.
+ */
 public  class MessageReaderImpl
     implements MessageReader 
 {

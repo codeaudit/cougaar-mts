@@ -36,9 +36,10 @@ import org.cougaar.core.mts.MulticastMessageAddress;
 
 
 /**
- * The MessageTransportRegistry singleton is a utility instance that
- * helps certain pieces of the message transport subsystem to find one
- * another. */
+ * This is a utility/bookkeeping service for the MTS.  The
+ * implementation and ServiceProvider are in {@link
+ * MessageTransportRegistry}. 
+ */
 public interface MessageTransportRegistryService extends Service
 {
 

@@ -26,6 +26,12 @@
 
 package org.cougaar.mts.base;
 
+/**
+ * This class of Exceptions is thrown by the security services if a
+ * message fails to be delivered for security reasons and if the send
+ * should therefore not be retried.
+ */
+
 public class MessageSecurityException 
     extends DontRetryException
     implements java.io.Serializable

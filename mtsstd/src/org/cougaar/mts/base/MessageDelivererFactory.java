@@ -30,8 +30,9 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.mts.std.AspectFactory;
 
 /**
- * A factory which makes MessageDeliverers.  In the current design
- * there's onlyone Deliverer */
+ * This {@link ServiceProvider} provides the {@link MessageDeliverer}
+ * service, which is implemented by a singleton MessageDelivererImpl.
+ */
 public class MessageDelivererFactory 
     extends AspectFactory
     implements ServiceProvider

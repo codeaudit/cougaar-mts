@@ -25,9 +25,17 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 import org.cougaar.mts.std.AspectFactory;
+import org.cougaar.mts.std.AttributedMessage; // for javadoc
 
+/**
+ * This factory is used to create MessageReaders and MessageWriters
+ * with a specific list of Aspects.  It's not a service primarily
+ * because the only client is {@link AttributedMessage}, which has no
+ * ready access to a ServiceBroker.
+ */
 public final class MessageStreamsFactory 
     extends  AspectFactory
 {
