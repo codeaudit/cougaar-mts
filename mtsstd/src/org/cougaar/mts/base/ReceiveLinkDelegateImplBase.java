@@ -30,7 +30,14 @@ import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 
-
+/**
+ * Convenience class for aspects which define {@link ReceiveLink}
+ * delegate classes.  It implements all methods of by delegating to
+ * another instance, given in the constructor.  Aspect inner classes
+ * which extend this need only implement specific methods that are
+ * relevant to that aspect,
+ * 
+ */
 abstract public class ReceiveLinkDelegateImplBase implements ReceiveLink
 {
     private ReceiveLink link;

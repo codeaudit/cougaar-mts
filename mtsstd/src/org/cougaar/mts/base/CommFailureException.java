@@ -28,10 +28,9 @@ package org.cougaar.mts.base;
 
 
 /**
- *   This Exception indicates a type of Link Protocol failure.
- *   <p>
- *   The destination Link got a valid address but could not deliver the message
- *   to the receiving Node.
+ *   This Exception indicates a {@link DestinationLink} general
+ *   communications failure.  The cause is a more {@link
+ *   LinkProtocol}-specific exception.
  **/
 public class CommFailureException extends Exception 
 {

@@ -37,12 +37,22 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
 import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.mts.std.AspectFactory;  // for javadoc only
 
 /**
- * A factory which makes DestinationQueues.  It uses the standard
+ * This Component implements the {@link
+ * DestinationQueueProviderService}, which makes DestinationQueues on
+ * demand, and the {@link DestinationQueueMonitorService}, which
+ * allows clients to be notified of queue events.  It also acts the
+ * {@link ServiceProvider} for those services.
+ *
+ * For instantiation of DestinationQueues, it uses the standard
  * find-or-make approach, where a target address is used for finding.
- * Since this factory is a subclass of AspectFactory, aspects can be
- * attached to a DestinationQueue when it's first instantiated.  */
+ * Since this Component is a subclass of @{link AspectFactory}, aspect
+ * delegates will be attached to {@link DestinationQueue}s when
+ * they're instantiated.
+ * 
+ */
 public class DestinationQueueFactory 
     extends  QueueFactory
     implements DestinationQueueProviderService, 

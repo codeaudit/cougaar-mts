@@ -32,6 +32,14 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.wp.Callback;
 
+/**
+ * Convenience class for aspects which define {@link NameSupport}
+ * delegate classes.  It implements all methods of by delegating to
+ * another instance, given in the constructor.  Aspect inner classes
+ * which extend this need only implement specific methods that are
+ * relevant to that aspect,
+ * 
+ */
 abstract public class NameSupportDelegateImplBase implements NameSupport 
 {
     private NameSupport nameSupport;

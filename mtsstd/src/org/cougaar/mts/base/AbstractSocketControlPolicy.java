@@ -28,7 +28,11 @@ package org.cougaar.mts.base;
 import org.cougaar.core.component.ServiceBroker;
 
 /**
-   Instantiable SocketControlPolicy classes must extend this
+ * An abstract base implementation of {@link SocketControlPolicy}
+ * which handles the registration through the {@link
+ * SocketControlProvisionService}.  Concrete implementations should
+ * extend this and invoke super.load().
+ *  
 */
 abstract public class AbstractSocketControlPolicy 
     extends BoundComponent

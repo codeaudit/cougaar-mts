@@ -32,6 +32,14 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AttributedMessage;
 
+/**
+ * Convenience class for aspects which define {@link SendLink}
+ * delegate classes.  It implements all methods by delegating to
+ * another instance, given in the constructor.  Aspect inner classes
+ * which extend this need only implement specific methods that are
+ * relevant to that aspect,
+ * 
+ */
 abstract public class SendLinkDelegateImplBase
     implements SendLink
 {

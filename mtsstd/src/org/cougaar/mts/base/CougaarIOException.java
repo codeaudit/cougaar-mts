@@ -29,8 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * Parent class of COUGAAR-specific IO exceptions.  So far the
- * sublclasses are DontRetryException and TransientIOException.
+ * Parent class of COUGAAR-specific {@link IOException}s.
  */
 abstract public class  CougaarIOException 
     extends IOException

@@ -37,13 +37,15 @@ import org.cougaar.core.service.ThreadService;
 import org.cougaar.util.PropertyParser;
 
 /**
- * The default, and for now only, implementation of DestinationQueue.
- * The dispatcher on this queue selects a DestinationLink based on the
- * LinkSelectionPolicy and forwards to that link.  If an exception
- * occurs during the forwarding, it will retry the whole process,
- * including link selection, continuosly, gradually increasing the
- * delay between retries.  Once the message has been successfully
- * forwared, the ServiceProxy will be notified. */
+ * The default, and for now only, implementation of {@link
+ * DestinationQueue}.  The dispatcher on this queue selects a {@link
+ * DestinationLink} based on the {@link LinkSelectionPolicy} and
+ * forwards to that link.  If an exception occurs during the
+ * forwarding, it will retry the whole process , including link
+ * selection, continuously, gradually increasing the delay between
+ * retries. until the message has been successfully forwarded to the
+ *
+ **/
 final class DestinationQueueImpl 
     extends MessageQueue 
     implements DestinationQueue
