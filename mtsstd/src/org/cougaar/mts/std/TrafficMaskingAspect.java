@@ -41,7 +41,8 @@ public class TrafficMaskingAspect extends StandardAspect
   public TrafficMaskingAspect() {
     super();
     registry = MessageTransportRegistry.getRegistry();
-    //System.out.println("\n $$$ TrafficMaskingAspect constructed");
+    if (Debug.debug(TRAFFIC_MASKING))
+      System.out.println("\n $$$ TrafficMaskingAspect constructed");
   }
 
 
@@ -94,7 +95,8 @@ public class TrafficMaskingAspect extends StandardAspect
         MessageAddress dest = msg.getTarget();
         msg = new MaskingMessageEnvelope(msg, dest);
       }
-      //System.out.println("\n %%%%% MaskingQueue sending message: "+msg);
+      if (Debug.debug(TRAFFIC_MASKING))
+        System.out.println("\n %%%%% MaskingQueue sending message: "+msg);
       queue.sendMessage(msg);
     }
   }  // end of MaskingQueueDelegate inner class
@@ -120,8 +122,10 @@ public class TrafficMaskingAspect extends StandardAspect
                                                           request.getOriginator(),
                                                           request.getContents());
             maskingQDelegate.sendMessage(reply);
-            //System.out.println("\n$$$ Deliverer got Fake Request: "+request+
-            //                   "\n Sending Fake Reply: "+reply);
+            if (Debug.debug(TRAFFIC_MASKING)) {
+              System.out.println("\n$$$ Deliverer got Fake Request: "+request+
+                                 "\n Sending Fake Reply: "+reply);
+            }
           }
           //if its a fake reply (the other kind of masking message)
           // drop it on the floor.
@@ -172,9 +176,11 @@ public class TrafficMaskingAspect extends StandardAspect
         FakeRequestMessage request = 
           new FakeRequestMessage(myAddress, fakedest, contents);
         maskingQDelegate.sendMessage(request);
-        //System.out.println("\n&&&&&&& About to send FakeRequest from: "+myAddress+
-        //                   " to: "+fakedest+" size of byte array: "+
-        //                   contents.length);
+        if (Debug.debug(TRAFFIC_MASKING)) {        
+          System.out.println("\n&&&&&&& About to send FakeRequest from: "+myAddress+
+                             " to: "+fakedest+" size of byte array: "+
+                             contents.length);
+        }
       }
     }
   }   // end of MaskingTimerTask inner class
@@ -220,7 +226,8 @@ public class TrafficMaskingAspect extends StandardAspect
     public MessageAddress getRandomNodeAddress() {
       MessageAddress winner = null;
       synchronized(nodelist) {
-        //System.out.println("\n$$$ nodelist.size is: "+nodelist.size());
+        if (Debug.debug(TRAFFIC_MASKING))        
+          System.out.println("\n$$$ nodelist.size is: "+nodelist.size());
         if (nodelist.size() > 0) {
           int randomIndex = generator.nextInt(nodelist.size());
           winner = (MessageAddress) nodelist.get(randomIndex);
@@ -231,7 +238,8 @@ public class TrafficMaskingAspect extends StandardAspect
 
     //safely update the list while no one else is using it
     private void updateNodeList(Collection newNodes) {
-      //System.out.println("\n$$$ Updating Node List");
+      if (Debug.debug(TRAFFIC_MASKING))      
+        System.out.println("\n$$$ Updating Node List");
       synchronized(nodelist) {
         nodelist.clear();
         nodelist.addAll(newNodes);
