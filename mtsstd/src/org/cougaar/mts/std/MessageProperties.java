@@ -25,7 +25,7 @@ public interface MessageProperties
 {
     public static final String FILTERS_PROPERTY = "Filters";
 
-    public Message getMessage();
+    public Message getRawMessage();
     public Object getProperty(String property);
     public void setProperty(String property, Object value);
     public void removeProperty(String property);

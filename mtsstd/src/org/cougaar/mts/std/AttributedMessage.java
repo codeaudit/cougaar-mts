@@ -34,7 +34,7 @@ import java.util.StringTokenizer;
 
 
 
-public class ExternalizableEnvelope 
+public class AttributedMessage 
     extends  Message
     implements Externalizable, MessageProperties
 {
@@ -44,10 +44,10 @@ public class ExternalizableEnvelope
 
     // Only invoked by server-side RMI when it's creating one of these
     // to correspond to one that was sent as data.
-    public ExternalizableEnvelope() {
+    public AttributedMessage() {
     }
 
-    public ExternalizableEnvelope(Message contents) 
+    public AttributedMessage(Message contents) 
     {
 	super(contents.getOriginator(), contents.getTarget());
 	this.contents = contents;
@@ -56,7 +56,7 @@ public class ExternalizableEnvelope
     }
 
 
-    public Message getMessage() {
+    public Message getRawMessage() {
 	return contents;
     }
 
@@ -148,9 +148,6 @@ public class ExternalizableEnvelope
 
     }
 
-    Message getContents() {
-	return contents;
-    }
 
 }
 

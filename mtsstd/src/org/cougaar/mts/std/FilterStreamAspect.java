@@ -62,7 +62,7 @@ public class FilterStreamAspect extends StandardAspect
 
 	public void dispatchNextMessage(Message message) 
 	{
-	    super.dispatchNextMessage(new ExternalizableEnvelope(message));
+	    super.dispatchNextMessage(new AttributedMessage(message));
 	}
 
 
@@ -78,12 +78,11 @@ public class FilterStreamAspect extends StandardAspect
 	public void deliverMessage(Message m, MessageAddress dest) 
 	    throws MisdeliveredMessageException
 	{
-	    if (m instanceof ExternalizableEnvelope) {
-		Message contents = ((ExternalizableEnvelope) m).getContents();
+	    if (m instanceof AttributedMessage) {
+		Message contents = ((AttributedMessage) m).getRawMessage();
 		super.deliverMessage(contents, dest);
 	    } else {
-		System.err.println("Received a message that isn't an" +
-				   " ExternalizableEnvelope");
+		System.err.println("Received a message that isn't attributed");
 		super.deliverMessage(m, dest);
 	    }
 	}
