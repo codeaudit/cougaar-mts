@@ -53,6 +53,7 @@ public class GossipAspect
 
     private MetricsService metricsService;
     private GossipKeyDistributionService keyService;
+    private GossipQualifierService qualifierService;
     private GossipUpdateService updateService;
     private WhitePagesService wpService;
 
@@ -89,6 +90,14 @@ public class GossipAspect
 	}
 
 	return null;
+    }
+
+    private synchronized void ensureQualifierService() {
+	if (qualifierService == null) {
+	    ServiceBroker sb = getServiceBroker();
+	    qualifierService = (GossipQualifierService)
+		sb.getService(this, GossipQualifierService.class, null);
+	}
     }
 
     public void load() {
@@ -155,7 +164,9 @@ public class GossipAspect
 	    GossipSubscription sub = (GossipSubscription) 
 		neighborsSubscriptions.get(neighbor);
 	    if (sub == null) {
-		sub = new GossipSubscription(neighbor, metricsService);
+		ensureQualifierService();
+		sub = new GossipSubscription(neighbor, metricsService,
+					     qualifierService);
 		neighborsSubscriptions.put(neighbor, sub);
 	    }
 	    sub.add(gossip);

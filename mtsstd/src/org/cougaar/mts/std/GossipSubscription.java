@@ -22,6 +22,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.qos.metrics.Metric;
+import org.cougaar.core.qos.metrics.MetricNotificationQualifier;
 import org.cougaar.core.qos.metrics.MetricsService;
 
 import java.util.HashMap;
@@ -40,7 +41,12 @@ class GossipSubscription
 	Callback(String key) {
 	    this.key = key;
 	    String path = "GossipIntegrater(" +key+ "):GossipFormula";
-	    subscription_uid = svc.subscribeToValue(path, this);
+	    MetricNotificationQualifier qualifier = null;
+	    if (qualifier_svc != null) {
+		qualifier = qualifier_svc.getNotificationQualifierClass(key);
+	    }
+	    subscription_uid = svc.subscribeToValue(path, this,
+						    qualifier);
 	}
 
 	public void update(Observable ignore, Object value) {
@@ -53,20 +59,25 @@ class GossipSubscription
 	}
     }
 
+    private GossipQualifierService qualifier_svc;
     private MessageAddress neighbor;
     private MetricsService svc;
     private HashMap callbacks;
     private ValueGossip changes;
 
-    GossipSubscription(MessageAddress neighbor, MetricsService svc) {
+    GossipSubscription(MessageAddress neighbor, 
+		       MetricsService svc,
+		       GossipQualifierService qualifierService)
+    {
 	this.svc = svc;
+	this. qualifier_svc = qualifierService;
 	this.neighbor = neighbor;
 	callbacks = new HashMap();
 	changes = null;
     }
 
 
-    synchronized void addChange(String key, Metric metric) {
+    private synchronized void addChange(String key, Metric metric) {
 	if (changes == null) changes = new ValueGossip();
 	changes.add(key, metric);
     }
@@ -89,7 +100,8 @@ class GossipSubscription
 	Iterator  itr = gossip.iterator();
 	while (itr.hasNext()) {
 	    Map.Entry entry = (Map.Entry) itr.next();
-	    addKey((String) entry.getKey());
+	    String key = (String) entry.getKey();
+	    addKey(key);
 	}
     }
 
