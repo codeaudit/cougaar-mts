@@ -21,43 +21,27 @@
 
 package org.cougaar.core.mts;
 
-import java.util.HashMap;
-
 /**
- * A factory which makes ReceiveLinks.  It uses the standard
- * find-or-make approach, where a MessageTransportClient is used for
- * finding.  Since this factory is a subclass of AspectFactory,
- * aspects can be attached to a ReceiveLink when it's first
- * instantiated.  */
+ * A factory which makes ReceiveLinks.  The caching for ReceiveLinks
+ * is in the registry, not here, since the links need to be cleaned up
+ * when agents unregister. 
+ * 
+ * This Factory is a subclass of AspectFactory, so aspects can be *
+ * attached to a ReceiveLink when it's first instantiated.  */
 public class ReceiveLinkFactory extends AspectFactory
 {
-    private HashMap links;
-    private MessageTransportRegistry registry;
-	
-    ReceiveLinkFactory(MessageTransportRegistry registry,
-		       AspectSupport aspectSupport)
-    {
+    ReceiveLinkFactory(AspectSupport aspectSupport) {
 	super(aspectSupport);
-	links = new HashMap();
-	this.registry = registry;
     }
 
 
     /**
-     * Find a ReceiveLink for the given client, or make a new one of
-     * type ReceiveLinkImpl if there isn't one by the given name.  In
-     * the latter case, attach all relevant aspects as part of the
-     * process of creating the queue.  The final object returned is
-     * the outermost aspect delegate, or the ReceiveLinkImpl itself if
-     * there are no aspects.  */
+     * Make a new ReceiveLinkImpl and attach all relevant aspects.
+     * The final object returned is the outermost aspect delegate, or
+     * the ReceiveLinkImpl itself if there are no aspects.  */
     ReceiveLink getReceiveLink(MessageTransportClient client) {
-	ReceiveLink link = (ReceiveLink) links.get(client);
-	if (link == null) {
-	    link = new ReceiveLinkImpl(client);
-	    link = ( ReceiveLink) attachAspects(link, ReceiveLink.class);
-	    links.put(client, link);
-	}
-	return link;
+	ReceiveLink link = new ReceiveLinkImpl(client);
+	return (ReceiveLink) attachAspects(link, ReceiveLink.class);
     }
 }
 

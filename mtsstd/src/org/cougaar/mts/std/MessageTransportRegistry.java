@@ -115,8 +115,11 @@ class MessageTransportRegistry
 	MessageAddress key = client.getMessageAddress();
 	try {
 	    synchronized (this) {
-		ReceiveLink link = receiveLinkFactory.getReceiveLink(client);
-		receiveLinks.put(key, link);
+		ReceiveLink link = findLocalReceiveLink(key);
+		if (link == null) {
+		    link = receiveLinkFactory.getReceiveLink(client);
+		    receiveLinks.put(key, link);
+		}
 	    }
 	} catch (Exception e) {
 	    System.err.println(e);

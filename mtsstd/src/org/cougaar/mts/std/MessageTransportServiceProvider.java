@@ -120,7 +120,7 @@ public class MessageTransportServiceProvider
 
 	protocolFactory = 
 	    new LinkProtocolFactory(id, registry, nameSupport, aspectSupport);
-	receiveLinkFactory = new ReceiveLinkFactory(registry, aspectSupport);
+	receiveLinkFactory = new ReceiveLinkFactory(aspectSupport);
 
 	registry.setReceiveLinkFactory(receiveLinkFactory);
 	registry.setProtocolFactory(protocolFactory);
