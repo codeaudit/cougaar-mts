@@ -34,14 +34,13 @@ public class SendLinkImpl
     private MessageAddress addr;
     private MessageTransportRegistryService registry;
 
-    SendLinkImpl(SendQueue sendQ, 
-		 MessageAddress addr,
-		 ServiceBroker sb)
+    SendLinkImpl(MessageAddress addr, ServiceBroker sb)
     {
-	this.sendQ = sendQ;
 	this.addr = addr;
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
+	sendQ = (SendQueue)
+	    sb.getService(this, SendQueue.class, null);
     }
 
 

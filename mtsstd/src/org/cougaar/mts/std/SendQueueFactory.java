@@ -22,42 +22,50 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
- * A factory which makes SendQueues.  It uses the standard
- * find-or-make approach, where the name is used for finding.  Since
- * this factory is a subclass of AspectFactory, aspects can be
- * attached to a SendQueue when it's first instantiated.  */
-public class SendQueueFactory extends AspectFactory
+ * A factory which makes SendQueues. A singleton for now  */
+public class SendQueueFactory 
+    extends AspectFactory
+    implements ServiceProvider
 {
-    private ArrayList queues = new ArrayList();
+    private SendQueue queue;
 
-    SendQueueFactory(ServiceBroker sb)
+    SendQueueFactory(ServiceBroker sb, String id)
     {
 	super(sb);
-
-    }
-
-    /**
-     * Find a SendQueue with the given name, or make a new one of type
-     * SendQueueImpl if there isn't one by the given name.  In the
-     * latter case, attach all relevant aspects as part of the process
-     * of creating the queue.  The final object returned is the
-     * outermost aspect delegate, or the SendQueueImpl itself if there
-     * are no aspects.  */
-    SendQueue getSendQueue(String name) {
-	Iterator i = queues.iterator();
-	while (i.hasNext()) {
-	    SendQueue candidate = (SendQueue) i.next();
-	    if (candidate != null && candidate.matches(name)) return candidate;
-	}
-	// No match, make a new one
-	SendQueue queue = new SendQueueImpl(name, sb);
+	queue = new SendQueueImpl(id+"/OutQ", sb);
 	queue = (SendQueue) attachAspects(queue, SendQueue.class);
-	queues.add(queue);
-	return queue;
     }
+
+
+   public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	// Could restrict this request to the Router
+	if (serviceClass == SendQueue.class) {
+	    if (requestor instanceof SendLinkImpl) {
+		return queue;
+	    } else {
+		System.err.println("Ilegal request for SendQueue"
+				   +  " from " +requestor);
+		return null;
+	    }
+	} else {
+	    return null;
+	}
+    }
+
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
+
+
 }

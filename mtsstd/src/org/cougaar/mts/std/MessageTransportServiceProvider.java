@@ -69,8 +69,6 @@ public final class MessageTransportServiceProvider
     private WatcherAspect watcherAspect;
     private AgentStatusAspect agentStatusAspect;
 
-    // Implicit singleton -- one sendQ for all senders.
-    private SendQueue sendQ;
 
     private String id;
     private HashMap proxies;
@@ -151,32 +149,31 @@ public final class MessageTransportServiceProvider
 	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory(sb);
 	sb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
 
-	LinkProtocolFactory protocolFactory = 
-	    new LinkProtocolFactory(this, sb);
-
-	MessageDelivererFactory delivererFactory = 
-	    new MessageDelivererFactory(sb, id);
-	sb.addService(MessageDeliverer.class, delivererFactory);
-
 	LinkSelectionPolicyServiceProvider lspsp =
 	    new LinkSelectionPolicyServiceProvider();
 	sb.addService(LinkSelectionPolicy.class, lspsp);
-
 	
 	DestinationQueueFactory	destQFactory = 
 	    new DestinationQueueFactory(sb);
 	sb.addService(DestinationQueueProviderService.class, destQFactory);
 
-	// Router and SendQueue are singletons, though produced by
-	// factories.
+	//  Singletons, though produced by factories.
+	MessageDelivererFactory delivererFactory = 
+	    new MessageDelivererFactory(sb, id);
+	sb.addService(MessageDeliverer.class, delivererFactory);
+
 	RouterFactory routerFactory =  new RouterFactory(sb);
 	sb.addService(Router.class, routerFactory);
 
-	SendQueueFactory sendQFactory = new SendQueueFactory(sb);
-	sendQ = sendQFactory.getSendQueue(id+"/OutQ");
+	SendQueueFactory sendQFactory = new SendQueueFactory(sb, id);
+	sb.addService(SendQueue.class, sendQFactory);
 
 
-	// force transports to be created here
+
+
+	// LinkProtocols
+	LinkProtocolFactory protocolFactory = 
+	    new LinkProtocolFactory(this, sb);
 	protocolFactory.loadProtocols();
     }
 
@@ -189,7 +186,7 @@ public final class MessageTransportServiceProvider
 	if (proxy != null) return proxy;
 	
 	// Make SendLink and attach aspect delegates
-	SendLink link = new SendLinkImpl(sendQ, addr, getServiceBroker());
+	SendLink link = new SendLinkImpl(addr, getServiceBroker());
 	Class c = SendLink.class;
 	Object raw = aspectSupport.attachAspects(link, c);
 	link = (SendLink) raw;
