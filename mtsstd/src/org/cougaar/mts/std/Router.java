@@ -24,22 +24,43 @@ package org.cougaar.core.mts;
 import org.cougaar.core.component.Service;
 
 /**
- * The second stop for an outgoing message.  In theory a
+ * The third station for an outgoing message.  In theory a
  * given Message Transport subsystem can have multiple Routers.
  * For this release we only make one, instantiated as a RouterImpl.
- * Either way, the Routers are instantiated by a RouterFactory.
- *
+ * Either way, the Routers are instantiated by a RouterFactory,
+ * accesible to SendQueueImpls as the internal MTS service
+ * <ff>Router</ff>.
+ * <p>
  * The <strong>routeMessage</strong> method is used to requesting
- * routing foe a given message, which would ordinarily mean passing
+ * routing for a given message, which would ordinarily mean passing
  * the message on to a DestinationQueue for the message's destination.
  * Ordinarily this method would only be called from a SendQueue
  * implementation.
- **/
-interface Router extends Service
+ * <p>
+ * The previous station is SendQueue. The next station is
+ * DestinationQueue.
+ *
+ * @see RouterFactory
+ * @see SendLink
+ * @see SendQueue
+ * @see DestinationQueue
+ * @see DestinationLink
+ * @see MessageWriter
+ * @see MessageReader
+ * @see MessageDeliverer
+ * @see ReceiveLink
+ *
+ * Javadoc contributions from George Mount.
+ */
+public interface Router extends Service
 {
 
-    /** Used by SendQueue implementations to route an outgoing
+    /** 
+     * Used by SendQueue implementations to route an outgoing
      * message, ordinarily to the DestinatonQueue corresponding to the
-     * message's destintion.  */
+     * message's destintion.
+     *
+     * @see DestinationQueue#holdMessage(AttributedMessage)
+     */
     void routeMessage(AttributedMessage message);
 }

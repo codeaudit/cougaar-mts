@@ -23,16 +23,37 @@ package org.cougaar.core.mts;
 
 
 /**
- * The fourth stop for outgoing messages. Each LinkProtocol has its
+ * The fifth station for outgoing messages. Each LinkProtocol has its
  * own DestinationLink implementation class.  DestinationLinks are
- * made by the protocols, acting as factories.  */
+ * made by the protocols, acting as factories.
+ * <p>
+ * The previous station is DestinationQueue. If the protocol uses
+ * Java serialization, the next station is MessageWriter. 
+ * If there is no serialization, MessageDeliverer on the receiving
+ * side is the next stop. 
+ *
+ * @see LinkProtocol
+ * @see SendLink
+ * @see SendQueue
+ * @see Router
+ * @see DestinationQueue
+ * @see MessageWriter
+ * @see MessageReader
+ * @see MessageDeliverer
+ * @see ReceiveLink
+ *
+ * Javadoc contributions from George Mount.
+ */
 public interface DestinationLink
 {
 
     /**
      * This method is used to request the associated transport to do
      * its thing with the given message.  Only called during
-     * processing of messages in DestinationQueueImpl.  */
+     * processing of messages in DestinationQueueImpl.  
+     *
+     * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
+     */
     MessageAttributes forwardMessage(AttributedMessage message) 
 	throws UnregisteredNameException, 
 	NameLookupException, 
@@ -42,7 +63,12 @@ public interface DestinationLink
     /**
      * This method returns a simple measure of the cost of sending the
      * given message via the associated transport. Only called during
-     * processing of messages in DestinationQueueImpl. */
+     * processing of messages in DestinationQueueImpl. 
+     *
+     * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
+     * @see LinkSelectionPolicy
+     * @see MinCostLinkSelectionPolicy
+     */
     int cost(AttributedMessage message);
 
     
@@ -69,6 +95,12 @@ public interface DestinationLink
      * has one (rmi server stub, smtp url, CORBA ior, etc) */
     Object getRemoteReference();
 
+  /**
+   * Allows the DestinationLink to add attributes before forwarding 
+   * the message.
+   *
+   * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
+   */
     void addMessageAttributes(MessageAttributes attrs);
 
 }

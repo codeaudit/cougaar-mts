@@ -23,15 +23,38 @@ package org.cougaar.core.mts;
 
 
 /**
- * The final stop in the message transport system before an incoming
- * message is delivered to an Agent.  One ReceiveLink is instantiated
- * for each MessageTransportClient.
+ * The final station in the message transport system before an
+ * incoming message is delivered to an Agent.  One ReceiveLink is
+ * instantiated for each MessageTransportClient.  <p> The previous
+ * station is MessageDeliverer.
  *
+ * @see org.cougaar.core.service.MessageTransportService#registerClient(MessageTransportClient)
+ * @see SendLink
+ * @see SendQueue
+ * @see Router
+ * @see DestinationQueue
+ * @see DestinationLink
+ * @see MessageWriter
+ * @see MessageReader
+ * @see MessageDeliverer
+ *
+ * Javadoc contributions from George Mount.
  */
 public interface ReceiveLink
 {
-    /** Deliver the message to the final recipient (an Agent). */
+    /** 
+     * Deliver the message to the final recipient (an Agent). 
+     * The message is unwrapped by the implementation before
+     * calling MessageTransportClient receiveMessage.
+     *
+     * @param message The message to be delivered.
+     * @see MessageTransportClient#receiveMessage
+     */
     MessageAttributes deliverMessage(AttributedMessage message);
+
+    /**
+     * Returns the client associated with this ReceiveLink
+     */
     MessageTransportClient getClient();
 
 }

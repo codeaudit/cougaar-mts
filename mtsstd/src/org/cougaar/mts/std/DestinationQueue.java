@@ -23,31 +23,59 @@ package org.cougaar.core.mts;
 
 
 /**
- * The third stop for an outgoing message is a DestinationQueue. In
+ * The fourth station for an outgoing message is a DestinationQueue. In
  * this implementation, the DestinationQueueFactory instantiates one
- * DestinationQueue per destination address.  
- * 
+ * DestinationQueue per destination address and is accessible to
+ * certain impl classes as the MTS-internal service
+ * DestinationQueueProviderService. 
+ * <p>
  * The dispatching thread associated with this queue will send
  * dequeued messages on to the 'best' DestinationLink, handling
  * retries if an exception occurs.
- *
+ * <p>
  * The <strong>holdMessage</strong> method is used to queue messages
  * in preparation for passing them onto the next stop, a
- * transport-specific DestionLink.  Ordinarily this would only be
+ * transport-specific DestinationLink.  Ordinarily this would only be
  * called from a Router.
- *
+ * <p>
  * The <strong>matches</strong> method is used by the
  * DestinationQueueFactory to avoid making more than one queue for a
- * given destinationAddress.  */
+ * given destinationAddress.  
+ * <p>
+ * The previous station is Router. The next station is DestinationLink.
+ *
+ * @see DestinationQueueFactory
+ * @see SendLink
+ * @see SendQueue
+ * @see Router
+ * @see DestinationLink
+ * @see MessageWriter
+ * @see MessageReader
+ * @see MessageDeliverer
+ * @see ReceiveLink
+ * 
+ * Javadoc contributions by George Mount.
+ */
 
 public interface DestinationQueue 
 {
     /**
-     * Adds the message to the queue. */
+     * Adds the message to the queue.  Since the queue runs its own
+     * thread, this call is typically the last element in the Router
+     * thread's call sequence. */
     void holdMessage(AttributedMessage message);
 
     /**
-     * Handles the next message popped off the queue */
+     * Handles the next message popped off the queue. Finds the
+     * most appropriate DestinationLink based on the LinkSelectionPolicy
+     * and calls its <tt>addMessageAttributes</tt> before
+     * <tt>forwardMessage</tt> to dispatch.
+     *
+     * @see LinkSelectionPolicy
+     * @see Router#routeMessage(AttributedMessage)
+     * @see DestinationLink#addMessageAttributes(MessageAttributes)
+     * @see DestinationLink#forwardMessage(AttributedMessage)
+     */
     void dispatchNextMessage(AttributedMessage message);
 
     /**
@@ -60,7 +88,14 @@ public interface DestinationQueue
      */
     int size();
 
+    /**
+     * Returns the address for which this DestinationQueue was created.
+     */
     MessageAddress getDestination();
 
+    /**
+     * Return a snapshot of the current contents of the queue.
+     */
     AttributedMessage[] snapshot();
+
 }
