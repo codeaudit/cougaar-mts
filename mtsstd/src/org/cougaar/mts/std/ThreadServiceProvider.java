@@ -23,37 +23,24 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.util.ReusableThreadPool;
+import org.cougaar.util.ReusableThread;
 
-
-/**
- * A factory which makes ReceiveLinks.  The caching for ReceiveLinks
- * is in the registry, not here, since the links need to be cleaned up
- * when agents unregister. 
- * 
- * This Factory is a subclass of AspectFactory, so aspects can be *
- * attached to a ReceiveLink when it's first instantiated.  */
-public class ReceiveLinkFactory 
-    extends AspectFactory
-    implements ReceiveLinkService, ServiceProvider
+class ThreadServiceProvider implements ServiceProvider
 {
-    ReceiveLinkFactory(ServiceBroker sb) {
-	super(sb);
+
+    private ThreadPoolService service;
+
+    ThreadServiceProvider() {
+	service = new ThreadPoolService();
     }
-
-
+    
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
     {
-	// Could restrict this request to the registry
-	if (serviceClass == ReceiveLinkService.class) {
-	    if (requestor instanceof MessageTransportRegistry.ServiceImpl) {
-		return this;
-	    } else {
-		System.err.println("Ilegal request for ReceiveLinkService " +
-				   " from " +requestor);
-		return null;
-	    }
+	if (serviceClass == ThreadService.class) {
+	    return service;
 	} else {
 	    return null;
 	}
@@ -66,15 +53,29 @@ public class ReceiveLinkFactory
     {
     }
 
+ 
 
 
-    /**
-     * Make a new ReceiveLinkImpl and attach all relevant aspects.
-     * The final object returned is the outermost aspect delegate, or
-     * the ReceiveLinkImpl itself if there are no aspects.  */
-    public ReceiveLink getReceiveLink(MessageTransportClient client) {
-	ReceiveLink link = new ReceiveLinkImpl(client);
-	return (ReceiveLink) attachAspects(link, ReceiveLink.class);
+    private static class ThreadPoolService implements ThreadService {
+	private static final int maxThreadCount = 100;
+	private static ReusableThreadPool threadPool = 
+	    new ReusableThreadPool(20, maxThreadCount);
+
+	public Thread getThread() {
+	    return threadPool.getThread();
+	}
+
+	public Thread getThread(String name) {
+	    return threadPool.getThread(name);
+	}
+
+	public Thread getThread(Runnable runnable) {
+	    return threadPool.getThread(runnable);
+	}
+
+	public Thread getThread(Runnable runnable, String name) {
+	    return threadPool.getThread(runnable, name);
+	}
     }
-}
 
+}

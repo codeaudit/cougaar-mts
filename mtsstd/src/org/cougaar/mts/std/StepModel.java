@@ -22,44 +22,9 @@
 package org.cougaar.core.mts;
 
 
-
-/**
- * Simple extension to RMILinkProtocol which uses pre-serialization.
- */
-public class SerializedRMILinkProtocol extends RMILinkProtocol
+public interface StepModel
 {
-
-    public SerializedRMILinkProtocol() {
-	super();
-    }
-
-
-    protected String getProtocolType() {
-	return "-SerializedRMI";
-    }
-
-    // Is this different?
-    protected int computeCost(Message message) {
-	return super.computeCost(message);
-    }
-
-    protected MTImpl makeMTImpl(MessageAddress myAddress,
-				MessageDeliverer deliverer,
-				SocketFactory socfac)
-	throws java.rmi.RemoteException
-    {
-	return new SerializedMTImpl(myAddress, deliverer, socfac);
-    }
-
-    protected void doForwarding(MT remote, Message message) 
-	throws MisdeliveredMessageException, java.rmi.RemoteException
-    {
-	if (remote instanceof SerializedMT) {
-	    byte[] messageBytes = SerializationUtils.toByteArray(message);
-	    ((SerializedMT) remote).rerouteMessage(messageBytes);
-	} else {
-	    super.doForwarding(remote, message);
-	}
-    }
-
+    public boolean isStepping();
+    public void setStepping(boolean mode);
+    public void step();
 }

@@ -21,9 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.ServiceBroker;
 
 
 import java.io.IOException;
@@ -50,24 +48,18 @@ public class SocketFactory
 
     // The factory will be serialized along with the MTImpl, and we
     // definitely don't want to include the AspectSupport when that
-    // happens.  Instead, this instance variable will be grabbed from
-    // the singleton on the fly, vie ensureAspects.
-    private transient AspectSupport aspectSupport;
+    // happens.  Instead, the aspect delegation will be handled by a
+    // special static call.
     private boolean use_ssl;
 
     public SocketFactory(boolean use_ssl) {
 	this.use_ssl = use_ssl;
     }
 
-    private void ensureAspects() {
-	if (aspectSupport == null) 
-	    aspectSupport = AspectSupportImpl.instance();
-    }
     
     public Socket createSocket(String host, int port) 
 	throws IOException, UnknownHostException 
     {
-	ensureAspects();
 	Socket s = null;
 	if (use_ssl) {
 	    try {
@@ -79,15 +71,12 @@ public class SocketFactory
 	} else {
 	    s = new Socket(host, port);
 	}
-	s = (Socket) aspectSupport.attachAspects(s, Socket.class);
-	return s;
+ 	return AspectSupportImpl.attachRMISocketAspects(s);
     }
     
     public ServerSocket createServerSocket(int port) 
 	throws IOException 
     {
-	ensureAspects();
-	// return getDefaultSocketFactory().createServerSocket(port);
 	ServerSocket s = null;
 	if (use_ssl) {
 	    try {
@@ -99,7 +88,6 @@ public class SocketFactory
 	} else {
 	    s = new ServerSocket(port);
 	}
-	s = (ServerSocket) aspectSupport.attachAspects(s, ServerSocket.class);
 	return s;
     }
 

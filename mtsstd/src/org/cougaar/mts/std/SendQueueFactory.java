@@ -21,9 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.ServiceBroker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,13 +34,14 @@ import java.util.Iterator;
 public class SendQueueFactory extends AspectFactory
 {
     private ArrayList queues = new ArrayList();
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
 
-    SendQueueFactory(MessageTransportRegistry registry,
-		     AspectSupport aspectSupport)
+    SendQueueFactory(ServiceBroker sb)
     {
-	super(aspectSupport);
-	this.registry = registry;
+	super(sb);
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
+
     }
 
     /**
@@ -59,7 +58,7 @@ public class SendQueueFactory extends AspectFactory
 	    if (candidate != null && candidate.matches(name)) return candidate;
 	}
 	// No match, make a new one
-	SendQueue queue = new SendQueueImpl(name, router, registry);
+	SendQueue queue = new SendQueueImpl(name, sb, router, registry);
 	queue = (SendQueue) attachAspects(queue, SendQueue.class);
 	queues.add(queue);
 	return queue;

@@ -21,14 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MulticastMessageAddress;
-
 
 import java.io.PrintWriter;
 import java.io.FileWriter;
@@ -47,17 +39,15 @@ public class TraceAspect
 
     // logging support
     private PrintWriter logStream = null;
-    private MessageTransportRegistry registry;
 
     public TraceAspect() {
-	registry =  MessageTransportRegistry.getRegistry();
     }
 
 
     private PrintWriter getLog() {
 	if (logStream == null) {
 	    try {
-		String id = registry.getIdentifier();
+		String id = getRegistry().getIdentifier();
 		logStream = new PrintWriter(new FileWriter(id+".cml"), true);
 	    } catch (Exception e) {
 		e.printStackTrace();
@@ -70,8 +60,9 @@ public class TraceAspect
 
 
     protected void log(String key, String info) {
-	String id = registry.getIdentifier();
-	getLog().println(id+"\t"+System.currentTimeMillis()+"\t"+key+"\t"+info);
+	String id = getRegistry().getIdentifier();
+	String cleanInfo = info.replace('\n', '_');
+	getLog().println(id+"\t"+System.currentTimeMillis()+"\t"+key+"\t"+cleanInfo);
     }
 
     public Object getDelegate(Object delegate,  Class type) 

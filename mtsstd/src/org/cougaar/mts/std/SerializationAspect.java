@@ -21,11 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
+import org.cougaar.core.component.ServiceBroker;
 
 
 import java.io.BufferedInputStream;
@@ -73,8 +69,14 @@ public class SerializationAspect extends StandardAspect
 
 	SerializingDestinationLink(DestinationLink link) {
 	    super(link);
-	    thread = new Thread(this, "SerializingDestinationLink " + link);
-	    thread.setDaemon(true);
+
+	    ServiceBroker sb = getServiceBroker();
+	    ThreadService service =
+		(ThreadService) sb.getService(this, ThreadService.class, null);
+	    String name = "SerializingDestinationLink " + link;
+	    thread = service.getThread(this, name);
+	    // thread.setDaemon(true);
+
 	    try {
 		piped_is = new PipedInputStream();
 		piped_os = new PipedOutputStream();

@@ -21,9 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.ServiceBroker;
 
 
 
@@ -33,15 +31,14 @@ import org.cougaar.core.node.*;
  * first instantiated.  */
 public class RouterFactory extends AspectFactory
 {
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
     private DestinationQueueFactory destQFactory;
 
-    RouterFactory(MessageTransportRegistry registry,
-		  DestinationQueueFactory destQFactory,
-		  AspectSupport aspectSupport)
+    RouterFactory(ServiceBroker sb, DestinationQueueFactory destQFactory)
     {
-	super(aspectSupport);
-	this.registry = registry;
+	super(sb);
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
 	this.destQFactory = destQFactory;
     }
 

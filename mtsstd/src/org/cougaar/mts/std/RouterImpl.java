@@ -35,11 +35,11 @@ import org.cougaar.core.mts.MessageAddress;
  * each message's target, and enqueues the outgoing message there.  */
 class RouterImpl implements Router
 {
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
     private DestinationQueueFactory destQFactory;
 
 
-    RouterImpl(MessageTransportRegistry registry, 
+    RouterImpl(MessageTransportRegistryService registry, 
 	       DestinationQueueFactory destQFactory)
     {
 	this.registry = registry;

@@ -21,12 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
+import org.cougaar.core.component.ServiceBroker;
 
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 
@@ -36,14 +32,16 @@ public class SendLinkImpl
 
     private SendQueue sendQ;
     private MessageAddress addr;
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
 
     SendLinkImpl(SendQueue sendQ, 
-		 MessageAddress addr)
+		 MessageAddress addr,
+		 ServiceBroker sb)
     {
 	this.sendQ = sendQ;
 	this.addr = addr;
-	this.registry = MessageTransportRegistry.getRegistry();
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
     }
 
 

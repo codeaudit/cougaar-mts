@@ -45,7 +45,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 {
 
     private MaskingQueueDelegate maskingQDelegate;
-    public MessageTransportRegistry registry;
     private int requestRate = 0;
     private int replyRate = 333;
     private int replySize = 0;
@@ -63,7 +62,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     public TrafficMaskingGeneratorAspect() {
 	super();
 	nodelist = new ArrayList();
-	registry = MessageTransportRegistry.getRegistry();
+
+
+
 	//get any properties
 	String requestPeriod = 
 	    System.getProperty("org.cougaar.message.trafficGenerator.requestPeriod");
@@ -93,6 +94,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	// add the service to my parent's service broker so my
 	// sibling aspects can access it.
 	getBindingSite().getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
+
     }
 
     // aspect implementation: forward linkage (send side)
@@ -340,7 +342,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    //The first time we see a message, setup the auto 
 	    //timer to send fake messages(only if system properties were set)
 	    if (requestRate > 0 && !timerOn) {
-		myAddress = registry.getLocalAddress();
+		myAddress = getRegistry().getLocalAddress();
 		setupTimerTasks();
 	    }
 	    queue.sendMessage(msg);
@@ -373,21 +375,25 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	public void deliverMessage(Message msg) 
 	{
 	    if (msg instanceof MaskingMessageEnvelope) {
-		Message internalmsg = ((MaskingMessageEnvelope) msg).getContents();
-		if (internalmsg instanceof FakeRequestMessage) {
-		    FakeRequestMessage request = (FakeRequestMessage)internalmsg;
-		    byte[] contents = randomContents(replySize);
-		    FakeReplyMessage reply = 
-			new FakeReplyMessage(request.getTarget(),
-					     request.getOriginator(),
-					     contents);
-		    replyTimerTaskController.addMessage(reply);
-		    if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
-			System.out.println("\n$$$ Masking Deliverer got Fake Request: "+
-					   request+ " size: "+request.getContents().length+
-					   "\n Queueing Fake Reply: "+reply +
-					   " size: "+contents.length);
+		try {
+		    Message internalmsg = ((MaskingMessageEnvelope) msg).getContents();
+		    if (internalmsg instanceof FakeRequestMessage) {
+			FakeRequestMessage request = (FakeRequestMessage)internalmsg;
+			byte[] contents = randomContents(replySize);
+			FakeReplyMessage reply = 
+			    new FakeReplyMessage(request.getTarget(),
+						 request.getOriginator(),
+						 contents);
+			replyTimerTaskController.addMessage(reply);
+			if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
+			    System.out.println("\n$$$ Masking Deliverer got Fake Request: "+
+					       request+ " size: "+request.getContents().length+
+					       "\n Queueing Fake Reply: "+reply +
+					       " size: "+contents.length);
+			}
 		    }
+		} catch (Throwable th) {
+		    System.err.println("## Demasking error " + th);
 		}
 		//if its a fake reply (the other kind of masking message)
 		// drop it on the floor.
@@ -466,7 +472,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	private class Task extends TimerTask {
 	    public void run() {
 		byte[] contents = randomContents(requestSize);
-		myAddress = registry.getLocalAddress();
+		myAddress = getRegistry().getLocalAddress();
 		FakeRequestMessage request = 
 		    new FakeRequestMessage(myAddress, destination, contents);
 		maskingQDelegate.sendMessageInEnvelope(request);
@@ -603,7 +609,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // one-time initialize node list so we don't 
 	    // get a request for an address before the timer 
 	    // has run the first time
-	    Iterator iter = registry.findRemoteMulticastTransports(
+	    Iterator iter = getRegistry().findRemoteMulticastTransports(
 								   (MulticastMessageAddress)MessageAddress.SOCIETY);
 	    while (iter.hasNext()) {
 		MessageAddress anAddress = (MessageAddress) iter.next();
@@ -617,7 +623,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    //update the node list
 	    MulticastMessageAddress societynodes = 
 		(MulticastMessageAddress)MessageAddress.SOCIETY;
-	    Iterator nodeIt = registry.findRemoteMulticastTransports(societynodes);
+	    Iterator nodeIt = getRegistry().findRemoteMulticastTransports(societynodes);
 	    ArrayList tmpnodes = new ArrayList();
 	    while (nodeIt.hasNext()) {
 		MessageAddress nodeAddress = (MessageAddress) nodeIt.next();

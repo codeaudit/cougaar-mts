@@ -37,7 +37,35 @@ abstract public class StandardAspect
 {
 
 
+    private MessageTransportRegistryService registry;
+    private NameSupport nameSupport;
     private BindingSite bindingSite;
+
+    protected MessageTransportRegistryService getRegistry() {
+	if (registry != null) return registry;
+
+	ServiceBroker sb = getServiceBroker();
+	registry =
+	    (MessageTransportRegistryService)
+	    sb.getService(this,
+			  MessageTransportRegistryService.class,
+			  null);
+
+	return registry;
+    }
+
+
+    protected NameSupport getNameSupport() {
+	if (nameSupport != null) return nameSupport;
+
+	ServiceBroker sb = getServiceBroker();
+	nameSupport =
+	    (NameSupport) sb.getService(this, NameSupport.class,  null);
+
+	return nameSupport;
+    }
+
+
 
     protected BindingSite getBindingSite() {
 	return bindingSite;

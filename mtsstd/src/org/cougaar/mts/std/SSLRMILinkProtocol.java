@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-
 
 /**
  * Simple extension to RMILinkProtocol which uses ssl.
@@ -34,8 +28,8 @@ import org.cougaar.core.mts.Message;
 public class SSLRMILinkProtocol extends RMILinkProtocol
 {
 
-    public SSLRMILinkProtocol(String id, AspectSupport aspectSupport) {
-	super(id, aspectSupport);
+    public SSLRMILinkProtocol() {
+	super();
     }
 
 
