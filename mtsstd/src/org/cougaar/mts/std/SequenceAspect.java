@@ -48,9 +48,6 @@ public class SequenceAspect extends StandardAspect
 	    this.sequence_number = sequence_number;
 	}
 
-	protected Message getContents() {
-	    return super.getContents();
-	}
     
     }
 
