@@ -43,6 +43,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   private ReplyTimerTask replyTimerTask;
   private HashMap nodeTimerMap = new HashMap(6);
   private ArrayList statsList = new ArrayList();
+  private Timer myTimer = new Timer(true);
 
   public TrafficMaskingGeneratorAspect() {
     super();
@@ -63,17 +64,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       replyRate = replyInt;
     }
     if (Debug.debug(TRAFFIC_MASKING_GENERATOR))
-      System.out.println("\n $$$ TrafficMaskingGeneratorAspect constructed... request is: "+
-                         requestRate + " reply is: "+replyRate);
-  }
-
-  public void setState(Object loadState) {
-    // nothing for now
-  }
-
-  public Object getState() {
-    //nothing for now
-    return null;
+      System.out.println("\n $$$ TrafficMaskingGeneratorAspect constructed"+
+                         "... request is: "+ requestRate + 
+                         " reply is: "+replyRate);
   }
 
   public void load() {
@@ -81,10 +74,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
    //set up the service provider
    TrafficMaskingGeneratorServiceProvider tmgSP = 
        new TrafficMaskingGeneratorServiceProvider(this);
+   // add the service to my parent's service broker so my
+   // sibling aspects can access it.
    getBindingSite().getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
   }
 
-
+  // aspect implementation
   public Object getDelegate(Object delegate, Class type) {
     if (type == SendQueue.class) {
       maskingQDelegate = new MaskingQueueDelegate((SendQueue) delegate);
@@ -96,18 +91,6 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     }
   }
 
-  private void cancelTimer(MessageAddress node) {
-    Timer theMaskingTimer = (Timer) nodeTimerMap.get(node);
-    theMaskingTimer.cancel();
-    nodeTimerMap.remove(node);
-  }
-
-  private void startReplyTimer() {
-    Timer replyTimer = new Timer(true);
-    // delay start by replyRate
-    replyTimerTask = new ReplyTimerTask();
-    replyTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
-  }
 
   //
   // implement TrafficMaskingGeneratorService API
@@ -122,7 +105,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     //check the avgPeriod
     if (avgPeriod < 1) {
       if (avgPeriod == -1) {
-        cancelTimer(node);
+        cancelTimerTask(node);
         return;
       } else {
         throw new IllegalArgumentException("TrafficMaskingGeneratorService."+
@@ -141,19 +124,18 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
      // if we already have a timer going for this node - cancel the current one
     if (nodeTimerMap.get(node) != null) {
-      cancelTimer(node);
+      cancelTimerTask(node);
     }
     // start up a request masking timer for this node
-    Timer maskingTimer = new Timer(true);
     MaskingTimerTask mtt = new MaskingTimerTask(node, avgSize, avgPeriod);
-    maskingTimer.scheduleAtFixedRate(mtt, avgPeriod, avgPeriod);
+    myTimer.scheduleAtFixedRate(mtt, avgPeriod, avgPeriod);
     // register with timer
-    nodeTimerMap.put(node, maskingTimer);
+    nodeTimerMap.put(node, mtt);
     
     // if this is the first timer task we need to turn on the reply 
     // timer task.
     if (replyTimerTask == null) {
-      startReplyTimer();
+      startReplyTimerTask();
     }
   }
 
@@ -177,7 +159,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       replyTimerTask.cancel();
     }
     replyRate = thinkTime;
-    startReplyTimer();
+    startReplyTimerTask();
   }
 
   /** Get information about the fake messages sent from this Node
@@ -189,11 +171,27 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     return new ArrayList(statsList);
   }
 
- // timer to create fake tasks
-  private void setupMaskingTimer() {
+  //
+  // utility methods
+  //
+  private void cancelTimerTask(MessageAddress node) {
+    TimerTask theTimerTask = (TimerTask) nodeTimerMap.get(node);
+    theTimerTask.cancel();
+    nodeTimerMap.remove(node);
+  }
+
+  private void startReplyTimerTask() {
+    // delay start by replyRate
+    replyTimerTask = new ReplyTimerTask();
+    myTimer.scheduleAtFixedRate(replyTimerTask, replyRate, replyRate);
+  }
+
+
+  // TimerTasks to create fake request and reply tasks
+  private void setupTimerTasks() {
     timerOn = true;
 
-    // start up the node keeper
+    // start up the node keeper - this guys gets his own Timer too
     Timer nodeKeeperTimer = new Timer(true);
     // for now only update every minute and get a new one after 2 seconds
     nodeKeeper = new NodeKeeperTimerTask();
@@ -202,14 +200,12 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // important thing is not to wait too long to get all the initial nodes
     nodeKeeperTimer.schedule(nodeKeeper, 10000, 30000);
 
-    // start up the masking task
-    Timer maskingTimer = new Timer(true);
-    // delay start by the requestRate 
+    // start up the masking task - delay start by the requestRate 
     AutoMaskingTimerTask amtt = new AutoMaskingTimerTask();
-    maskingTimer.scheduleAtFixedRate(amtt, requestRate, requestRate);
+    myTimer.scheduleAtFixedRate(amtt, requestRate, requestRate);
 
     //start up the reply timer
-    startReplyTimer();
+    startReplyTimerTask();
   }
 
   //
@@ -217,7 +213,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   //
 
   //new envelope to wrap fake messages
-  private static class MaskingMessageEnvelope extends MessageEnvelope {
+  public static class MaskingMessageEnvelope extends MessageEnvelope {
     private Message message;
 
     MaskingMessageEnvelope(Message message, MessageAddress destination) {
@@ -226,7 +222,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     }
 
     public String toString() {
-      return new String("MaskingMessageEnvelope containing message: "+message.toString());
+      return new String("MaskingMessageEnvelope containing message: "+
+                        message.toString());
     }
   }
 
@@ -244,7 +241,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       //timer to send fake messages(only if system properties were set)
       if (requestRate > 0 && !timerOn) {
         myAddress = registry.getLocalAddress();
-        setupMaskingTimer();
+        setupTimerTasks();
       }
       // If this is a fake message type - wrap it in an envelope
       if (msg instanceof FakeRequestMessage || msg instanceof FakeReplyMessage) {
@@ -293,8 +290,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
                                                           replyContents);
             replyTimerTask.addMessage(reply);
             if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
-              System.out.println("\n$$$ Masking Deliverer got Fake Request: "+request+
-                                 " size: "+request.getContents().length +
+              System.out.println("\n$$$ Masking Deliverer got Fake Request: "+
+                                 request+ " size: "+request.getContents().length+
                                  "\n Queueing Fake Reply: "+reply +
                                  " size: "+replyContents.length);
             }
@@ -308,7 +305,13 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       } 
   }  // end of MaskingDelivererDelegate inner class
 
+
+  //
+  // TimerTask inner classes
+  //
+
   // creates fake-requests on a set timer - requests are a set size
+  // used by service method setRequestParameters
   protected class MaskingTimerTask extends TimerTask {
     private int requestSize;
     private MessageAddress destination;
@@ -340,9 +343,38 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       mystats.incrementTotalBytes(contents.length);
     }
   }
+
+  // this is the fake 'think' time for reply tasks
+  // used in both auto and service directed runs
+  public class ReplyTimerTask extends TimerTask {
+    private ArrayList replyQueue = new ArrayList();
+
+    public void run() {
+      if (!replyQueue.isEmpty()) {
+        synchronized(replyQueue) {
+          Message replymsg = (Message) replyQueue.get(0);
+          // put message on real MTS SendQueue
+          maskingQDelegate.sendMessage(replymsg);
+          if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
+            System.out.println("\n $$$ Masking: ReplyTimer sending reply: " +
+                               replymsg + " size: "+ 
+                               ((FakeReplyMessage)replymsg).getContents().length);
+          }
+          replyQueue.remove(0);
+        }
+      }
+    }
+
+    public void addMessage(Message msg) {
+      synchronized(replyQueue) {
+        replyQueue.add(msg);
+      }
+    }
+  }
       
 
   // creates fake-requests on a timer - requests are a random size
+  // used for auto masking setup up by system properties
   public class AutoMaskingTimerTask extends TimerTask {
     private Random contentsGenerator = new Random();
   
@@ -373,7 +405,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   }   // end of AutoMaskingTimerTask inner class
 
   // keeps list of nodes up to date and generates random node addresses
-  // from the current list
+  // from the current list - only used in auto mode when
+  // system properties are defined
   public class NodeKeeperTimerTask extends TimerTask {
     private Random generator = new Random();
     private ArrayList nodelist;
@@ -397,8 +430,9 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
           
     public void run() {
       //update the node list
-      Iterator nodeIt = registry.findRemoteMulticastTransports(
-                                      (MulticastMessageAddress)MessageAddress.SOCIETY);
+      MulticastMessageAddress societynodes = 
+        (MulticastMessageAddress)MessageAddress.SOCIETY;
+      Iterator nodeIt = registry.findRemoteMulticastTransports(societynodes);
       ArrayList tmpnodes = new ArrayList();
       while (nodeIt.hasNext()) {
         MessageAddress nodeAddress = (MessageAddress) nodeIt.next();
@@ -435,34 +469,16 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
   }   // end of NodeKeeperTimerTask inner class
 
-
-  // this is the fake 'think' time for reply tasks
-  public class ReplyTimerTask extends TimerTask {
-    private ArrayList replyQueue = new ArrayList();
-
-    public void run() {
-      if (!replyQueue.isEmpty()) {
-        synchronized(replyQueue) {
-          Message replymsg = (Message) replyQueue.get(0);
-          // put message on real MTS SendQueue
-          maskingQDelegate.sendMessage(replymsg);
-          if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
-            System.out.println("\n $$$ Masking: ReplyTimer sending reply: " +
-                               replymsg + " size: "+ 
-                               ((FakeReplyMessage)replymsg).getContents().length);
-          }
-          replyQueue.remove(0);
-        }
-      }
-    }
-
-    public void addMessage(Message msg) {
-      synchronized(replyQueue) {
-        replyQueue.add(msg);
-      }
-    }
+  //  
+  // StateObject stuff
+  //
+  public void setState(Object loadState) {
+    // nothing for now
   }
-                              
+  public Object getState() {
+    //nothing for now
+    return null;
+  }
 
 }
 
