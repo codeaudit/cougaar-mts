@@ -75,10 +75,26 @@ public class SimpleMessageAttributes
 
     // MessageAttributes interface
 
+    private static void deepCopy(HashMap src, HashMap dst) {
+	// dst.putAll(src); // shallow
+	Iterator itr = src.entrySet().iterator();
+	Map.Entry entry = null;
+	Object value = null;
+	while (itr.hasNext()) {
+	    entry = (Map.Entry) itr.next();
+	    value = entry.getValue();
+	    if (value instanceof ArrayList) {
+		value = new ArrayList((ArrayList) value);
+	    }
+	    dst.put(entry.getKey(), value);
+	}
+    }
+
+    // Caller should synchronize
     public Attributes cloneAttributes() {
 	SimpleMessageAttributes clone = new SimpleMessageAttributes();
-	clone.data.putAll(data);
-	clone.local_data.putAll(local_data);
+	deepCopy(data, clone.data);
+	deepCopy(local_data, clone.local_data);
 	return clone;
     }
 
