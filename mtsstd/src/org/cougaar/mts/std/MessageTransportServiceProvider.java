@@ -88,7 +88,7 @@ public class MessageTransportServiceProvider
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
 	Object svc = sb.getService(this, NamingService.class, null);
-        Object ns = new NameSupportImpl(id, (NamingService) svc);
+        Object ns = NameSupportImpl.makeInstance(id, (NamingService) svc);
 	ns = aspectSupport.attachAspects(ns, NameSupport.class, null);
 	return (NameSupport) ns;
     }

@@ -31,15 +31,33 @@ import javax.naming.directory.SearchResult;
 /**
  * This is utility class which hides the grimy details of dealing with
  * NameServers from the rest of the message transport subsystem.  */
-public class NameSupportImpl implements NameSupport 
+public final class NameSupportImpl implements NameSupport 
 {
     private static final String MTS_ATTR = "MTS";
     private static final String ADDRESS_ATTR = "Address";
 
+    // Singleton
+    private static NameSupport instance;
+
+    public static NameSupport instance() {
+	return instance;
+    }
+
+    public static NameSupport makeInstance(String id, 
+					   NamingService namingService)
+    {
+	if (instance == null) {
+	    instance = new NameSupportImpl(id, namingService);
+	} else {
+	    System.err.println("### NameSupport singleton already exists");
+	}
+	return instance;
+    }
+
     private NamingService namingService;
     private MessageAddress myNodeAddress;
 
-    public NameSupportImpl(String id, NamingService namingService) {
+    private NameSupportImpl(String id, NamingService namingService) {
 	myNodeAddress = new MessageAddress(id+"(Node)");
         this.namingService = namingService;
     }
