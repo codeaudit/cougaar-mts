@@ -44,7 +44,7 @@ public interface NameSupport extends Service
     void registerMTS(MessageAddress address);
 
     URI lookupAddressInNameServer(MessageAddress address, 
-				  String transportType);
+				  String protocol);
 
     Iterator lookupMulticast(MulticastMessageAddress address);
 
