@@ -186,6 +186,11 @@ implements ServiceProvider
 
     protected ComponentDescriptions findInitialComponentDescriptions() {
 	ServiceBroker sb = getServiceBroker();
+	NodeIdentificationService nis = (NodeIdentificationService)
+	    sb.getService(this, NodeIdentificationService.class, null);
+ 	id = nis.getMessageAddress().toString();
+	loggingService = 
+	    (LoggingService) sb.getService(this, LoggingService.class, null);
 	ComponentInitializerService cis = (ComponentInitializerService) 
 	    sb.getService(this, ComponentInitializerService.class, null);
 	try {
@@ -200,18 +205,6 @@ implements ServiceProvider
 	} finally {
 	    sb.releaseService(this, ComponentInitializerService.class, cis);
 	}
-    }
-
-
-    public void initialize() {
-	super.initialize();
-	ServiceBroker sb = getServiceBroker();
-	NodeIdentificationService nis = (NodeIdentificationService)
-	    sb.getService(this, NodeIdentificationService.class, null);
- 	id = nis.getMessageAddress().toString();
-	loggingService = 
-	    (LoggingService) sb.getService(this, LoggingService.class, null);
-
     }
 
     public void loadHighPriorityComponents() {
