@@ -20,12 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.Externalizable;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.NotSerializableException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
@@ -34,10 +30,14 @@ import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 
+import org.cougaar.core.mts.Attributes;
+import org.cougaar.core.mts.Message;
+import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.SimpleMessageAttributes;
+import org.cougaar.core.service.MessageProtectionService;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
-import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.MessageProtectionService;
 
 /**
  * An AttributedMessage is a Message with metadata, the latter

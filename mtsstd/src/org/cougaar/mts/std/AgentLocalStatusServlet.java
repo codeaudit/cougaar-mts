@@ -20,10 +20,9 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.io.PrintStream;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.AgentStatusService;
+import org.cougaar.core.mts.MessageAddress;
 
 public class AgentLocalStatusServlet extends AgentStatusServlet
 {

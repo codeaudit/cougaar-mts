@@ -20,9 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.util.ArrayList;
+
 import org.cougaar.core.component.Service;
 
 /**

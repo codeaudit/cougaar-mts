@@ -20,13 +20,14 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.PrintWriter;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.servlet.ServletFrameset;
+import org.cougaar.core.mts.AgentStatusService;
+import org.cougaar.core.mts.BaseServlet;
+import org.cougaar.core.mts.MessageAddress;
 
 abstract public class AgentStatusServlet
     extends BaseServlet // ServletFrameset

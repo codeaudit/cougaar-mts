@@ -20,15 +20,11 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
+
 import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ParameterizedComponent;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ThreadService;
 

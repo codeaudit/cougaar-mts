@@ -20,11 +20,8 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.*;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
