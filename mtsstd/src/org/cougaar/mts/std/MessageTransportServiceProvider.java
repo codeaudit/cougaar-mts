@@ -75,6 +75,7 @@ public class MessageTransportServiceProvider
     private SendQueue sendQ;
     private MessageDeliverer deliverer;
     private WatcherAspect watcherAspect;
+    private AgentStatusAspect agentStatusAspect;
 
     private String id;
     private HashMap rawProxies;
@@ -114,6 +115,9 @@ public class MessageTransportServiceProvider
 	//time.
 	watcherAspect =  new WatcherAspect();
 	aspectSupport.addAspect(watcherAspect);
+
+	agentStatusAspect =  new AgentStatusAspect();
+	aspectSupport.addAspect(agentStatusAspect);
 
 	// Multicast Aspect is always required.
 	aspectSupport.addAspect(new MulticastAspect());
@@ -213,6 +217,8 @@ public class MessageTransportServiceProvider
 	    return aspect;
 	} else if (serviceClass == MessageWatcherService.class) {
 	    return new MessageWatcherServiceImpl(watcherAspect);
+	} else if (serviceClass == AgentStatusService.class) {
+	    return agentStatusAspect;
 	} else {
 	    return null;
 	}
@@ -242,6 +248,9 @@ public class MessageTransportServiceProvider
 	} else if (serviceClass == MessageStatisticsService.class) {
 	    // The only resource used here is the StatisticsAspect,
 	    // which stays around.  
+	} else if (serviceClass == AgentStatusService.class) {
+	    // The only resource used here is the aspect, which stays
+	    // around.
 	} else if (serviceClass == MessageWatcherService.class) {
 	    if (service instanceof MessageWatcherServiceImpl) {
 		((MessageWatcherServiceImpl) service).release();
