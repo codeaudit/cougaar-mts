@@ -25,11 +25,14 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
@@ -55,10 +58,13 @@ import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.DestinationQueueProviderService;
+import org.cougaar.mts.base.SendQueueProviderService;
+import org.cougaar.mts.base.QueueListener;
 
 public class AgentStatusAspect 
     extends StandardAspect
-    implements AgentStatusService, Constants, AttributeConstants
+    implements AgentStatusService, QueueListener, Constants, AttributeConstants
 {
 
     private static final double SEND_CREDIBILITY = 
@@ -76,10 +82,63 @@ public class AgentStatusAspect
 
     public void load() {
 	super.load();
+
+	ServiceBroker sb = getServiceBroker();
 	metricsUpdateService = (MetricsUpdateService)
-	    getServiceBroker().getService(this, MetricsUpdateService.class, null);
+	    sb.getService(this, MetricsUpdateService.class, null);
     }
+
+
+    public void start() {
+	super.start();
+
+	ServiceBroker sb = getServiceBroker();
+
+	SendQueueProviderService sendq_fact = (SendQueueProviderService)
+	    sb.getService(this, SendQueueProviderService.class, null);
+
+	DestinationQueueProviderService destq_fact = (DestinationQueueProviderService)
+	    sb.getService(this, DestinationQueueProviderService.class, null);
+
+	LoggingService lsvc = getLoggingService();
+
+	if (sendq_fact != null) {
+	    sendq_fact.addListener(this);
+	    sb.releaseService(this, SendQueueProviderService.class, sendq_fact);
+	} else if (lsvc.isInfoEnabled()) {
+	    lsvc.info("Couldn't get SendQueueProviderService");
+	}
+
+
+	if (destq_fact != null) {
+	    destq_fact.addListener(this);
+	    sb.releaseService(this, DestinationQueueProviderService.class, sendq_fact);
+	} else if (lsvc.isInfoEnabled()) {
+	    lsvc.info("Couldn't get DestinationQueueProviderService");
+	}
+    }
+
     
+    public void messagesRemoved(List messages)
+    {
+	LoggingService lsvc = getLoggingService();
+	synchronized (messages) {
+	    Iterator itr = messages.iterator();
+	    AttributedMessage message;
+	    while (itr.hasNext()) {
+		message = (AttributedMessage) itr.next();
+		// handle removed message
+		MessageAddress remoteAddr = message.getTarget().getPrimary();
+		AgentState remoteState = ensureRemoteState(remoteAddr);
+		if (lsvc.isInfoEnabled())
+		    lsvc.info("Messages removed from queue " +remoteAddr);
+		synchronized (remoteState) {
+		    remoteState.queueLength--;
+		}
+	    }
+	}
+    }
+
     private AgentState ensureRemoteState(MessageAddress address) {
 	AgentState state = null;
 	synchronized(remoteStates){
@@ -274,19 +333,6 @@ public class AgentStatusAspect
 	    ensureLocalState(getAddress().getPrimary());
 	}
 
-
-	public void flushMessages(ArrayList messages) {
-	    super.flushMessages(messages);
-	    Iterator i = messages.iterator();
-	    while (i.hasNext()) {
-		Message message = (Message) i.next();
-		MessageAddress remoteAddr = message.getTarget().getPrimary();
-		AgentState remoteState = ensureRemoteState(remoteAddr);
-		synchronized (remoteState) {
-		    remoteState.queueLength--;
-		}
-	    }
-	}
     }
 
     private class DestinationLinkDelegate
