@@ -175,7 +175,9 @@ public class MessageTransportServiceProvider
 		Class policy_class = Class.forName(policy_classname);
 		LinkSelectionPolicy selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
-		System.out.println("Created " +  policy_classname);
+		if (Debug.debug(DebugFlags.POLICY))
+		    System.out.println("%%% Created " +  policy_classname);
+
 		return selectionPolicy;
 	    } catch (Exception ex) {
 		ex.printStackTrace();
