@@ -57,11 +57,10 @@ public final class AspectSupportImpl implements AspectSupport
 	aspects = new ArrayList();
 	aspects_table = new HashMap();
 	this.container = container;
-	readAspects();
     }
     
  
-    private void readAspects() {
+    public void readAspects() {
 	String classes = System.getProperty(ASPECTS_PROPERTY);
 
 	if (classes == null) return;

@@ -106,20 +106,25 @@ public class MessageTransportServiceProvider
     private void createAspectSupport() {
 	aspectSupport = AspectSupportImpl.makeInstance(this);
 
-	//Watcher Aspect is special because the MTServicer interface
-	//needs it.  So we have to make the Watcher Aspect all the
-	//time.
+	// Do the standard set first, since they're assumed to be more
+	// generic than the user-specified set.
+
+	// For the MessageWatcher service
 	watcherAspect =  new WatcherAspect();
 	aspectSupport.addAspect(watcherAspect);
 
+	// Keep track of Agent state
 	agentStatusAspect =  new AgentStatusAspect();
 	aspectSupport.addAspect(agentStatusAspect);
 
-	// Multicast Aspect is always required.
+	// Handling multicast messages
 	aspectSupport.addAspect(new MulticastAspect());
 
-	// Flusg Aspect always required
+	// Handling flushMessage();
 	aspectSupport.addAspect(new FlushAspect());
+
+	// Now read user-supplied aspects
+	aspectSupport.readAspects();
     }
 
     private void createFactories() {
