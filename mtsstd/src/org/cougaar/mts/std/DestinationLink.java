@@ -22,6 +22,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
+import org.cougaar.core.society.MessageAddress;
 
 
 /**
@@ -59,5 +60,10 @@ public interface DestinationLink
      */
     public boolean retryFailedMessage(Message message, int retryCount);
 
+
+    /**
+     * Return the target/destination of this link. 
+     */
+    public MessageAddress getDestination();
 
 }

@@ -50,7 +50,7 @@ class FutileSerializingLinkProtocol
     public synchronized DestinationLink getDestinationLink(MessageAddress address) {
 	DestinationLink link = (DestinationLink) links.get(address);
 	if (link == null) {
-	    link = new Link();
+	    link = new Link(address);
 	    link = (DestinationLink) attachAspects(link,DestinationLink.class);
 	    links.put(address, link);
 	}
@@ -81,7 +81,17 @@ class FutileSerializingLinkProtocol
 
     class Link implements DestinationLink {
 	private Message lastMessage;
+	private MessageAddress address;
 	private int count;
+
+	Link(MessageAddress address) {
+	    this.address = address;
+	}
+
+	public MessageAddress getDestination() {
+	    return address;
+	}
+
 
 	public int cost(Message msg) {
 	    if (lastMessage != msg) {

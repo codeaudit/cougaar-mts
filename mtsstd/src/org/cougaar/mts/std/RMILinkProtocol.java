@@ -248,6 +248,10 @@ public class RMILinkProtocol
 	}
 
 
+	public MessageAddress getDestination() {
+	    return target;
+	}
+
 	public void forwardMessage(Message message) 
 	    throws NameLookupException, 
 		   UnregisteredNameException, 

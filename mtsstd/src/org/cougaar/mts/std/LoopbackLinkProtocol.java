@@ -104,6 +104,12 @@ class LoopbackLinkProtocol
 	    return LoopbackLinkProtocol.class;
 	}
 
+
+	public MessageAddress getDestination() {
+	    return address;
+	}
+
+
     }
 
 }
