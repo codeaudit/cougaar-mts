@@ -367,7 +367,8 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
 		ois = new ObjectInputStream(conn.getInputStream());
 		return ois.readObject();
 	    } catch(Exception e) {
-		logger.debug("Exception in postMessge", e);
+		if (logger.isWarnEnabled())
+		    logger.warn("Exception in postMessge", e);
 	    } finally {
 		if (out != null) {
 		    out.close();
