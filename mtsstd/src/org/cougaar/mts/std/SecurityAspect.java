@@ -96,8 +96,8 @@ public class SecurityAspect extends StandardAspect
     public Object getDelegate(Object delegate, Class type) {
 	if (type == DestinationLink.class) {
 	    return new SecureDestinationLink((DestinationLink) delegate);
-	} else if (type == ReceiveQueue.class) {
-	    return new SecureReceiveQueue((ReceiveQueue) delegate);
+	} else if (type == MessageDeliverer.class) {
+	    return new SecureDeliverer((MessageDeliverer) delegate);
 	} else {
 	    return null;
 	}
@@ -129,23 +129,19 @@ public class SecurityAspect extends StandardAspect
 
 
 
-    private class SecureReceiveQueue implements ReceiveQueue {
-	private ReceiveQueue queue;
+    private class SecureDeliverer implements MessageDeliverer {
+	private MessageDeliverer deliverer;
 
-	private SecureReceiveQueue(ReceiveQueue queue) {
-	    this.queue = queue;
+	private SecureDeliverer(MessageDeliverer deliverer) {
+	    this.deliverer = deliverer;
 	}
 
 	public void deliverMessage(Message m) {
-	    queue.deliverMessage(unsecure(m));
+	    deliverer.deliverMessage(unsecure(m));
 	}
 
 	public boolean matches(String name) {
-	    return queue.matches(name);
-	}
-
-	public int size() {
-	    return queue.size();
+	    return deliverer.matches(name);
 	}
     }
 }

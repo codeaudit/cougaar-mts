@@ -29,7 +29,7 @@ public class MTImpl extends UnicastRemoteObject implements MT
 {
     private MessageTransport transport;
     private MessageAddress address;
-    private ReceiveQueue recvQ;
+    private MessageDeliverer deliverer;
 
     //public MTImpl() throws RemoteException {} // not used
 
@@ -39,22 +39,24 @@ public class MTImpl extends UnicastRemoteObject implements MT
 	this(mt, addr, null);
     }
 
-    public MTImpl(MessageTransport mt, MessageAddress addr, ReceiveQueue recvQ) 
+    public MTImpl(MessageTransport mt, 
+		  MessageAddress addr, 
+		  MessageDeliverer deliverer) 
 	throws RemoteException 
     {
 	super();
 	transport = mt;
 	address = addr;
-	this.recvQ = recvQ;
+	this.deliverer = deliverer;
     }
 
     public void rerouteMessage(Message m) {
 	try {
-	    if (recvQ != null) {
+	    if (deliverer != null) {
 		// System.err.println("Something efficient happened today ");
-		recvQ.deliverMessage(m);
+		deliverer.deliverMessage(m);
 	    } else {
-		throw new Exception("No ReceiveQueue in " + this);
+		throw new Exception("No Deliverer in " + this);
 	    }
 	} catch (Exception e) {
 	    System.err.println("\n\nCaught exception in shim: "+e);

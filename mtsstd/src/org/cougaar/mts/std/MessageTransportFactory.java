@@ -10,7 +10,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.society.NameSupport;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -39,7 +38,7 @@ public final class MessageTransportFactory
     private String id;
     private MessageTransport defaultTransport, loopbackTransport;
     private MessageTransportRegistry registry;
-    private ReceiveQueue recvQ;
+    private MessageDeliverer deliverer;
     private NameSupport nameSupport;
 
     public MessageTransportFactory(String id, 
@@ -53,8 +52,8 @@ public final class MessageTransportFactory
 	this.aspects = aspects;
     }
 
-    void setRecvQ(ReceiveQueue recvQ) {
-	this.recvQ = recvQ;
+    void setDeliverer(MessageDeliverer deliverer) {
+	this.deliverer = deliverer;
     }
 
     private MessageTransport makeTransport(String classname) {
@@ -75,7 +74,7 @@ public final class MessageTransportFactory
 	    xxx.printStackTrace();
 	    return null;
 	}
-	transport.setRecvQ(recvQ);
+	transport.setDeliverer(deliverer);
 	transport.setRegistry(registry);
 	transport.setNameSupport(nameSupport);
 	transports.add(transport);
@@ -115,13 +114,13 @@ public final class MessageTransportFactory
 	// No preferred transport, make all the usual ones.
 
 	loopbackTransport = new LoopbackMessageTransport(id, aspects);
-	loopbackTransport.setRecvQ(recvQ);
+	loopbackTransport.setDeliverer(deliverer);
 	loopbackTransport.setRegistry(registry);
 	loopbackTransport.setNameSupport(nameSupport);
 	transports.add(loopbackTransport);
 	
 	defaultTransport = new RMIMessageTransport(id, aspects);
-	defaultTransport.setRecvQ(recvQ);
+	defaultTransport.setDeliverer(deliverer);
 	defaultTransport.setRegistry(registry);
 	defaultTransport.setNameSupport(nameSupport);
 	transports.add(defaultTransport);

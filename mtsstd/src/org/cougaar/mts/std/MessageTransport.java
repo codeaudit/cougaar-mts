@@ -11,7 +11,6 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.society.NameSupport;
 
 
 /**
@@ -31,13 +30,14 @@ import org.cougaar.core.society.NameSupport;
  * attachment is handled in each specific transport class.  */
 public abstract class MessageTransport extends AspectFactory
 {
-    protected ReceiveQueue recvQ;
+    protected MessageDeliverer deliverer;
     protected MessageTransportRegistry registry;
     protected NameSupport nameSupport;
 
     // abstract public void routeMessage(Message message);
     abstract public DestinationLink getDestinationLink(MessageAddress destination);
     abstract public void registerClient(MessageTransportClient client);
+    abstract public void unregisterClient(MessageTransportClient client);
     abstract public boolean addressKnown(MessageAddress address);
 
 
@@ -61,8 +61,8 @@ public abstract class MessageTransport extends AspectFactory
 	this.nameSupport = nameSupport;
     }
 
-    public void setRecvQ(ReceiveQueue recvQ) {
-	this.recvQ = recvQ;
+    public void setDeliverer(MessageDeliverer deliverer) {
+	this.deliverer = deliverer;
     }
 
 

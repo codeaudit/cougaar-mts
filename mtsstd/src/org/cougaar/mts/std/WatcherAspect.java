@@ -17,7 +17,7 @@ import java.util.Iterator;
 
 /**
  * A simple aspect which implements the message watching functionality
- * by attaching delegates to SendQueue and ReceiveQueue objects.  The
+ * by attaching delegates to SendQueue and MessageDeliverer objects.  The
  * delegates are implemented as inner classes.  */
 public class WatcherAspect 
     extends StandardAspect
@@ -33,8 +33,8 @@ public class WatcherAspect
     public Object getDelegate(Object delegate, Class type) {
 	if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) delegate);
-	} else if (type == ReceiveQueue.class) {
-	    return new ReceiveQueueDelegate((ReceiveQueue) delegate);
+	} else if (type == MessageDeliverer.class) {
+	    return new MessageDelivererDelegate((MessageDeliverer) delegate);
 	} else {
 	    return null;
 	}
@@ -84,11 +84,11 @@ public class WatcherAspect
     }
 
 
-    public class ReceiveQueueDelegate implements ReceiveQueue
+    public class MessageDelivererDelegate implements MessageDeliverer
     {
-	private ReceiveQueue server;
+	private MessageDeliverer server;
 	
-	public ReceiveQueueDelegate (ReceiveQueue server)
+	public MessageDelivererDelegate (MessageDeliverer server)
 	{
 	    this.server = server;
 	}
@@ -102,9 +102,6 @@ public class WatcherAspect
 	    return server.matches(name);
 	}
 
-	public int size() {
-	    return server.size();
-	}
     }
 }
 

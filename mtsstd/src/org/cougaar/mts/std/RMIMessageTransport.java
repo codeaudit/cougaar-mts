@@ -94,7 +94,7 @@ public class RMIMessageTransport
 	synchronized (this) {
 	    if (myAddress == null) {
 		myAddress = nameSupport.getNodeMessageAddress();
-		MTImpl impl = new MTImpl(this, myAddress, recvQ);
+		MTImpl impl = new MTImpl(this, myAddress, deliverer);
 		MT proxy = getServerSideProxy(impl);
 		nameSupport.registerNodeInNameServer(proxy,TRANSPORT_TYPE);
 	    }
@@ -116,6 +116,20 @@ public class RMIMessageTransport
 	    e.printStackTrace();
 	}
     }
+
+
+    public final void unregisterClient(MessageTransportClient client) {
+	try {
+	    // Assume node-redirect
+	    Object proxy = myAddress;
+	    nameSupport.unregisterAgentInNameServer(proxy,client,TRANSPORT_TYPE);
+	} catch (Exception e) {
+	    System.err.println("Error unregistering MessageTransport:");
+	    e.printStackTrace();
+	}
+    }
+
+
 
     public boolean addressKnown(MessageAddress address) {
 	try {

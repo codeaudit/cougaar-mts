@@ -107,22 +107,24 @@ class MessageTransportRegistry
 
 
 
+    // Caller MUST acquire the lock before calling these two
+    // functions!
     ReceiveLink findLocalReceiveLink(MessageAddress id) {
-	synchronized (lock) {
-	    return (ReceiveLink) receiveLinks.get(id);
-	}
+	return (ReceiveLink) receiveLinks.get(id);
     }
+
 
     // this is a slow implementation, as it conses a new set each time.
     // Better alternatives surely exist.
     Iterator findLocalMulticastReceiveLinks(MulticastMessageAddress addr)
     {
-	synchronized (lock) {
-	    return new ArrayList(receiveLinks.values()).iterator();
-	}
+	return new ArrayList(receiveLinks.values()).iterator();
     }
 
 
+    Object getLock() {
+	return lock;
+    }
 
 
 
@@ -137,9 +139,28 @@ class MessageTransportRegistry
 	}
     }
 
+
+    private void unregisterClientWithSociety(MessageTransportClient client) {
+	// register with each component transport
+	Iterator transports = transportFactory.getTransports().iterator();
+	while (transports.hasNext()) {
+	    MessageTransport mt = (MessageTransport) transports.next();
+	    mt.unregisterClient(client);
+	}
+    }
+
+
+
+
     void registerClient(MessageTransportClient client) {
 	addLocalClient(client);
 	registerClientWithSociety(client);
+    }
+
+
+    void unregisterClient(MessageTransportClient client) {
+	unregisterClientWithSociety(client);
+	removeLocalClient(client);
     }
 
 

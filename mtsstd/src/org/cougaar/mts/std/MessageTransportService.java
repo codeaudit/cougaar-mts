@@ -36,6 +36,13 @@ public interface MessageTransportService extends Service
   void registerClient(MessageTransportClient client);
 
 
+  /** Unregister a client with MessageTransport.  A client
+   * is any object which can receive Messages directed to it
+   * as the Target of a message.
+   **/
+  void unregisterClient(MessageTransportClient client);
+
+
   /**
    * the name of the entity that this MessageTransport represents.
    * Will usually be the name of a node.

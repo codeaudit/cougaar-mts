@@ -63,6 +63,13 @@ public class MessageTransportServiceProxy
     public void registerClient(MessageTransportClient client) {
 	registry.registerClient(client);
     }
+
+
+    /**
+     * Redirects the request to the MessageTransportRegistry. */
+    public void unregisterClient(MessageTransportClient client) {
+	registry.unregisterClient(client);
+    }
     
 
    

@@ -17,8 +17,6 @@ import java.util.StringTokenizer;
 
 import org.cougaar.core.component.*;
 import org.cougaar.core.naming.NamingService;
-import org.cougaar.core.society.NameSupport;
-import org.cougaar.core.society.NewNameSupport;
 import org.cougaar.core.society.Node;
 
 
@@ -38,7 +36,7 @@ public class MessageTransportServiceProvider
     // Factories
     private MessageTransportFactory transportFactory;
     private SendQueueFactory sendQFactory;
-    private ReceiveQueueFactory recvQFactory;
+    private MessageDelivererFactory delivererFactory;
     private DestinationQueueFactory destQFactory;
     private LinkSenderFactory linkSenderFactory;
     private RouterFactory routerFactory;
@@ -53,7 +51,7 @@ public class MessageTransportServiceProvider
     private LinkSelectionPolicy selectionPolicy;
     private Router router;
     private SendQueue sendQ;
-    private ReceiveQueue recvQ;
+    private MessageDeliverer deliverer;
     private WatcherAspect watcherAspect;
 
     private String id;
@@ -106,7 +104,7 @@ public class MessageTransportServiceProvider
     private NameSupport createNameSupport(String id) {
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
-        return new NewNameSupport(id, (NamingService)
+        return new NameSupportImpl(id, (NamingService)
                                   sb.getService(this, NamingService.class, null));
     }
 
@@ -134,7 +132,7 @@ public class MessageTransportServiceProvider
 
 	wireComponents(id);
 
-	transportFactory.setRecvQ(recvQ);
+	transportFactory.setDeliverer(deliverer);
 	// force transports to be created here
 	transportFactory.getTransports();
         super.initialize();
@@ -161,8 +159,8 @@ public class MessageTransportServiceProvider
 
     private void wireComponents(String id) {
 	getSelectionPolicy();
-	recvQFactory = new ReceiveQueueFactory(registry, aspects);
-	recvQ = recvQFactory.getReceiveQueue(id+"/InQ");
+	delivererFactory = new MessageDelivererFactory(registry, aspects);
+	deliverer = delivererFactory.getMessageDeliverer(id+"/Deliverer");
 
 
 	linkSenderFactory =

@@ -67,8 +67,8 @@ public class TraceAspect
 	    return new DestinationQueueDelegate((DestinationQueue) delegate);
 	} else if (type == DestinationLink.class) {
 	    return new DestinationLinkDelegate((DestinationLink) delegate);
-	} else if (type == ReceiveQueue.class) {
-	    return new ReceiveQueueDelegate((ReceiveQueue) delegate);
+	} else if (type == MessageDeliverer.class) {
+	    return new MessageDelivererDelegate((MessageDeliverer) delegate);
 	} else if (type == ReceiveLink.class) {
 	    return new ReceiveLinkDelegate((ReceiveLink) delegate);
 	} else {
@@ -91,6 +91,10 @@ public class TraceAspect
 
 	public void registerClient(MessageTransportClient client) {
 	    server.registerClient(client);
+	}
+
+	public void unregisterClient(MessageTransportClient client) {
+	    server.unregisterClient(client);
 	}
 
 	public String getIdentifier() {
@@ -203,25 +207,22 @@ public class TraceAspect
     }
 
 
-    public class ReceiveQueueDelegate implements ReceiveQueue
+    public class MessageDelivererDelegate implements MessageDeliverer
     {
-	private ReceiveQueue server;
+	private MessageDeliverer server;
 	
-	public ReceiveQueueDelegate (ReceiveQueue server)
+	public MessageDelivererDelegate (MessageDeliverer server)
 	{
 	    this.server = server;
 	}
 	
 	public void deliverMessage(Message message) {
-	    log("ReceiveQueue", message.toString());
+	    log("MessageDeliverer", message.toString());
 	    server.deliverMessage(message);
 	}
 	
 	public boolean matches(String name) {
 	    return server.matches(name);
-	}
-	public int size() {
-	    return server.size();
 	}
     }
 

@@ -52,10 +52,15 @@ class LoopbackMessageTransport
 
 
     public void forwardMessage(Message message) {
-	recvQ.deliverMessage(message);
+	deliverer.deliverMessage(message);
     }
 
     public void registerClient(MessageTransportClient client) {
+	// Does nothing because the Database of local clients is held
+	// by MessageTransportServerImpl
+    }
+
+    public void unregisterClient(MessageTransportClient client) {
 	// Does nothing because the Database of local clients is held
 	// by MessageTransportServerImpl
     }
