@@ -140,6 +140,7 @@ public class FlushAspect extends StandardAspect
 	public void sendMessage(Message message) {
 	    synchronized (this) {
 		++outstandingMessages;
+		if (Debug.debug(FLUSH)) showPending("Message queued");
 	    }
 	    link.sendMessage(message);
 	}
