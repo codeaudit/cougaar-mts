@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>MTS Link Protocols</title>
+</head>
+
+<body>
+<h2>MTS Link Protocols</h2>
+
+<h3>Overview</h3>
+
+<p> LinkProtocol instances are Components of the MTS and have access
+to all MTS Services, as well as Node-level Services. They are also
+Service Providers and may define protocol-specific services in the MTS
+Service Broker.</p>
+
+<p> If no LinkProtocols are loaded, the LinkProtocolFactory will
+create a LoopbackLinkProtocol and an RMILinkProtocol. . </p>
+
+<h3> RPC abstraction </h3>
+
+A number of useful link protocols have an RPC-like structure, which
+has been captured in the abstract class
+<code>RPCLinkProtocol</code>.  Many of the instantiated protocols
+extend this class and only need to define a few protocol-specific
+methods. 
+
+<h3> Protocols </h3>
+
+<h4>LoopbackLinkProtocol </h4>
+
+<p> This protocol handles intra-Node traffic. It's effectively a
+direct call from the DestinationLink to the MessageDeliverer. </p>
+
+<h4>RMILinkProtocol </h4>
+
+<p> This sublass of RPCLinkProtocol provides the default implementation for handling
+inter-Node traffic, by using RMI calls to remote objects of type MT
+(implemented by MTImpl).   </p>
+
+<h4>SSLRMILinkProtocol </h4>
+
+<p> This subclass of RMILinkProtocol uses ssl encryption for the RMI
+communication by overriding RMILinkProtocol's getSocketFactory
+method. </p>
+
+<h4>SerializedRMILinkProtocol </h4>
+
+<p> This subclass of RMILinkProtocol pre-serializes Message into byte
+arrays by overriding RMILinkProtocol's doForwarding method. It defines
+a new kind of MTImpl, which will handle the deserialization on the
+server side, and creates these new server objects by overriding
+RMILinkProtocol's make MTImpl method.  </p>
+
+  <h4>CorbaLinkProtocol </h4>
+
+<p> This subclass of RPCLinkProtocol sends Messages via CORBA instead
+of RMI.  </p>
+
+
+  <h4>HTTPLinkProtocol and HTTPSLinkProtocol </h4>
+
+<p> This subclass of RPCLinkProtocol sends Messages through servlets,
+using either http or https.  </p>
+
+
+</body> </html>

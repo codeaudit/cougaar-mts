@@ -59,7 +59,7 @@ for the getDelegate and getReverseDelegate calls, since in both cases
 the relevant delegate interface is MT.class. In order to distinguish
 these two, we use MTImpl.class in the getDelegate and
 getReverseDelegate calls on for the RMI server object, even though the
-delegates themselves need only match the interface MT.&nbsp; Finally,
+delegates themselves need only match the interface MT. Finally,
 aspect delegates may be attached indirectly to serialization streams,
 which has the effect of converting a direct tcp connection into a
 series of Filter Streams (see org.cougaar.core.mts.MessageWriter and
@@ -80,12 +80,8 @@ message stations.</p>
 <p class=GraphicBigNoBorder><img width=577 height=326
 src="gifs/multiple-aspects.gif"></p>
 
-<p class=MsoCaption>Figure 3-10: Message Transport 
+<p class=MsoCaption>Figure: Message Transport 
     Aspects Cross Cut Multiple Stations</p>
-
-<h5>AgentFlowAspect</h5>
-
-<p>Collects message information for use in building a Traffic Matrix. </p>
 
 <h5>AgentStatusAspect</h5>
 
@@ -139,10 +135,6 @@ MessageTraceAspect along with this argument: </p>
 
 <p>Multicast in the MTS is handled by this aspect.</p>
 
-<h5>FlushAspect</h5>
-
-<p>Handles the call to flush forcing all pending message either to be delivered 
-    or dropped. The flush functionality isused in Agent mobility </p>
 
 <h5>ForwardMessageLoggingAspect</h5>
 
@@ -151,7 +143,7 @@ MessageTraceAspect along with this argument: </p>
 
 <h5>SecurityAspect</h5>
 
-<p>Provides a simple form of message-level security by enabling message signing.&nbsp; 
+<p>Provides a simple form of message-level security by enabling message signing. 
     This is more of an example than a functional aspect.</p>
 
 <h5>SerializationAspect</h5>
@@ -187,15 +179,41 @@ stations.  This is used for debugging the message transport.</p>
 
 <h5>ChecksumStreamsAspect</h5>
 
-<p>An example of using FilterStreams in RMI.&nbsp; This particular example adds 
+<p>An example of using FilterStreams in RMI. This particular example adds 
     a checksum to the end of the message. Adding trailers onto message serialization 
     could also be used to sign a message.</p>
 
 <h5>CompressingStreamsAspect</h5>
 
-<p>Another example of using FilterStreams in RMI.&nbsp; This example compresses 
+<p>Another example of using FilterStreams in RMI. This example compresses 
     and decompresses message data on the fly.</p>
 
+
+<h4>AOP is Not a Magic Bullet</h4>
+
+<p> By combining OOP and AOP, a simple and easily maintainable core
+design for message transport can be easily extended, either to provide
+new sorts of behavior altogether (e.g., new ,) or to adapt existing
+behavior in smart and dynamic ways (e.g. new Aspects), without
+compromising the simplicity of the core design.  This is a significant
+win in every way. But the use of AOP in the MTS design is not a magic
+bullet: it won't eliminate every design problem that might ever arise,
+even if it greatly reduces the overall complexity. </p>
+
+<p> In particular, considerable care is required when combining
+Aspects in previously untested ways. Aspects should usually be
+orthogonal to one another, and most of the current Aspects are. But
+even in this case, Aspect order can be very important. The user of a
+given set of Aspects needs to understand them well enough to choose a
+reasonable order at runtime. </p>
+
+<p> When Aspects are not orthogonal, the interactions will of course
+become even trickier to handle properly (though not remotely as
+complicated as managing the same interactions would be in a monolithic
+design). In such situations, the lack of orthogonality needs to be
+examined very closly, since it may simply be an artifact of confused
+Aspect design. Non-orthogonal Aspects should be quite unusual, and as
+such can reasonably be expected to require special-case handling. </p>
 
 
 </body> </html>
