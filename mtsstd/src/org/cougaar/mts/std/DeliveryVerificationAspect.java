@@ -48,10 +48,10 @@ public class DeliveryVerificationAspect
     }
 
     private void verify() {
-	Iterator itr = pendingMessages.entrySet().iterator();
 	long now = System.currentTimeMillis();
 	LoggingService lsvc = getLoggingService();
 	synchronized(pendingMessages) {
+	    Iterator itr = pendingMessages.entrySet().iterator();
 	    while (itr.hasNext()) {
 		Map.Entry entry = (Map.Entry) itr.next();
 		AttributedMessage msg = (AttributedMessage)
