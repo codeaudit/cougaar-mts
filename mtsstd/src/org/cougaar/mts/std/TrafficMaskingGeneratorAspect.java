@@ -33,7 +33,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
   private MaskingQueueDelegate maskingQDelegate;
   public MessageTransportRegistry registry;
-  private int requestRate = 333;
+  private int requestRate = 0;
   private int replyRate = 333;
   boolean timerOn = false;
   private NodeKeeperTimerTask nodeKeeper;
@@ -43,10 +43,22 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   public TrafficMaskingGeneratorAspect() {
     super();
     registry = MessageTransportRegistry.getRegistry();
+    //get any properties
+    String requestPeriod = 
+      System.getProperty("org.cougaar.message.trafficGenerator.requestPeriod");
+    if (requestPeriod != null) {
+      requestRate = new Integer(requestPeriod).intValue();
+    }
+    String thinkTime = 
+      System.getProperty("org.cougaar.message.trafficGenerator.replyThinkTime", "333");
+    int replyInt = new Integer(thinkTime).intValue();
+    if (replyInt > 0) {
+      replyRate = replyInt;
+    }
     if (Debug.debug(TRAFFIC_MASKING_GENERATOR))
-      System.out.println("\n $$$ TrafficMaskingGeneratorAspect constructed");
+      System.out.println("\n $$$ TrafficMaskingGeneratorAspect constructed... request is: "+
+                         requestRate + " reply is: "+replyRate);
   }
-
 
   public Object getDelegate(Object delegate, Class type) {
     if (type == SendQueue.class) {
@@ -88,7 +100,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // does not interact with a real outgoing message.
     public synchronized void sendMessage(Message msg) {
       //The first time we see a message, setup a the timer to send fake messages
-      if (!timerOn) {
+      if (!timerOn && requestRate > 0) {
         myAddress = registry.getLocalAddress();
         setupMaskingTimer();
       }

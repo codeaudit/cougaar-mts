@@ -126,6 +126,9 @@ public class MessageTransportServiceProvider
 	// Handling flushMessage();
 	aspectSupport.addAspect(new FlushAspect());
 
+        // Traffic Masking Generator
+        aspectSupport.addAspect(new TrafficMaskingGeneratorAspect());
+
 	// Now read user-supplied aspects
 	aspectSupport.readAspects();
     }
