@@ -33,6 +33,8 @@ import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Application;
 import org.cougaar.core.service.wp.Cert;
+import org.cougaar.core.service.wp.Callback;
+import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
 
 /**
@@ -110,7 +112,20 @@ public final class NameSupportImpl implements ServiceProvider
 	    Application app = Application.getApplication(application);
 	    AddressEntry entry = new AddressEntry(agent, app, ref, CERT, TTL);
 	    try {
-		wpService.rebind(entry);
+              final LoggingService ls = loggingService;
+              Callback cb = new Callback() {
+                  public void execute(Response r) {
+                    if (r.isSuccess()) {
+                      if (ls.isInfoEnabled()) {
+                        ls.info("WP Response: "+r);
+                      }
+                    } else {
+                      ls.error("WP Error: "+r);
+                    }
+                  }
+                };
+
+		wpService.rebind(entry, cb);
 	    } catch (Exception ex) {
 		loggingService.error(null, ex);
 	    }
