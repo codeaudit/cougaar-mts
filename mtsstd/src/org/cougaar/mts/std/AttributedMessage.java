@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -244,9 +245,14 @@ public class AttributedMessage
 	    oos.writeObject(attributes);
 	    oos.close();
 	    
-	    byte[] bytes = svc.protectHeader(bos.toByteArray(), 
-					     getOriginator(),
-					     getTarget());
+	    byte[] bytes = null;
+	    try {
+		bytes = svc.protectHeader(bos.toByteArray(), 
+					  getOriginator(),
+					  getTarget());
+	    } catch (GeneralSecurityException gse) {
+	    } catch (java.io.IOException ioe) {
+	    }
 	    out.writeObject(bytes);
 	} else {
 	    out.writeObject(attributes);
@@ -262,9 +268,14 @@ public class AttributedMessage
 	if (svc != null) {
 
 	    byte[] rawData = (byte[]) in.readObject();
-	    byte[] data  = svc.unprotectHeader(rawData, 
-					       getOriginator(),
-					       getTarget());
+	    byte[] data  = null;
+	    try {
+		data = svc.unprotectHeader(rawData, 
+					   getOriginator(),
+					   getTarget());
+	    } catch (GeneralSecurityException gse) {
+	    } catch (java.io.IOException ioe) {
+	    }
 	    ByteArrayInputStream bis = new ByteArrayInputStream(data);
 	    ObjectInputStream ois = new ObjectInputStream(bis);
 	    attributes = (SimpleMessageAttributes) ois.readObject();
