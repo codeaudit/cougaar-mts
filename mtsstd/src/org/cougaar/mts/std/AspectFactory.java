@@ -31,7 +31,7 @@ import java.lang.reflect.Constructor;
  * of the factory.  The aspect delegates are made on the fly by each
  * aspect, if it wishes to attach one for a given factory
  * interface. */
-abstract public class AspectFactory 
+abstract public class AspectFactory implements DebugFlags
 {
     private AspectSupport aspectSupport;
 

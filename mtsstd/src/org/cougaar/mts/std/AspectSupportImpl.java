@@ -34,7 +34,8 @@ import org.cougaar.core.component.ServiceBroker;
  * This is utility class which supports loading aspects
  * @property org.cougaar.message.transport.aspects Lists the MTS aspects to be loaded.
  */
-public final class AspectSupportImpl implements AspectSupport
+public final class AspectSupportImpl 
+    implements AspectSupport, DebugFlags
 {
     private final static String ASPECTS_PROPERTY = 
 	"org.cougaar.message.transport.aspects";
@@ -120,7 +121,7 @@ public final class AspectSupportImpl implements AspectSupport
 	    Object candidate = aspect.getDelegate(delegate, type);
 	    if (candidate != null) {
 		delegate = candidate;
-		if (Debug.debugAspects()) 
+		if (Debug.debug(ASPECTS))
 		    System.out.println("======> " + delegate);
 	    }
 	}
@@ -133,7 +134,7 @@ public final class AspectSupportImpl implements AspectSupport
 	    Object candidate = aspect.getReverseDelegate(delegate, type);
 	    if (candidate != null) {
 		delegate = candidate;
-		if (Debug.debugAspects()) 
+		if (Debug.debug(ASPECTS))
 		    System.out.println("(r)======> " + delegate);
 	    }
 	}

@@ -1,6 +1,6 @@
 /*
  * <copyright>
- *  Copyright 1997-2001 BBNT Solutions, LLC
+ *  Copyright 2001 BBNT Solutions, LLC
  *  under sponsorship of the Defense Advanced Research Projects Agency (DARPA).
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -18,26 +18,17 @@
  *  PERFORMANCE OF THE COUGAAR SOFTWARE.
  * </copyright>
  */
-
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ContainerAPI;
-import org.cougaar.core.component.ServiceBroker;
-
-
-/**
- * Abstract specification of a aspect in the message transport
- * subsystem.  An aspect is only required to perform one job: return
- * an aspect delegate for a given object of a given interface, or null
- * if the aspect prefers not to deal with that interface.
- * 
- * The getReverseDelegate method provides a means to do unwrapping of
- * messages in envelopes in the proper (ie reverse order).
- */
-public interface MessageTransportAspect 
-    extends ContainerAPI, DebugFlags
+public interface DebugFlags
 {
-    Object getDelegate(Object delegate, Class type);
+    public static int ASPECTS = 1<<0;;
+    public static int COMM = 1<<1;
+    public static int FLUSH = 1<<2;
+    public static int MULTICAST = 1<<3;
+    public static int SECURITY = 1<<4;
+    public static int SERVICE = 1<<5;
+    public static int STATISTICS = 1<<6;
+    public static int WATCHER = 1<<7;
 
-    Object getReverseDelegate(Object delegate, Class type);
 }

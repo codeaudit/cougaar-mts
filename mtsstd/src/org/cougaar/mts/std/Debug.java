@@ -23,49 +23,49 @@ package org.cougaar.core.mts;
 import java.util.StringTokenizer;
 
 /** 
- * MTS debugging support, controlled by the property org.cougaar.message.transport.debug.
- * If specified, may be "aspects","flush", "multicast", "security", "service", "statistics", or "watcher". 
- * A comma-separated list of the options may also be specified, and "true" is interpreted as
- * all of the options enabled.
+ * MTS debugging support, controlled by the property
+ * org.cougaar.message.transport.debug.  If specified, may be
+ * "aspects","flush", "multicast", "security", "service",
+ * "statistics", or "watcher".  A comma-separated list of the options
+ * may also be specified, and "true" is interpreted as all of the
+ * options enabled.
  * @property org.cougaar.message.transport.debug Enables various MTS debugging options.  
  * See the class description for information.
  **/
-class Debug
+public class Debug implements DebugFlags
 {
-    private static boolean DEBUG_TRANSPORT;
-    private static boolean DEBUG_ASPECTS;
-    private static boolean DEBUG_FLUSH;
-    private static boolean DEBUG_MULTICAST;
-    private static boolean DEBUG_SECURITY;
-    private static boolean DEBUG_SERVICE;
-    private static boolean DEBUG_STATISTICS;
-    private static boolean DEBUG_WATCHER;
+    private static int Flags = 0;
 
+    public static boolean debug(int mask) {
+	return (Flags & mask) == mask;
+    }
 
     static {
 	String debug = 
 	    System.getProperty("org.cougaar.message.transport.debug");
 	if (debug != null) {
 	    if (debug.equalsIgnoreCase("true")) {
-		DEBUG_TRANSPORT = true;
+		Flags = -1;
 	    } else {
 		StringTokenizer tk = new StringTokenizer(debug, ",");
 		while (tk.hasMoreTokens()) {
 		    String dbg = tk.nextToken();
 		    if (dbg.equalsIgnoreCase("aspects")) 
-			DEBUG_ASPECTS = true;
+			Flags |= ASPECTS;
 		    else if (dbg.equalsIgnoreCase("flush")) 
-			DEBUG_FLUSH = true;
+			Flags |= FLUSH;
+		    else if (dbg.equalsIgnoreCase("comm")) 
+			Flags |= COMM;
 		    else if (dbg.equalsIgnoreCase("multicast")) 
-			DEBUG_MULTICAST = true;
+			Flags |= MULTICAST;
 		    else if (dbg.equalsIgnoreCase("security")) 
-			DEBUG_SECURITY = true;
+			Flags |= SECURITY;
 		    else if (dbg.equalsIgnoreCase("service")) 
-			DEBUG_SERVICE = true;
+			Flags |= SERVICE;
 		    else if (dbg.equalsIgnoreCase("statistics")) 
-			DEBUG_STATISTICS = true;
+			Flags |= STATISTICS;
 		    else if (dbg.equalsIgnoreCase("watcher")) 
-			DEBUG_WATCHER = true;
+			Flags |= WATCHER;
 		    else
 			System.err.println("### Unknown MTS debug key " + dbg);
 		}
@@ -73,34 +73,5 @@ class Debug
 	}
     }
 
-    static boolean debugMulticast() {
-	return DEBUG_TRANSPORT || DEBUG_MULTICAST;
-    }
-
-    static boolean debugFlush() {
-	return DEBUG_TRANSPORT || DEBUG_FLUSH;
-    }
-
-    static boolean debugAspects() {
-	return DEBUG_TRANSPORT || DEBUG_ASPECTS;
-    }
-
-
-    static boolean debugStatistics() {
-	return DEBUG_TRANSPORT || DEBUG_STATISTICS;
-    }
-
-
-    static boolean debugSecurity() {
-	return DEBUG_TRANSPORT || DEBUG_SECURITY;
-    }
-
-    static boolean debugService() {
-	return DEBUG_TRANSPORT || DEBUG_SERVICE;
-    }
-
-    static boolean debugWatcher() {
-	return DEBUG_TRANSPORT || DEBUG_WATCHER;
-    }
 
 }

@@ -262,7 +262,7 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// force recache of remote
-		ex.printStackTrace();
+		if (Debug.debug(COMM)) ex.printStackTrace();
 		remote = null;
 		// Assume anything else is a comm failure
 		throw new CommFailureException(ex);

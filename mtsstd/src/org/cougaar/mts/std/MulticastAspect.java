@@ -78,12 +78,12 @@ public class MulticastAspect extends StandardAspect
 	    MessageAddress destination = msg.getTarget();
 	    if (destination instanceof MulticastMessageAddress) {
 		if (destination.equals(MessageAddress.LOCAL)) {
-		    if (Debug.debugMulticast())
+		    if (Debug.debug(MULTICAST))
 			System.out.println("### MCAST: Local multicast");
 		    msg = new MulticastMessageEnvelope(msg,  destination);
 		    link.sendMessage(msg);
 		} else {
-		    if (Debug.debugMulticast())
+		    if (Debug.debug(MULTICAST))
 			System.out.println("### MCAST: Remote multicast");
 		    MulticastMessageAddress dst = 
 			(MulticastMessageAddress) destination;
@@ -92,7 +92,7 @@ public class MulticastAspect extends StandardAspect
 		    MessageAddress addr;
 		    while (itr.hasNext()) {
 			addr = (MessageAddress) itr.next();
-			if (Debug.debugMulticast())
+			if (Debug.debug(MULTICAST))
 			    System.out.println("### MCAST: next address = " 
 					       + addr);
 			envelope = new MulticastMessageEnvelope(msg, addr);
@@ -125,7 +125,7 @@ public class MulticastAspect extends StandardAspect
 		while (i.hasNext()) {
 		    dest = (MessageAddress) i.next();
 		    deliverer.deliverMessage(msg, dest);
-		    if (Debug.debugMulticast())
+		    if (Debug.debug(MULTICAST))
 			System.out.println("### MCAST: Delivering to "
 					   + dest);
 		}

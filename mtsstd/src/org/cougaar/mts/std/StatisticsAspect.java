@@ -131,7 +131,7 @@ public class StatisticsAspect
 	public void dispatchNextMessage(Message message) {
 	    --current_total_size;
 	    accumulateStatistics();
-	    if (Debug.debugStatistics()) {
+	    if (Debug.debug(STATISTICS)) {
 		MessageStatistics.Statistics result = 
 		    getMessageStatistics(false);
 		System.err.println("###### Count=" + result.totalMessageCount
@@ -187,7 +187,7 @@ public class StatisticsAspect
 	    messageLengthHistogram[bin]++;
 	    statisticsTotalBytes += byteCount;
 
-	    if (Debug.debugStatistics())
+	    if (Debug.debug(STATISTICS))
 		System.err.println("%%%%%%% byteCount = " + byteCount);
 
 	    byteCount = 0;

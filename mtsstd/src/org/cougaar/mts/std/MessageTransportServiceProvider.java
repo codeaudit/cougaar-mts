@@ -197,7 +197,7 @@ public class MessageTransportServiceProvider
 	// Make proxy
 	proxy = new MessageTransportServiceProxy(client, link);
 	proxies.put(addr, proxy);
-	if (Debug.debugService())
+	if (Debug.debug(DebugFlags.SERVICE))
 	    System.out.println("=== Created MessageTransportServiceProxy for " 
 			       +  requestor);
 	return proxy;

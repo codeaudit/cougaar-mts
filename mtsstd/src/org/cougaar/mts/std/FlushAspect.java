@@ -139,7 +139,7 @@ public class FlushAspect extends StandardAspect
 
 	synchronized void messageDelivered(Message m) {
 	    --outstandingMessages;
-	    if (Debug.debugFlush()) showPending("Message delivered");
+	    if (Debug.debug(FLUSH)) showPending("Message delivered");
 	    if (outstandingMessages <= 0) this.notify();
 	}
 
@@ -155,7 +155,7 @@ public class FlushAspect extends StandardAspect
 	    if (!flushing) return; // do nothing in this case
 
 	    --outstandingMessages;
-	    if (Debug.debugFlush()) showPending("Message dropped");
+	    if (Debug.debug(FLUSH)) showPending("Message dropped");
 	    if (droppedMessages == null) droppedMessages = new ArrayList();
 	    droppedMessages.add(message);
 	    if (outstandingMessages <= 0) this.notify();
@@ -183,7 +183,7 @@ public class FlushAspect extends StandardAspect
 	    flushing = true;
 	    droppedMessages = new ArrayList();
 	    while (outstandingMessages > 0) {
-		if (Debug.debugFlush()) {
+		if (Debug.debug(FLUSH)) {
 		    System.out.println("%%% " + getAddress() + 
 				       ": Waiting on " + 
 				       outstandingMessages +
@@ -191,7 +191,7 @@ public class FlushAspect extends StandardAspect
 		}
 		try { this.wait(); } catch (InterruptedException ex) {}
 	    }
-	    if (Debug.debugFlush()) {
+	    if (Debug.debug(FLUSH)) {
 		System.out.println("%%% " + getAddress() + 
 				   ": All messages flushed.");
 	    }

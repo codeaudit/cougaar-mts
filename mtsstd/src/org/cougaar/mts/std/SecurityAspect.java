@@ -72,7 +72,7 @@ public class SecurityAspect extends StandardAspect
     // rid of MessageTransportClassic
     Message secure(Message message) {
 	if (msm != null) {
-	    if (Debug.debugSecurity()) 
+	    if (Debug.debug(SECURITY)) 
 		System.out.println("Securing message " + message);
 	    return msm.secureMessage(message);
 	} else {
@@ -92,7 +92,7 @@ public class SecurityAspect extends StandardAspect
 			       " but has no MessageSecurityManager.");
 	    return null;
 	} else {
-	    if (Debug.debugSecurity())
+	    if (Debug.debug(SECURITY))
 		System.out.println("Unsecuring message " + message);
 	    Message msg = msm.unsecureMessage((SecureMessage) message);
 	    if (msg == null) {
