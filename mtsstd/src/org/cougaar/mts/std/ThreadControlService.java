@@ -27,8 +27,8 @@ public interface ThreadControlService extends Service
 {
     void setCougaarPriority(ManagedThread thread, int priority);
     int getCougaarPriority(ManagedThread thread);
-    // void setThreadPriority(ManagedThread thread, int priority);
-    // int getThreadPriority(ManagedThread thread);
+    void setThreadPriority(ManagedThread thread, int priority);
+    int getThreadPriority(ManagedThread thread);
     int runningThreadCount(ThreadService proxy);
     int pendingThreadCount(ThreadService proxy);
     int activeThreadCount(ThreadService proxy);

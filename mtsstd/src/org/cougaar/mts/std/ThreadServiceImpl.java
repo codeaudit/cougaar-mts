@@ -145,16 +145,41 @@ class ThreadServiceImpl
 	}
 
 	public void setCougaarPriority(ManagedThread thread, int priority) {
-	    ManagedControllableThread thr = 
-		(ManagedControllableThread) thread;
-	    thr.rawThread.setCougaarPriority(priority);
+	    if (thread instanceof ManagedControllableThread) {
+		ManagedControllableThread thr = 
+		    (ManagedControllableThread) thread;
+		thr.rawThread.setCougaarPriority(priority);
+	    }
 	}
 
 
 	public int getCougaarPriority(ManagedThread thread) {
-	    ManagedControllableThread thr = 
-		(ManagedControllableThread) thread;
-	    return thr.rawThread.getCougaarPriority();
+	    if (thread instanceof ManagedControllableThread) {
+		ManagedControllableThread thr = 
+		    (ManagedControllableThread) thread;
+		return thr.rawThread.getCougaarPriority();
+	    } else {
+		return -1;
+	    }
+	}
+
+	public void setThreadPriority(ManagedThread thread, int priority) {
+	    if (thread instanceof ManagedControllableThread) {
+		ManagedControllableThread thr = 
+		    (ManagedControllableThread) thread;
+		thr.rawThread.setPriority(priority);
+	    }
+	}
+
+
+	public int getThreadPriority(ManagedThread thread) {
+	    if (thread instanceof ManagedControllableThread) {
+		ManagedControllableThread thr = 
+		    (ManagedControllableThread) thread;
+		return thr.rawThread.getPriority();
+	    } else {
+		return -1;
+	    }
 	}
 
 	public void setMaxRunningThreadCount(ThreadService svc, int count) {
@@ -437,6 +462,7 @@ class ThreadServiceImpl
 	    // thread is done
 	    pool.removeRunningThread(this);
 	    resetCougaarPriority();
+	    setPriority(Thread.NORM_PRIORITY);
 	    super.reclaim();
 	}
 
