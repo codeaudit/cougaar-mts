@@ -37,11 +37,13 @@ public class AgentStatusAspect
 	Constants.SECOND_MEAS_CREDIBILITY;
 
 
-    private HashMap states;
+    private HashMap remoteStates;
+    private HashMap localStates;
     private MetricsUpdateService metricsUpdateService;
     
     public AgentStatusAspect() {
-	states = new HashMap();
+	remoteStates = new HashMap();
+	localStates = new HashMap();
     }
 
     public void load() {
@@ -50,22 +52,42 @@ public class AgentStatusAspect
 	    getServiceBroker().getService(this, MetricsUpdateService.class, null);
     }
     
-    private AgentState ensureState(MessageAddress address) {
+    private AgentState ensureRemoteState(MessageAddress address) {
 	AgentState state = null;
-	synchronized(states){
-	    state = (AgentState) states.get(address);
+	synchronized(remoteStates){
+	    state = (AgentState) remoteStates.get(address);
 	    if (state == null) {
 		state = newAgentState();
-		states.put(address, state);
+		remoteStates.put(address, state);
 	    }
 	}
 	return state;
     }
 
-    private  AgentState getState(MessageAddress address){
+    private  AgentState getRemoteState(MessageAddress address){
 	AgentState state = null;
-	synchronized(states){
-	    state = (AgentState) states.get(address);
+	synchronized(remoteStates){
+	    state = (AgentState) remoteStates.get(address);
+	}
+	return state;
+    }
+
+    private AgentState ensureLocalState(MessageAddress address) {
+	AgentState state = null;
+	synchronized(localStates){
+	    state = (AgentState) localStates.get(address);
+	    if (state == null) {
+		state = newAgentState();
+		localStates.put(address, state);
+	    }
+	}
+	return state;
+    }
+
+    private  AgentState getLocalState(MessageAddress address){
+	AgentState state = null;
+	synchronized(localStates){
+	    state = (AgentState) localStates.get(address);
 	}
 	return state;
     }
@@ -130,6 +152,32 @@ public class AgentStatusAspect
 			      "AgentStatusAspect");
     }
 
+    //
+    // Agent Status Service Public Interface
+
+    // Deprecated: For backwards compatibility
+    public AgentState getAgentState(MessageAddress address) {
+	return getRemoteAgentState(address);
+    }
+
+    public AgentState getLocalAgentState(MessageAddress address) {
+	AgentState state = getLocalState(address);
+	// must snapshot state or caller will get a dynamic value.
+	if (state != null) return snapshotState(state);
+	else return null;
+    }
+
+  public AgentState getRemoteAgentState(MessageAddress address) {
+	AgentState state = getRemoteState(address);
+	// must snapshot state or caller will get a dynamic value.
+	if (state != null) return snapshotState(state);
+	else return null;
+    }
+
+
+    // 
+    // Aspect Code to implement Sensors
+
     public Object getDelegate(Object object, Class type) {
 	if (type == DestinationLink.class) {
 	    return new AgentStatusDestinationLink((DestinationLink) object);
@@ -142,15 +190,7 @@ public class AgentStatusAspect
 	}
     }
 
-    // must snapshot state or caller will get a dynamic value.
-    public AgentState getAgentState(MessageAddress address) {
-	AgentState state = getState(address);
-	if (state != null) return snapshotState(state);
-	else return null;
-    }
-
-
-
+ 
     public class AgentStatusDestinationLink 
 	extends DestinationLinkDelegateImplBase
     {
@@ -159,9 +199,9 @@ public class AgentStatusAspect
 	public AgentStatusDestinationLink(DestinationLink link)
 	{
 	    super(link);
-	    String agent = link.getDestination().getAddress();
-	    spoke_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "SpokeTime";
-	    heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
+	    String remoteAgent = link.getDestination().getAddress();
+	    spoke_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ "SpokeTime";
+	    heard_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ "HeardTime";
 	}
 	
 	boolean delivered(MessageAttributes attributes) {
@@ -177,15 +217,18 @@ public class AgentStatusAspect
 		   MisdeliveredMessageException
 
 	{
-	    MessageAddress addr = message.getTarget();
-	    AgentState state = ensureState(addr);
+	    MessageAddress remoteAddr = message.getTarget();
+	    AgentState remoteState = ensureRemoteState(remoteAddr);
+	    MessageAddress localAddr = message.getOriginator();
+	    AgentState localState = ensureLocalState(localAddr);
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
 		metricsUpdateService.updateValue(spoke_key, 
 						 longMetric(startTime));
-		synchronized (state) {
-		    state.lastLinkProtocolTried=getProtocolClass().getName();
+		synchronized (remoteState) {
+		    remoteState.lastLinkProtocolTried=
+			getProtocolClass().getName();
 		}
 		// Attempt to Deliver message
 		MessageAttributes meta = super.forwardMessage(message);
@@ -202,48 +245,58 @@ public class AgentStatusAspect
 		    msgBytes=((Number) attr).intValue();
 
 		long latency = endTime - startTime;
-		double alpha = 0.333;
-		synchronized (state) {
-		    state.status =  AgentStatusService.ACTIVE;
-		    state.timestamp = System.currentTimeMillis();
-		    state.deliveredCount++;
-		    state.deliveredBytes+=msgBytes;
-		    state.lastDeliveredBytes=msgBytes;
-		    state.queueLength--;
-		    state.lastDeliveredLatency = (int) latency;
-		    state.deliveredLatencySum +=  latency;
-		    state.averageDeliveredLatency = (alpha * latency) +
-			((1-alpha) * state.averageDeliveredLatency);
-		    state.lastLinkProtocolSuccess=getProtocolClass().getName();
+		double alpha = 0.20;
+		synchronized (remoteState) {
+		    remoteState.status =  AgentStatusService.ACTIVE;
+		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.deliveredCount++;
+		    remoteState.deliveredBytes+=msgBytes;
+		    remoteState.lastDeliveredBytes=msgBytes;
+		    remoteState.queueLength--;
+		    remoteState.lastDeliveredLatency = (int) latency;
+		    remoteState.deliveredLatencySum +=  latency;
+		    remoteState.averageDeliveredLatency = (alpha * latency) +
+			((1-alpha) * remoteState.averageDeliveredLatency);
+		    remoteState.lastLinkProtocolSuccess=
+			getProtocolClass().getName();
 		}
+		synchronized (localState) {
+		    localState.status =  AgentStatusService.ACTIVE;
+		    localState.timestamp = System.currentTimeMillis();
+		    localState.deliveredCount++;
+		    localState.deliveredBytes+=msgBytes;
+		    localState.lastDeliveredBytes=msgBytes;
+		}
+
+
 		return meta;
 
 	    } catch (UnregisteredNameException unreg) {
-		synchronized (state) {
-		    state.status = UNREGISTERED;
-		    state.timestamp = System.currentTimeMillis();
-		    state.unregisteredNameCount++;
+		synchronized (remoteState) {
+		    remoteState.status = UNREGISTERED;
+		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.unregisteredNameCount++;
 		}
 		throw unreg;
 	    } catch (NameLookupException namex) {
-		synchronized (state) {
-		    state.status =UNKNOWN;
-		    state.timestamp = System.currentTimeMillis();
-		    state.nameLookupFailureCount++;
+		synchronized (remoteState) {
+		    remoteState.status =UNKNOWN;
+		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.nameLookupFailureCount++;
 		}
 		throw namex;
 	    } catch (CommFailureException commex) {
-		synchronized (state) {
-		    state.status =UNREACHABLE;
-		    state.timestamp = System.currentTimeMillis();
-		    state.commFailureCount++;
+		synchronized (remoteState) {
+		    remoteState.status =UNREACHABLE;
+		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.commFailureCount++;
 		}
 		throw commex;
 	    } catch (MisdeliveredMessageException misd) {
-		synchronized (state) {
-		    state.status =UNREGISTERED;
-		    state.timestamp = System.currentTimeMillis();
-		    state.misdeliveredMessageCount++;
+		synchronized (remoteState) {
+		    remoteState.status =UNREGISTERED;
+		    remoteState.timestamp = System.currentTimeMillis();
+		    remoteState.misdeliveredMessageCount++;
 		}	
 		throw misd;
 	    }
@@ -263,8 +316,9 @@ public class AgentStatusAspect
 						MessageAddress dest)
 	    throws MisdeliveredMessageException
 	{  
-	    String agent= message.getOriginator().getAddress();
-	    String heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
+	    String remoteAgent= message.getOriginator().getAddress();
+	    String heard_key = "Agent" +KEY_SEPR+ remoteAgent 
+		+KEY_SEPR+ "HeardTime";
 	    long receiveTime = System.currentTimeMillis();
 	    metricsUpdateService.updateValue(heard_key, 
 					     longMetric(receiveTime));
@@ -274,10 +328,18 @@ public class AgentStatusAspect
 	    if (attr!=null && (attr instanceof Number) )
 		msgBytes=((Number) attr).intValue();
 
-	    AgentState state = ensureState(message.getOriginator());
-	    synchronized (state) {
-		state.receivedCount++;
-		state.receivedBytes+=msgBytes;
+	    AgentState remoteState = 
+		ensureRemoteState(message.getOriginator());
+	    synchronized (remoteState) {
+		remoteState.receivedCount++;
+		remoteState.receivedBytes+=msgBytes;
+	    }
+		    
+	    AgentState localState = 
+		ensureLocalState(message.getTarget());
+	    synchronized (localState) {
+		localState.receivedCount++;
+		localState.receivedBytes+=msgBytes;
 	    }
 
 	    return super.deliverMessage(message, dest);
@@ -295,22 +357,30 @@ public class AgentStatusAspect
 	}
 	
 	public void sendMessage(AttributedMessage message) {
-	    MessageAddress addr = message.getTarget();
-	    AgentState state = ensureState(addr);
-	    synchronized (state) {
-		state.sendCount++;
-		state.queueLength++;
+	    MessageAddress remoteAddr = message.getTarget();
+	    AgentState remoteState = ensureRemoteState(remoteAddr);
+	    MessageAddress localAddr = message.getOriginator();
+	    AgentState localState = ensureLocalState(localAddr);
+
+	    synchronized (remoteState) {
+		remoteState.sendCount++;
+		remoteState.queueLength++;
 	    }	
+
+	    synchronized (localState) {
+		localState.sendCount++;
+	    }	
+
 	    //Local agent sending message means that the MTS has
 	    //"heard from" the local agent
-	    String agent= message.getOriginator().getAddress();
-	    String heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
+	    String localAgent = localAddr.getAddress();
+	    String heard_key = "Agent" +KEY_SEPR+ localAgent 
+		+KEY_SEPR+ "HeardTime";
 	    long receiveTime = System.currentTimeMillis();
-	    metricsUpdateService.updateValue(heard_key, longMetric(receiveTime));
+	    metricsUpdateService.updateValue(heard_key, 
+					     longMetric(receiveTime));
 
 	    super.sendMessage(message);
 	}
-	
     }
-
 }

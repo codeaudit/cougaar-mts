@@ -36,7 +36,8 @@ public class StatisticsPlugin extends ComponentPlugin
 
 	ServiceBroker sb = getServiceBroker();
 	new StatisticsServlet(sb);
-	new AgentStatusServlet(sb);
+	new AgentRemoteStatusServlet(sb);
+	new AgentLocalStatusServlet(sb);
     }
 
     protected void setupSubscriptions() {

@@ -34,7 +34,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.servlet.ServletService;
 import org.cougaar.core.service.MessageStatisticsService;
 
-public class AgentStatusServlet extends BaseServlet
+abstract public class AgentStatusServlet extends BaseServlet
 {
 
     protected AgentStatusService agentStatusService;
@@ -45,13 +45,14 @@ public class AgentStatusServlet extends BaseServlet
 	    sb.getService(this, AgentStatusService.class, null);
     }
 
-    protected String myPath() {
-	return "/message/agent/status";
-    }
+    abstract AgentStatusService.AgentState getState(MessageAddress agent);	
+    abstract String getAdjective();	
 
     protected String myTitle() {
-	return nodeID + " Message Transport Agent Status";
+	return nodeID + " Message Transport <em>"+getAdjective()+
+	   "</em> Agent Status";
     }
+
 
     private void row(PrintWriter out, String name, String value){
 	out.print("<tr><b>");
@@ -81,18 +82,18 @@ public class AgentStatusServlet extends BaseServlet
 	if (agentString==null) agentString=nodeID;
 	MessageAddress agent = new MessageAddress(agentString);
 
-	AgentStatusService.AgentState state = null;
-	if (agentStatusService!=null) {
-	    state = agentStatusService.getAgentState(agent);
-	}
+	AgentStatusService.AgentState state = getState(agent);
+
 	if (state == null) {
 	    out.print("<p><b>");
-	    out.print("ERROR: Agent Status Service is not Available for Agent ");
+	    out.print("ERROR: Agent <em>"+ getAdjective() +
+		      "</em> Status Service is not Available for Agent ");
 	    out.print(agentString + "</b><p>");
 	    out.println("<p>To Change Agent use cgi parameter: ?agent=agentname<p>");
 	    return;
 	}
-	out.print("<h2> Agent Status for Agent "+agentString+"</h2>");
+	out.print("<h2> Agent <em> " +getAdjective()+
+		  "</em> Status for Agent "+agentString+"</h2>");
 	out.print("<table border=1>\n");
 	row(out,"Status", state.status);
 	row(out,"Queue Length", state.queueLength);

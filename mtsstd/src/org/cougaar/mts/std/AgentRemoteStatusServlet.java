@@ -21,41 +21,39 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
+import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.util.Iterator;
+import java.util.Set;
 
-public interface AgentStatusService extends Service
+
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.servlet.ServletService;
+import org.cougaar.core.service.MessageStatisticsService;
+
+public class AgentRemoteStatusServlet extends AgentStatusServlet
 {
-    int UNKNOWN = 0;
-    int UNREGISTERED = 1;
-    int UNREACHABLE = 2;
-    int ACTIVE = 3;
-
-    class AgentState {
-	public long timestamp;
-	public int status;
-	public int queueLength;
-	public int receivedCount;
-	public long receivedBytes;
-	public int lastReceivedBytes;
-	public int sendCount;
-      	public int deliveredCount;
-	public long deliveredBytes;
-	public int lastDeliveredBytes;
-	public long deliveredLatencySum;
-	public int lastDeliveredLatency;
-	public double averageDeliveredLatency;
-	public int unregisteredNameCount;
-	public int nameLookupFailureCount;
-	public int commFailureCount;
-	public int misdeliveredMessageCount;
-	public String lastLinkProtocolTried;
-	public String lastLinkProtocolSuccess;
+    public AgentRemoteStatusServlet(ServiceBroker sb) {
+	super(sb);
     }
-    AgentState getRemoteAgentState(MessageAddress address);
-    AgentState getLocalAgentState(MessageAddress address);
 
-    // Deprecated: use getRemoteAgentState
-    AgentState getAgentState(MessageAddress address);
+    protected String myPath() {
+	return "/message/remote/agent/status";
+    }
 
+
+    protected String getAdjective() {
+	return "Remote";
+    }
+
+    protected  AgentStatusService.AgentState getState(MessageAddress agent){
+       	AgentStatusService.AgentState state = null;
+	if (agentStatusService!=null) {
+	    state = agentStatusService.getRemoteAgentState(agent);
+	}
+	return state;
+    }
 }
-
