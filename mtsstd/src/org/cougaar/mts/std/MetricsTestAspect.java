@@ -34,8 +34,10 @@ public class MetricsTestAspect
     extends StandardAspect 
     implements Observer
 {
-
-    private double x = 0.0;
+    
+    MetricsUpdateService update;
+    MetricsService svc;
+    long lastUpdate =0;
 
     public Object getDelegate(Object delegatee, Class type)  {
 	if (type == SendQueue.class) {
@@ -48,17 +50,27 @@ public class MetricsTestAspect
 
     public void load() {
 	super.load();
-
-	String path = System.getProperty("org.cougaar.metrics.test");
 	ServiceBroker sb = getServiceBroker();
-	MetricsService svc = (MetricsService)
+	update = (MetricsUpdateService)
+	    sb.getService(this, MetricsUpdateService.class, null);
+	svc = (MetricsService)
 	    sb.getService(this, MetricsService.class, null);
-	svc.subscribeToValue(path, this);
-	System.out.println("Subscribed to " +path);
+
+	String path = System.getProperty("org.cougaar.metrics.callback");
+	if (path != null) {
+	    svc.subscribeToValue(path, this);
+	    System.out.println("Subscribed to " +path);
+	}
     }
 
     public void update(Observable o, Object arg) {
-	System.out.println("Updated with " +arg);
+	long now = System.currentTimeMillis();
+	long updateDelta = now-lastUpdate;
+	long value = ((Metric) arg).longValue();
+	long valueDelta = value;
+	    
+	System.out.println("Update Time=" +updateDelta +
+			   " Value =" + arg);
     }
 
 
@@ -68,29 +80,28 @@ public class MetricsTestAspect
 	}
 
 	public void sendMessage(AttributedMessage message) {
-	    // runTest();
+	     runTest();
 	    super.sendMessage(message);
 	}
 
     }
 
     public void runTest() {
-	String path = System.getProperty("org.cougaar.metrics.test");
-	ServiceBroker sb = getServiceBroker();
-	MetricsService svc = (MetricsService)
-	    sb.getService(this, MetricsService.class, null);
-	Metric val = svc.getValue(path);
-	System.out.println(path+ "=" +val);
-	
+	String path = System.getProperty("org.cougaar.metrics.query");
+	if (path != null) {
+	    Metric val = svc.getValue(path);
+	    System.out.println(path+ "=" +val);
+	}
+
 	String key = System.getProperty("org.cougaar.metrics.key");
-	MetricsUpdateService update = (MetricsUpdateService)
-	    sb.getService(this, MetricsUpdateService.class, null);
-	// String type = "ProcessStats";
-	x = x + 500000;
-	Metric m = new MetricImpl(new Double(x), 0.3,
-				  "", "MetricsTestAspect");
-	// update.updateValue(key, type, m);
-	update.updateValue(key, m);
+	if (key != null) {
+	    Metric m = new MetricImpl(new Long(System.currentTimeMillis()),
+				      0.3,
+				      "", "MetricsTestAspect");
+	    System.out.println("Published " +key+ "=" +m);
+	    update.updateValue(key, m);
+	    lastUpdate=System.currentTimeMillis();
+	}
 
     }
 

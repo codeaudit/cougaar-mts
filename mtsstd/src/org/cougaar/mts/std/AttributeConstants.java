@@ -21,25 +21,20 @@
 
 package org.cougaar.core.mts;
 
-import java.io.Serializable;
-
-public interface MessageAttributes extends Serializable, AttributeConstants
+public interface AttributeConstants
 {
- 
-    Object getAttribute(String attribute);
+    String IS_STREAMING_ATTRIBUTE = "IsStreaming";
+    String ENCRYPTED_SOCKET_ATTRIBUTE = "EncryptedSocket";
 
-    void setAttribute(String attribute, Object value);
-    void removeAttribute(String attribute);
-    void addValue(String attribute, Object value);
-    void pushValue(String attribute, Object value);
-    void removeValue(String attribute, Object value);
-
-    void setLocalAttribute(String attribute, Object value);
-    void removeLocalAttribute(String attribute);
-    void addLocalValue(String attribute, Object value);
-    void pushLocalValue(String attribute, Object value);
-    void removeLocalValue(String attribute, Object value);
-
-    MessageAttributes cloneAttributes();
+    String DELIVERY_ATTRIBUTE = "DeliveryStatus";
+    String DELIVERY_STATUS_DELIVERED = "Delivered";
+    String DELIVERY_STATUS_CLIENT_ERROR = 
+	"ClientException";
+    String DELIVERY_STATUS_DROPPED_DUPLICATE = 
+	"DroppedDuplicate";
+    String DELIVERY_STATUS_HELD = "Held";
+    String DELIVERY_STATUS_STORE_AND_FORWARD  =
+	"Store&Forward";
+    String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
 
 }

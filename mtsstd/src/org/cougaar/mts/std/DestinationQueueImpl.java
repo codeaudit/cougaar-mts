@@ -150,10 +150,7 @@ final class DestinationQueueImpl
 		Exception cause = comm_failure.getException();
 		if (cause instanceof DontRetryException) {
 		    // Always log these.
-		    String tag = "DontRetryException <Message " 
-			+message.getOriginator()+ "->" 
-			+message.getTarget()+ " "
-			+Integer.toString(message.hashCode())+ ">";
+		    String tag = "DontRetryException: " + message;
 		    loggingService.error(tag, cause.getCause());
 
 		    // Act as if the message has gone through.

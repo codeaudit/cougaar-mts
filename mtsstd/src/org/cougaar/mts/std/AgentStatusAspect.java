@@ -21,18 +21,32 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.qos.metrics.Constants;
+import org.cougaar.core.qos.metrics.MetricImpl;
+import org.cougaar.core.qos.metrics.Metric;
+import org.cougaar.core.qos.metrics.MetricsUpdateService;
 
 import java.util.HashMap;
 
 public class AgentStatusAspect 
     extends StandardAspect
-    implements AgentStatusService
+    implements AgentStatusService, Constants, AttributeConstants
 {
 
+    private static final double SEND_CREDIBILITY = Constants.SECOND_MEAS_CREDIBILITY;
+
+
     private HashMap states;
+    private MetricsUpdateService metricsUpdateService;
     
     public AgentStatusAspect() {
 	states = new HashMap();
+    }
+
+    public void load() {
+	super.load();
+	metricsUpdateService = (MetricsUpdateService)
+	    getServiceBroker().getService(this, MetricsUpdateService.class, null);
     }
     
    private synchronized AgentState ensureState(MessageAddress address)
@@ -55,12 +69,20 @@ public class AgentStatusAspect
 	return state;
     }
 
- 
+    private Metric longMetric(long value) {
+	return new MetricImpl(new Long(value),
+			      SEND_CREDIBILITY,
+			      "",
+			      "AgentStatusAspect");
+    }
+
     public Object getDelegate(Object object, Class type) {
 	if (type == DestinationLink.class) {
 	    return new AgentStatusDestinationLink((DestinationLink) object);
 	} else 	if (type == SendQueue.class) {
 	    return new SendQueueDelegate((SendQueue) object);
+	} else 	if (type == MessageDeliverer.class) {
+	    return new MessageDelivererDelegate((MessageDeliverer) object);
 	} else {
 	    return null;
 	}
@@ -71,14 +93,26 @@ public class AgentStatusAspect
     }
 
 
+
     public class AgentStatusDestinationLink 
 	extends DestinationLinkDelegateImplBase
     {
+	private String spoke_key, heard_key;
+
 	public AgentStatusDestinationLink(DestinationLink link)
 	{
 	    super(link);
+	    String agent = link.getDestination().getAddress();
+	    spoke_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "SpokeTime";
+	    heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
 	}
 	
+	boolean delivered(MessageAttributes attributes) {
+	    return 
+		attributes != null &
+		attributes.getAttribute(DELIVERY_ATTRIBUTE).equals(DELIVERY_STATUS_DELIVERED);
+	}
+
 	public MessageAttributes forwardMessage(AttributedMessage message) 
 	    throws UnregisteredNameException, 
 	    NameLookupException, 
@@ -91,9 +125,15 @@ public class AgentStatusAspect
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
+		metricsUpdateService.updateValue(spoke_key, longMetric(startTime));
 		MessageAttributes meta = super.forwardMessage(message);
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
+		
+		if (delivered(meta))
+		    metricsUpdateService.updateValue(heard_key, 
+						     longMetric(endTime));
+
 		long latency = endTime - startTime;
 		double alpha = 0.333;
 		synchronized (state) {
@@ -138,10 +178,34 @@ public class AgentStatusAspect
 	
     }
 
+    public class  MessageDelivererDelegate 
+	extends MessageDelivererDelegateImplBase 
+    {
+
+	MessageDelivererDelegate(MessageDeliverer delegatee) {
+	    super(delegatee);
+	}
+
+	public MessageAttributes deliverMessage(AttributedMessage message,
+					 MessageAddress dest)
+	    throws MisdeliveredMessageException
+	{
+	    String agent= message.getOriginator().getAddress();
+	    String heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
+	    long receiveTime = System.currentTimeMillis();
+	    metricsUpdateService.updateValue(heard_key, longMetric(receiveTime));
+
+	    return super.deliverMessage(message, dest);
+	}
+
+    }
+
+
     public class SendQueueDelegate 
 	extends SendQueueDelegateImplBase
     {
 	public SendQueueDelegate (SendQueue queue) {
+
 	    super(queue);
 	}
 	
@@ -151,6 +215,13 @@ public class AgentStatusAspect
 	    synchronized (state) {
 		state.sendCount++;
 	    }	
+	    //Local agent sending message means that the MTS has
+	    //"heard from" the local agent
+	    String agent= message.getOriginator().getAddress();
+	    String heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
+	    long receiveTime = System.currentTimeMillis();
+	    metricsUpdateService.updateValue(heard_key, longMetric(receiveTime));
+
 	    super.sendMessage(message);
 	}
 	

@@ -381,7 +381,11 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		}
 		//if its a fake reply (the other kind of masking message)
 		// drop it on the floor.
-		return null;
+		MessageAttributes meta = new SimpleMessageAttributes();
+		meta.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
+				  MessageAttributes.DELIVERY_STATUS_DELIVERED);
+		return meta;
+		// return null;
 	    } else {
 		// any other kind of message just gets passed through
 		return super.deliverMessage(msg);
