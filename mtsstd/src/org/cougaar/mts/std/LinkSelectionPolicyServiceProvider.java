@@ -21,6 +21,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
@@ -41,31 +42,36 @@ public class LinkSelectionPolicyServiceProvider
     private LinkSelectionPolicy policy;
     private LoggingService loggingService;
 
-    LinkSelectionPolicyServiceProvider(LoggingService loggingService) {
-	policy = createSelectionPolicy();
+    LinkSelectionPolicyServiceProvider(LoggingService loggingService,
+				       Container container) 
+    {
+	policy = createSelectionPolicy(container);
 	this.loggingService = loggingService;
     }
 
 
-    private LinkSelectionPolicy createSelectionPolicy() {
+    private LinkSelectionPolicy createSelectionPolicy(Container container) {
 	String policy_classname = System.getProperty(POLICY_PROPERTY);
+	LinkSelectionPolicy selectionPolicy = null;
 	if (policy_classname == null) {
-	    return new MinCostLinkSelectionPolicy();
+	    selectionPolicy = new MinCostLinkSelectionPolicy();
 	} else {
 	    try {
 		Class policy_class = Class.forName(policy_classname);
-		LinkSelectionPolicy selectionPolicy = 
+		selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
 		if (Debug.isDebugEnabled(loggingService,POLICY))
 		    loggingService.debug("Created " +  policy_classname);
-
-		return selectionPolicy;
 	    } catch (Exception ex) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error(null, ex);
-		return new MinCostLinkSelectionPolicy();
+		selectionPolicy = new MinCostLinkSelectionPolicy();
 	    }
-	}	       
+	}
+
+	container.add(selectionPolicy);
+	return selectionPolicy;
+
     }
 
 

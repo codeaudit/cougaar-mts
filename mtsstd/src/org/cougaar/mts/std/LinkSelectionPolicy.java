@@ -22,10 +22,11 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Service;
+import org.cougaar.core.component.Component;
 
 import java.util.Iterator;
 
-public interface LinkSelectionPolicy extends Service
+public interface LinkSelectionPolicy extends Service, Component
 {
     DestinationLink selectLink (Iterator links, 
 				AttributedMessage msg, 

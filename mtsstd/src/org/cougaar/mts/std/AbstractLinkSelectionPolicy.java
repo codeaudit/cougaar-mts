@@ -21,39 +21,12 @@
 
 package org.cougaar.core.mts;
 
-import java.util.Iterator;
 
 /**
  * A cost-based selection policy that chooses the cheapest link.  */
-public class MinCostLinkSelectionPolicy 
-    extends AbstractLinkSelectionPolicy
+abstract public class AbstractLinkSelectionPolicy 
+    extends BoundComponent
+    implements LinkSelectionPolicy
 {
 
-
-    // Example of using MTS services in a selection policy
-    //
-//     public void load() {
-// 	super.load();
-// 	System.out.println("ID=" +getRegistry().getIdentifier());
-//     }
-
-
-    public DestinationLink selectLink (Iterator links, 
-				       AttributedMessage message,
-				       int retryCount,
-				       Exception lastException)
-    {
-	int min_cost = -1;
-	DestinationLink cheapest = null;
-	while (links.hasNext()) {
-	    DestinationLink link = (DestinationLink) links.next();
-	    int cost = link.cost(message);
-	    if (cost == Integer.MAX_VALUE) continue; // skip these
-	    if (cheapest == null || cost < min_cost) {
-		cheapest = link;
-		min_cost = cost;
-	    }
-	}
-	return cheapest;
-    }
 }

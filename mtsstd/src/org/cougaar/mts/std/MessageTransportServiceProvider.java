@@ -163,7 +163,7 @@ public final class MessageTransportServiceProvider
 	
 
 	LinkSelectionPolicyServiceProvider lspsp =
-	    new LinkSelectionPolicyServiceProvider(loggingService);
+	    new LinkSelectionPolicyServiceProvider(loggingService, this);
 	sb.addService(LinkSelectionPolicy.class, lspsp);
 	
 	DestinationQueueFactory	destQFactory = 
