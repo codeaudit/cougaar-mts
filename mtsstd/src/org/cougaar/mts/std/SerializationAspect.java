@@ -21,18 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.thread.Schedulable;
-
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
 /**
  * This is a debugging aspect.  By attaching it in a single-node
  * society (ie one in which all messages go through the Loopback
@@ -60,61 +48,10 @@ public class SerializationAspect extends StandardAspect
 
     private class SerializingDestinationLink 
 	extends DestinationLinkDelegateImplBase
-	implements Runnable
 	
     {
-	PipedInputStream piped_is;
-	PipedOutputStream piped_os;
-	ObjectInputStream reader;
-	ObjectOutputStream writer;
-	Schedulable thread;
-
 	SerializingDestinationLink(DestinationLink link) {
 	    super(link);
-
-	    ServiceBroker sb = getServiceBroker();
-	    ThreadService service =
-		(ThreadService) sb.getService(this, ThreadService.class, null);
-	    String name = "SerializingDestinationLink " + link;
-	    thread = service.getThread(this, this, name);
-	    // thread.setDaemon(true);
-
-	    try {
-		piped_is = new PipedInputStream();
-		piped_os = new PipedOutputStream();
-		piped_is.connect(piped_os); 
-
-		BufferedOutputStream bos = new BufferedOutputStream(piped_os);
-		writer = new ObjectOutputStream(bos);
-
-		thread.start();
-
-	    } 
-	    catch (Exception ex) {
-		loggingService.error(null, ex);
-	    }
-	}
-
-	public void run() {
-	    try {
-		BufferedInputStream bis = new BufferedInputStream(piped_is);
-		reader = new ObjectInputStream(bis);
-	    } catch (Exception ex) {
-		loggingService.error(null, ex);
-		return;
-	    }
-
-	    Object object;
-	    while (true) {
-		try {
-		    object = reader.readObject();
-		    if (loggingService.isInfoEnabled())
-			loggingService.info("Deserialized as " + object);
-		    super.forwardMessage((AttributedMessage) object);
-		} catch (Exception ex) {
-		    loggingService.error(null, ex);
-		}
-	    }
 	}
 
 	public synchronized MessageAttributes
@@ -125,27 +62,32 @@ public class SerializationAspect extends StandardAspect
 		   MisdeliveredMessageException
 
 	{
-	    // Serialize into the stream rather than pushing on the
-	    // queue.
-	    if (writer != null) {
-		try {
-		    if (loggingService.isInfoEnabled())
-			loggingService.info("Serializing " + message);
-		    writer.writeObject(message);
-		    writer.flush();
-		    if (loggingService.isInfoEnabled())
-			loggingService.info("Serialized " + message);
-		    // Hmmm
-		    return null;
-		} catch (Exception ex) {
-		    loggingService.error(null, ex);
-		    return super.forwardMessage(message);
-		}
-	    } else {
+	    byte[] data = null;
+	    AttributedMessage clone = null;
+	    try {
 		if (loggingService.isInfoEnabled())
-		    loggingService.info("Forwarding " + message);
-		return super.forwardMessage(message);
+		    loggingService.info("Serializing " + message);
+		data = SerializationUtils.toByteArray(message);
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("Serialized " + message);
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("Deserializing");
+		clone = (AttributedMessage) SerializationUtils.fromByteArray(data);
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("Deserialized as " + clone);
+	    } catch (DontRetryException no_retry) {
+		loggingService.error("SerializationAspect", no_retry);
+		throw new CommFailureException(no_retry);
+	    } catch (java.io.IOException iox) {
+		iox.printStackTrace();
+		return null;
+	    } catch (ClassNotFoundException cnf) {
+		cnf.printStackTrace();
+		return null;
 	    }
+
+	    return super.forwardMessage(clone);
+
 	}
 
     }
