@@ -24,6 +24,12 @@ package org.cougaar.core.mts;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+/**
+ * A StepManager implemented as an Aspect which attaches delegates to
+ * the DestinationQueues.  Each delegate is a StepMode that holds an
+ * instance of a StepController.  The Aspect itself (one per Node)
+ * holds the Swing frame in which the controllers will be displayed
+ * (the view).  */
 public class StepperAspect
     extends StandardAspect
     implements StepManager
@@ -63,7 +69,7 @@ public class StepperAspect
 
     // StepManager
 
-    public synchronized void frameClosing() {
+    public synchronized void close() {
 	stepAll();
 	frame.dispose();
 	frame = null;

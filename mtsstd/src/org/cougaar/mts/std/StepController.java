@@ -26,6 +26,16 @@ import java.awt.event.*;
 import javax.swing.border.TitledBorder;
 import java.awt.Dimension;
 
+/**
+ * This class is a Swing widget that represents a kind of controller
+ * (in the mvc sense) for the flow of messages to a particular
+ * destination from the running Node.  The control operations are
+ * pause (ie pause before the next message is sent to the given
+ * destination), resume (send messages through without pausing), and
+ * step (send the current message through but remain in pause mode).
+ * There are also two callbacks from the StepMode, messagwWait and
+ * clearMessage, which are used to handle the display of the pending
+ * message, if any. */
 public class StepController 
     extends JPanel 
     implements ScrollPaneConstants

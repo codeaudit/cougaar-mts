@@ -25,22 +25,25 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.Container;
 
+/**
+ * A Swing frame that displays a set of StepControllers.
+ */
 public class StepFrame
     extends JFrame 
     implements ScrollPaneConstants 
 {
     private JComponent contents;
-    StepManager owner;
+    StepManager manager;
 
-    public StepFrame(StepManager owner, String id)  {
+    public StepFrame(StepManager manager, String id)  {
 	super("Outgoing messages from " +id);
-	this.owner = owner;
+	this.manager = manager;
 
 	makeComponents();
 
 	addWindowListener(new WindowAdapter() {
 		public void windowClosing(WindowEvent e) {
-		    StepFrame.this.owner.frameClosing();
+		    StepFrame.this.manager.close();
 		}
 	    });
 
@@ -57,21 +60,21 @@ public class StepFrame
 	JButton pauseAll = new JButton("Pause All");
 	pauseAll.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-		    owner.pauseAll();
+		    manager.pauseAll();
 		}});
 	buttons.add(pauseAll);
 
 	JButton resumeAll = new JButton("Resume All");
 	resumeAll.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-		    owner.resumeAll();
+		    manager.resumeAll();
 		}});
 	buttons.add(resumeAll);
 
 	JButton stepAll = new JButton("Step All");
 	stepAll.addActionListener(new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-		    owner.stepAll();
+		    manager.stepAll();
 		}});
 	buttons.add(stepAll);
 
@@ -92,7 +95,7 @@ public class StepFrame
     public void addWidget(final StepController component) {
 	SwingUtilities.invokeLater (new Runnable() {
 		public void run() {
-		    owner.addController(component);
+		    manager.addController(component);
 		    addControllerWidget(component);
 		    // force a redisplay
 		    contents.revalidate();

@@ -21,9 +21,11 @@
 
 package org.cougaar.core.mts;
 
+/**
+ * This interface represents a collection of StepControllers. */
 public interface StepManager
 {
-    public void frameClosing();
+    public void close();
     public void addController(StepController controller);
     public void pauseAll();
     public void resumeAll();

@@ -22,6 +22,10 @@
 package org.cougaar.core.mts;
 
 
+/**
+ * This is the model piece (in the mvc sense) of the message-stepper.
+ * Logically it provides a flag to enable or disable stepping, and a
+ * function to step through (ie send) the next pending message.  */
 public interface StepModel
 {
     public boolean isStepping();
