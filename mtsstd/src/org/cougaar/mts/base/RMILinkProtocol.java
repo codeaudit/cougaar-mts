@@ -36,6 +36,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
+import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
@@ -80,7 +81,7 @@ public class RMILinkProtocol
     private RMISocketControlService controlService;
     private Object ipAddrLock = new Object();
     private ArrayList clients = new ArrayList();
-
+    private IncarnationService incarnationService;
 
     public RMILinkProtocol() {
 	super(); 
@@ -118,6 +119,9 @@ public class RMILinkProtocol
 	// RMISocketControlService could be null
 	controlService = (RMISocketControlService)
 	    sb.getService(this, RMISocketControlService.class, null);
+
+	incarnationService = (IncarnationService)
+	    sb.getService(this, IncarnationService.class, null);
     }
 
 
@@ -391,7 +395,7 @@ public class RMILinkProtocol
 
 
 
-    class Link implements DestinationLink
+    class Link implements DestinationLink,  IncarnationService.Callback
     {
 	
 	private MessageAddress target;
@@ -404,6 +408,9 @@ public class RMILinkProtocol
 	protected Link(MessageAddress destination)
 	{
 	    this.target = destination;
+	    // subscribe to IncarnationService
+	    if (incarnationService != null)
+		incarnationService.subscribe(destination, this);
 	}
 
 	private void decache() {
@@ -488,9 +495,7 @@ public class RMILinkProtocol
 
 
 
-	// *** HACK ****.  This is called from MTImpl.  Should be part
-	// *** of the DestinationLink interface.
-	public void incarnationChanged() {
+	public void incarnationChanged(MessageAddress addr, long incn) {
 	    decache();
 	}
 

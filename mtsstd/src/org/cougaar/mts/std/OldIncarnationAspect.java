@@ -26,16 +26,25 @@
 
 package org.cougaar.mts.std;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.SimpleMessageAttributes;
+import org.cougaar.core.service.IncarnationService;
+import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.MessageTransportRegistryService;
+import org.cougaar.mts.base.RMILinkProtocol;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
@@ -43,7 +52,6 @@ import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.core.service.LoggingService;
 
 
 public class OldIncarnationAspect extends StandardAspect
@@ -57,11 +65,17 @@ public class OldIncarnationAspect extends StandardAspect
     }
 
     private HashSet obsoleteAgents;
+    private HashMap incarnationNumbers;
+    private MessageTransportRegistryService registry;
 
     public void load()
     {
 	super.load();
 	obsoleteAgents = new HashSet();
+	incarnationNumbers = new HashMap();
+	ServiceBroker sb = getServiceBroker();
+	this.registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
     }
 
     private boolean agentIsObsolete(MessageAddress agent)
@@ -70,6 +84,26 @@ public class OldIncarnationAspect extends StandardAspect
 	    return obsoleteAgents.contains(agent.getPrimary());
 	}
     }
+
+
+    private void decacheDestinationLink(MessageAddress sender) 
+    {
+	// Find the RMI DestinationLink for this address and force a
+	// decache.
+	ArrayList links = registry.getDestinationLinks(sender);
+	if (links != null) {
+	    Iterator itr = links.iterator();
+	    while (itr.hasNext()) {
+		Object next = itr.next();
+		if (next instanceof IncarnationService.Callback) {
+		    IncarnationService.Callback cb = (IncarnationService.Callback)
+			next;
+		    cb.incarnationChanged(sender, -1);
+		}
+	    }
+	}
+    }
+
 
     public Object getDelegate(Object delegate, Class type) 
     {
@@ -116,11 +150,38 @@ public class OldIncarnationAspect extends StandardAspect
 						MessageAddress addr) 
 	    throws MisdeliveredMessageException
 	{
+	    LoggingService loggingService = getLoggingService();
+	    MessageAddress sender = message.getOriginator();
+	    String sender_string = sender.getAddress();
+	    Long incarnation = (Long)
+		message.getAttribute(AttributeConstants.INCARNATION_ATTRIBUTE);
+	    Long old = (Long) incarnationNumbers.get(sender_string);
+	    if (incarnation == null) {
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("No incarnation number in message " +
+					message);
+	    } else if (old == null || 
+		       old.longValue() < incarnation.longValue()) {
+		// First message from this sender or new incarnation 
+		if (old != null && loggingService.isInfoEnabled())
+		    loggingService.info("Detected new incarnation number " 
+					+incarnation+ " in message " +message);
+		incarnationNumbers.put(sender_string, incarnation);
+		decacheDestinationLink(sender);
+	    } else if (old.longValue() > incarnation.longValue()) {
+		// Bogus message from old incarnation.  Pretend normal
+		// delivery but don't process it.
+		if (loggingService.isInfoEnabled())
+		    loggingService.info("Detected obsolete incarnation number " 
+					+incarnation+ " in message " +message+
+					"\nShould be " +old);
+		return DummyReturn;
+	    }
+
 	    if (agentIsObsolete(addr)) {
-		LoggingService loggingService = getLoggingService();
 		if (loggingService.isErrorEnabled()) {
 		    loggingService.error("Blocking message to obsolete agent: "
-					+message);
+					 +message);
 		}
 		throw new MisdeliveredMessageException(message);
 	    } else {

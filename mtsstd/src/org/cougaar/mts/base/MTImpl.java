@@ -29,17 +29,10 @@ import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject; // not used but needed by ANT and build process -- DO NOT REMOVE
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.mts.SimpleMessageAttributes;
-import org.cougaar.core.service.LoggingService;
-
 import org.cougaar.mts.std.AttributedMessage;
 
 /** Actual RMI remote object providing the implementation of
@@ -49,21 +42,11 @@ import org.cougaar.mts.std.AttributedMessage;
  **/
 public class MTImpl extends RemoteObject implements MT 
 {
-    private static transient MessageAttributes DummyReturn;
-    static {
-	DummyReturn = new SimpleMessageAttributes();
-	DummyReturn.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-				 MessageAttributes.DELIVERY_STATUS_OLD_INCARNATION);
-    }
-
     private MessageAddress address;
 
     private transient ServiceBroker sb;
     private transient MessageDeliverer deliverer;
-    private transient MessageTransportRegistryService registry;
-    private transient LoggingService loggingService;
     private transient SocketFactory socfac;
-    private transient HashMap incarnation_numbers = new HashMap();
 
     public MTImpl(MessageAddress addr,  
 		  ServiceBroker sb,
@@ -77,63 +60,16 @@ public class MTImpl extends RemoteObject implements MT
 	this.address = addr;
 	this.deliverer = (MessageDeliverer) 
 	    sb.getService(this,  MessageDeliverer.class, null);
-	this.loggingService = (LoggingService)
-	    sb.getService(this, LoggingService.class, null);
-	this.registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
     }
 
     public SocketFactory getSocketFactory() {
 	return socfac;
     }
 
-    private void decacheDestinationLink(MessageAddress sender) {
-	// Find the RMI DestinationLink for this address and force a
-	// decache.
-	ArrayList links = registry.getDestinationLinks(sender);
-	if (links != null) {
-	    Iterator itr = links.iterator();
-	    while (itr.hasNext()) {
-		Object next = itr.next();
-		if (next instanceof RMILinkProtocol.Link) {
-		    RMILinkProtocol.Link link = (RMILinkProtocol.Link) next;
-		    if (link.getDestination().equals(sender)) {
-			link.incarnationChanged();
-			return;
-		    }
-		}
-	    }
-	}
-    }
 
     public MessageAttributes rerouteMessage(AttributedMessage message) 
 	throws MisdeliveredMessageException
     {
-	MessageAddress sender = message.getOriginator();
-	String sender_string = sender.getAddress();
-	Long incarnation = (Long)
-	    message.getAttribute(AttributeConstants.INCARNATION_ATTRIBUTE);
-	Long old = (Long) incarnation_numbers.get(sender_string);
-	if (incarnation == null) {
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("No incarnation number in message " +
-				     message);
-	} else if (old == null || old.longValue() < incarnation.longValue()) {
-	    // First message from this sender or new incarnation 
-	    if (old != null && loggingService.isInfoEnabled())
-		loggingService.info("Detected new incarnation number " 
-				     +incarnation+ " in message " +message);
-	    incarnation_numbers.put(sender_string, incarnation);
-	    decacheDestinationLink(sender);
-	} else if (old.longValue() > incarnation.longValue()) {
-	    // Bogus message from old incarnation.  Pretend normal
-	    // delivery but don't process it.
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("Detected obsolete incarnation number " 
-				     +incarnation+ " in message " +message+
-				    "\nShould be " +old);
-	    return DummyReturn;
-	}
 	return deliverer.deliverMessage(message, message.getTarget());
     }
 
