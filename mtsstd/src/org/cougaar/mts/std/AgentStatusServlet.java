@@ -23,10 +23,12 @@ package org.cougaar.core.mts;
 
 import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
-import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
 
-abstract public class AgentStatusServlet extends BaseServlet
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.servlet.ServletFrameset;
+
+abstract public class AgentStatusServlet
+    extends BaseServlet // ServletFrameset
 {
 
     protected AgentStatusService agentStatusService;
@@ -37,13 +39,8 @@ abstract public class AgentStatusServlet extends BaseServlet
 	    sb.getService(this, AgentStatusService.class, null);
     }
 
-    abstract AgentStatusService.AgentState getState(MessageAddress agent);	
+    abstract AgentStatusService.AgentState getState(MessageAddress agent);
     abstract String getAdjective();	
-
-    protected String myTitle() {
-	return nodeID + " Message Transport <em>"+getAdjective()+
-	   "</em> Agent Status";
-    }
 
 
     private void row(PrintWriter out, String name, String value){
@@ -67,12 +64,22 @@ abstract public class AgentStatusServlet extends BaseServlet
 	row(out,name,Double.toString(value) );
     }
 
-    protected void outputPage(PrintWriter out,
-			      HttpServletRequest request )
+
+    public String getTitle() {
+	return getNodeID() + " Message Transport <em>"+getAdjective()+
+	   "</em> Agent Status";
+    }
+
+    public void printPage(HttpServletRequest request,
+			  PrintWriter out)
     {
+	MessageAddress agent = null;
 	String agentString= request.getParameter("agent");
-	if (agentString==null) agentString=nodeID;
- 	MessageAddress agent = MessageAddress.getMessageAddress(agentString);
+	if (agentString != null) {
+	    agent = MessageAddress.getMessageAddress(agentString);
+	} else {
+	    agent = getNodeID();
+	}
 
 	AgentStatusService.AgentState state = getState(agent);
 
@@ -80,12 +87,12 @@ abstract public class AgentStatusServlet extends BaseServlet
 	    out.print("<p><b>");
 	    out.print("ERROR: Agent <em>"+ getAdjective() +
 		      "</em> Status Service is not Available for Agent ");
-	    out.print(agentString + "</b><p>");
+	    out.print(agent + "</b><p>");
 	    out.println("<p>To Change Agent use cgi parameter: ?agent=agentname<p>");
 	    return;
 	}
 	out.print("<h2> Agent <em> " +getAdjective()+
-		  "</em> Status for Agent "+agentString+"</h2>");
+		  "</em> Status for Agent "+agent+"</h2>");
 	out.print("<table border=1>\n");
 	row(out,"Status", state.status);
 	row(out,"Queue Length", state.queueLength);

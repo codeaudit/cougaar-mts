@@ -29,7 +29,7 @@ public class AgentRemoteStatusServlet extends AgentStatusServlet
 	super(sb);
     }
 
-    protected String myPath() {
+    public String getPath() {
 	return "/message/remote/agent/status";
     }
 

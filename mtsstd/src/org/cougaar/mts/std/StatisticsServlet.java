@@ -24,14 +24,19 @@ package org.cougaar.core.mts;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import javax.servlet.http.HttpServletRequest;
+
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.component.ServiceRevokedListener;
+import org.cougaar.core.servlet.ServletFrameset;
 import org.cougaar.core.service.MessageStatisticsService;
 
-public class StatisticsServlet extends BaseServlet
+public class StatisticsServlet 
+    extends ServletFrameset
 {
 
-    protected MessageStatisticsService statisticsService;
+    private final DecimalFormat f4_2 = new DecimalFormat("#0.00");
+
+
+    private MessageStatisticsService statisticsService;
 
     public StatisticsServlet(ServiceBroker sb) {
 	super(sb);
@@ -39,16 +44,16 @@ public class StatisticsServlet extends BaseServlet
 	    sb.getService(this, MessageStatisticsService.class, null);
     }
 
-    protected String myPath() {
+    public String getPath() {
 	return "/message/statistics";
     }
 
-    protected String myTitle() {
-	return nodeID + " Message Statistics";
+    public String getTitle() {
+	return getNodeID() + " Message Statistics";
     }
 
-    protected void outputPage(PrintWriter out,
-			      HttpServletRequest request)
+    public void printPage(HttpServletRequest request,
+			  PrintWriter out)
     {
 	String reset_string = request.getParameter("reset");
 	boolean reset = reset_string != null && 

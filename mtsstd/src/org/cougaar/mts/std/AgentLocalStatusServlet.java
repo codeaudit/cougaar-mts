@@ -31,7 +31,7 @@ public class AgentLocalStatusServlet extends AgentStatusServlet
 	super(sb);
     }
 
-    protected String myPath() {
+    public String getPath() {
 	return "/message/local/agent/status";
     }
 

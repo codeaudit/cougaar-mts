@@ -36,8 +36,7 @@ import org.cougaar.core.service.ServletService;
 
 public abstract class BaseServlet extends HttpServlet 
 {
-    protected String nodeID;
-    protected DecimalFormat f4_2;
+    private MessageAddress nodeID;
 
     public BaseServlet(ServiceBroker sb) {
 	ServletService servletService = (ServletService)
@@ -48,24 +47,27 @@ public abstract class BaseServlet extends HttpServlet
 
 	NodeIdentificationService node_id_svc = (NodeIdentificationService)
 	    sb.getService(this, NodeIdentificationService.class, null);
- 	nodeID = node_id_svc.getMessageAddress().toString();
+ 	nodeID = node_id_svc.getMessageAddress();
 	
 
 	// register our servlet
 	try {
-	    servletService.register(myPath(), this);
+	    servletService.register(getPath(), this);
 	} catch (Exception e) {
 	    throw new RuntimeException("Unable to register servlet at path <"
-				       +myPath()+ ">: " +e.getMessage());
+				       +getPath()+ ">: " +e.getMessage());
 	}
 
-	f4_2 = new DecimalFormat("#0.00");
     }
-    protected abstract String myPath();
-    protected abstract String myTitle();
-    protected abstract void outputPage(PrintWriter out,
-				       HttpServletRequest request);
+    protected abstract String getPath();
+    protected abstract String getTitle();
+    protected abstract void printPage(HttpServletRequest request,
+				      PrintWriter out);
 
+
+    public MessageAddress getNodeID() {
+	return nodeID;
+    }
 
     public void doGet(HttpServletRequest request,
 		      HttpServletResponse response) 
@@ -88,15 +90,15 @@ public abstract class BaseServlet extends HttpServlet
 	    out.print("\">");
 	}
 	out.print("<TITLE>");
-	out.print(myTitle());
+	out.print(getTitle());
 	out.print("</TITLE></HEAD><body><H1>");
-	out.print(myTitle());
+	out.print(getTitle());
 	out.print("</H1>");
 
 	out.print("Date: ");
 	out.print(new java.util.Date()+"\n");
 	
-	outputPage(out,request);
+	printPage(request,out);
 	out.print("<p><p><br>RefreshSeconds: ");	
 	out.print(refreshSeconds);
 
