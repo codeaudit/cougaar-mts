@@ -134,7 +134,7 @@ public class RMILinkProtocol
     }
 
     protected SocketFactory getSocketFactory() {
-	return new SocketFactory(false, loggingService);
+	return new SocketFactory(false, true);
     }
 
 

@@ -38,7 +38,7 @@ public class SSLRMILinkProtocol extends RMILinkProtocol
     }
 
     protected SocketFactory getSocketFactory() {
-	return new SocketFactory(true, loggingService);
+	return new SocketFactory(true, true);
     }
 
     // If this is called, we've already found the remote reference.
