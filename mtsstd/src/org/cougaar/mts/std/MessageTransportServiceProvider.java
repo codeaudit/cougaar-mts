@@ -35,7 +35,7 @@ import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
-import org.cougaar.core.thread.ThreadServiceImpl;
+import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.core.node.Node;
 
 import java.util.ArrayList;
@@ -221,8 +221,8 @@ public final class MessageTransportServiceProvider
 
 	Debug.load(loggingService);
 
-	ThreadServiceImpl ts = new ThreadServiceImpl(sb, "MTS");
-	ts.provideServices(sb);
+	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
+	tsp.provideServices(sb);
 
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);
