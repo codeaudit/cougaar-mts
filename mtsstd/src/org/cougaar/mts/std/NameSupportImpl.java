@@ -184,11 +184,15 @@ public class NameSupportImpl implements NameSupport
     }
 
 
-    public static class NamingItr implements Iterator {
+    /**
+     * Hides the messy details of a NamingEnumeration.  This version
+     * returns a specific attribute value for each next() call.
+     */
+    public static class NamingIterator implements Iterator {
 	private NamingEnumeration e;
 	private String attribute;
 
-	NamingItr(NamingEnumeration e, String attribute) {
+	NamingIterator(NamingEnumeration e, String attribute) {
 	    this.e = e;
 	    this.attribute = attribute;
 	}
@@ -207,7 +211,7 @@ public class NameSupportImpl implements NameSupport
 		SearchResult result = (SearchResult) e.next();
 		Attributes attrs = result.getAttributes();
 		Attribute attr = attrs.get(attribute);
-                return attr.get();
+                return attr != null ? attr.get() : null;
 	    } catch (NamingException ex) {
 		ex.printStackTrace();
 		return null;
@@ -230,7 +234,8 @@ public class NameSupportImpl implements NameSupport
 	try {
 	    DirContext ctx = namingService.getRootContext();
 	    NamingEnumeration e = ctx.search(MTS_DIR, MC_MATCH, MC_RETATTR);
-            return new NamingItr(e, ADDRESS_ATTR);
+	    // Return an Iterator instead of the messy NamingEnumeration
+            return new NamingIterator(e, ADDRESS_ATTR);
 	} catch (NamingException ne) {
 	    ne.printStackTrace();
 	    return null;
