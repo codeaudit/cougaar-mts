@@ -151,9 +151,6 @@ public class ChecksumStreamsAspect extends StandardAspect
 		super(wrapped);
 	    }
 
-	    private OutputStream getRawStream() {
-		return out;
-	    }
 
 	    public void write(int b) throws IOException {
 		super.write(b);
@@ -202,10 +199,6 @@ public class ChecksumStreamsAspect extends StandardAspect
 
 	    private ChecksumInputStream (InputStream wrapped) {
 		super(wrapped);
-	    }
-
-	    private InputStream getRawStream() {
-		return in;
 	    }
 
 
