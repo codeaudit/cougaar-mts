@@ -17,6 +17,7 @@ import java.util.StringTokenizer;
 
 import org.cougaar.core.component.*;
 import org.cougaar.core.naming.NamingService;
+import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.Node;
 
 
@@ -32,6 +33,13 @@ public class MessageTransportServiceProvider
     extends ContainerSupport
     implements ContainerAPI, ServiceProvider, Debug
 {
+
+    private final static String ASPECTS_PROPERTY = 
+	"org.cougaar.message.transport.aspects";
+    private final static String POLICY_PROPERTY =
+	"org.cougaar.message.transport.policy";
+    private final static String STATISTICS_ASPECT = 
+	"org.cougaar.core.mts.StatisticsAspect";
 
     // Factories
     private MessageTransportFactory transportFactory;
@@ -76,8 +84,7 @@ public class MessageTransportServiceProvider
 
 
     private void readAspects() {
-	String property = "org.cougaar.message.transport.aspects";
-	String classes = System.getProperty(property);
+	String classes = System.getProperty(ASPECTS_PROPERTY);
 
 	if (classes == null) return;
 
@@ -104,8 +111,8 @@ public class MessageTransportServiceProvider
     private NameSupport createNameSupport(String id) {
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
-        return new NameSupportImpl(id, (NamingService)
-                                  sb.getService(this, NamingService.class, null));
+	Object svc = sb.getService(this, NamingService.class, null);
+        return new NameSupportImpl(id, (NamingService) svc);
     }
 
     public void initialize() {
@@ -139,14 +146,14 @@ public class MessageTransportServiceProvider
     }
 
     private void getSelectionPolicy() {
-	String policy_classname = 
-	    System.getProperty("org.cougaar.message.transport.policy");
+	String policy_classname = System.getProperty(POLICY_PROPERTY);
 	if (policy_classname == null) {
 	    selectionPolicy = new MinCostLinkSelectionPolicy();
 	} else {
 	    try {
 		Class policy_class = Class.forName(policy_classname);
-		selectionPolicy = (LinkSelectionPolicy) policy_class.newInstance();
+		selectionPolicy = 
+		    (LinkSelectionPolicy) policy_class.newInstance();
 		System.out.println("Created " +  policy_classname);
 	    } catch (Exception ex) {
 		ex.printStackTrace();
@@ -183,30 +190,36 @@ public class MessageTransportServiceProvider
 
 
 
+    private Object findOrMakeProxy(Object requestor) {
+	MessageTransportClient client = (MessageTransportClient) requestor;
+	MessageAddress addr = client.getMessageAddress();
+	Object proxy = proxies.get(addr);
+	if (proxy != null) return proxy;
+	proxy = new MessageTransportServiceProxy(client,registry,sendQ);
+	proxy = AspectFactory.attachAspects(aspects, proxy, 
+					    MessageTransportService.class,
+					    null);
+	proxies.put(addr, proxy);
+	if (Debug.DEBUG_TRANSPORT)
+	    System.out.println("=== Created MessageTransportServiceProxy for " 
+			       +  requestor);
+	return proxy;
+
+    }
+
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
     {
 	if (serviceClass == MessageTransportService.class) {
 	    if (requestor instanceof MessageTransportClient) {
-		Object proxy = proxies.get(requestor);
-		if (proxy == null) {
-		    proxy = new MessageTransportServiceProxy(registry, sendQ);
-		    proxy = AspectFactory.attachAspects(aspects, proxy, 
-							MessageTransportService.class,
-							null);
-		    proxies.put(requestor, proxy);
-		    if (Debug.DEBUG_TRANSPORT)
-			System.out.println("======= Created MessageTransportServiceProxy for "
-					   +  requestor);
-		}
-		return proxy;
+		return findOrMakeProxy(requestor);
 	    } else {
 		return null;
 	    }
 	} else if (serviceClass == MessageStatisticsService.class) {
 	    StatisticsAspect aspect = 
-		(StatisticsAspect) findAspect("org.cougaar.core.mts.StatisticsAspect");
+		(StatisticsAspect) findAspect(STATISTICS_ASPECT);
 	    return aspect;
 	} else if (serviceClass == MessageWatcherService.class) {
 	    return watcherAspect;
@@ -221,6 +234,23 @@ public class MessageTransportServiceProvider
 			       Class serviceClass, 
 			       Object service)
     {
+	if (serviceClass == MessageTransportService.class) {
+	    if (requestor instanceof MessageTransportClient) {
+		MessageTransportClient client = 
+		    (MessageTransportClient) requestor;
+		MessageAddress addr = client.getMessageAddress();
+		Object proxy = proxies.get(addr);
+		if (proxy == null) return;
+		proxies.remove(addr);
+		MessageTransportService svc = (MessageTransportService) proxy;
+		svc.unregisterClient(client); // ???
+		svc.flushMessages();          // ???
+	    }
+	} else if (serviceClass == MessageStatisticsService.class) {
+	    // TO BE DONE
+	} else if (serviceClass == MessageWatcherService.class) {
+	    // TO BE DONE
+	} 
     }
 
 

@@ -97,6 +97,10 @@ public class TraceAspect
 	    server.unregisterClient(client);
 	}
 
+	public void flushMessages() {
+	    server.flushMessages();
+	}
+
 	public String getIdentifier() {
 	    return server.getIdentifier();
 	}

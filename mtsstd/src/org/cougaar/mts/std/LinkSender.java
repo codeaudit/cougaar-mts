@@ -98,12 +98,16 @@ public class LinkSender implements Runnable
 		message = (Message) queue.next();
 	    }
 	    if (message != null) {
+		MessageTransportServiceProxy serviceProxy =
+		    registry.findServiceProxy(message.getOriginator());
 		while (true) {
 		    links = destinationLinks.iterator();
 		    link = selectionPolicy.selectLink(links, message);
 		    if (link != null) {
 			try {
 			    link.forwardMessage(message);
+			    if (serviceProxy != null) 
+				serviceProxy.messageDelivered(message);
 			    break;
 			} catch (DestinationLink.UnregisteredNameException no_name) {
 			    // nothing to say here
@@ -113,6 +117,12 @@ public class LinkSender implements Runnable
 			    comm_failure.printStackTrace();
 			}
 		    }
+
+		    if (serviceProxy != null && serviceProxy.isFlushing()) {
+			serviceProxy.droppedMessage(message);
+			break;
+		    }
+
 		    try { Thread.sleep(delay);}
 		    catch (InterruptedException ex){}
 		    if (delay < MAX_DELAY) delay += delay;
