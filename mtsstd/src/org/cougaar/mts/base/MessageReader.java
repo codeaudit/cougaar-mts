@@ -27,7 +27,7 @@ import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This is the first station in the receiver for serializling
- * LinkProyocols.  MessageWriter and MessageReader allow aspect
+ * LinkProtocols.  MessageWriter and MessageReader allow aspect
  * authors to examine and filter the serialized data stream.
  *
  * <p>
@@ -81,11 +81,11 @@ public interface MessageReader
   /**
    * Called by AttributedMessage during deserialization. The
    * stream is used to read the serialized message body. The
-   * returned OutputStream is usually a filtered stream that modifies
+   * returned InputStream is usually a filtered stream that modifies
    * the contents as they are being read.
    *
-   * @param out The next innermost stream in the nesting.
-   * @return An OutputStream to be used for serialization of the message.
+   * @param in The next innermost stream in the nesting.
+   * @return An InputStream to be used for serialization of the message.
    * @see #preProcess
    * @see #finishInput
    */
@@ -98,7 +98,7 @@ public interface MessageReader
    *
    * @throws java.io.IOException The stream could be cached 
    *                             so an IOException can be thrown here.
-   * @see #getObjectInputStream(ObjectOutput)
+   * @see #getObjectInputStream(ObjectInput)
    */
     void finishInput()
 	throws java.io.IOException;

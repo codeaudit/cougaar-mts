@@ -38,8 +38,8 @@ public class MessageTransportException extends Exception {
 
   /**
    *	Constructs a MessageTransportException with a specified detail message. but an Unknown type
-   *   @param aType Argument used to set the type of error condition that occurred
-   *   return MessageTransportException
+   *   @param aMsg Argument used to set the message of the error condition that occurred
+   *   @return MessageTransportException
    **/
   public MessageTransportException( String aMsg ) {
     super (aMsg);
