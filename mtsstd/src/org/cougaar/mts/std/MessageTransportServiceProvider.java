@@ -83,6 +83,7 @@ public class MessageTransportServiceProvider
 
 	if (classes == null) return;
 
+        ServiceBroker sb = getServiceBroker();
 	StringTokenizer tokenizer = new StringTokenizer(classes, ",");
 	while (tokenizer.hasMoreElements()) {
 	    String classname = tokenizer.nextToken();
@@ -92,6 +93,8 @@ public class MessageTransportServiceProvider
 		    (MessageTransportAspect) aspectClass.newInstance();
 		aspects.add(aspect);
 		aspects_table.put(classname, aspect);
+		
+		aspect.setServiceBroker(sb);
 	    }
 	    catch (Exception ex) {
 		ex.printStackTrace();

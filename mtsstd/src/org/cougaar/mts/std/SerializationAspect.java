@@ -25,7 +25,7 @@ import java.io.PipedOutputStream;
  * society (ie one in which all messages go through the Loopback
  * transport), we can check for issues related to serialization that
  * wouldn't arise otherwise.  */
-public class SerializationAspect implements MessageTransportAspect
+public class SerializationAspect extends StandardAspect
 {
 
     public SerializationAspect() {

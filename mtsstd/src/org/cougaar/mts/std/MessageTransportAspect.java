@@ -10,6 +10,9 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.ServiceBroker;
+
+
 /**
  * Abstract specification of a aspect in the message transport
  * subsystem.  An aspect is only required to perform one job: return
@@ -19,4 +22,5 @@ public interface MessageTransportAspect
 {
     public Object getDelegate(Object delegate, Class type);
     public boolean rejectTransport(MessageTransport transport, Class type);
+    public void setServiceBroker(ServiceBroker sb);
 }

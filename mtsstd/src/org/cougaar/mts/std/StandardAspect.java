@@ -9,12 +9,21 @@
  */
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.ServiceBroker;
+
 /**
  * Default base Aspect class, which will accept any transport at any
  * cutpoint.
  */
-abstract public class StandardAspect implements MessageTransportAspect
+abstract public class StandardAspect 
+    implements MessageTransportAspect
 {
+    protected ServiceBroker sb;
+    
+    public void setServiceBroker(ServiceBroker sb) {
+	this.sb = sb;
+    }
+
     public boolean rejectTransport(MessageTransport transport, Class type) {
 	// Accept any transport at any cut point by default
 	return false;

@@ -21,7 +21,7 @@ import java.beans.Beans;
  * RemoteProxy aspect delegate and unsecued by a RemoteImpl aspect
  * delegate.
  * */
-public class SecurityAspect implements MessageTransportAspect
+public class SecurityAspect extends StandardAspect
 {
     private static MessageSecurityManager msm = null; 
 

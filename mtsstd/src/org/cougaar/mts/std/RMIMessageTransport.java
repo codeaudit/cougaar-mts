@@ -46,7 +46,7 @@ import java.util.HashMap;
 public class RMIMessageTransport 
     extends MessageTransport
 {
-    private static final String TRANSPORT_TYPE = ":simpleRMI";
+    public static final String TRANSPORT_TYPE = ":simpleRMI";
     
 
     private MessageAddress myAddress;
