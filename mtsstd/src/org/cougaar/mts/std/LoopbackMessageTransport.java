@@ -51,8 +51,15 @@ class LoopbackMessageTransport
 	
 
 
-    public void forwardMessage(Message message) {
-	deliverer.deliverMessage(message);
+    public void forwardMessage(Message message) 
+	throws CommFailureException
+    {
+	try {
+	    deliverer.deliverMessage(message);
+	}
+	catch (Exception ex) {
+	    throw new CommFailureException(ex);
+	}
     }
 
     public void registerClient(MessageTransportClient client) {
