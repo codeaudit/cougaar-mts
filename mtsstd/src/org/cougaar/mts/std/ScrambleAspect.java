@@ -61,72 +61,69 @@ public class ScrambleAspect extends StandardAspect
 	int flippedMessageCount;
 	int forcedMessageCount;
 	int messageCount; 
-
+	
 	private ScrambledSendLink(SendLink link) {
 	    super(link);
 	    //long  timeStarted = System.currentTimeMillis();
 	}
+	
+	
+	public synchronized void sendMessage(Message message) {
+	    messageCount++;
+	    if (heldMessage == null)//Case 1: On a new message //a -- No held messages yet
+		holdMessage(message);
+	    else if (heldMessage != null) //b --there is already a held messgae
+		flipMessage(message, heldMessage);
+	}
 
 	
-	public synchronized void sendMessage(Message message) 
-	{  
+	private class SendMessageTimerTask extends TimerTask {
+	    private ScrambledSendLink link;
 
-	    messageCount++;
-	    //Case 1: On a new message
-	    //a -- No held messages yet
-	    if (heldMessage == null){
-		timerTask = new SendMessageTimerTask (this);
-		timer.schedule(timerTask, 3000); //schedule a timer task
-		heldMessage = message;
-		heldMessageCount++;
-		System.out.println("===Holding message #" + messageCount +  " from "+  
-				   heldMessage.getOriginator()+ " to " + heldMessage.getTarget() 
-				   + "  " +  heldMessageCount );
-		
+	    public SendMessageTimerTask ( ScrambledSendLink link ){
+		super();
+		this.link = link;
 	    }
-	    else if (heldMessage != null){ //b --there is already a held messgae
-		timerTask.cancel();
-		link.sendMessage(message);
-		link.sendMessage(heldMessage);
-		flippedMessageCount++;
-		int previousCount = messageCount - 1;
-		System.out.println("===Flippiing messages #" + previousCount +  " and # " 
-				   + messageCount +  " from "+  heldMessage.getOriginator()+ " to "
-				   + heldMessage.getTarget() + " and " + message.getTarget() + "  " +  flippedMessageCount );
-		
+	
+	    public void run() {
+		link.forcedHeldMessage();
 
-		heldMessage = null;
-		
 	    }
 	}
-	public synchronized void forcedHeldMessage() {
+    
+	//================util methods
+	private void holdMessage(Message message){
+	    timerTask = new SendMessageTimerTask (this);
+	    timer.schedule(timerTask, 3000); //schedule a timer task
+	    heldMessage = message;
+	    heldMessageCount++;
+	    System.out.println("===Holding message #" +printString()  + "  " +  heldMessageCount );
+	}
+	private void flipMessage(Message message, Message heldMessage){
+	    timerTask.cancel();
+	    link.sendMessage(message);
+	    link.sendMessage(heldMessage);
+	    flippedMessageCount++;
+	    int previousCount = messageCount - 1;
+	    System.out.println("===Flippiing messages #" + previousCount +  " and #" + printString() +  
+			       " and " + message.getTarget() + "  " +  flippedMessageCount );
+	    heldMessage = null;
+	}
+
+	private synchronized void forcedHeldMessage() {
 	    if (heldMessage != null){
 		link.sendMessage(heldMessage);
-	   
 		forcedMessageCount++;
-		System.out.println("===Forcing message #" + messageCount +  " from "+  
-				   heldMessage.getOriginator()+ " to "
-				   + heldMessage.getTarget() + "  " + forcedMessageCount);
+		System.out.println("===Forcing message #" + printString() + "  " + forcedMessageCount);
 		heldMessage = null;
 	    }
 	}
 	
-
-	
-    private class SendMessageTimerTask extends TimerTask {
-	private ScrambledSendLink link;
-
-	public SendMessageTimerTask ( ScrambledSendLink link ){
-	    super();
-	    this.link = link;
+	private String printString() {
+	    return messageCount +  " from "+  
+		heldMessage.getOriginator()+ " to " + heldMessage.getTarget() ;
 	}
-	
-	public void run() {
-	    link.forcedHeldMessage();
-
-	}
-    }
-    
+	//===========================
     }
 
 
