@@ -24,6 +24,8 @@ package org.cougaar.core.mts;
 import org.cougaar.core.society.Message;
 
 import org.cougaar.util.CircularQueue;
+import org.cougaar.util.ReusableThreadPool;
+import org.cougaar.util.ReusableThread;
 
 /**
  * An abstract class which manages a circular queue of messages, and
@@ -32,17 +34,37 @@ import org.cougaar.util.CircularQueue;
  * invoked on each message as it's popped off. */
 abstract class MessageQueue implements Runnable
 {
+    private static final int maxThreadCount = 100;
+    private static ReusableThreadPool threadPool = 
+	new ReusableThreadPool(20, maxThreadCount);
+
+    private static Thread getThread(MessageQueue queue) {
+	return threadPool.getThread(queue, queue.name);
+    }
+
+
     private CircularQueue queue;
     private Thread thread;
     private String name;
+    private boolean useThreadPool;
 
     MessageQueue(String name) {
-	this.name = name;
-	queue = new CircularQueue();
-	thread = new Thread(this, name);
-	thread.setDaemon(true);
-	thread.start();
+	this(name, false);
     }
+
+    MessageQueue(String name, boolean useThreadPool) {
+	this.name = name;
+	this.useThreadPool = useThreadPool;
+	queue = new CircularQueue();
+	if (!useThreadPool) {
+	    thread = new Thread(this, name);
+	    thread.setDaemon(true);
+	    thread.start();
+	}
+    }
+
+
+
 
     String getName() {
 	return name;
@@ -54,11 +76,14 @@ abstract class MessageQueue implements Runnable
 	    // wait for a message to handle
 	    synchronized (queue) {
 		while (queue.isEmpty()) {
-		    try {
-			queue.wait();
-		    } catch (InterruptedException e) {} // dont care
+		    if (!useThreadPool) {
+			try { queue.wait(); }
+			catch (InterruptedException ex) {}
+		    } else {
+			thread = null;
+			return;
+		    }
 		}
-        
 		m = (Message) queue.next(); // from top
 	    }
 
@@ -73,7 +98,12 @@ abstract class MessageQueue implements Runnable
     void add(Message m) {
 	synchronized (queue) {
 	    queue.add(m);
-	    queue.notify();
+	    if (!useThreadPool) {
+		queue.notify();
+	    } else if (thread == null) {
+		thread = getThread(this);
+		thread.start();
+	    }
 	}
     }
 

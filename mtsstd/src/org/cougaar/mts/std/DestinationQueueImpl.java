@@ -55,7 +55,7 @@ class DestinationQueueImpl
 			 LinkProtocolFactory protocolFactory,
 			 LinkSelectionPolicy selectionPolicy)
     {
-	super(destination.toString());
+	super(destination.toString(), true); // use thread pool
 	this.destination = destination;
 	this.protocolFactory = protocolFactory;
 	this.registry =registry;
