@@ -36,7 +36,8 @@ import org.cougaar.mts.base.MessageTransportServiceProvider; // javadoc
  * This entity implements the {@link MessageWatcherService}.  It's
  * used in conjunction with the {@link WatcherAspect}.  Both are
  * instantiated by the {@link MessageTransportServiceProvider}, which
- * is the provider of the {@link MessageWatcherService}.
+ * is the provider of the {@link MessageWatcherService}.  The actual
+ * "watching" happens in the Aspect.  This service is a core front-end.
  */
 public class MessageWatcherServiceImpl
     implements MessageWatcherService

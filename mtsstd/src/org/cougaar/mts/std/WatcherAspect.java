@@ -32,7 +32,9 @@ import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportWatcher;
+import org.cougaar.core.service.MessageWatcherService; // javadoc
 
+import org.cougaar.mts.base.MessageTransportServiceProvider; // javadoc
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.UnregisteredNameException;
@@ -44,9 +46,13 @@ import org.cougaar.mts.base.SendQueue;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * A simple aspect which implements the message watching functionality
- * by attaching delegates to SendQueue and MessageDeliverer objects.  The
- * delegates are implemented as inner classes.  */
+ * This Aspect is used in conjunction with {@link
+ * MessageWatcherServiceImpl}, the implementaion of the {@link
+ * MessageWatcherService}. Both are instantiated by the {@link
+ * MessageTransportServiceProvider}, which is also the provider of the
+ * {@link MessageWatcherService}.  The actual "watching" happens in
+ * this Aspect.  The service is a core front-end.
+ */
 public class WatcherAspect 
     extends StandardAspect
 {

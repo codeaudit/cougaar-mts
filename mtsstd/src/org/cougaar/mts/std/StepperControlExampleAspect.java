@@ -31,9 +31,11 @@ import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * An simple example of controlling the message stepper, in this case
- * by pausing each DestinationQueue after the second message.  Be sure
- * to list such aspects after the StepperAspect.  */
+ * This example Aspect shows a simple use of the {@link StepService}.
+ * It pauses each {@link DestinationQueue} after the second message.
+ * Since this Aspect needs the {@link StepService}, it should be
+ * loaded after that service is provided by the {@link StepperAspect}.
+*/
 public class StepperControlExampleAspect
     extends StandardAspect
 {

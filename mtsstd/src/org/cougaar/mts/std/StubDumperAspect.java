@@ -32,6 +32,10 @@ import org.cougaar.mts.base.NameSupport;
 import org.cougaar.mts.base.NameSupportDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
+/**
+ * This debugging Aspect logs URIs and stubs of local and remote
+ * references, respectively.
+ */
 public class StubDumperAspect extends StandardAspect
 {
 

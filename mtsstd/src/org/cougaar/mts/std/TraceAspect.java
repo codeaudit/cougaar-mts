@@ -52,9 +52,10 @@ import org.cougaar.mts.base.RouterDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This is a very simple aspect which is mostly for demonstration
- * purposes.  It provides a trivial trace of a message as it passes
- * through the various stages of the message transport subsystem.  */
+ * This demonstration Aspect provides a simple trace of a message as
+ * it passes through the various stages of the message transport
+ * subsystem.
+ */
 public class TraceAspect 
     extends StandardAspect
 {

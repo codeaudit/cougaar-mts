@@ -35,10 +35,9 @@ import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This is a debugging aspect.  By attaching it in a single-node
- * society (ie one in which all messages go through the Loopback
- * transport), we can check for issues related to serialization that
- * wouldn't arise otherwise.  */
+ * This debugging Aspect deliberately delays message processing by
+ * wasting CPU for pseudo-random durations. 
+ */
 public class WasteCPUAspect extends StandardAspect
 {
    //This was taken from TrafficGenerator should be a math utils

@@ -56,6 +56,11 @@ import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 
+/**
+ * This Aspect includes the ServiceProvider for and implementation of
+ * the {@link StepService}, as well as a use of that service in a
+ * Swing gui.
+ */
 public final class StepperAspect 
     extends StandardAspect
 {
