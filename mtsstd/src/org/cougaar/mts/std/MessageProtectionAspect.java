@@ -55,15 +55,10 @@ import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This class provides an example of adding trailers to serialized
- * AttributedMessages.  The Writer computes a checksum (as a long) and
- * sends the eight bytes after the Message content.  The Reader
- * computes its own checksum and compares to the one that was sent.
- * The CHECKSUM_VALID_ATTR records whether or not they matched.  This
- * attributes is stored in the AttributedMessage and is available to
- * all receive-side Aspects.
+   This Aspect puts the {@link MessageProtectionService} streams in
+   place.  It also instantiates a default implementation for that
+   service if no other one is loaded.
  */
-
 public class MessageProtectionAspect extends StandardAspect 
 {
 

@@ -43,7 +43,9 @@ import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.StandardAspect;
 
-// Depends on StatisticsAspect for MESSAGE_BYTES_ATTRIBUTE
+/**
+ * This test Aspect logs message delivery elapsed time.
+ */
 public class MessageTraceAspect 
     extends StandardAspect
     implements AttributeConstants

@@ -30,7 +30,14 @@ import java.util.Iterator;
 
 import org.cougaar.core.mts.MessageTransportWatcher;
 import org.cougaar.core.service.MessageWatcherService;
+import org.cougaar.mts.base.MessageTransportServiceProvider; // javadoc
 
+/**
+ * This entity implements the {@link MessageWatcherService}.  It's
+ * used in conjunction with the {@link WatcherAspect}.  Both are
+ * instantiated by the {@link MessageTransportServiceProvider}, which
+ * is the provider of the {@link MessageWatcherService}.
+ */
 public class MessageWatcherServiceImpl
     implements MessageWatcherService
 {
