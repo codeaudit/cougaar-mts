@@ -32,8 +32,8 @@ public class PriorityComparator implements Comparator {
 	if (!(y instanceof Prioritized))
 	    throw new RuntimeException(y + " is not Prioritized");
 
-	int p1 = ((Prioritized) x).getPriority();
-	int p2 = ((Prioritized) y).getPriority();
+	int p1 = ((Prioritized) x).getCougaarPriority();
+	int p2 = ((Prioritized) y).getCougaarPriority();
 	long t1 = ((Prioritized) x).getTimestamp();
 	long t2 = ((Prioritized) y).getTimestamp();
 	if (p1 > p2)

@@ -23,6 +23,6 @@ package org.cougaar.core.mts;
 
 public interface Prioritized
 {
-    public int getPriority();
+    public int getCougaarPriority();
     public long getTimestamp();
 }

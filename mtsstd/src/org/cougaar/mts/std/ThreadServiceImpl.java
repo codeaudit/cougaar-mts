@@ -360,9 +360,9 @@ class ThreadServiceImpl
 
 
 	// Prioritized
-	public int getPriority() {
+	public int getCougaarPriority() {
 	    // For now just return the Thread priority
-	    return super.getPriority();
+	    return getPriority();
 	}
 
 	public long getTimestamp() {
