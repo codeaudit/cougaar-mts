@@ -37,7 +37,7 @@ import java.io.OutputStream;
  */
 public class StatisticsAspect 
     extends StandardAspect
-    implements MessageStatistics, MessageStatisticsService
+    implements MessageStatistics, MessageStatisticsService,AttributeConstants
 
 {
     // This variable holds the total current size of ALL
@@ -216,11 +216,16 @@ public class StatisticsAspect
     {
 
 	StatisticsOutputStream wrapper;
+	AttributedMessage msg;
 
 	StatisticsWriter(MessageWriter delegatee) {
 	    super(delegatee);
 	}
 
+	public void finalizeAttributes(AttributedMessage msg) {
+	    super.finalizeAttributes(msg);
+	    this.msg = msg;
+	}
 
 
 	// Create and return the byte-counting FilterOutputStream
@@ -231,7 +236,6 @@ public class StatisticsAspect
 	    wrapper = new StatisticsOutputStream(raw_os);
 	    return wrapper;
 	}
-
 
 
 	public void finishOutput() 
@@ -247,6 +251,12 @@ public class StatisticsAspect
 	    }
 	    messageLengthHistogram[bin]++;
 	    statisticsTotalBytes += byteCount;
+	    
+	    //This attribute is not actually sent remotely, but is put
+	    //onto the local message's header.  The Attribute can be
+	    //read by other local Aspects after message is delivered,
+	    //but before it is garbage collected
+	    msg.setAttribute(MESSAGE_BYTES_ATTRIBUTE, new Integer(byteCount));
 
 	    if (Debug.isDebugEnabled(loggingService,STATISTICS))
 		loggingService.debug("byteCount = " + byteCount);

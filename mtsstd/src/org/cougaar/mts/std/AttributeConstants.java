@@ -36,5 +36,9 @@ public interface AttributeConstants
     String DELIVERY_STATUS_STORE_AND_FORWARD  =
 	"Store&Forward";
     String DELIVERY_STATUS_BEST_EFFORT = "BestEffort";
+    
+    String MESSAGE_BYTES_ATTRIBUTE = "MessageBytes";
+    String SENT_BYTES_ATTRIBUTE = "SentBytes";
+    String RECEIVED_BYTES_ATTRIBUTE = "ReceivedBytes";
 
 }

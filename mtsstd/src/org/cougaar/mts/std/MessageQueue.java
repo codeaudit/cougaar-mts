@@ -28,6 +28,7 @@ import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.util.CircularQueue;
 
+import java.util.ArrayList;
 import java.util.TimerTask;
 
 /**
@@ -45,10 +46,12 @@ abstract class MessageQueue
     private Schedulable thread;
     private String name;
     private AttributedMessage pending;
+    private Object pending_lock;
 
 
     MessageQueue(String name, Container container) {
 	this.name = name;
+	pending_lock = new Object();
 	queue = new CircularQueue();
     }
 
@@ -66,15 +69,29 @@ abstract class MessageQueue
     }
 
 
+    void removeMessagesFrom(MessageAddress address, ArrayList removed) {
+	synchronized (queue) {
+	    
+	}
+	synchronized (pending_lock) {
+	    if (pending != null && pending.getOriginator().equals(address)) {
+		removed.add(pending);
+		pending = null;
+	    }
+	}
+    }
+
     public void run() {
 	boolean process_queue = true;
-	if (pending != null) {
-	    // Retry the last failed dispatch before looking at the
-	    // queue. 
-	    if (!dispatch(pending)) {
-		process_queue = false;
-	    } else {
-		pending = null;
+	synchronized (pending_lock) {
+	    if (pending != null) {
+		// Retry the last failed dispatch before looking at the
+		// queue. 
+		if (!dispatch(pending)) {
+		    process_queue = false;
+		} else {
+		    pending = null;
+		}
 	    }
 	}
 	while (process_queue) {

@@ -33,7 +33,8 @@ public class AgentStatusAspect
     implements AgentStatusService, Constants, AttributeConstants
 {
 
-    private static final double SEND_CREDIBILITY = Constants.SECOND_MEAS_CREDIBILITY;
+    private static final double SEND_CREDIBILITY = 
+	Constants.SECOND_MEAS_CREDIBILITY;
 
 
     private HashMap states;
@@ -54,16 +55,27 @@ public class AgentStatusAspect
 	AgentState state = (AgentState) states.get(address);
 	if (state == null) {
 	    state = new AgentState();
-	    state.status = UNREGISTERED;
+	    
 	    state.timestamp = System.currentTimeMillis();
+	    state.status = UNREGISTERED;
+	    state.queueLength=0;
+	    state.receivedCount=0;
+	    state.receivedBytes=0;
+	    state.lastReceivedBytes=0;
 	    state.sendCount = 0;
 	    state.deliveredCount = 0;
-	    state.lastDeliverTime = 0;
-	    state.averageDeliverTime = 0;
+	    state.deliveredBytes=0;
+	    state.lastDeliveredBytes=0;
+	    state.deliveredLatencySum = 0;
+	    state.lastDeliveredLatency = 0;
+	    state.averageDeliveredLatency = 0;
 	    state.unregisteredNameCount = 0;
 	    state.nameLookupFailureCount = 0;
 	    state.commFailureCount = 0;
-	    state.misdeliveredMessageCount = 0;	  
+	    state.misdeliveredMessageCount = 0;	
+	    state.lastLinkProtocolTried = null;
+	    state.lastLinkProtocolSuccess=null;
+
 	    states.put(address, state);
 	}
 	return state;
@@ -125,14 +137,24 @@ public class AgentStatusAspect
 	    
 	    try {
 		long startTime = System.currentTimeMillis();
-		metricsUpdateService.updateValue(spoke_key, longMetric(startTime));
+		metricsUpdateService.updateValue(spoke_key, 
+						 longMetric(startTime));
+		synchronized (state) {
+		    state.lastLinkProtocolTried=getProtocolClass().getName();
+		}
+		// Attempt to Deliver message
 		MessageAttributes meta = super.forwardMessage(message);
+
 		//successful Delivery
 		long endTime = System.currentTimeMillis();
 		
 		if (delivered(meta))
 		    metricsUpdateService.updateValue(heard_key, 
 						     longMetric(endTime));
+		int msgBytes=0;
+		Object attr= message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
+		if (attr!=null && (attr instanceof Number) )
+		    msgBytes=((Number) attr).intValue();
 
 		long latency = endTime - startTime;
 		double alpha = 0.333;
@@ -140,11 +162,18 @@ public class AgentStatusAspect
 		    state.status =  AgentStatusService.ACTIVE;
 		    state.timestamp = System.currentTimeMillis();
 		    state.deliveredCount++;
-		    state.lastDeliverTime = (int) latency;
-		    state.averageDeliverTime = (alpha * latency) +
+		    state.deliveredBytes+=msgBytes;
+		    state.lastDeliveredBytes=msgBytes;
+		    state.queueLength--;
+		    state.lastDeliveredLatency = (int) latency;
+		    state.deliveredLatencySum +=  latency;
+		    state.averageDeliveredLatency = (alpha * latency) +
 			((1-alpha) * latency);
+		    state.lastLinkProtocolSuccess=getProtocolClass().getName();
 		}
+
 		return meta;
+
 	    } catch (UnregisteredNameException unreg) {
 		synchronized (state) {
 		    state.status = UNREGISTERED;
@@ -189,11 +218,23 @@ public class AgentStatusAspect
 	public MessageAttributes deliverMessage(AttributedMessage message,
 					 MessageAddress dest)
 	    throws MisdeliveredMessageException
-	{
+	{  
 	    String agent= message.getOriginator().getAddress();
 	    String heard_key = "Agent" +KEY_SEPR+ agent +KEY_SEPR+ "HeardTime";
 	    long receiveTime = System.currentTimeMillis();
-	    metricsUpdateService.updateValue(heard_key, longMetric(receiveTime));
+	    metricsUpdateService.updateValue(heard_key, 
+					     longMetric(receiveTime));
+
+	    int msgBytes=0;
+	    Object attr= message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
+	    if (attr!=null && (attr instanceof Number) )
+		msgBytes=((Number) attr).intValue();
+
+	    AgentState state = ensureState(message.getOriginator());
+	    synchronized (state) {
+		state.receivedCount++;
+		state.receivedBytes+=msgBytes;
+	    }
 
 	    return super.deliverMessage(message, dest);
 	}
@@ -214,6 +255,7 @@ public class AgentStatusAspect
 	    AgentState state = ensureState(addr);
 	    synchronized (state) {
 		state.sendCount++;
+		state.queueLength++;
 	    }	
 	    //Local agent sending message means that the MTS has
 	    //"heard from" the local agent

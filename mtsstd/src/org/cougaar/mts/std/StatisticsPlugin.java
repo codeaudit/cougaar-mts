@@ -41,7 +41,7 @@ public class StatisticsPlugin extends ComponentPlugin
     }
   
     protected void execute() {
-	System.out.println("Uninteresting");
+	//System.out.println("Executed StatisticPlugin");
     }
 
 }
