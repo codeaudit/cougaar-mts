@@ -22,6 +22,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.service.LoggingService;
 
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ final public class SendLinkImpl
     private SendQueue sendQ;
     private MessageAddress addr;
     private MessageTransportRegistryService registry;
-    private DebugService debugService;
+    private LoggingService loggingService;
 
     SendLinkImpl(MessageAddress addr, ServiceBroker sb)
     {
@@ -42,8 +43,8 @@ final public class SendLinkImpl
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	sendQ = (SendQueue)
 	    sb.getService(this, SendQueue.class, null);
-	debugService = (DebugService)
-	    sb.getService(this, DebugService.class, null);
+	loggingService = (LoggingService)
+	    sb.getService(this, LoggingService.class, null);
     }
 
 
@@ -67,8 +68,8 @@ final public class SendLinkImpl
     public boolean okToSend(Message message) {
 	MessageAddress target = message.getTarget();
 	if (target == null || target.toString().equals("")) {
-	    if (debugService.isErrorEnabled())
-		debugService.error("Malformed message: "+message);
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("Malformed message: "+message);
 	    return false;
 	} else {
 	    return true;

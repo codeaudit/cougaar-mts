@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.node.Node;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.service.LoggingService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,13 +78,13 @@ final class MessageTransportRegistry
 	private ReceiveLinkProviderService receiveLinkProvider;
 	private NameSupport nameSupport;
 	private ServiceBroker sb;
-	private DebugService debugService;
+	private LoggingService loggingService;
 
 	private ServiceImpl(String name, ServiceBroker sb) {
 	    this.name = name;
 	    this.sb = sb;
-	    debugService = 
-		(DebugService) sb.getService(this, DebugService.class, null);
+	    loggingService = 
+		(LoggingService) sb.getService(this, LoggingService.class, null);
 	}
 
 	private NameSupport nameSupport() {
@@ -141,8 +142,8 @@ final class MessageTransportRegistry
 		    }
 		}
 	    } catch (Exception e) {
-		if (debugService.isErrorEnabled())
-		    debugService.error(e.toString());
+		if (loggingService.isErrorEnabled())
+		    loggingService.error(e.toString());
 	    }
 	}
 
@@ -195,23 +196,23 @@ final class MessageTransportRegistry
 			MessageTransportClient client = link.getClient();
 			if (mclass.isAssignableFrom(client.getClass())) {
 			    result.add(entry.getKey());
-			    if (debugService.isDebugEnabled(MULTICAST))
-				debugService.debug("Client " +
+			    if (Debug.isDebugEnabled(MULTICAST))
+				loggingService.debug("Client " +
 							  client + 
 							  " matches " +
 							  mclass + ", added " +
 							  entry.getKey());
 			} else {
-			    if (debugService.isDebugEnabled(MULTICAST)) 
-				debugService.debug("Client " +
+			    if (Debug.isDebugEnabled(MULTICAST)) 
+				loggingService.debug("Client " +
 							  client +
 							  " doesn't match " +
 							  mclass);
 			}
 		    }
 		}
-		if (debugService.isDebugEnabled(MULTICAST)) 
-		    debugService.debug("result=" + result);
+		if (Debug.isDebugEnabled(MULTICAST)) 
+		    loggingService.debug("result=" + result);
 		return result.iterator();
 
 	    } else {

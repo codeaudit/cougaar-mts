@@ -135,10 +135,10 @@ public class StatisticsAspect
 	public void dispatchNextMessage(Message message) {
 	    --current_total_size;
 	    accumulateStatistics();
-	    if (debugService.isDebugEnabled(STATISTICS)) {
+	    if (Debug.isDebugEnabled(STATISTICS)) {
 		MessageStatistics.Statistics result = 
 		    getMessageStatistics(false);
-		debugService.debug("Count=" + result.totalMessageCount
+		loggingService.debug("Count=" + result.totalMessageCount
 				   + " Bytes=" + result.totalMessageBytes
 				   + " Average Message Queue Length=" +
 				   result.averageMessageQueueLength);
@@ -191,8 +191,8 @@ public class StatisticsAspect
 	    messageLengthHistogram[bin]++;
 	    statisticsTotalBytes += byteCount;
 
-	    if (debugService.isDebugEnabled(STATISTICS))
-		debugService.debug("byteCount = " + byteCount);
+	    if (Debug.isDebugEnabled(STATISTICS))
+		loggingService.debug("byteCount = " + byteCount);
 
 	    byteCount = 0;
 	}

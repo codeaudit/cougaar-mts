@@ -72,14 +72,14 @@ public class MulticastAspect extends StandardAspect
 	    MessageAddress destination = msg.getTarget();
 	    if (destination instanceof MulticastMessageAddress) {
 		if (destination.equals(MessageAddress.LOCAL)) {
-		    if (debugService.isDebugEnabled(MULTICAST))
-			debugService.debug("MCAST: Local multicast");
+		    if (Debug.isDebugEnabled(MULTICAST))
+			loggingService.debug("MCAST: Local multicast");
 		    destination = getRegistry().getLocalAddress();
 		    msg = new MulticastMessageEnvelope(msg,  destination);
 		    link.sendMessage(msg);
 		} else {
-		    if (debugService.isDebugEnabled(MULTICAST))
-			debugService.debug("MCAST: Remote multicast to "
+		    if (Debug.isDebugEnabled(MULTICAST))
+			loggingService.debug("MCAST: Remote multicast to "
 						  + destination);
 		    MulticastMessageAddress dst = 
 			(MulticastMessageAddress) destination;
@@ -89,8 +89,8 @@ public class MulticastAspect extends StandardAspect
 		    MessageAddress addr;
 		    while (itr.hasNext()) {
 			addr = (MessageAddress) itr.next();
-			if (debugService.isDebugEnabled(MULTICAST))
-			    debugService.debug("MCAST: next address = " 
+			if (Debug.isDebugEnabled(MULTICAST))
+			    loggingService.debug("MCAST: next address = " 
 						      + addr);
 			envelope = new MulticastMessageEnvelope(msg, addr);
 			link.sendMessage(envelope);
@@ -120,15 +120,15 @@ public class MulticastAspect extends StandardAspect
 		msg = ((MulticastMessageEnvelope) msg).getContents();
 		MulticastMessageAddress addr = 
 		    (MulticastMessageAddress) msg.getTarget();
-		if (debugService.isDebugEnabled(MULTICAST)) 
-		    debugService.debug("MCAST: Received multicast to "
+		if (Debug.isDebugEnabled(MULTICAST)) 
+		    loggingService.debug("MCAST: Received multicast to "
 					      + addr);
 		Iterator i = getRegistry().findLocalMulticastReceivers(addr);
 		MessageAddress localDestination = null;
 		while (i.hasNext()) {
 		    localDestination = (MessageAddress) i.next();
-		    if (debugService.isDebugEnabled(MULTICAST))
-			debugService.debug("MCAST: Delivering to "
+		    if (Debug.isDebugEnabled(MULTICAST))
+			loggingService.debug("MCAST: Delivering to "
 						  + localDestination);
 		    deliverer.deliverMessage(msg, localDestination);
 		}

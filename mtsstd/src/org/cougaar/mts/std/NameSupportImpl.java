@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.naming.NS;
+import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.NamingService;
 
 import java.util.ArrayList;
@@ -56,10 +57,10 @@ public final class NameSupportImpl implements ServiceProvider
 	svc = sb.getService(this, AspectSupport.class, null);
 	AspectSupport aspectSupport = (AspectSupport) svc;
 
-	DebugService debugService = (DebugService)
-	    sb.getService(this, DebugService.class, null);
+	LoggingService loggingService = (LoggingService)
+	    sb.getService(this, LoggingService.class, null);
 
-	Object ns = new ServiceImpl(id, nameService, debugService);
+	Object ns = new ServiceImpl(id, nameService, loggingService);
 	ns = aspectSupport.attachAspects(ns, NameSupport.class);
 	service = (NameSupport) ns;
 	
@@ -94,20 +95,20 @@ public final class NameSupportImpl implements ServiceProvider
 	private MessageAddress myNodeAddress;
 	private String id;
 	private String hostname;
-	private DebugService debugService;
+	private LoggingService loggingService;
 
 	private ServiceImpl(String id, 
 			    NamingService namingService,
-			    DebugService debugService) 
+			    LoggingService loggingService) 
 	{
 	    this.id = id;
-	    this.debugService = debugService;
+	    this.loggingService = loggingService;
 	    myNodeAddress = new MessageAddress(id+"(MTS)");
 	    this.namingService = namingService;
 	    try {
 		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
 	    } catch (java.net.UnknownHostException ex) {
-		debugService.error(null, ex);
+		loggingService.error(null, ex);
 	    }
 	}
 
@@ -162,8 +163,8 @@ public final class NameSupportImpl implements ServiceProvider
 		String key = makeName(AGENT_DIR, addr, transportType);
 		_registerWithSociety(key, proxy);
 	    } catch (Exception e) {
-		if (debugService.isErrorEnabled())
-		    debugService.error("Failed to add Client "+ addr + 
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("Failed to add Client "+ addr + 
 					      " to N`ameServer for transport" 
 					      +  transportType,
 					      e);
@@ -178,8 +179,8 @@ public final class NameSupportImpl implements ServiceProvider
 		String key = makeName(AGENT_DIR, addr, transportType);
 		_registerWithSociety(key, null);
 	    } catch (Exception e) {
-		if (debugService.isErrorEnabled())
-		    debugService.error("Failed to remove Client "+addr+ 
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("Failed to remove Client "+addr+ 
 					  " from NameServer for transport" + 
 					  transportType,
 					  e);
@@ -196,8 +197,8 @@ public final class NameSupportImpl implements ServiceProvider
 		mts_attr.put(ADDRESS_ATTR, mts_address);
 		_registerWithSociety(name, mts_address, mts_attr);
 	    } catch (Exception e) {
-		if (debugService.isErrorEnabled())
-		    debugService.error("Failed to register " +  name,
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("Failed to register " +  name,
 					      e);
 	    }
 	    addToTopology(mts_address, SYSTEM_CATEGORY);
@@ -222,8 +223,8 @@ public final class NameSupportImpl implements ServiceProvider
 		object = ctx.lookup(key);
 		if (object instanceof MessageAddress) {
 		    addr = (MessageAddress) object;
-		    if (debugService.isInfoEnabled())
-			debugService.info("Trying redirect of " 
+		    if (loggingService.isInfoEnabled())
+			loggingService.info("Trying redirect of " 
 						 +address+ 
 						 " to " +addr);
 		} else {
@@ -270,7 +271,7 @@ public final class NameSupportImpl implements ServiceProvider
 		try {
 		    return e.hasMore();
 		} catch (NamingException ex) {
-		    debugService.error(null, ex);
+		    loggingService.error(null, ex);
 		    return false;
 		}
 	    }
@@ -288,7 +289,7 @@ public final class NameSupportImpl implements ServiceProvider
 			return attr != null ? attr.get() : null;
 		    }
 		} catch (NamingException ex) {
-		    debugService.error(null, ex);
+		    loggingService.error(null, ex);
 		    return null;
 		}
 	    }
@@ -314,7 +315,7 @@ public final class NameSupportImpl implements ServiceProvider
 		// Return an Iterator instead of the messy NamingEnumeration
 		return new NamingIterator(e, ADDRESS_ATTR);
 	    } catch (NamingException ne) {
-		debugService.error(null, ne);
+		loggingService.error(null, ne);
 		return null;
 	    }
 	}
@@ -335,7 +336,7 @@ public final class NameSupportImpl implements ServiceProvider
 	    try {
 		_registerWithSociety(key, addr, attr);
 	    } catch (NamingException ex) {
-		debugService.error(null, ex);
+		loggingService.error(null, ex);
 	    }
 	}
 
@@ -348,7 +349,7 @@ public final class NameSupportImpl implements ServiceProvider
 	    try {
 		_registerWithSociety(key, addr, attr);
 	    } catch (NamingException ex) {
-		debugService.error(null, ex);
+		loggingService.error(null, ex);
 	    }
 	}
 
@@ -361,7 +362,7 @@ public final class NameSupportImpl implements ServiceProvider
 		// Return an Iterator instead of the messy NamingEnumeration
 		return new NamingIterator(e, attribute);
 	    } catch (NamingException ne) {
-		debugService.error(null, ne);
+		loggingService.error(null, ne);
 		return null;
 	    }
 	}
@@ -375,7 +376,7 @@ public final class NameSupportImpl implements ServiceProvider
 		// Return an Iterator instead of the messy NamingEnumeration
 		return new NamingIterator(e, null);
 	    } catch (NamingException ne) {
-		debugService.error(null, ne);
+		loggingService.error(null, ne);
 		return null;
 	    }
 	}

@@ -22,7 +22,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
-
+import org.cougaar.core.service.LoggingService;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -51,11 +51,11 @@ public class SocketFactory
     // happens.  Instead, the aspect delegation will be handled by a
     // special static call.
     private boolean use_ssl;
-    private DebugService debugService;
+    private LoggingService loggingService;
 
-    public SocketFactory(boolean use_ssl, DebugService debugService) {
+    public SocketFactory(boolean use_ssl, LoggingService loggingService) {
 	this.use_ssl = use_ssl;
-	this.debugService = debugService;
+	this.loggingService = loggingService;
     }
 
     
@@ -67,7 +67,7 @@ public class SocketFactory
 	    try {
 		s = SSLSocketFactory.getDefault().createSocket(host, port);
 	    } catch (IOException ex) {
-		debugService.error(null, ex);
+		loggingService.error(null, ex);
 		return null;
 	    }
 	} else {
@@ -84,7 +84,7 @@ public class SocketFactory
 	    try {
 		s=SSLServerSocketFactory.getDefault().createServerSocket(port);
 	    } catch (IOException ex) {
-		debugService.error(null, ex);
+		loggingService.error(null, ex);
 		return null;
 	    }
 	} else {

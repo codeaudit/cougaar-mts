@@ -20,8 +20,6 @@
  */
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.Service;
-import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
 
@@ -38,26 +36,19 @@ import java.util.StringTokenizer;
  * options.
  *
  **/
-public final class Debug
+public final class Debug implements DebugFlags
 {
 
-    Debug(ServiceBroker sb) {
-	LoggingService loggingService = (LoggingService)
+    private int flags;
+    private LoggingService loggingService;
+
+    private Debug(ServiceBroker sb) {
+	this.loggingService = (LoggingService)
 	    sb.getService(this, LoggingService.class, null);
-	Provider provider = new Provider(loggingService);
-	sb.addService(DebugService.class, provider);
-	
+	initialize();
     }
 
-
-    private static class ServiceImpl implements DebugService, DebugFlags
-    {
-	private int flags;
-	private LoggingService loggingService;
-
-	private ServiceImpl(LoggingService loggingService) {
-	    this.loggingService = loggingService;
-
+    private void initialize() {
 	    flags = 0;
 	    String debug = 
 		System.getProperty("org.cougaar.message.transport.debug");
@@ -109,113 +100,31 @@ public final class Debug
 	    }
 	}
 
-	public boolean isDebugEnabled(int mask) {
-	    return loggingService.isDebugEnabled() && ((flags & mask) == mask);
-	}
 
 
-	// Everything else is just delegation
 
-	public boolean isEnabledFor(int level) {
-	    return loggingService.isEnabledFor(level);
-	}
-
-	public void log(int level, String message) {
-	    loggingService.log(level, message);
-	}
-
-	public void log(int level, String message, Throwable t) {
-	    loggingService.log(level, message, t);
-	}
-
-	public boolean isDebugEnabled() {
-	    return loggingService.isDebugEnabled();
-	}
-
-	public boolean isInfoEnabled() {
-	    return loggingService.isInfoEnabled();
-	}
-
-	public boolean isWarnEnabled() {
-	    return loggingService.isWarnEnabled();
-	}
-
-	public boolean isErrorEnabled() {
-	    return loggingService.isErrorEnabled();
-	}
-
-	public boolean isFatalEnabled() {
-	    return loggingService.isFatalEnabled();
-	}
-
-
-	public void debug(String message) {
-	    loggingService.debug(message);
-	}
-
-	public void debug(String message, Throwable t) {
-	    loggingService.debug(message, t);
-	}
-
-
-	public void info(String message) {
-	    loggingService.info(message);
-	}
-
-	public void info(String message, Throwable t) {
-	    loggingService.info(message, t);
-	}
-
-	public void warn(String message) {
-	    loggingService.warn(message);
-	}
-
-	public void warn(String message, Throwable t) {
-	    loggingService.warn(message, t);
-	}
-
-	public void error(String message) {
-	    loggingService.error(message);
-	}
-
-	public void error(String message, Throwable throwable) {
-	    loggingService.error(message, throwable);
-	}
-
-	public void fatal(String message) {
-	    loggingService.fatal(message);
-	}
-
-	public void fatal(String message, Throwable throwable) {
-	    loggingService.fatal(message, throwable);
-	}
-
+    private boolean debugEnabled(int mask) {
+	if (loggingService != null && !loggingService.isDebugEnabled())
+	    return false;
+	else
+	    return ((flags & mask) == mask);
     }
 
-    private static class Provider implements ServiceProvider {
-	private DebugService service;
 
-	private Provider(LoggingService loggingService) {
-	    service = new ServiceImpl(loggingService);
-	}
 
-	public Object getService(ServiceBroker sb, 
-				 Object requestor, 
-				 Class serviceClass) 
-	{
-	    if (serviceClass == DebugService.class) {
-		return service;
-	    } else {
-		return null;
-	    }
-	}
 
-	public void releaseService(ServiceBroker sb, 
-				   Object requestor, 
-				   Class serviceClass, 
-				   Object service)
-	{
-	}
+    private static Debug debug;
+
+    static synchronized void enableDebug(ServiceBroker sb) {
+	if (debug != null) return;
+	debug = new Debug(sb);
+    }
+
+    public static boolean isDebugEnabled(int mask) {
+	if (debug != null)
+	    return debug.debugEnabled(mask);
+	else
+	    return false;
     }
 
 }

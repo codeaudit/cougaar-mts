@@ -112,20 +112,20 @@ class FutileSerializingLinkProtocol
 		oos = new ObjectOutputStream(baos);
 		oos.writeObject(message);
 	    } catch (java.io.IOException ioe) {
-		if (debugService.isErrorEnabled())
-		    debugService.error(null, ioe);
+		if (loggingService.isErrorEnabled())
+		    loggingService.error(null, ioe);
 		return;
 	    }
 
 	    try {
 		oos.close();
 	    } catch (java.io.IOException ioe2) {
-		if (debugService.isErrorEnabled())
-		    debugService.error(null, ioe2);
+		if (loggingService.isErrorEnabled())
+		    loggingService.error(null, ioe2);
 	    }
 
-	    if (debugService.isInfoEnabled())
-		debugService.info("Serialized " + message);
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("Serialized " + message);
 	}
 
 	public void forwardMessage(Message message) 

@@ -128,7 +128,7 @@ public class RMILinkProtocol
     }
 
     protected SocketFactory getSocketFactory() {
-	return new SocketFactory(false, debugService);
+	return new SocketFactory(false, loggingService);
     }
 
 
@@ -185,7 +185,7 @@ public class RMILinkProtocol
 	    MTImpl impl = makeMTImpl(myAddress, getDeliverer(), socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
-	    debugService.error(null, ex);
+	    loggingService.error(null, ex);
 	}
     }
 
@@ -196,8 +196,8 @@ public class RMILinkProtocol
 	    getNameSupport().registerAgentInNameServer(proxy,addr,
 						  getProtocolType());
 	} catch (Exception e) {
-	    if (debugService.isErrorEnabled())
-		debugService.error("Error registering Protocol",
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("Error registering Protocol",
 					  e);
 	}
     }
@@ -211,8 +211,8 @@ public class RMILinkProtocol
 	    getNameSupport().registerAgentInNameServer(proxy,addr,
 						  getProtocolType());
 	} catch (Exception e) {
-	    if (debugService.isErrorEnabled())
-		debugService.error("Error registering client", e);
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("Error registering client", e);
 	}
     }
 
@@ -225,8 +225,8 @@ public class RMILinkProtocol
 	    getNameSupport().unregisterAgentInNameServer(proxy,addr,
 						    getProtocolType());
 	} catch (Exception e) {
-	    if (debugService.isErrorEnabled())
-		debugService.error("Error unregistering client", e);
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("Error unregistering client", e);
 	}
     }
 
@@ -347,8 +347,8 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// force recache of remote
-		if (debugService.isDebugEnabled(COMM)) 
-		    debugService.error(null, ex);
+		if (Debug.isDebugEnabled(COMM)) 
+		    loggingService.error(null, ex);
 		remote = null;
 		// Assume anything else is a comm failure
 		throw new CommFailureException(ex);

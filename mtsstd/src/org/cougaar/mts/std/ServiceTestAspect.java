@@ -44,8 +44,8 @@ public class ServiceTestAspect extends StandardAspect
 	    }
 	}
 
-	if (svc != null && debugService.isInfoEnabled()) {
-	    debugService.info("LinkProtocol Service " + text + ":" + 
+	if (svc != null && loggingService.isInfoEnabled()) {
+	    loggingService.info("LinkProtocol Service " + text + ":" + 
 				     addr + "->" + svc.addressKnown(addr));
 	}
 			       

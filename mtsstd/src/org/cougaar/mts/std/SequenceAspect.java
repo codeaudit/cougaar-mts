@@ -143,8 +143,8 @@ public class SequenceAspect extends StandardAspect
 		while (itr.hasNext()) {
 		    SequenceEnvelope next = (SequenceEnvelope)itr.next();
 		    if (next.sequence_number == nextSeqNum){
-			if (debugService.isDebugEnabled())
-			    debugService.debug("delivered held message" + 
+			if (loggingService.isDebugEnabled())
+			    loggingService.debug("delivered held message" + 
 					       next); 
 			stripAndDeliver(next);
 			itr.remove();
@@ -152,8 +152,8 @@ public class SequenceAspect extends StandardAspect
 		}//end while
 	    }
 	    else {
-		if (debugService.isDebugEnabled())
-		    debugService.debug("holding a out of sequence message" + 
+		if (loggingService.isDebugEnabled())
+		    loggingService.debug("holding a out of sequence message" + 
 				       message); 
 		heldMessages.add(message);
 	    }
@@ -180,8 +180,8 @@ public class SequenceAspect extends StandardAspect
 	     conversation.handleNewMessage((SequenceEnvelope) message);
 	 }
 	 else {
-	     if (debugService.isErrorEnabled())
-		 debugService.error("Not a SequenceEnvelope: " + message);
+	     if (loggingService.isErrorEnabled())
+		 loggingService.error("Not a SequenceEnvelope: " + message);
 	     link.deliverMessage(message);
 	 }
 

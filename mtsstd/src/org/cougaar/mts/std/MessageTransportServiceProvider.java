@@ -30,6 +30,7 @@ import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.StateObject;
+import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
@@ -64,7 +65,7 @@ public final class MessageTransportServiceProvider
 
     // Services we use (more than once)
     private AspectSupport aspectSupport;
-    private DebugService debugService;
+    private LoggingService loggingService;
 
     // Hang on to these because they implement services we provide.
     private WatcherAspect watcherAspect;
@@ -90,8 +91,8 @@ public final class MessageTransportServiceProvider
     
     // The MTS itself as a client
     public void receiveMessage(Message message) {
-	if (debugService.isErrorEnabled())
-	    debugService.error("# MTS received unwanted message: " + 
+	if (loggingService.isErrorEnabled())
+	    loggingService.error("# MTS received unwanted message: " + 
 				      message);
     }
 
@@ -116,7 +117,7 @@ public final class MessageTransportServiceProvider
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
 
-	AspectSupportImpl impl = new AspectSupportImpl(this, debugService);
+	AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
 	sb.addService(AspectSupport.class, impl);
 	aspectSupport = 
 	    (AspectSupport) sb.getService(this, AspectSupport.class, null);
@@ -153,7 +154,7 @@ public final class MessageTransportServiceProvider
 	sb.addService(ReceiveLinkProviderService.class, receiveLinkFactory);
 
 	LinkSelectionPolicyServiceProvider lspsp =
-	    new LinkSelectionPolicyServiceProvider(debugService);
+	    new LinkSelectionPolicyServiceProvider(loggingService);
 	sb.addService(LinkSelectionPolicy.class, lspsp);
 	
 	DestinationQueueFactory	destQFactory = 
@@ -192,8 +193,8 @@ public final class MessageTransportServiceProvider
 	// Make proxy
 	proxy = new MessageTransportServiceProxy(client, link);
 	proxies.put(addr, proxy);
-	if (debugService.isDebugEnabled(DebugFlags.SERVICE))
-	    debugService.debug("Created MessageTransportServiceProxy for " 
+	if (Debug.isDebugEnabled(DebugFlags.SERVICE))
+	    loggingService.debug("Created MessageTransportServiceProxy for " 
 				      +requestor+
 				      " with address "
 				      +client.getMessageAddress());
@@ -206,9 +207,10 @@ public final class MessageTransportServiceProvider
         super.initialize();
         ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
 	
-	Debug debug = new Debug(sb); // provide DebugService
-	debugService = 
-	    (DebugService) sb.getService(this, DebugService.class, null);
+	Debug.enableDebug(sb);
+
+	loggingService = 
+	    (LoggingService) sb.getService(this, LoggingService.class, null);
 
 	// Later this will be replaced by a Node-level service
 	ThreadServiceProvider tsp = new ThreadServiceProvider();

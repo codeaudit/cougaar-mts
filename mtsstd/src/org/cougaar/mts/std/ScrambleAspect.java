@@ -101,8 +101,8 @@ public class ScrambleAspect extends StandardAspect
 	    timer.schedule(timerTask, 3000); //schedule a timer task
 	    heldMessage = message;
 	    heldMessageCount++;
-	    if (debugService.isDebugEnabled())
-		debugService.debug("Holding message #" +printString()  
+	    if (loggingService.isDebugEnabled())
+		loggingService.debug("Holding message #" +printString()  
 				   + "  " +  heldMessageCount );
 	}
 	private void flipMessage(Message message, Message heldMessage){
@@ -111,8 +111,8 @@ public class ScrambleAspect extends StandardAspect
 	    link.sendMessage(heldMessage);
 	    flippedMessageCount++;
 	    int previousCount = messageCount - 1;
-	    if (debugService.isDebugEnabled())
-		debugService.debug("Flipping messages #" + previousCount +
+	    if (loggingService.isDebugEnabled())
+		loggingService.debug("Flipping messages #" + previousCount +
 				   " and #" + printString() +  
 				   " and " + message.getTarget() + "  "
 				   +  flippedMessageCount );
@@ -123,8 +123,8 @@ public class ScrambleAspect extends StandardAspect
 	    if (heldMessage != null){
 		link.sendMessage(heldMessage);
 		forcedMessageCount++;
-		if (debugService.isDebugEnabled())
-		    debugService.debug("Forcing message #" + printString() +
+		if (loggingService.isDebugEnabled())
+		    loggingService.debug("Forcing message #" + printString() +
 				       "  " + forcedMessageCount);
 		heldMessage = null;
 	    }

@@ -48,8 +48,8 @@ public class TraceAspect
 		String id = getRegistry().getIdentifier();
 		logStream = new PrintWriter(new FileWriter(id+".cml"), true);
 	    } catch (Exception e) {
-		if (debugService.isErrorEnabled())
-		    debugService.error("Logging required but not possible - exiting", e);
+		if (loggingService.isErrorEnabled())
+		    loggingService.error("Logging required but not possible - exiting", e);
 		System.exit(1);
 	    }
 	}

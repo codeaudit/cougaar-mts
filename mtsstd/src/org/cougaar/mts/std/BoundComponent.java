@@ -24,7 +24,7 @@ import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.Component;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.util.GenericStateModelAdapter;
-
+import org.cougaar.core.service.LoggingService;
 
 /**
  * Root class of Components of the MTS.
@@ -39,7 +39,7 @@ abstract public class BoundComponent
     private NameSupport nameSupport;
     private AspectSupport aspectSupport;
 
-    protected DebugService debugService;
+    protected LoggingService loggingService;
 
     BoundComponent() {
 
@@ -47,7 +47,7 @@ abstract public class BoundComponent
 
     public void load() {
 	super.load();
-	getDebugService();
+	getLoggingService();
 	getRegistry();
 	getNameSupport();
 	getAspectSupport();
@@ -85,13 +85,14 @@ abstract public class BoundComponent
     }
 
 
-    protected DebugService getDebugService() {
-	if (debugService == null) {
+    protected LoggingService getLoggingService() {
+	if (loggingService == null) {
 	    ServiceBroker sb = getServiceBroker();
-	    debugService =
-		(DebugService) sb.getService(this, DebugService.class,  null);
+	    loggingService =
+		(LoggingService) sb.getService(this, LoggingService.class,  
+					       null);
 	}
-	return debugService;
+	return loggingService;
     }
 
 

@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.service.LoggingService;
 
 
 /**
@@ -38,11 +39,11 @@ public class LinkSelectionPolicyServiceProvider
 	"org.cougaar.message.transport.policy";
 
     private LinkSelectionPolicy policy;
-    private DebugService debugService;
+    private LoggingService loggingService;
 
-    LinkSelectionPolicyServiceProvider(DebugService debugService) {
+    LinkSelectionPolicyServiceProvider(LoggingService loggingService) {
 	policy = createSelectionPolicy();
-	this.debugService = debugService;
+	this.loggingService = loggingService;
     }
 
 
@@ -55,13 +56,13 @@ public class LinkSelectionPolicyServiceProvider
 		Class policy_class = Class.forName(policy_classname);
 		LinkSelectionPolicy selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
-		if (debugService.isDebugEnabled(POLICY))
-		    debugService.debug("Created " +  policy_classname);
+		if (Debug.isDebugEnabled(POLICY))
+		    loggingService.debug("Created " +  policy_classname);
 
 		return selectionPolicy;
 	    } catch (Exception ex) {
-		if (debugService.isErrorEnabled())
-		    debugService.error(null, ex);
+		if (loggingService.isErrorEnabled())
+		    loggingService.error(null, ex);
 		return new MinCostLinkSelectionPolicy();
 	    }
 	}	       
@@ -76,8 +77,8 @@ public class LinkSelectionPolicyServiceProvider
 	if (serviceClass == LinkSelectionPolicy.class) {
 	    if (requestor instanceof DestinationQueueImpl)
 		return policy;
-	    else if (debugService.isErrorEnabled())
-		debugService.error("Illegal request for LinkSelectionPolicy from "
+	    else if (loggingService.isErrorEnabled())
+		loggingService.error("Illegal request for LinkSelectionPolicy from "
 				   + requestor);
 	}
 	return null;

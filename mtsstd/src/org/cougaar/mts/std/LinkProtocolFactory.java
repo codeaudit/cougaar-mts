@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.service.LoggingService;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -45,7 +46,7 @@ final class LinkProtocolFactory
 
     private MessageTransportRegistryService registry;
     private NameSupport nameSupport;
-    private DebugService debugService;
+    private LoggingService loggingService;
     private Container container;
 
     LinkProtocolFactory(Container container, ServiceBroker sb)
@@ -54,8 +55,8 @@ final class LinkProtocolFactory
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	nameSupport = (NameSupport)
 	    sb.getService(this, NameSupport.class, null);
-	debugService = (DebugService)
-	    sb.getService(this, DebugService.class, null);
+	loggingService = (LoggingService)
+	    sb.getService(this, LoggingService.class, null);
 	this.container = container;
 	loadProtocols();
     }
@@ -73,8 +74,8 @@ final class LinkProtocolFactory
 	    Class protocol_class = Class.forName(classname);
 	    protocol = (LinkProtocol) protocol_class.newInstance();
 	} catch (Exception xxx) {
-	    if (debugService.isErrorEnabled())
-		debugService.error(null, xxx);
+	    if (loggingService.isErrorEnabled())
+		loggingService.error(null, xxx);
 	    return null;
 	}
 	initProtocol(protocol);

@@ -32,6 +32,7 @@ import java.util.StringTokenizer;
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.service.LoggingService;
 
 /**
  * This is utility class which supports loading aspects
@@ -45,8 +46,8 @@ final class AspectSupportImpl implements ServiceProvider
 
     private static AspectSupport service;
 
-    AspectSupportImpl(Container container, DebugService debugService) {
-	service = new ServiceImpl(container, debugService);
+    AspectSupportImpl(Container container, LoggingService loggingService) {
+	service = new ServiceImpl(container, loggingService);
     }
 
 
@@ -90,14 +91,14 @@ final class AspectSupportImpl implements ServiceProvider
 	private ArrayList aspects;
 	private HashMap aspects_table;
 	private Container container;
-	private DebugService debugService;
+	private LoggingService loggingService;
 
 
-	private ServiceImpl(Container container, DebugService debugService) {
+	private ServiceImpl(Container container, LoggingService loggingService) {
 	    aspects = new ArrayList();
 	    aspects_table = new HashMap();
 	    this.container = container;
-	    this.debugService = debugService;
+	    this.loggingService = loggingService;
 	}
     
  
@@ -110,8 +111,8 @@ final class AspectSupportImpl implements ServiceProvider
 	    while (tokenizer.hasMoreElements()) {
 		String classname = tokenizer.nextToken();
 		MessageTransportAspect aspect = findAspect(classname);
-		if (aspect != null && debugService.isErrorEnabled()) {
-		    debugService.error("Ignoring duplicate aspect "+
+		if (aspect != null && loggingService.isErrorEnabled()) {
+		    loggingService.error("Ignoring duplicate aspect "+
 					      classname);
 		    continue;
 		}
@@ -121,7 +122,7 @@ final class AspectSupportImpl implements ServiceProvider
 		    addAspect(aspect);
 		}
 		catch (Exception ex) {
-		    debugService.error(null, ex);
+		    loggingService.error(null, ex);
 		}
 	    }
 	}
@@ -143,8 +144,8 @@ final class AspectSupportImpl implements ServiceProvider
 		aspects_table.put(classname, aspect);
 	    }
 	    container.add(aspect);
-	    if (debugService.isDebugEnabled(ASPECTS))
-		debugService.debug("Added aspect " + aspect);
+	    if (Debug.isDebugEnabled(ASPECTS))
+		loggingService.debug("Added aspect " + aspect);
 	}
 
 
@@ -165,8 +166,8 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (debugService.isDebugEnabled(ASPECTS))
-			debugService.debug("attached " + delegate);
+		    if (Debug.isDebugEnabled(ASPECTS))
+			loggingService.debug("attached " + delegate);
 		}
 	    }
 
@@ -178,8 +179,8 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getReverseDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (debugService.isDebugEnabled(ASPECTS))
-			debugService.debug("reverse attached " 
+		    if (Debug.isDebugEnabled(ASPECTS))
+			loggingService.debug("reverse attached " 
 						  + delegate);
 		}
 	    }

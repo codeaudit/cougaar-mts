@@ -59,8 +59,8 @@ public class StepperControlExampleAspect
 		    (StepService) sb.getService(this, StepService.class, null);
 		if (svc != null)
 		    svc.pause(getDestination());
-		else if (debugService.isErrorEnabled())
-		    debugService.error("StepperAspect not loaded?");
+		else if (loggingService.isErrorEnabled())
+		    loggingService.error("StepperAspect not loaded?");
 	    }
 	}
     }

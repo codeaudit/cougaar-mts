@@ -74,8 +74,8 @@ public class SecurityAspect extends StandardAspect
     // rid of MessageTransportClassic
     Message secure(Message message) {
 	if (msm != null) {
-	    if (debugService.isDebugEnabled(SECURITY)) 
-		debugService.debug("Securing message " + message);
+	    if (Debug.isDebugEnabled(SECURITY)) 
+		loggingService.debug("Securing message " + message);
 	    return msm.secureMessage(message);
 	} else {
 	    return message;
@@ -86,17 +86,17 @@ public class SecurityAspect extends StandardAspect
     // rid of MessageTransportClassic
     Message unsecure(Message message) {
 	if (msm == null) {
-	    if (debugService.isErrorEnabled())
-		debugService.error("MessageTransport "+this+
+	    if (loggingService.isErrorEnabled())
+		loggingService.error("MessageTransport "+this+
 					  " received SecureMessage "+message+
 					  " but has no MessageSecurityManager.");
 	    return null;
 	} else {
-	    if (debugService.isDebugEnabled(SECURITY))
-		debugService.debug("Unsecuring message " + message);
+	    if (Debug.isDebugEnabled(SECURITY))
+		loggingService.debug("Unsecuring message " + message);
 	    Message msg = msm.unsecureMessage((SecureMessage) message);
-	    if (msg == null && debugService.isErrorEnabled()) {
-		debugService.error("MessageTransport "+this+
+	    if (msg == null && loggingService.isErrorEnabled()) {
+		loggingService.error("MessageTransport "+this+
 					  " received an unverifiable SecureMessage "
 					  +message);
 	    }

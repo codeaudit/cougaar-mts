@@ -60,7 +60,7 @@ public class StubDumperAspect extends StandardAspect
 	{
 	    super.registerAgentInNameServer(proxy, address, transportType);
 
-	    debugService.info("\nRegistering " + address +
+	    loggingService.info("\nRegistering " + address +
 				     " for "+ transportType +
 				     " = [" +proxy+ "]");
 	}
@@ -70,7 +70,7 @@ public class StubDumperAspect extends StandardAspect
 	{
 	    Object result = super.lookupAddressInNameServer(address,
 							    transportType);
-	    debugService.info("\nLookup " + address +
+	    loggingService.info("\nLookup " + address +
 				     " for "+ transportType +
 				     " = [" +result+ "]");
 	    return result;
