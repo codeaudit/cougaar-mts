@@ -44,7 +44,6 @@ public final class LinkProtocolFactory
 	"org.cougaar.message.protocol.classes";
 
     private MessageTransportRegistryService registry;
-    private MessageDeliverer deliverer;
     private NameSupport nameSupport;
     private Container container;
 
@@ -57,12 +56,8 @@ public final class LinkProtocolFactory
 	this.container = container;
     }
 
-    void setDeliverer(MessageDeliverer deliverer) {
-	this.deliverer = deliverer;
-    }
 
     private void initProtocol(LinkProtocol protocol) {
-	protocol.setDeliverer(deliverer);
 	registry.addLinkProtocol(protocol);
 	container.add(protocol);
     }
@@ -82,7 +77,6 @@ public final class LinkProtocolFactory
     }
 
     public void loadProtocols() {
-
 	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
 	if (protocol_classes == null || protocol_classes.equals("")) {
 	    // Make the two standard protocols if none specified.

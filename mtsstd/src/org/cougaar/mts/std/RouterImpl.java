@@ -21,13 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
 
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-
+import org.cougaar.core.component.ServiceBroker;
 
 /**
  * The default, and for now only, implementation of Router.  The
@@ -35,15 +30,12 @@ import org.cougaar.core.mts.MessageAddress;
  * each message's target, and enqueues the outgoing message there.  */
 class RouterImpl implements Router
 {
-    private MessageTransportRegistryService registry;
-    private DestinationQueueFactory destQFactory;
+    private DestinationQueueService destQService;
 
-
-    RouterImpl(MessageTransportRegistryService registry, 
-	       DestinationQueueFactory destQFactory)
+    RouterImpl(ServiceBroker sb)
     {
-	this.registry = registry;
-	this.destQFactory = destQFactory;
+	destQService = (DestinationQueueService)
+	    sb.getService(this, DestinationQueueService.class, null);
     }
 
     /** Find or make a DestinationQueue for this message, then add the
@@ -51,7 +43,7 @@ class RouterImpl implements Router
      so we do not have to cache here.  */
     public void routeMessage(Message message) {
 	MessageAddress destination = message.getTarget();
-	DestinationQueue queue = destQFactory.getDestinationQueue(destination);
+	DestinationQueue queue = destQService.getDestinationQueue(destination);
 	queue.holdMessage(message);
     }
 

@@ -21,14 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
 import java.util.HashMap;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 
 /**
@@ -96,7 +89,7 @@ class LoopbackLinkProtocol
 	public void forwardMessage(Message message) 
 	    throws MisdeliveredMessageException
 	{
-	    deliverer.deliverMessage(message, message.getTarget());
+	    getDeliverer().deliverMessage(message, message.getTarget());
 	}
 
 	public boolean retryFailedMessage(Message message, int retryCount) {

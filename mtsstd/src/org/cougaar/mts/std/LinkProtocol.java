@@ -43,7 +43,7 @@ abstract public class LinkProtocol
     extends BoundComponent
     implements DebugFlags, ServiceProvider
 {
-    protected MessageDeliverer deliverer;
+    private MessageDeliverer deliverer;
     
     protected class ServiceProxy 
 	implements LinkProtocolService
@@ -96,7 +96,16 @@ abstract public class LinkProtocol
     protected LinkProtocol() {
     }
 
-
+    protected MessageDeliverer getDeliverer() {
+	if (deliverer == null) {
+	    ServiceBroker sb = getServiceBroker();
+	    MessageDelivererService delivererService = 
+		(MessageDelivererService) 
+		sb.getService(this,  MessageDelivererService.class, null);
+	    deliverer = delivererService.getMessageDeliverer(this);
+	}
+	return deliverer;
+    }
 
     // Allow subclasses to provide their own load()
     protected void super_load() {
@@ -133,9 +142,6 @@ abstract public class LinkProtocol
     }
 
 
-    public void setDeliverer(MessageDeliverer deliverer) {
-	this.deliverer = deliverer;
-    }
 
 
 }

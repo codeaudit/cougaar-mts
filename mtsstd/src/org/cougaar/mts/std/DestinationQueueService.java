@@ -21,28 +21,11 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.component.ServiceBroker;
 
+import org.cougaar.core.component.Service;
 
-
-/**
- * A factory which makes Routers.  Since this factory is a subclass of
- * AspectFactory, aspects can be attached to a SendQueue when it's
- * first instantiated.  */
-public class RouterFactory extends AspectFactory
+public interface DestinationQueueService extends Service
 {
-    RouterFactory(ServiceBroker sb)
-    {
-	super(sb);
-    }
-
-    /**
-     * Make a RouterImpl abd attach all relevant aspects.  The final
-     * object returned is the outermost aspect delegate, or the
-     * RouterImpl itself if there are no aspects.  */
-    Router getRouter() {
-	Router router = new RouterImpl(sb);
-	router = (Router) attachAspects(router, Router.class);
-	return router;
-    }
+    public DestinationQueue getDestinationQueue(MessageAddress destination);
 }
+

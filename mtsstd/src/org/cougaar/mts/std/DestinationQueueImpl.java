@@ -44,24 +44,23 @@ class DestinationQueueImpl
 {
     private static final int MAX_DELAY = 60 * 1000; // 1 minute
     private MessageAddress destination;
-    private LinkProtocolFactory protocolFactory;
     private MessageTransportRegistryService registry;
     private LinkSelectionPolicy selectionPolicy;
     private DestinationQueue delegate;
 
     private ArrayList destinationLinks;
 
-    DestinationQueueImpl(MessageAddress destination,
-			 ServiceBroker sb,
-			 MessageTransportRegistryService registry,
-			 LinkProtocolFactory protocolFactory,
-			 LinkSelectionPolicy selectionPolicy)
+    DestinationQueueImpl(MessageAddress destination, ServiceBroker sb)
     {
 	super(destination.toString(), sb);
 	this.destination = destination;
-	this.protocolFactory = protocolFactory;
-	this.registry =registry;
-	this.selectionPolicy = selectionPolicy;
+
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
+	selectionPolicy =
+	(LinkSelectionPolicy)
+	    sb.getService(this, LinkSelectionPolicy.class, null);
+
 	this.delegate = this;
 
 	// cache DestinationLinks, per transport

@@ -22,44 +22,56 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * A factory which makes MessageDeliverers.  It uses the standard
- * find-or-make approach, where the name is used for finding.  Since
- * this factory is a subclass of AspectFactory, aspects can be
- * attached to a MessageDeliverer when it's first instantiated.  */
-public class MessageDelivererFactory extends AspectFactory
+ * A factory which makes MessageDeliverers.  In the current design
+ * there's onlyone Deliverer */
+public class MessageDelivererFactory 
+    extends AspectFactory
+    implements MessageDelivererService, ServiceProvider
 {
-    private ArrayList deliverers = new ArrayList();
-    private MessageTransportRegistryService registry;
+    private MessageDeliverer deliverer;
 
-    MessageDelivererFactory(ServiceBroker sb)
+    MessageDelivererFactory(ServiceBroker sb, String id)
     {
 	super(sb);
-	registry = (MessageTransportRegistryService)
+	MessageTransportRegistryService registry = 
+	    (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
+
+	String name = id+"/Deliverer";
+	MessageDeliverer d = new MessageDelivererImpl(name, registry);
+	deliverer = 
+	    (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
     }
 
-    /**
-     * Find a MessageDeliverer with the given name, or make a new one
-     * of type MessageDelivererImpl if there isn't one by the given
-     * name.  In the latter case, attach all relevant aspects as part
-     * of the process of creating the queue.  The final object
-     * returned is the outermost aspect delegate, or the
-     * MessageDelivererImpl itself if there are no aspects.  */
-    MessageDeliverer getMessageDeliverer(String name) {
-	Iterator i = deliverers.iterator();
-	while (i.hasNext()) {
-	    MessageDeliverer candidate = (MessageDeliverer) i.next();
-	    if (candidate != null && candidate.matches(name)) return candidate;
-	}
-	// No match, make a new one
-	MessageDeliverer d = new MessageDelivererImpl(name, registry);
-	d = (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
-	deliverers.add(d);
-	return d;
+    public MessageDeliverer getMessageDeliverer(LinkProtocol lp) {
+	return deliverer;
     }
+
+    public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	// Could restrict this request to LinkProtocols
+	if (serviceClass == MessageDelivererService.class) {
+	    return this;
+	} else {
+	    return null;
+	}
+    }
+
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
+
+
 }

@@ -182,7 +182,7 @@ public class RMILinkProtocol
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
-	    MTImpl impl = makeMTImpl(myAddress, deliverer, socfac);
+	    MTImpl impl = makeMTImpl(myAddress, getDeliverer(), socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
 	    ex.printStackTrace();

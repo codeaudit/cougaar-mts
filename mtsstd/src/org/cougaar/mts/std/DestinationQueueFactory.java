@@ -22,7 +22,7 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.component.ServiceProvider;
 
 import java.util.HashMap;
 
@@ -31,24 +31,16 @@ import java.util.HashMap;
  * find-or-make approach, where a target address is used for finding.
  * Since this factory is a subclass of AspectFactory, aspects can be
  * attached to a DestinationQueue when it's first instantiated.  */
-public class DestinationQueueFactory extends  AspectFactory
+public class DestinationQueueFactory 
+    extends  AspectFactory
+    implements DestinationQueueService, ServiceProvider
 {
     private HashMap queues;
-    private MessageTransportRegistryService registry;
-    private LinkProtocolFactory protocolFactory;
-    private LinkSelectionPolicy selectionPolicy;
 
-    DestinationQueueFactory(ServiceBroker sb,
-			    LinkProtocolFactory protocolFactory) 
+    DestinationQueueFactory(ServiceBroker sb) 
     {
 	super(sb);
 	queues = new HashMap();
-	registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
-	this.protocolFactory = protocolFactory;
-	selectionPolicy =
-	(LinkSelectionPolicy)
-	    sb.getService(this, LinkSelectionPolicy.class, null);
     }
 
     /**
@@ -58,16 +50,13 @@ public class DestinationQueueFactory extends  AspectFactory
      * process of creating the queue.  The final object returned is
      * the outermost aspect delegate, or the DestinationQueueImpl itself if
      * there are no aspects.  */
-    DestinationQueue getDestinationQueue(MessageAddress destination) {
+    public DestinationQueue getDestinationQueue(MessageAddress destination) 
+    {
 	    
 	DestinationQueue q = (DestinationQueue) queues.get(destination);
 	if (q == null) {
 	    DestinationQueueImpl qimpl = 
-		new DestinationQueueImpl(destination,
-					 sb,
-					 registry,
-					 protocolFactory,
-					 selectionPolicy);
+		new DestinationQueueImpl(destination, sb);
 	    q = (DestinationQueue) attachAspects(qimpl, 
 						 DestinationQueue.class);
 	    qimpl.setDelegate(q);
@@ -75,5 +64,36 @@ public class DestinationQueueFactory extends  AspectFactory
 	}
 	return q;
     }
+
+
+
+
+
+    public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	// Could restrict this request to the Router
+	if (serviceClass == DestinationQueueService.class) {
+	    if (requestor instanceof RouterImpl) {
+		return this;
+	    } else {
+		System.err.println("Ilegal request for DestinationQueueService"
+				   +  " from " +requestor);
+		return null;
+	    }
+	} else {
+	    return null;
+	}
+    }
+
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
+
 }
 
