@@ -145,11 +145,14 @@ final class DestinationQueueImpl
 		if (loggingService.isErrorEnabled()) 
 		    loggingService.error(null, lookup_error);
 	    } catch (CommFailureException comm_failure) {
-		Exception cause = comm_failure.getException();
+		Exception cause = comm_failure.getException();	
+		String msg = "Failure in communication, message " +message+
+		    " caused by " +cause;
 		if (cause instanceof DontRetryException) {
 		    // Always log these.
-		    String tag = "DontRetryException: " + message;
-		    loggingService.error(tag, cause.getCause());
+		    if (loggingService.isErrorEnabled()) {
+			loggingService.error(msg, cause.getCause());
+		    }
 
 		    // Act as if the message has gone through.
 		    resetState();
@@ -159,7 +162,7 @@ final class DestinationQueueImpl
 		    // related to security.  Retry.
 		    lastException = comm_failure;
 		    if (loggingService.isErrorEnabled()) 
-			loggingService.error(null, comm_failure);
+			loggingService.error(msg, comm_failure);
 		}
 	    } catch (MisdeliveredMessageException misd) {
 		lastException = misd;
