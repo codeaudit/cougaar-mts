@@ -98,7 +98,7 @@ public class TraceAspect
 					      MessageAddress addr, 
 					      String type)
 	{
-	    log("NameSupport", "Register Agent" + proxy);
+	    log("NameSupport", "Register Agent " + addr + " " + proxy);
 	    super.registerAgentInNameServer(proxy, addr, type);
 	}
 
@@ -106,7 +106,7 @@ public class TraceAspect
 						MessageAddress addr, 
 						String type) 
 	{
-	    log("NameSupport", "Unregister Agent " + proxy);
+	    log("NameSupport", "Unregister Agent " + addr + " " + proxy);
 	    super.unregisterAgentInNameServer(proxy, addr, type);
 	}
 
