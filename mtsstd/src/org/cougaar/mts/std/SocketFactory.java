@@ -158,14 +158,26 @@ public class SocketFactory
 
 
 
+    private static final String WRAPPER_CLASS_PROP =
+	"org.cougaar.message.transport.server_socket_class";
 
+    private static Class serverWrapperClass;
+    static {
+	String classname = System.getProperty(WRAPPER_CLASS_PROP);
+	if (classname != null) {
+	    try {
+		serverWrapperClass = Class.forName(classname);
+	    } catch (Exception ex) {
+		System.err.println(ex);
+	    }
+	}
+    }
 
     // The factory will be serialized along with the MTImpl, and we
     // definitely don't want to include the AspectSupport when that
     // happens.  Instead, the aspect delegation will be handled by a
     // special static call.
     private boolean use_ssl, use_aspects;
-
 
     public SocketFactory(boolean use_ssl, boolean use_aspects) {
 	this.use_ssl = use_ssl;
@@ -200,7 +212,19 @@ public class SocketFactory
 	} else {
 	    s = new ServerSocket(port);
 	}
-	return s;
+	if (serverWrapperClass != null) {
+	    try {
+		ServerSocketWrapper wrapper = (ServerSocketWrapper)
+		    serverWrapperClass.newInstance();
+		wrapper.setDelegate(s);
+		return wrapper;
+	    } catch (Exception ex) {
+		System.err.println(ex);
+		return s;
+	    }
+	} else {
+	    return s;
+	}
     }
 
 

@@ -24,9 +24,8 @@ package org.cougaar.core.mts;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
+import java.nio.channels.SocketChannel;
+import java.net.*;
 
 abstract public class SocketDelegateImplBase extends Socket
 {
@@ -34,6 +33,106 @@ abstract public class SocketDelegateImplBase extends Socket
 
     protected SocketDelegateImplBase(Socket socket) {
 	this.socket = socket;
+    }
+
+    public void sendUrgentData(int data) 
+	throws java.io.IOException
+    {
+	socket.sendUrgentData(data);
+    }
+
+    public void bind(SocketAddress bindpoint)
+	throws java.io.IOException
+    {
+	socket.bind(bindpoint);
+    }
+
+    public void connect(SocketAddress endpoint) 
+	throws java.io.IOException
+    {
+	socket.connect(endpoint);
+    }
+
+    public void connect(SocketAddress endpoint, int timeout) 
+	throws java.io.IOException
+    {
+	socket.connect(endpoint, timeout);
+    }
+
+    public SocketChannel getChannel() {
+	return socket.getChannel();
+    }
+
+
+    public SocketAddress getLocalSocketAddress() {
+	return socket.getLocalSocketAddress();
+    }
+
+
+    public SocketAddress getRemoteSocketAddress() {
+	return socket.getRemoteSocketAddress();
+    }
+
+
+    public boolean getOOBInline() 
+	throws SocketException
+    {
+	return socket.getOOBInline();
+    }
+
+    public void setOOBInline(boolean  on) 
+	throws SocketException
+    {
+	socket.setOOBInline(on);
+    }
+
+
+    public boolean getReuseAddress() 
+	throws SocketException
+    {
+	return socket.getReuseAddress();
+    }
+
+    public void setReuseAddress(boolean  on) 
+	throws SocketException
+    {
+	socket.setReuseAddress(on);
+    }
+
+
+    public int getTrafficClass() 
+	throws SocketException
+    {
+	return socket.getTrafficClass();
+    }
+
+
+    public void setTrafficClass(int tc) 
+	throws SocketException
+    {
+	socket.setTrafficClass(tc);
+    }
+
+
+    public boolean isBound() {
+	return socket.isBound();
+    }
+
+    public boolean isClosed() {
+	return socket.isClosed();
+    }
+
+    public boolean isConnected() {
+	return socket.isConnected();
+    }
+
+
+    public boolean isInputShutdown() {
+	return socket.isInputShutdown();
+    }
+
+    public boolean isOutputShutdown() {
+	return socket.isOutputShutdown();
     }
 
     public InetAddress getInetAddress() {
