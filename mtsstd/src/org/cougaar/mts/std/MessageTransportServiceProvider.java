@@ -106,7 +106,7 @@ public class MessageTransportServiceProvider
 
 
     private void createAspectSupport() {
-	aspectSupport = new AspectSupportImpl(this);
+	aspectSupport = AspectSupportImpl.makeInstance(this);
 
 	//Watcher Aspect is special because the MTServicer interface
 	//needs it.  So we have to make the Watcher Aspect all the

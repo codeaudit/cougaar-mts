@@ -37,12 +37,23 @@ public final class AspectSupportImpl implements AspectSupport
     private final static String ASPECTS_PROPERTY = 
 	"org.cougaar.message.transport.aspects";
 
+    private static AspectSupportImpl instance;
+
+    public static AspectSupport instance() {
+	return instance;
+    }
+
+    public static AspectSupport makeInstance(Container container) {
+	instance = new AspectSupportImpl(container);
+	return instance;
+    }
+
     private ArrayList aspects;
     private HashMap aspects_table;
     private Container container;
 
     // Should this be a singleton?
-    public AspectSupportImpl(Container container) {
+    private AspectSupportImpl(Container container) {
 	aspects = new ArrayList();
 	aspects_table = new HashMap();
 	this.container = container;

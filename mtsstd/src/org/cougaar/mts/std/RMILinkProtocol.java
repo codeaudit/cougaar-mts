@@ -63,23 +63,18 @@ public class RMILinkProtocol
     // private MessageAddress myAddress;
     private MT myProxy;
     private HashMap links;
-
+    private SocketFactory socfac;
 
     public RMILinkProtocol(String id, AspectSupport aspectSupport) {
 	super(aspectSupport); 
 	links = new HashMap();
-	RMISocketFactory socfac = RMISocketFactory.getSocketFactory();
-	if (! (socfac instanceof SocketFactory)) {
-	    socfac = new SocketFactory(this);
-	    try {
-		RMISocketFactory.setSocketFactory(socfac);
-	    }
-	    catch (java.io.IOException ex) {
-		ex.printStackTrace();
-	    }
-	}
-
-
+	socfac = new SocketFactory();
+// 	try {
+// 	    RMISocketFactory.setSocketFactory(socfac);
+// 	}
+// 	catch (java.io.IOException ex) {
+// 	    ex.printStackTrace();
+// 	}
     }
 
 
@@ -107,7 +102,7 @@ public class RMILinkProtocol
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = nameSupport.getNodeMessageAddress();
-	    MTImpl impl = new MTImpl(myAddress, deliverer);
+	    MTImpl impl = new MTImpl(myAddress, deliverer, socfac);
 	    myProxy = getServerSideProxy(impl);
 	} catch (java.rmi.RemoteException ex) {
 	    ex.printStackTrace();
@@ -258,6 +253,7 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// force recache of remote
+		ex.printStackTrace();
 		remote = null;
 		// Assume anything else is a comm failure
 		throw new CommFailureException(ex);

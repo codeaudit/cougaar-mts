@@ -26,7 +26,9 @@ import org.cougaar.core.society.MessageAddress;
 import org.cougaar.core.society.MessageStatistics;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 
 /**
  * This aspect adds simple statistics gathering to the client side
@@ -93,8 +95,8 @@ public class StatisticsAspect
 			      LinkProtocol protocol, 
 			      Class type) 
     {
-	if (type == OutputStream.class) {
-	    return new StatisticsStreamWrapper((OutputStream) object);
+	if (type == Socket.class) {
+	    return new StatisticsSocket((Socket) object);
 	} else if (type == DestinationQueue.class) {
 	    return new StatisticsDestinationQueue((DestinationQueue) object);
 	} else {
@@ -148,6 +150,34 @@ public class StatisticsAspect
 	    return queue.size();
 	}
     }
+
+
+
+
+
+    private class StatisticsSocket extends Socket {
+	private Socket socket;
+	private StatisticsSocket(Socket socket) {
+	    this.socket = socket;
+	}
+
+	public InputStream getInputStream() 
+	    throws IOException 
+	{
+	    return socket.getInputStream();
+	}
+
+
+	public OutputStream getOutputStream() 
+	    throws IOException 
+	{
+	    OutputStream s = socket.getOutputStream();
+	    return (s == null) ? null : new StatisticsStreamWrapper(s);
+	}
+
+
+    }
+
 
     private class StatisticsStreamWrapper extends OutputStream {
 	OutputStream wrapped;
