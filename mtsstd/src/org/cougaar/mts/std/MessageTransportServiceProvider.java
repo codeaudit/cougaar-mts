@@ -96,9 +96,12 @@ public final class MessageTransportServiceProvider
     
     // The MTS itself as a client
     public void receiveMessage(Message message) {
-	if (loggingService.isErrorEnabled())
-	    loggingService.error("# MTS received unwanted message: " + 
-				      message);
+	if (loggingService.isErrorEnabled()) {
+	    MessageAddress target = message.getTarget();
+	    if (!(target instanceof MulticastMessageAddress))
+		loggingService.error("# MTS received unwanted message: " + 
+				     message);
+	}
     }
 
     public MessageAddress getMessageAddress() {
