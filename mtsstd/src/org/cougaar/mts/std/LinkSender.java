@@ -109,11 +109,11 @@ public class LinkSender implements Runnable
 			    if (serviceProxy != null) 
 				serviceProxy.messageDelivered(message);
 			    break;
-			} catch (DestinationLink.UnregisteredNameException no_name) {
+			} catch (UnregisteredNameException no_name) {
 			    // nothing to say here
-			} catch (DestinationLink.NameLookupException lookup_error) {
+			} catch (NameLookupException lookup_error) {
 			    lookup_error.printStackTrace();
-			} catch (DestinationLink.CommFailureException comm_failure) {
+			} catch (CommFailureException comm_failure) {
 			    comm_failure.printStackTrace();
 			}
 		    }

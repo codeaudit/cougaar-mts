@@ -94,7 +94,7 @@ public class SecurityAspect extends StandardAspect
 
 
     public Object getDelegate(Object delegate, Class type) {
-	if (type == DestinationLink.class) {
+	if (type ==  DestinationLink.class) {
 	    return new SecureDestinationLink((DestinationLink) delegate);
 	} else if (type == MessageDeliverer.class) {
 	    return new SecureDeliverer((MessageDeliverer) delegate);
@@ -113,9 +113,9 @@ public class SecurityAspect extends StandardAspect
 	}
 
 	public void forwardMessage(Message message) 
-	    throws DestinationLink.UnregisteredNameException, 
-		   DestinationLink.NameLookupException, 
-		   DestinationLink.CommFailureException
+	    throws UnregisteredNameException, 
+		   NameLookupException, 
+		   CommFailureException
 	{
 	    link.forwardMessage(secure(message));
 	}

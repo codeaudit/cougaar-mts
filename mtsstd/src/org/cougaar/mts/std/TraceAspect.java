@@ -196,9 +196,9 @@ public class TraceAspect
 	}
 	
 	public void forwardMessage(Message message) 
-	    throws DestinationLink.UnregisteredNameException, 
-		   DestinationLink.NameLookupException, 
-		   DestinationLink.CommFailureException
+	    throws UnregisteredNameException, 
+		   NameLookupException, 
+		   CommFailureException
 
 	{
 	    log("DestinationLink", message.toString());

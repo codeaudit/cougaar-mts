@@ -96,9 +96,9 @@ public class SerializationAspect extends StandardAspect
 	}
 
 	public synchronized void forwardMessage(Message message) 
-	    throws DestinationLink.UnregisteredNameException, 
-		   DestinationLink.NameLookupException, 
-		   DestinationLink.CommFailureException
+	    throws UnregisteredNameException, 
+		   NameLookupException, 
+		   CommFailureException
 
 	{
 	    // Serialize into the stream rather than pushing on the
