@@ -32,9 +32,30 @@ import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
+/**
+ * Generic service specialized by DestinationQueueProviderService and
+ * SendQueueProviderService.  The methods at this level handle queue
+ * "events" registration as well as the removal of messages.
+ */
 public interface QueueProviderService extends Service
 {
+    /**
+     * Removes any messages matching the given predicate, in all
+     * relevant queues.  Each removed message is added to the given
+     * ArrayList.
+     */
     void removeMessages(UnaryPredicate predicate, ArrayList removed);
+
+    /**
+     * Add the given listener to the list of those receiving callbacks
+     * for queue events.  Listeners will be notified of queue events
+     * via callback. @see QueueListener.
+     */
     void addListener(QueueListener listener);
+
+    /**
+     * Removes the given listener from the list of those receiving callbacks
+     * for queue events. 
+     */
     void removeListener(QueueListener listener);
 }

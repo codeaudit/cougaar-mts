@@ -32,10 +32,31 @@ import java.util.Iterator;
 import org.cougaar.core.component.Component;
 import org.cougaar.core.component.Service;
 
+/**
+ * The selection of a DestinationLink is handled by this MTS-internal
+ * service, which is accessible only to MTS components.  Its one
+ * method is used to select a link for every message processed by
+ * every DestinationQueue.
+ *
+ * The default implementation simply chooses the cheapest valid link,
+ * using the cost and isValid methods.  Other policies can be set with
+ * the LinkSelectionProvisionService. 
+ */
 public interface LinkSelectionPolicy extends Service, Component
 {
-    DestinationLink selectLink (Iterator links, 
-				AttributedMessage msg, 
+    /**
+     * Selects a DestinationLink from the given set of candidates for
+     * the given message.  This method will be invoked multiple times
+     * on the same message until the DestinationLink it returns
+     * succeeds in processing the message.  In these retry situations
+     * the message will always contains the same set of attributes
+     * for every try.  Any attributes added in subsequent processing
+     * will be stripped before the retry.  The @param failedMessage
+     * parameter can be used to examine the full set of attributes in
+     * this scenario.
+     */
+    DestinationLink selectLink (Iterator candidate_links, 
+				AttributedMessage message, 
 				AttributedMessage failedMsg,
 				int retryCount,
 				Exception lastException);

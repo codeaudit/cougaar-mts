@@ -31,7 +31,9 @@ import org.cougaar.mts.base.CougaarIOException;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.MT;
 
-/** actual RMI remote interface for MessageTransport clients (clusters).
+/** 
+ * Extension of the standard RMI interface that uses preserialized
+ * byte arrays instead of AttributedMessages.
  **/
 
 public interface SerializedMT extends MT {

@@ -36,7 +36,7 @@ import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * SendLink is the first station after the MessageTransportService
- * implementation class.  It's primary job is to validate the
+ * implementation class.  Its primary job is to validate the
  * originator and add the message to the SendQueue, thereby ending the
  * call sequence from the caller's point of view (sendMessage). <p>
  * @see org.cougaar.core.service.MessageTransportService

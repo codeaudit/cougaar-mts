@@ -28,7 +28,17 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.mts.MessageAddress;
 
+/**
+ * This is the factory service for getting a queue for a given
+ * sender.  It's both and implemented and provided by
+ * SendQueueFactory and is accessible only to MTS components.
+ */
 public interface SendQueueProviderService extends QueueProviderService
 {
+    /**
+     * Find or make a SendQueue for the given destination.  In the
+     * current implementation a singleton SendQueue is used for all
+     * senders. 
+     */
     SendQueue getSendQueue(MessageAddress sender);
 }

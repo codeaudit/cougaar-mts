@@ -31,7 +31,9 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.core.component.Service;
 
 /**
- * This is a utility class which supports loading aspects
+ * This is an MTS-internal utility service which supports the use of
+ * aspects.  It's used to add new aspects, typically at load time, and
+ * to attach aspect delegates at run time.
  */
 public interface AspectSupport extends Service
 {
