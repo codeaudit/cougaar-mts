@@ -23,7 +23,7 @@ import java.io.OutputStream;
  */
 public class StatisticsAspect 
     extends StandardAspect
-    implements MessageStatistics, Debug, MessageStatisticsService
+    implements MessageStatistics, MessageStatisticsService
 
 {
     // This variable holds the total current size of ALL
@@ -116,7 +116,7 @@ public class StatisticsAspect
 	    accumulateStatistics();
 	    Object next = queue.next();
 	    
-	    if (DEBUG_TRANSPORT) {
+	    if (Debug.debugStatistics()) {
 		MessageStatistics.Statistics result = 
 		    getMessageStatistics(false);
 		System.err.println("###### Count=" + result.totalMessageCount
@@ -164,7 +164,7 @@ public class StatisticsAspect
 	    messageLengthHistogram[bin]++;
 	    statisticsTotalBytes += byteCount;
 
-	    if (DEBUG_TRANSPORT)
+	    if (Debug.debugStatistics())
 		System.err.println("%%%%%%% byteCount = " + byteCount);
 
 	    byteCount = 0;

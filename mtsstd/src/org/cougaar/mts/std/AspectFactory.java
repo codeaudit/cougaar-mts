@@ -23,7 +23,6 @@ import java.lang.reflect.Constructor;
  * aspect, if it wishes to attach one for a given factory
  * interface. */
 abstract public class AspectFactory 
-    implements Debug
 {
     private ArrayList aspects;
 
@@ -48,7 +47,8 @@ abstract public class AspectFactory
 
 		Object candidate = aspect.getDelegate(delegate, type);
 		if (candidate != null) delegate = candidate;
-		if (DEBUG_TRANSPORT) System.out.println("======> " + delegate);
+		if (Debug.debugAspects()) 
+		    System.out.println("======> " + delegate);
 	    }
 	}
 	return delegate;

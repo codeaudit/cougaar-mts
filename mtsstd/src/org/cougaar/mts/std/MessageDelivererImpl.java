@@ -22,7 +22,7 @@ import java.util.Iterator;
  * The default, and for now only, implementation of MessageDeliverer.
  * The implementation of <strong>deliverMessage</strong> forwards each
  * message on to the appropriate DestinationLink. */
-public class MessageDelivererImpl implements MessageDeliverer, Debug
+public class MessageDelivererImpl implements MessageDeliverer
 {
     private MessageTransportRegistry registry;
     private String name;
@@ -54,7 +54,7 @@ public class MessageDelivererImpl implements MessageDeliverer, Debug
 		while (i.hasNext()) {
 		    ReceiveLink link = (ReceiveLink) i.next();
 		    link.deliverMessage(message);
-		    if (DEBUG_MULTICAST)
+		    if (Debug.debugMulticast())
 			System.out.println("!!!!! Delivering multicast to " +
 					   link);
 		}

@@ -31,7 +31,7 @@ import org.cougaar.core.society.Node;
 
 public class MessageTransportServiceProvider 
     extends ContainerSupport
-    implements ContainerAPI, ServiceProvider, Debug
+    implements ContainerAPI, ServiceProvider
 {
 
     private final static String ASPECTS_PROPERTY = 
@@ -203,7 +203,7 @@ public class MessageTransportServiceProvider
 					    MessageTransportService.class,
 					    null);
 	proxies.put(addr, proxy);
-	if (Debug.DEBUG_TRANSPORT)
+	if (Debug.debugService())
 	    System.out.println("=== Created MessageTransportServiceProxy for " 
 			       +  requestor);
 	return proxy;
