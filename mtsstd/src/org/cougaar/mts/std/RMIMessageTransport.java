@@ -10,6 +10,7 @@
 
 package org.cougaar.core.mts;
 
+import org.cougaar.core.naming.NS;
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
 
@@ -46,7 +47,7 @@ import java.util.HashMap;
 public class RMIMessageTransport 
     extends MessageTransport
 {
-    public static final String TRANSPORT_TYPE = ":simpleRMI";
+    public static final String TRANSPORT_TYPE = NS.DirSeparator + "simpleRMI";
     
 
     private MessageAddress myAddress;
