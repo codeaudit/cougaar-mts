@@ -61,15 +61,19 @@ public class StatisticsServlet
 	    reset_string.equalsIgnoreCase("true");
 
 	MessageStatistics.Statistics stats = null;
-	if (statisticsService!=null) {
-	    stats = statisticsService.getMessageStatistics(reset);
-	}
-	if (stats == null) {
+	if (statisticsService == null) {
 	    out.print("<p><b>");
 	    out.print("ERROR: Message Statistics Service is not Available\n");
-	    out.print("</b><p> org.cougaar.core.mts.StatisticsAspect ");
+	    out.print("</b><p> org.cougaar.mts.std.StatisticsAspect ");
 	    out.print("should be loaded into Node \n");
 	    return;
+	} else {
+	    stats = statisticsService.getMessageStatistics(reset);
+	    if (stats == null) {
+		out.print("<p><b>");
+		out.print("ERROR: Message Statistics Service returned null statistics\n");
+		return;
+	    }
 	}
 	out.print("<h2>Messages from all agents on node ");
 	out.print(getNodeID());
