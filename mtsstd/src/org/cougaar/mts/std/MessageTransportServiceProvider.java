@@ -179,7 +179,15 @@ public class MessageTransportServiceProvider
 	MessageAddress addr = client.getMessageAddress();
 	Object proxy = proxies.get(addr);
 	if (proxy != null) return proxy;
-	proxy = new MessageTransportServiceProxy(client, sendQ, aspectSupport);
+	
+	// Make SendLink and attach aspect delegates
+	SendLink link = new SendLinkImpl(sendQ, addr);
+	Class c = SendLink.class;
+	Object raw = aspectSupport.attachAspects(link, c, null);
+	link = (SendLink) raw;
+
+	// Make proxy
+	proxy = new MessageTransportServiceProxy(client, link);
 	proxies.put(addr, proxy);
 	if (Debug.debugService())
 	    System.out.println("=== Created MessageTransportServiceProxy for " 

@@ -64,7 +64,6 @@ class MessageTransportRegistry
 
     private String name;
     private HashMap receiveLinks = new HashMap(89);
-    private HashMap serviceProxies = new HashMap(89);
     private MessageTransportServiceProvider serviceProvider;
     private LinkProtocolFactory protocolFactory;
     private ReceiveLinkFactory receiveLinkFactory;
@@ -94,29 +93,6 @@ class MessageTransportRegistry
 	return name;
     }
 
-    
-    void registerServiceProxy(MessageTransportServiceProxy proxy,
-			      MessageAddress address)
-    {
-	MessageTransportServiceProxy old = findServiceProxy(address);
-	if (old != null && old != proxy) {
-	    System.err.println("##### Reregistering " + address + 
-			       " as " + proxy);
-	}
-	serviceProxies.put(address, proxy);
-    }
-
-    void unregisterServiceProxy(MessageTransportServiceProxy proxy,
-				MessageAddress address)
-    {
-	// Check for match before deleting?
-	serviceProxies.remove(address);
-    }
-
-    MessageTransportServiceProxy findServiceProxy(MessageAddress address) {
-	return (MessageTransportServiceProxy) serviceProxies.get(address);
-    }
-	
 
     private void addLocalClient(MessageTransportClient client) {
 	MessageAddress key = client.getMessageAddress();

@@ -26,15 +26,17 @@ import org.cougaar.core.society.MessageAddress;
 
 import java.util.ArrayList;
 
-/**
- * Attachment point for ServiceProxy delegates
- */
-public interface MessageTransportServiceDelegate 
+public interface SendLink
 {
     public void sendMessage(Message message);
-    public ArrayList flushMessages();
+    public void flushMessages(ArrayList messsages);
     public void release();
     public MessageAddress getAddress();
     public boolean okToSend(Message message);
+
+    public void registerClient(MessageTransportClient client);
+    public void unregisterClient(MessageTransportClient client);
+    public String getIdentifier();
+    public boolean addressKnown(MessageAddress a);
 }
 

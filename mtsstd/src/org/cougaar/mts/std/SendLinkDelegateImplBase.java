@@ -26,64 +26,53 @@ import org.cougaar.core.society.MessageAddress;
 
 import java.util.ArrayList;
 
-public class ServiceProxyDelegateImplBase
-    implements MessageTransportServiceDelegate
+abstract public class SendLinkDelegateImplBase
+    implements SendLink
 {
 
-    private SendQueue sendQ;
-    private MessageAddress addr;
-    protected MessageTransportServiceDelegate delegate;
+    protected SendLink link;
 
-    ServiceProxyDelegateImplBase(SendQueue sendQ, MessageAddress addr) {
-	this.sendQ = sendQ;
-	this.addr = addr;
-    }
-
-    protected ServiceProxyDelegateImplBase(MessageTransportServiceDelegate d) {
-	this.delegate = d;
+    protected SendLinkDelegateImplBase(SendLink link) {
+	this.link = link;
     }
 
     public void sendMessage(Message message) {
-	if (delegate != null) 
-	    delegate.sendMessage(message);
-	else
-	    sendQ.sendMessage(message);
+	link.sendMessage(message);
     }
 
-    public ArrayList flushMessages() {
-	if (delegate != null) 
-	    return delegate.flushMessages();
-	else
-	    return null;
+    public void flushMessages(ArrayList droppedMessages) {
+	link.flushMessages(droppedMessages);
     }
 
     public MessageAddress getAddress() {
-	if (delegate != null)
-	    return delegate.getAddress();
-	else
-	    return addr;
+	return link.getAddress();
     }
 
     public void release() {
-	if (delegate != null) delegate.release();
-	sendQ = null;
+	link.release();
+	link = null;
     }
 
     public boolean okToSend(Message message) {
-	MessageAddress target = message.getTarget();
-	// message is ok as long as the target is not empty or null
-	if (delegate != null) {
-	    return delegate.okToSend(message);
-	} else if (target == null || target.toString().equals("")) {
-	    System.err.println("**** Malformed message: "+message);
-	    Thread.dumpStack();
-	    return false;
-	} else {
-	    return true;
-	}
+	return link.okToSend(message);
     }
 
 	
+    public void registerClient(MessageTransportClient client) {
+	link.registerClient(client);
+    }
+
+    public void unregisterClient(MessageTransportClient client) {
+	link.unregisterClient(client);
+    }
+
+    public String getIdentifier() {
+	return link.getIdentifier();
+    }
+
+    public boolean addressKnown(MessageAddress address) {
+	return link.addressKnown(address);
+    }
 
 }
 

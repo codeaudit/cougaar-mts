@@ -43,8 +43,8 @@ public class MulticastAspect extends StandardAspect
 			      LinkProtocol protocol, 
 			      Class type) 
     {
-	if (type == MessageTransportServiceDelegate.class) {
-	    return new ServiceDelegate((MessageTransportServiceDelegate) delegate);
+	if (type == SendLink.class) {
+	    return new SendLinkDelegate((SendLink) delegate);
 	} else if (type == MessageDeliverer.class) {
 	    return new DelivererDelegate((MessageDeliverer) delegate);
 	} else {
@@ -70,10 +70,10 @@ public class MulticastAspect extends StandardAspect
     }
 
 
-    public class ServiceDelegate extends ServiceProxyDelegateImplBase {
+    public class SendLinkDelegate extends SendLinkDelegateImplBase {
 	
-	public ServiceDelegate (MessageTransportServiceDelegate delegate) {
-	    super(delegate);
+	public SendLinkDelegate (SendLink link) {
+	    super(link);
 	}
 	
 
@@ -84,7 +84,7 @@ public class MulticastAspect extends StandardAspect
 		    if (Debug.debugMulticast())
 			System.out.println("### MCAST: Local multicast");
 		    msg = new MulticastMessageEnvelope(msg,  destination);
-		    delegate.sendMessage(msg);
+		    link.sendMessage(msg);
 		} else {
 		    if (Debug.debugMulticast())
 			System.out.println("### MCAST: Remote multicast");
@@ -99,11 +99,11 @@ public class MulticastAspect extends StandardAspect
 			    System.out.println("### MCAST: next address = " 
 					       + addr);
 			envelope = new MulticastMessageEnvelope(msg, addr);
-			delegate.sendMessage(envelope);
+			link.sendMessage(envelope);
 		    }
 		}
 	    } else {
-		delegate.sendMessage(msg);
+		link.sendMessage(msg);
 	    }
 	}
 

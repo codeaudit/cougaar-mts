@@ -38,19 +38,19 @@ public class FlushAspect extends StandardAspect
     }
 
 
-    private ServiceDelegate findServiceDelegate(Message message) {
+    private SendLinkDelegate findSendLink(Message message) {
 	MessageAddress addr = message.getOriginator();
-	return (ServiceDelegate) delegates.get(addr);
+	return (SendLinkDelegate) delegates.get(addr);
     }
 
-    private void registerServiceDelegate(ServiceDelegate delegate,
-					 MessageAddress addr)
+    private void registerSendLink(SendLinkDelegate link,
+				  MessageAddress addr)
     {
-	delegates.put(addr, delegate);
+	delegates.put(addr, link);
     }
 
-    private void unregisterServiceDelegate(ServiceDelegate delegate,
-					   MessageAddress addr)
+    private void unregisterSendLink(SendLinkDelegate link,
+				    MessageAddress addr)
     {
 	delegates.remove(addr);
     }
@@ -59,10 +59,10 @@ public class FlushAspect extends StandardAspect
 			      LinkProtocol protocol, 
 			      Class type) 
     {
-	if (type == MessageTransportServiceDelegate.class) {
-	    return new ServiceDelegate((MessageTransportServiceDelegate) delegate);
+	if (type == SendLink.class) {
+	    return new SendLinkDelegate((SendLink) delegate);
 	} else if (type == DestinationLink.class) {
-	    return new LinkDelegate((DestinationLink) delegate);
+	    return new DestinationLinkDelegate((DestinationLink) delegate);
 	} else {
 	    return null;
 	}
@@ -70,8 +70,10 @@ public class FlushAspect extends StandardAspect
 
 
     
-    public class LinkDelegate extends DestinationLinkDelegateImplBase {
-	public LinkDelegate(DestinationLink link) {
+    public class DestinationLinkDelegate
+	extends DestinationLinkDelegateImplBase 
+    {
+	public DestinationLinkDelegate(DestinationLink link) {
 	    super(link);
 	}
 
@@ -81,51 +83,51 @@ public class FlushAspect extends StandardAspect
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    ServiceDelegate delegate = findServiceDelegate(message);
+	    SendLinkDelegate sendLink = findSendLink(message);
 	    try {
 		link.forwardMessage(message);
-		if (delegate != null) delegate.messageDelivered(message);
+		if (sendLink != null) sendLink.messageDelivered(message);
 	    } catch (NameLookupException name_ex) {
-		if (delegate != null) delegate.messageFailed(message);
+		if (sendLink != null) sendLink.messageFailed(message);
 		throw name_ex;
 	    } catch (UnregisteredNameException unreg_ex) {
-		if (delegate != null) delegate.messageFailed(message);
+		if (sendLink != null) sendLink.messageFailed(message);
 		throw unreg_ex;
 	    } catch (CommFailureException comm_ex) {
-		if (delegate != null) delegate.messageFailed(message);
+		if (sendLink != null) sendLink.messageFailed(message);
 		throw comm_ex;
 	    } catch (MisdeliveredMessageException misd_ex) {
-		if (delegate != null) delegate.messageFailed(message);
+		if (link != null) sendLink.messageFailed(message);
 		throw misd_ex;
 	    }
 	}
 
 	public boolean retryFailedMessage(Message message, int count) {
-	    ServiceDelegate delegate = findServiceDelegate(message);
-	    if (delegate != null)
-		return delegate.retryFailedMessage(message, count);
+	    SendLinkDelegate sendLink = findSendLink(message);
+	    if (sendLink != null)
+		return sendLink.retryFailedMessage(message, count);
 	    else
 		return link.retryFailedMessage(message, count);
 	}
 
     }
 
-    public class ServiceDelegate extends ServiceProxyDelegateImplBase {
+    public class SendLinkDelegate extends SendLinkDelegateImplBase {
 	
 	private int outstandingMessages;
 	private ArrayList droppedMessages;
 	private boolean flushing;
 
-	public ServiceDelegate (MessageTransportServiceDelegate delegate) {
-	    super(delegate);
+	public SendLinkDelegate(SendLink link) {
+	    super(link);
 	    outstandingMessages = 0;
 	    flushing = false;
-	    registerServiceDelegate(this, getAddress());
+	    registerSendLink(this, getAddress());
 	}
 	
 	public void release() {
 	    droppedMessages = null;
-	    unregisterServiceDelegate(this, getAddress());
+	    unregisterSendLink(this, getAddress());
 	    super.release();
 	}
 
@@ -176,7 +178,7 @@ public class FlushAspect extends StandardAspect
 		} 
 	    }
 	    
-	    return delegate.okToSend(message);
+	    return link.okToSend(message);
 	}
 
 	public synchronized ArrayList flushMessages() {

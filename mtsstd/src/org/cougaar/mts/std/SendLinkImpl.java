@@ -23,66 +23,60 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
-import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
-
-/**
- * Currently the only implementation of MessageTransportService.  It
- * does almost nothing by itself - its work is accomplished by
- * redirecting calls to the corresponding SendLink.  */
-public class MessageTransportServiceProxy 
-    implements MessageTransportService
+public class SendLinkImpl
+    implements SendLink
 {
-    private SendLink link;
-    private MessageTransportClient client;
 
-    public MessageTransportServiceProxy(MessageTransportClient client,
-					SendLink link) 
+    private SendQueue sendQ;
+    private MessageAddress addr;
+    private MessageTransportRegistry registry;
+
+    SendLinkImpl(SendQueue sendQ, 
+		 MessageAddress addr)
     {
-	this.client = client;
-	this.link = link;
+	this.sendQ = sendQ;
+	this.addr = addr;
+	this.registry = MessageTransportRegistry.getRegistry();
     }
 
 
-    void release() {
-	client = null;
-	link.release();
-	link = null;
-    }
-    
-
-
-
-    /**
-     * Redirects the sendMessage to the SendQueue. */
     public void sendMessage(Message message) {
-	if (link.okToSend(message)) {
-	    link.sendMessage(message);
+	sendQ.sendMessage(message);
+    }
+
+    // Default is no-op, all the real work is done in FlushAspect
+    public void flushMessages(ArrayList droppedMessages) {
+    }
+
+    public MessageAddress getAddress() {
+	return addr;
+    }
+
+    public void release() {
+	sendQ = null;
+	registry = null;
+    }
+
+    public boolean okToSend(Message message) {
+	MessageAddress target = message.getTarget();
+	if (target == null || target.toString().equals("")) {
+	    System.err.println("**** Malformed message: "+message);
+	    Thread.dumpStack();
+	    return false;
+	} else {
+	    return true;
 	}
     }
 
-    /**
-     * Wait for all queued messages for our client to be either
-     * delivered or dropped. 
-     * @return the list of dropped messages, which could be null.
-     */
-    public synchronized ArrayList flushMessages() {
-	ArrayList droppedMessages = new ArrayList();
-	link.flushMessages(droppedMessages);
-	return droppedMessages;
-    }
-
-
-
-
+	
     /**
      * Redirects the request to the MessageTransportRegistry. */
     public synchronized void registerClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
-	link.registerClient(client);
+	registry.registerClient(client);
     }
 
 
@@ -90,7 +84,7 @@ public class MessageTransportServiceProxy
      * Redirects the request to the MessageTransportRegistry. */
     public synchronized void unregisterClient(MessageTransportClient client) {
 	// Should throw an exception of client != this.client
-	link.unregisterClient(client);
+	registry.unregisterClient(client);
 
 	// NB: The proxy (as opposed to the client) CANNOT be
 	// unregistered here.  If it were, messageDelivered callbacks
@@ -103,13 +97,13 @@ public class MessageTransportServiceProxy
     /**
      * Redirects the request to the MessageTransportRegistry. */
     public String getIdentifier() {
-	return link.getIdentifier();
+	return registry.getIdentifier();
     }
 
     /**
      * Redirects the request to the MessageTransportRegistry. */
     public boolean addressKnown(MessageAddress a) {
-	return link.addressKnown(a);
+	return registry.addressKnown(a);
     }
 
 }
