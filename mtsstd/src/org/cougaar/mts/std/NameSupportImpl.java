@@ -156,6 +156,13 @@ public final class NameSupportImpl implements ServiceProvider
 	    _unregister(addr.getAddress(), reference, protocol);
 	}
 
+	public void lookupAddressInNameServer(MessageAddress address, 
+					      String protocol,
+					      Callback callback)
+	{
+	    wpService.get(address.getAddress(), protocol, callback);
+	}
+
 	public URI lookupAddressInNameServer(MessageAddress address, 
 					     String protocol)
 	{

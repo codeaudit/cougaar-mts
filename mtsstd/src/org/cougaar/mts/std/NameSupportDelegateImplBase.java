@@ -24,6 +24,8 @@ package org.cougaar.core.mts;
 import java.net.URI;
 import java.util.Iterator;
 
+import org.cougaar.core.service.wp.Callback;
+
 abstract public class NameSupportDelegateImplBase implements NameSupport 
 {
     private NameSupport nameSupport;
@@ -53,6 +55,13 @@ abstract public class NameSupportDelegateImplBase implements NameSupport
 
     public void registerMTS(MessageAddress address) {
 	nameSupport.registerMTS(address);
+    }
+
+    public void lookupAddressInNameServer(MessageAddress address, 
+					  String protocol,
+					  Callback callback)
+    {
+	nameSupport.lookupAddressInNameServer(address, protocol, callback);
     }
 
     public URI lookupAddressInNameServer(MessageAddress address, 

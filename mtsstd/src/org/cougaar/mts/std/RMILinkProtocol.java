@@ -34,6 +34,9 @@ import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.ServiceRevokedListener;
 import org.cougaar.core.mts.RMILinkProtocol.Service;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.wp.AddressEntry;
+import org.cougaar.core.service.wp.Callback;
+import org.cougaar.core.service.wp.Response;
 
 /**
  * This is a minimal rmi message transport which does nothing other
@@ -67,14 +70,13 @@ public class RMILinkProtocol
     // private MessageAddress myAddress;
     private MT myProxy;
     private URI ref;
-    private HashMap links, remoteRefs;
+    private HashMap links;
     private SocketFactory socfac;
     private RMISocketControlService controlService;
 
     public RMILinkProtocol() {
 	super(); 
 	links = new HashMap();
-	remoteRefs = new HashMap();
 	socfac = getSocketFactory();
     }
 
@@ -200,40 +202,6 @@ public class RMILinkProtocol
 	} 
     }
 
-    private MT lookupRMIObject(MessageAddress address, boolean getProxy) 
-	throws Exception 
-    {
-	URI ref =  
-	    getNameSupport().lookupAddressInNameServer(address, 
-						       getProtocolType());
-
-	if (ref == null) return null;
-
-	Object object = null;
-	try {
-	    object = RMIRemoteObjectDecoder.decode(ref);
-	} catch (Throwable ex) {
-	    loggingService.error("Can't decode URI " +ref, ex);
-	}
-
-	remoteRefs.put(address, object);
-
-	if (object == null || !getProxy) return (MT) object;
-
-	if (controlService != null) 
-	    controlService.setReferenceAddress((Remote) object, address);
-	
-
-	if (object instanceof MT) {
-	    return (MT) object;
-	} else {
-	    throw new RuntimeException("Object "
-				       +object+
-				       " is not a MessageTransport!");
-	}
-
-    }
-
 
     private synchronized void findOrMakeMT() {
 	if (myProxy != null) return;
@@ -287,10 +255,6 @@ public class RMILinkProtocol
 
 
     public boolean addressKnown(MessageAddress address) {
-	try {
-	    return lookupRMIObject(address, false) != null;
-	} catch (Exception e) {
-	}
 	return false;
     }
 
@@ -298,12 +262,17 @@ public class RMILinkProtocol
     // Factory methods:
 
     public DestinationLink getDestinationLink(MessageAddress address) {
-	DestinationLink link = (DestinationLink) links.get(address);
-	if (link == null) {
-	    link = new Link(address); // attach aspects
-	    link =(DestinationLink) attachAspects(link, DestinationLink.class);
-	    links.put(address, link);
+	DestinationLink link = null;
+	synchronized (links) {
+	    link = (DestinationLink) links.get(address);
+	    if (link == null) {
+		link = new Link(address); // attach aspects
+		link = (DestinationLink) 
+		    attachAspects(link, DestinationLink.class);
+		links.put(address, link);
+	    }
 	}
+
 	return link;
     }
 
@@ -317,17 +286,86 @@ public class RMILinkProtocol
 	
 	private MessageAddress target;
 	private MT remote;
+	private boolean lookup_pending = false;
+	private URI lookup_result = null;
+	private Object lookup_lock = new Object();
+
 
 	protected Link(MessageAddress destination)
 	{
 	    this.target = destination;
 	}
 
+	private void decache() {
+	    remote = null;
+	    synchronized (lookup_lock) {
+		if (!lookup_pending) lookup_result = null;
+	    }
+	}
+
+	private Callback lookup_cb = new Callback() {
+		public void execute(Response response) {
+		    Response.Get rg = (Response.Get) response;
+		    AddressEntry entry = rg.getAddressEntry();
+		    synchronized (lookup_lock) {
+			lookup_pending = false;
+			lookup_result =(entry != null) ? entry.getURI() : null;
+		    }
+		}
+	    };
+
+
+	private MT lookupRMIObject() 
+	    throws Exception 
+	{
+	    URI ref = null;
+	    Object object = null;
+
+	    synchronized (lookup_lock) {
+		if (lookup_result != null) {
+		    ref = lookup_result;
+		} else if (lookup_pending) {
+		    return  null;
+		} else {
+		    lookup_pending = true;
+		    String ptype = getProtocolType();
+		    getNameSupport().lookupAddressInNameServer(target, 
+							       ptype, 
+							       lookup_cb);
+		    return null;
+		}
+	    }
+
+	    try {
+		object = RMIRemoteObjectDecoder.decode(ref);
+	    } catch (Throwable ex) {
+		loggingService.error("Can't decode URI " +ref, ex);
+	    }
+
+
+	    if (object == null) return null;
+
+	    if (controlService != null) 
+		controlService.setReferenceAddress((Remote) object, target);
+	
+
+	    if (object instanceof MT) {
+		return (MT) object;
+	    } else {
+		throw new RuntimeException("Object "
+					   +object+
+					   " is not a MessageTransport!");
+	    }
+	}
+
+
+
+
 
 	// *** HACK ****.  This is called from MTImpl.  Should be part
 	// *** of the DestinationLink interface.
 	public void incarnationChanged() {
-	    remote = null;
+	    decache();
 	}
 
 	private void cacheRemote() 
@@ -335,7 +373,7 @@ public class RMILinkProtocol
 	{
 	    if (remote == null) {
 		try {
-		    remote = lookupRMIObject(target, true);
+		    remote = lookupRMIObject();
 		}
 		catch (Exception lookup_failure) {
 		    throw new  NameLookupException(lookup_failure);
@@ -392,12 +430,12 @@ public class RMILinkProtocol
 	    } 
 	    catch (MisdeliveredMessageException mis) {
 		// force recache of remote
-		remote = null;
+		decache();
 		throw mis;
 	    }
 	    catch (CommFailureException cfe) {
 		// force recache of remote
-		remote = null;
+		decache();
 		throw cfe;
 	    }
 	    catch (java.rmi.RemoteException ex) {
@@ -405,14 +443,14 @@ public class RMILinkProtocol
 		    loggingService.error(null, ex);
 		handleSecurityException(ex);
 		// If we get here it wasn't a security exception
-		remote = null;
+		decache();
 		throw new CommFailureException(ex);
 	    }
 	    catch (Exception ex) {
 		// Ordinary comm failure.  Force recache of remote
 		if (loggingService.isErrorEnabled()) 
 		    loggingService.error(null, ex);
-		remote = null;
+		decache();
 		//  Ordinary comm failure
 		throw new CommFailureException(ex);
 	    }
@@ -421,7 +459,7 @@ public class RMILinkProtocol
 
 
 	public Object getRemoteReference() {
-	    return remoteRefs.get(target);
+	    return remote;
 	}
 
 	public void addMessageAttributes(MessageAttributes attrs) {
@@ -437,4 +475,3 @@ public class RMILinkProtocol
     }
 
 }
-

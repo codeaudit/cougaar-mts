@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Iterator;
 
 import org.cougaar.core.component.Service;
+import org.cougaar.core.service.wp.Callback;
 
 /**
  * This is utility class which hides the grimy details of dealing with
@@ -49,6 +50,10 @@ public interface NameSupport extends Service
     URI lookupAddressInNameServer(MessageAddress address, 
 				  String protocol,
 				  long timeout);
+
+    void lookupAddressInNameServer(MessageAddress address, 
+				   String protocol,
+				   Callback callback);
 
     Iterator lookupMulticast(MulticastMessageAddress address);
 
