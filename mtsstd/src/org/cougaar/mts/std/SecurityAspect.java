@@ -113,7 +113,17 @@ public class SecurityAspect extends StandardAspect
 	    return null;
 	} else if (type ==  DestinationLink.class) {
 	    return new SecureDestinationLink((DestinationLink) delegate);
-	} else if (type == MessageDeliverer.class) {
+	} else {
+	    return null;
+	}
+    }
+
+
+    public Object getReverseDelegate(Object delegate,
+				     LinkProtocol protocol,
+				     Class type) 
+    {
+	if (type == MessageDeliverer.class) {
 	    return new SecureDeliverer((MessageDeliverer) delegate);
 	} else {
 	    return null;

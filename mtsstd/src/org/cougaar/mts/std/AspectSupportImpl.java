@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.StringTokenizer;
 
 import org.cougaar.core.component.Container;
@@ -123,8 +124,23 @@ public final class AspectSupportImpl implements AspectSupport
 		    System.out.println("======> " + delegate);
 	    }
 	}
+
+	ListIterator litr = aspects.listIterator(aspects.size());
+	while (litr.hasPrevious()) {
+	    MessageTransportAspect aspect = 
+		(MessageTransportAspect) litr.previous();
+
+	    Object candidate = aspect.getReverseDelegate(delegate, protocol, type);
+	    if (candidate != null) {
+		delegate = candidate;
+		if (Debug.debugAspects()) 
+		    System.out.println("(r)======> " + delegate);
+	    }
+	}
+	
 	return delegate;
     }
+
 
 }
  

@@ -23,6 +23,7 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
+import org.cougaar.core.society.MessageEnvelope;
 import org.cougaar.core.society.MulticastMessageAddress;
 
 import java.util.ArrayList;
@@ -54,17 +55,15 @@ public class MulticastAspect extends StandardAspect
 
 
 
-    private static class MulticastMessageEnvelope extends Message {
+    private static class MulticastMessageEnvelope extends MessageEnvelope {
     
-	private Message contents;
 
 	MulticastMessageEnvelope(Message message, MessageAddress destination) {
-	    super(message.getOriginator(), destination);
-	    this.contents = message;
+	    super(message, message.getOriginator(), destination);
 	}
 
-	Message getContents() {
-	    return contents;
+	protected Message getContents() {
+	    return super.getContents();
 	}
     
     }

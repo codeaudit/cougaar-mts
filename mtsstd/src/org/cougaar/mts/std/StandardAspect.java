@@ -58,6 +58,14 @@ abstract public class StandardAspect
 	    return getDelegate(delegate, type);
 	}
     }
+
+
+    public Object getReverseDelegate(Object delegate, 
+				     LinkProtocol protocol,
+				     Class type) 
+    {
+	return null;
+    }
 	
 
 

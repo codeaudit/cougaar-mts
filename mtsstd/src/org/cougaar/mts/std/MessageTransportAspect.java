@@ -37,6 +37,10 @@ import org.cougaar.core.component.ServiceBroker;
 public interface MessageTransportAspect extends ContainerAPI
 {
     Object getDelegate(Object delegate, 
+		       LinkProtocol protocol,
+		       Class type);
+
+    Object getReverseDelegate(Object delegate, 
 			      LinkProtocol protocol,
 			      Class type);
 }
