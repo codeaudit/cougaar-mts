@@ -221,7 +221,8 @@ public final class MessageTransportServiceProvider
 
 	Debug.load(loggingService);
 
-	new ThreadServiceImpl(sb, "MTS");
+	ThreadServiceImpl ts = new ThreadServiceImpl(sb, "MTS");
+	ts.provideServices(sb);
 
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);

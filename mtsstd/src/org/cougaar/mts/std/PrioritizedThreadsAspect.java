@@ -22,7 +22,6 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.service.ThreadListenerService;
 import org.cougaar.core.service.ThreadControlService;
 import org.cougaar.core.thread.ThreadListener;
@@ -100,8 +99,6 @@ public class PrioritizedThreadsAspect
 	
 
 	ServiceBroker sb = getServiceBroker();
-	ThreadService threadService = (ThreadService) 
-	    sb.getService(this, ThreadService.class, null);
 	ThreadListenerService listenerService = (ThreadListenerService) 
 	    sb.getService(this, ThreadListenerService.class, null);
 	ThreadControlService controlService = (ThreadControlService) 
@@ -109,8 +106,8 @@ public class PrioritizedThreadsAspect
 
 
 	// Whack the queue
-	listenerService.addListener(threadService, this);
-	controlService.setQueueComparator(threadService, priorityComparator);
+	listenerService.addListener(this);
+	controlService.setQueueComparator(priorityComparator);
 
 	// we should release the services now.
 
