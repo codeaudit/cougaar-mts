@@ -201,14 +201,17 @@ public class RMILinkProtocol
 
 
 
+    // Hook to attach aspects to the client-side stub for the remote
+    // MT.
     private MT getClientSideProxy(Object object) {
 	return (MT) attachAspects(object, MT.class);
     }
 
 
-    // For now this can return an object of any arbitrary type!  The
-    // corresponding client proxy code has the responsibility for
-    // extracting a usable MT out of the object.
+    // Hook to attach aspects to the MT server object.  The class tag
+    // here is MTImpl to distinguish it from the client side proxy,
+    // above.  The final object itself only needs to match the MT
+    // interface, it doesn't have to be an MTImpl.
     private MT getServerSideProxy(Object object) 
 	throws RemoteException
     {
