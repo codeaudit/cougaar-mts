@@ -22,6 +22,7 @@
 package org.cougaar.core.mts;
 
 import java.io.IOException;
+import java.rmi.server.UnicastRemoteObject; // not used but needed by ANT
 import java.rmi.RemoteException;
 import org.cougaar.core.component.ServiceBroker;
 

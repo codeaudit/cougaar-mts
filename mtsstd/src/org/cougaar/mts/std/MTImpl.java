@@ -23,7 +23,7 @@ package org.cougaar.core.mts;
 
 import java.rmi.RemoteException;
 import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.UnicastRemoteObject;
+import java.rmi.server.UnicastRemoteObject; // not used but needed by ANT
 import java.rmi.server.RemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
