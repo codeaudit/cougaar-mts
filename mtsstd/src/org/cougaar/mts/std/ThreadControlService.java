@@ -25,6 +25,9 @@ import org.cougaar.core.component.Service;
 
 public interface ThreadControlService extends Service
 {
-    void setClientPriority(ThreadService client, int priority);
+    void setPriority(ThreadService client, int priority);
+    int runningThreadCount(ThreadService proxy);
+    int pendingThreadCount(ThreadService proxy);
     int activeThreadCount(ThreadService proxy);
+    void setMaxRunningThreadCount(ThreadService proxy, int count);
 }

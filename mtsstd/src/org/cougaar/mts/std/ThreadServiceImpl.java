@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.util.CircularQueue;
 import org.cougaar.util.PropertyParser;
 import org.cougaar.util.ReusableThreadPool;
 import org.cougaar.util.ReusableThread;
@@ -40,6 +41,18 @@ import java.util.Iterator;
  */
 class ThreadServiceImpl
 {
+    private static final String InitialPoolSizeProp =
+	"org.cougaar.thread.poolsize.initial";
+    private static final int InitialPoolSizeDefault = 32;
+    private static final String MaxPoolSizeProp =
+	"org.cougaar.thread.poolsize.max";
+    private static final int MaxPoolSizeDefault = 64;
+    private static final String MaxRunningCountProp =
+	"org.cougaar.thread.running.max";
+    private static final int MaxRunningCountDefault = 5;
+
+
+
     ThreadServiceImpl(ServiceBroker sb) {
 	ThreadServiceProvider provider = new ThreadServiceProvider();
 	sb.addService(ThreadService.class, provider);
@@ -64,10 +77,6 @@ class ThreadServiceImpl
 
 	ThreadServiceProvider() {
 	    proxies = new HashMap();
-	}
-
-	private synchronized Object getProxyForClient(Object client) {
-	    return proxies.get(client);
 	}
 
 	private synchronized Object findOrMakeProxyForClient (Object client) {
@@ -135,11 +144,26 @@ class ThreadServiceImpl
 	ThreadController() {
 	}
 
-	public void setClientPriority(ThreadService svc, int priority) {
+	public void setPriority(ThreadService svc, int priority) {
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
-		// Now set the priority of all the threads in proxy's
-		// ThreadGroup.
+		proxy.setPriority(priority);
+	    }
+	}
+
+	public void setMaxRunningThreadCount(ThreadService svc, int count) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		proxy.setMaxRunningThreadCount(count);
+	    }
+	}
+
+	public int runningThreadCount(ThreadService svc) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		return proxy.runningThreadCount();
+	    } else {
+		return -1;
 	    }
 	}
 
@@ -147,6 +171,16 @@ class ThreadServiceImpl
 	    if (svc != null && svc instanceof ThreadServiceProxy) {
 		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
 		return proxy.activeThreadCount();
+	    } else {
+		return -1;
+	    }
+	}
+
+
+	public int pendingThreadCount(ThreadService svc) {
+	    if (svc != null && svc instanceof ThreadServiceProxy) {
+		ThreadServiceProxy proxy = (ThreadServiceProxy) svc;
+		return proxy.pendingThreadCount();
 	    } else {
 		return -1;
 	    }
@@ -191,10 +225,9 @@ class ThreadServiceImpl
      */
     private static class ControllablePool extends ReusableThreadPool {
 	private ThreadServiceProxy proxy;
-	public ControllablePool(ThreadServiceProxy proxy, int init, int max) {
-	    super(init,max);
-	    this.proxy = proxy;
-	}
+	private CircularQueue pendingThreads;
+	private int maxRunningThreads;
+	private int runningThreadCount = 0;
 
 	public ControllablePool(ThreadServiceProxy proxy,
 				ThreadGroup group, 
@@ -202,11 +235,93 @@ class ThreadServiceImpl
 	{
 	    super(group, init, max);
 	    this.proxy = proxy;
+	    pendingThreads = new CircularQueue();
+	    maxRunningThreads = 
+		PropertyParser.getInt(MaxRunningCountProp, 
+				      MaxRunningCountDefault);
 	}
+
 
 	protected ReusableThread constructReusableThread() {
 	    return new ControllableThread(this);
 	}
+
+
+
+	// Several of the methods below should probably be
+	// synchronized.
+
+	private void setMaxRunningThreadCount(int count) {
+	    boolean more = false;
+	    synchronized (this) {
+		more = maxRunningThreads < count;
+		maxRunningThreads = count;
+	    }
+	    
+	    if (more) {
+		// we can run some pending threads
+		runMoreThreads();
+	    }
+	}
+
+	private synchronized int pendingThreadCount() {
+	    return pendingThreads.size();
+	}
+
+	private synchronized int runningThreadCount() {
+	    return runningThreadCount;
+	}
+
+
+	private synchronized int activeThreadCount() {
+	    return runningThreadCount + pendingThreads.size();
+	}
+
+	private synchronized boolean canStartThread() {
+	    return runningThreadCount < maxRunningThreads;
+	}
+
+	private void runNextPendingThread() {
+	    ControllableThread thread = null;
+	    synchronized (this) {
+		if (!pendingThreads.isEmpty()) {
+		    thread =(ControllableThread) pendingThreads.next();
+		}
+	    }
+	    if (thread != null) thread.start();
+	}
+
+
+	private void runMoreThreads() {
+	    ControllableThread thread = null;
+	    while (true) {
+		synchronized (this) {
+		    if (!pendingThreads.isEmpty()  && canStartThread()) {
+			thread = (ControllableThread) pendingThreads.next();
+		    } else {
+			return;
+		    }
+		}
+		thread.start();
+	    }
+	}
+
+	private void removeRunningThread(Thread thread) {
+	    synchronized (this) { --runningThreadCount; }
+	    proxy.notifyEnd(thread);
+	    runNextPendingThread();
+	}
+
+	private void startRunningThread(Thread thread) {
+	    synchronized (this) { ++runningThreadCount; }
+	    proxy.notifyStart(thread);
+	}
+
+	private synchronized void addPendingThread(Thread thread) {
+	    if (!pendingThreads.contains(thread))
+		pendingThreads.add(thread);
+	}
+
     }
 
 
@@ -224,16 +339,24 @@ class ThreadServiceImpl
 	}
 
 
+	public void start() throws IllegalThreadStateException {
+	    if (pool.canStartThread()) {
+		super.start();
+	    } else {
+		pool.addPendingThread(this);
+	    }
+	}
+
 	protected void claim() {
 	    // thread has started or restarted
-	    pool.proxy.notifyStart(this);
 	    super.claim();
+	    pool.startRunningThread(this);
 	}
 
 	protected void reclaim() {
 	    // thread is done
+	    pool.removeRunningThread(this);
 	    super.reclaim();
-	    pool.proxy.notifyEnd(this);
 	}
 
     }
@@ -243,24 +366,14 @@ class ThreadServiceImpl
      * The proxy implementation of Thread Service.
      */
     private static class ThreadServiceProxy implements ThreadService {
-	private static final String InitialPoolSizeProp =
-	    "org.cougaar.ReusableThread.initialPoolSize";
-	private static final int InitialPoolSizeDefault = 32;
-	private static final String MaxPoolSizeProp =
-	    "org.cougaar.ReusableThread.maximumPoolSize";
-	private static final int MaxPoolSizeDefault = 64;
-
-
 	private ControllablePool threadPool;
 	private HashMap consumers;
 	private ArrayList listeners;
 	private ThreadGroup group;
-	private int activeThreadCount;
 
 	private ThreadServiceProxy(ThreadServiceClient client) {
 	    listeners = new ArrayList();
 	    consumers = new HashMap();
-	    activeThreadCount = 0;
 	    group = client.getGroup();
 
 	    int initialSize = PropertyParser.getInt(InitialPoolSizeProp, 
@@ -268,19 +381,33 @@ class ThreadServiceImpl
 	    int maxSize = PropertyParser.getInt(MaxPoolSizeProp, 
 						MaxPoolSizeDefault);
 
-	    if (group != null)
-		threadPool = new ControllablePool(this,
-						  group, 
-						  initialSize,
-						  maxSize);
-	    else
-		threadPool = new ControllablePool(this,
-						  initialSize, 
-						  maxSize);
+	    if (group != null) 
+		group = new ThreadGroup(client.toString() + "_ThreadGroup");
+	    threadPool = new ControllablePool(this,
+					      group, 
+					      initialSize,
+					      maxSize);
+	}
+
+	private void setPriority(int priority) {
+	    // TBD
+	}
+
+
+	private void setMaxRunningThreadCount(int count) {
+	    threadPool.setMaxRunningThreadCount(count);
+	}
+
+	private int runningThreadCount() {
+	    return threadPool.runningThreadCount();
+	}
+
+	private int pendingThreadCount() {
+	    return threadPool.pendingThreadCount();
 	}
 
 	private int activeThreadCount() {
-	    return activeThreadCount;
+	    return threadPool.activeThreadCount();
 	}
 
 	private Thread consumeThread(Thread thread, Object consumer) {
@@ -293,7 +420,6 @@ class ThreadServiceImpl
 	}
 
 	synchronized void notifyStart(Thread thread) {
-	    ++activeThreadCount;
 	    Object consumer = threadConsumer(thread);
  	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
@@ -303,7 +429,6 @@ class ThreadServiceImpl
 	}
 
 	synchronized void notifyEnd(Thread thread) {
-	    --activeThreadCount;
 	    Object consumer = threadConsumer(thread);
   	    Iterator itr = listeners.iterator();
 	    while (itr.hasNext()) {
