@@ -40,15 +40,12 @@ public final class Debug implements DebugFlags
 {
 
     private int flags;
-    private LoggingService loggingService;
 
-    private Debug(ServiceBroker sb) {
-	this.loggingService = (LoggingService)
-	    sb.getService(this, LoggingService.class, null);
-	initialize();
+    private Debug(LoggingService loggingService) {
+	initialize(loggingService);
     }
 
-    private void initialize() {
+    private void initialize(LoggingService loggingService) {
 	    flags = 0;
 	    String debug = 
 		System.getProperty("org.cougaar.message.transport.debug");
@@ -104,10 +101,7 @@ public final class Debug implements DebugFlags
 
 
     private boolean debugEnabled(int mask) {
-	if (loggingService != null && !loggingService.isDebugEnabled())
-	    return false;
-	else
-	    return ((flags & mask) == mask);
+	return ((flags & mask) == mask);
     }
 
 
@@ -115,16 +109,16 @@ public final class Debug implements DebugFlags
 
     private static Debug debug;
 
-    static synchronized void enableDebug(ServiceBroker sb) {
+    static synchronized void enableDebug(LoggingService ls) {
 	if (debug != null) return;
-	debug = new Debug(sb);
+	debug = new Debug(ls);
     }
 
-    public static boolean isDebugEnabled(int mask) {
-	if (debug != null)
-	    return debug.debugEnabled(mask);
-	else
+    public static boolean isDebugEnabled(LoggingService ls, int mask) {
+	if (ls != null && !ls.isDebugEnabled())
 	    return false;
+	else
+	    return debug.debugEnabled(mask);
     }
 
 }

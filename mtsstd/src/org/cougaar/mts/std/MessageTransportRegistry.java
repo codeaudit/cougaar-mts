@@ -196,14 +196,14 @@ final class MessageTransportRegistry
 			MessageTransportClient client = link.getClient();
 			if (mclass.isAssignableFrom(client.getClass())) {
 			    result.add(entry.getKey());
-			    if (Debug.isDebugEnabled(MULTICAST))
+			    if (Debug.isDebugEnabled(loggingService,MULTICAST))
 				loggingService.debug("Client " +
 							  client + 
 							  " matches " +
 							  mclass + ", added " +
 							  entry.getKey());
 			} else {
-			    if (Debug.isDebugEnabled(MULTICAST)) 
+			    if (Debug.isDebugEnabled(loggingService,MULTICAST)) 
 				loggingService.debug("Client " +
 							  client +
 							  " doesn't match " +
@@ -211,7 +211,7 @@ final class MessageTransportRegistry
 			}
 		    }
 		}
-		if (Debug.isDebugEnabled(MULTICAST)) 
+		if (Debug.isDebugEnabled(loggingService,MULTICAST)) 
 		    loggingService.debug("result=" + result);
 		return result.iterator();
 

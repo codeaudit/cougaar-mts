@@ -193,7 +193,7 @@ public final class MessageTransportServiceProvider
 	// Make proxy
 	proxy = new MessageTransportServiceProxy(client, link);
 	proxies.put(addr, proxy);
-	if (Debug.isDebugEnabled(DebugFlags.SERVICE))
+	if (Debug.isDebugEnabled(loggingService, DebugFlags.SERVICE))
 	    loggingService.debug("Created MessageTransportServiceProxy for " 
 				      +requestor+
 				      " with address "
@@ -205,12 +205,13 @@ public final class MessageTransportServiceProvider
 
     public void initialize() {
         super.initialize();
+
         ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
-	
-	Debug.enableDebug(sb);
 
 	loggingService = 
 	    (LoggingService) sb.getService(this, LoggingService.class, null);
+
+	Debug.enableDebug(loggingService);
 
 	// Later this will be replaced by a Node-level service
 	ThreadServiceProvider tsp = new ThreadServiceProvider();

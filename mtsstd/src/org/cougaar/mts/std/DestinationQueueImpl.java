@@ -105,13 +105,13 @@ final class DestinationQueueImpl
 	int retryCount = 0;
 	Exception lastException = null;
 	while (true) {
-	    if (retryCount > 0 && Debug.isDebugEnabled(SERVICE))
+	    if (retryCount > 0 && Debug.isDebugEnabled(loggingService,SERVICE))
 		loggingService.debug("Retrying " +message);
 
 	    links = destinationLinks.iterator();
 	    link = selectionPolicy.selectLink(links, message, retryCount, lastException);
 	    if (link != null) {
-		if (Debug.isDebugEnabled(POLICY))
+		if (Debug.isDebugEnabled(loggingService,POLICY))
 		loggingService.debug("Selected Protocol " +
 					  link.getProtocolClass());
 		try {
@@ -122,20 +122,20 @@ final class DestinationQueueImpl
 		    // nothing to say here
 		} catch (NameLookupException lookup_error) {
 		    lastException = lookup_error;
-		    if (Debug.isDebugEnabled(COMM)) 
+		    if (Debug.isDebugEnabled(loggingService,COMM)) 
 			loggingService.error(null, lookup_error);
 		} catch (CommFailureException comm_failure) {
 		    lastException = comm_failure;
-		    if (Debug.isDebugEnabled(COMM)) 
+		    if (Debug.isDebugEnabled(loggingService,COMM)) 
 			loggingService.error(null, comm_failure);
 		} catch (MisdeliveredMessageException misd) {
 		    lastException = misd;
-		    if (Debug.isDebugEnabled(COMM)) 
+		    if (Debug.isDebugEnabled(loggingService,COMM)) 
 			loggingService.debug(misd.toString());
 		}
 
 		if (!link.retryFailedMessage(message, retryCount)) break;
-	    } else if (Debug.isDebugEnabled(POLICY)) {
+	    } else if (Debug.isDebugEnabled(loggingService,POLICY)) {
 		loggingService.debug("No Protocol selected ");
 	    }
 

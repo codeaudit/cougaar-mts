@@ -347,7 +347,7 @@ public class RMILinkProtocol
 	    }
 	    catch (Exception ex) {
 		// force recache of remote
-		if (Debug.isDebugEnabled(COMM)) 
+		if (Debug.isDebugEnabled(loggingService,COMM)) 
 		    loggingService.error(null, ex);
 		remote = null;
 		// Assume anything else is a comm failure

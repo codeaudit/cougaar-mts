@@ -144,7 +144,7 @@ final class AspectSupportImpl implements ServiceProvider
 		aspects_table.put(classname, aspect);
 	    }
 	    container.add(aspect);
-	    if (Debug.isDebugEnabled(ASPECTS))
+	    if (Debug.isDebugEnabled(loggingService,ASPECTS))
 		loggingService.debug("Added aspect " + aspect);
 	}
 
@@ -166,7 +166,7 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (Debug.isDebugEnabled(ASPECTS))
+		    if (Debug.isDebugEnabled(loggingService,ASPECTS))
 			loggingService.debug("attached " + delegate);
 		}
 	    }
@@ -179,7 +179,7 @@ final class AspectSupportImpl implements ServiceProvider
 		Object candidate = aspect.getReverseDelegate(delegate, type);
 		if (candidate != null) {
 		    delegate = candidate;
-		    if (Debug.isDebugEnabled(ASPECTS))
+		    if (Debug.isDebugEnabled(loggingService,ASPECTS))
 			loggingService.debug("reverse attached " 
 						  + delegate);
 		}

@@ -88,7 +88,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	// sibling aspects can access it.
 	getServiceBroker().addService(TrafficMaskingGeneratorService.class, tmgSP);
 
-	if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR))
+	if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR))
 	    loggingService.debug("TrafficMaskingGeneratorAspect "+
 			       "... request is: "+ requestRate + 
 			       " reply is: "+replyRate);
@@ -353,7 +353,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		    MessageAddress dest = msg.getTarget();
 		    msg = new MaskingMessageEnvelope(msg, dest);
 		}
-	    if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR))
+	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR))
 		loggingService.debug("MaskingQueue sending message: "+msg);
 	    sendMessage(msg);
 	}
@@ -382,7 +382,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 						 request.getOriginator(),
 						 contents);
 			replyTimerTaskController.addMessage(reply);
-			if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR)) {
+			if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 			    loggingService.debug("Masking Deliverer got Fake Request: "+
 					       request+ " size: "+request.getContents().length+
 					       "\n Queueing Fake Reply: "+reply +
@@ -426,7 +426,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	    // randomize period, then run a new task once at that time
 	    int delay = generator.nextInt(period); // randomize
 	    TimerTask newTask = makeTask();
-	    if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR)) {
+	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		loggingService.debug("Scheduling " +newTask+ " at "
 					  +delay);
 	    }
@@ -475,7 +475,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		FakeRequestMessage request = 
 		    new FakeRequestMessage(myAddress, destination, contents);
 		maskingQDelegate.sendMessageInEnvelope(request);
-		if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR)) {
+		if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		    loggingService.debug("MaskingTimer about to send FakeRequest"+
 				       "from: "+myAddress+" to: "+destination+
 				       " size of byte array: "+contents.length);
@@ -507,7 +507,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		//only add if queue is not too big
 		if (replyQueue.size() < 10) {
 		    replyQueue.add(msg);
-		} else  if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR)) {
+		} else  if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 		    loggingService.debug("TrafficMaskGen: ReplyQueue overflow");
 
 		}
@@ -523,7 +523,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 			Message replymsg = (Message) replyQueue.get(0);
 			// put message on real MTS SendQueue
 			maskingQDelegate.sendMessageInEnvelope(replymsg);
-			if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR)) {
+			if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {
 			    loggingService.debug("Masking: ReplyTimer sending reply: " +
 					       replymsg + " size: "+ 
 					       ((FakeReplyMessage)replymsg).getContents().length);
@@ -578,7 +578,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 		    FakeRequestMessage request = 
 			new FakeRequestMessage(myAddress, fakedest, contents);
 		    maskingQDelegate.sendMessageInEnvelope(request);
-		    if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR)) {        
+		    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR)) {        
 			loggingService.debug("AutoMasking About to send "+
 					   "FakeRequest from: "+myAddress+
 					   " to: "+fakedest+" size of byte array: "+
@@ -637,7 +637,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 	public MessageAddress getRandomNodeAddress() {
 	    MessageAddress winner = null;
 	    synchronized(nodelist) {
-		if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR))        
+		if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR))        
 		    loggingService.debug("nodelist.size is: "+nodelist.size());
 		if (nodelist.size() > 0) {
 		    int randomIndex = generator.nextInt(nodelist.size());
@@ -649,7 +649,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
 
 	//safely update the list while no one else is using it
 	private void updateNodeList(Collection newNodes) {
-	    if (Debug.isDebugEnabled(TRAFFIC_MASKING_GENERATOR))      
+	    if (Debug.isDebugEnabled(loggingService,TRAFFIC_MASKING_GENERATOR))      
 		loggingService.debug("Masking: Updating Node List");
 	    synchronized(nodelist) {
 		nodelist.clear();

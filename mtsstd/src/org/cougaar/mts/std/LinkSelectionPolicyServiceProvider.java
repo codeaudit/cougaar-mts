@@ -56,7 +56,7 @@ public class LinkSelectionPolicyServiceProvider
 		Class policy_class = Class.forName(policy_classname);
 		LinkSelectionPolicy selectionPolicy = 
 		    (LinkSelectionPolicy) policy_class.newInstance();
-		if (Debug.isDebugEnabled(POLICY))
+		if (Debug.isDebugEnabled(loggingService,POLICY))
 		    loggingService.debug("Created " +  policy_classname);
 
 		return selectionPolicy;
