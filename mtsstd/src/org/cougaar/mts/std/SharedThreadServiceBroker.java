@@ -26,26 +26,40 @@ import org.cougaar.core.component.*;
  * A ServiceBroker that shares a single ThreadService among all
  * requestors of any given BinderSupport class.
  */
-public class SharedThreadServiceBroker
+abstract public class SharedThreadServiceBroker
     extends PropagatingServiceBroker
     implements ThreadServiceClient
 {
 
     private ThreadService threadService;
-    
+    private ThreadGroup group;
+
+    public SharedThreadServiceBroker(BindingSite bs) {
+	this(bs.getServiceBroker());
+    }
+
     public SharedThreadServiceBroker(ServiceBroker sb) {
 	super(sb);
+	String tag = getGroupTag();
+	if (sb instanceof ThreadServiceClient) {
+	    ThreadServiceClient client = (ThreadServiceClient) sb;
+	    group = new ThreadGroup(client.getGroup(), tag);
+	} else {
+	    group = new ThreadGroup(tag);
+	}
     }
 
 
+    abstract protected String getGroupTag();
 
     public ThreadGroup getGroup() {
-	return null;
+	return group;
     }
 
 
     protected synchronized Object getThreadService() {
 	if (threadService == null) {
+	    System.err.println("New ThreadService proxy");
 	    threadService = (ThreadService)
 		super.getService(this, ThreadService.class, null);
 	}

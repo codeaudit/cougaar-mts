@@ -20,6 +20,7 @@
  */
 package org.cougaar.core.mts;
 
+import org.cougaar.core.component.BindingSite;
 import org.cougaar.core.component.ServiceBroker;
 
 public class SharedThreadServiceBrokerWithAspects
@@ -27,17 +28,19 @@ public class SharedThreadServiceBrokerWithAspects
 {
 
     private AspectSupport aspectSupport;
-    private ThreadGroup group;
+
+    public SharedThreadServiceBrokerWithAspects(BindingSite bs) {
+	super(bs);
+    }
 
     public SharedThreadServiceBrokerWithAspects(ServiceBroker sb) {
 	super(sb);
-	group = new ThreadGroup("MTS");
     }
 
-    public ThreadGroup getGroup() {
-	return group;
-    }
 
+    protected String getGroupTag() {
+	return "MTS";
+    }
 
     protected synchronized Object getThreadService() {
 	Object svc = super.getThreadService();
