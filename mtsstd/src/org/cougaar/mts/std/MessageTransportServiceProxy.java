@@ -104,9 +104,9 @@ public class MessageTransportServiceProxy
 		if (Debug.DEBUG_FLUSH) showPending(count + " messages queued");
 	    }
 	} else if (checkMessage(message)) {
-	    // Debugging
 	    if (destination.equals(MessageAddress.LOCAL)) {
 		System.out.println("!!!!!!!!!!!! Local Multicast!");
+		message = new MulticastMessageEnvelope(message,  destination);
 	    }
 
 	    sendQ.sendMessage(message);
