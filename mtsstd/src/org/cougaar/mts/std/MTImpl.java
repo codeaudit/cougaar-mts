@@ -34,15 +34,20 @@ public class MTImpl extends UnicastRemoteObject implements MT
 {
     private MessageAddress address;
     private MessageDeliverer deliverer;
-
+    private SocketFactory socfac;
 
     public MTImpl(MessageAddress addr,  MessageDeliverer deliverer,
 		  SocketFactory socfac) 
 	throws RemoteException 
     {
 	super(0, socfac, socfac);
+	this.socfac = socfac;
 	address = addr;
 	this.deliverer = deliverer;
+    }
+
+    public SocketFactory getSocketFactory() {
+	return socfac;
     }
 
     public void rerouteMessage(Message message) 
