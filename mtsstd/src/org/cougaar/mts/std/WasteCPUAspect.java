@@ -88,14 +88,14 @@ public class WasteCPUAspect extends StandardAspect
 		count++;
 	    }
 
-	    CougaarThread.yield();
+	    // CougaarThread.yield();
 
 	    startTime = System.currentTimeMillis();
 	    while (System.currentTimeMillis() - startTime < wasteTime) {
 		count++;
 	    }
 
-	    CougaarThread.yield();
+	    // CougaarThread.yield();
 
 	    startTime = System.currentTimeMillis();
 	    while (System.currentTimeMillis() - startTime < wasteTime) {

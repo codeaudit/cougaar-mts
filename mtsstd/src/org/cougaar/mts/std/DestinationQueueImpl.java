@@ -23,7 +23,6 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.core.thread.CougaarThread;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -52,7 +51,7 @@ final class DestinationQueueImpl
 
     DestinationQueueImpl(MessageAddress destination, Container container)
     {
-	super(destination.toString(), container);
+	super(destination.toString()+"/DestQ", container);
 	this.destination = destination;
 	container.add(this);
     }
@@ -91,65 +90,85 @@ final class DestinationQueueImpl
     }
 
 
+
+    // Save retry-state as instance variables
+    private int delay = 500;
+    private int retryCount = 0;
+    private Exception lastException = null;
+    private AttributedMessage previous = null;
+
+    private void resetState() {
+	delay = 500; // comes from a property
+	retryCount = 0;
+	lastException = null;
+	previous = null;
+    }
+
+
      /**
       * Processes the next dequeued message. */
-    void dispatch(AttributedMessage message) {
-	if (message != null) delegate.dispatchNextMessage(message);
+    boolean dispatch(AttributedMessage message) {
+	if (message == null) return true;
+	if (retryCount == 0)
+	    delegate.dispatchNextMessage(message);
+	else
+	    dispatchNextMessage(message);
+	return retryCount == 0;
     }
 
     public void dispatchNextMessage(AttributedMessage message) {
-	int delay = 500; // comes from a property
-	Iterator links;
-	DestinationLink link;
-	int retryCount = 0;
-	Exception lastException = null;
-	AttributedMessage previous = message;
-
-	message.snapshotAttributes();
-	while (true) {
-	    if (retryCount > 0 && Debug.isDebugEnabled(loggingService,SERVICE))
+	if (retryCount == 0) {
+	    message.snapshotAttributes();
+	    previous = message;
+	} else {
+	    if (Debug.isDebugEnabled(loggingService,SERVICE))
 		loggingService.debug("Retrying " +message);
+	}
 
-	    links = destinationLinks.iterator();
-	    link = selectionPolicy.selectLink(links, message, previous,
-					      retryCount, lastException);
-	    if (link != null) {
-		if (Debug.isDebugEnabled(loggingService,POLICY))
+	Iterator links = destinationLinks.iterator();
+	DestinationLink link = 
+	    selectionPolicy.selectLink(links, message, previous,
+				       retryCount, lastException);
+	if (link != null) {
+	    if (Debug.isDebugEnabled(loggingService,POLICY))
 		loggingService.debug("Selected Protocol " +
-					  link.getProtocolClass());
-		try {
-		    link.addMessageAttributes(message);
-		    MessageAttributes meta = link.forwardMessage(message);
-		    return;
-		} catch (UnregisteredNameException no_name) {
-		    lastException = no_name;
-		    // nothing to say here
-		} catch (NameLookupException lookup_error) {
-		    lastException = lookup_error;
-		    if (Debug.isErrorEnabled(loggingService,COMM)) 
-			loggingService.error(null, lookup_error);
-		} catch (CommFailureException comm_failure) {
-		    lastException = comm_failure;
-		    if (Debug.isErrorEnabled(loggingService,COMM)) 
-			loggingService.error(null, comm_failure);
-		} catch (MisdeliveredMessageException misd) {
-		    lastException = misd;
-		    if (Debug.isDebugEnabled(loggingService,COMM)) 
-			loggingService.debug(misd.toString());
-		}
-
-		if (!link.retryFailedMessage(message, retryCount)) break;
-	    } else if (Debug.isDebugEnabled(loggingService,POLICY)) {
-		loggingService.debug("No Protocol selected ");
+				     link.getProtocolClass());
+	    try {
+		link.addMessageAttributes(message);
+		MessageAttributes meta = link.forwardMessage(message);
+		resetState();
+		return;
+	    } catch (UnregisteredNameException no_name) {
+		lastException = no_name;
+		// nothing to say here
+	    } catch (NameLookupException lookup_error) {
+		lastException = lookup_error;
+		if (Debug.isErrorEnabled(loggingService,COMM)) 
+		    loggingService.error(null, lookup_error);
+	    } catch (CommFailureException comm_failure) {
+		lastException = comm_failure;
+		if (Debug.isErrorEnabled(loggingService,COMM)) 
+		    loggingService.error(null, comm_failure);
+	    } catch (MisdeliveredMessageException misd) {
+		lastException = misd;
+		if (Debug.isDebugEnabled(loggingService,COMM)) 
+		    loggingService.debug(misd.toString());
 	    }
 
-
-	    retryCount++;
-	    CougaarThread.sleep(delay);
-	    if (delay < MAX_DELAY) delay += delay;
-	    previous = new AttributedMessage(message);
-	    message.restoreSnapshot();
+	    if (!link.retryFailedMessage(message, retryCount)) {
+		resetState();
+		return;
+	    }
+	} else if (Debug.isDebugEnabled(loggingService,POLICY)) {
+	    loggingService.debug("No Protocol selected ");
 	}
+
+
+	retryCount++;
+	if (delay < MAX_DELAY) delay += delay;
+	previous = new AttributedMessage(message);
+	message.restoreSnapshot();
+	scheduleRestart(delay);
     }
 
 

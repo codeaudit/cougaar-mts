@@ -28,6 +28,9 @@ import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.util.CircularQueue;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * An abstract class which manages a circular queue of messages, and
  * runs its own thread to pop messages off that queue.  The method
@@ -37,10 +40,20 @@ abstract class MessageQueue
     extends BoundComponent
     implements Runnable
 {
+    private static Timer restartTimer = new Timer(true);
 
+
+//     static void makeRestartTimer() {
+// 	TimerRunnable timer = new TimerRunnable();
+// 	Schedulable thread = threadService.getThread(timer);
+// 	thread.start();
+//     }
+    
+    private TimerTask restartTask;
     private CircularQueue queue;
     private Schedulable thread;
     private String name;
+    private AttributedMessage pending;
 
 
     MessageQueue(String name, Container container) {
@@ -50,61 +63,75 @@ abstract class MessageQueue
 
 
 
+
     public void load() {
 	super.load();
-
-	if (Boolean.getBoolean("org.cougaar.message.transport.threadtest")) {
-	    // Each queue Component has its own ThreadService.  These are
-	    // children of the MTS ThreadService.
-	    ServiceBroker sb = getServiceBroker();
-	    ThreadServiceProvider tsp = new ThreadServiceProvider(sb, name);
-	    tsp.provideServices(sb);
-	
-	    ThreadService old = threadService;
-	    // Force a recache of the threadService instance variable,
-	    // since it's pointing at the parent as a result of
-	    // super.load().
-	    threadService = (ThreadService) 
-		sb.getService(this, ThreadService.class,  null);
-	}
+	thread = threadService.getThread(this, this, name);
     }
+
 
     String getName() {
 	return name;
     }
 
+
     public void run() {
-	while (true) {
-	    AttributedMessage m;
+	boolean process_queue = true;
+	if (pending != null) {
+	    // Retry the last failed dispatch before looking at the
+	    // queue. 
+	    if (!dispatch(pending)) {
+		process_queue = false;
+	    } else {
+		pending = null;
+	    }
+	}
+	while (process_queue) {
+	    AttributedMessage message;
 	    synchronized (queue) {
-		if (queue.isEmpty()) {
-		    thread = null;
-		    return;
-		}
-		m = (AttributedMessage) queue.next(); // from top
+		if (queue.isEmpty()) break;
+		message = (AttributedMessage) queue.next(); // from top
 	    }
 
 
-	    if (m != null) dispatch(m);
+	    if (message == null || dispatch(message)) continue;
+	    
+	    // Dispatch failed.  Save the message as pending and stop
+	    // walking through the queue.  Presumably the dispatch
+	    // body has scheduled a restart.
+	    pending = message;
+	    break;
 	}
+    }
+
+    void scheduleRestart(int delay) {
+	// Some dedicated task needs to call restart at the right
+	// time.  For now use a static java.util.Timer.
+	restartTask = new TimerTask() {
+		public void run() { restart(); }
+	    };
+	restartTimer.schedule(restartTask, delay);
+    }
+
+    void restart() {
+	thread.start();
     }
 
     /** 
      * Enqueue a message. */
-    void add(AttributedMessage m) {
+    void add(AttributedMessage message) {
 	synchronized (queue) {
-	    queue.add(m);
-	    if (thread == null) {
-		thread = threadService.getThread(this, this, name);
-		thread.start();
-	    }
+	    queue.add(message);
 	}
+	thread.start();
     }
 
 
     /**
-     * Process a dequeued message. */
-    abstract void dispatch(AttributedMessage m);
+     * Process a dequeued message.  Return value indicates success or
+     * failure or the dispatch.  Failed dispatches will be tried again
+     * before any further queue entries are dispatched. */
+    abstract boolean dispatch(AttributedMessage m);
 
     /**
      * Number of messages waiting in the queue.

@@ -117,10 +117,7 @@ abstract public class BoundComponent
 
     public final void setBindingSite(BindingSite bs) {
 	this.bindingSite = bs;
-	if (Boolean.getBoolean("org.cougaar.message.transport.threadtest"))
-	    this.sb = new PropagatingServiceBroker(bs);
-	else
-	    this.sb = bs.getServiceBroker();
+	this.sb = bs.getServiceBroker();
     }
 
 

@@ -53,6 +53,8 @@ public class AttributedMessage
     implements Externalizable, MessageAttributes
 {
 
+    private String FILTERS_ATTRIBUTE = "Filters";
+
     private Message contents;
     private SimpleMessageAttributes attributes;
 
@@ -136,7 +138,11 @@ public class AttributedMessage
 
 
 
+    void addFilter(StandardAspect aspect) {
+	pushValue(FILTERS_ATTRIBUTE, 
+		 aspect.getClass().getName());
 
+    }
 
     boolean replyOnly() {
 	return false;
@@ -174,6 +180,10 @@ public class AttributedMessage
 	attributes.addValue(attribute, value);
     }
 
+    public void pushValue(String attribute, Object value) {
+	attributes.pushValue(attribute, value);
+    }
+
     public void removeValue(String attribute, Object value) {
 	attributes.removeValue(attribute, value);
     }
@@ -190,6 +200,10 @@ public class AttributedMessage
 	
     public void addLocalValue(String attribute, Object value) {
 	attributes.addLocalValue(attribute, value);
+    }
+
+    public void pushLocalValue(String attribute, Object value) {
+	attributes.pushLocalValue(attribute, value);
     }
 
     public void removeLocalValue(String attribute, Object value) {
@@ -229,7 +243,6 @@ public class AttributedMessage
     {
  	MessageProtectionService svc =
 	    MessageProtectionAspect.getMessageProtectionService();
-
 	if (svc != null) {
 
 	    byte[] rawData = (byte[]) in.readObject();
@@ -272,8 +285,8 @@ public class AttributedMessage
 
 	    MessageStreamsFactory factory =  
 		MessageStreamsFactory.getFactory();
-	    ArrayList aspectNames = 
-		(ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
+	    ArrayList aspectNames = (ArrayList)
+		attributes.getAttribute(FILTERS_ATTRIBUTE);
 	    MessageWriter writer = factory.getMessageWriter(aspectNames);
 	
 	    writer.finalizeAttributes(this);
@@ -332,11 +345,10 @@ public class AttributedMessage
 
 	    if (replyOnly()) return;
 
-
-	    ArrayList aspectNames = (ArrayList)
-		attributes.getAttribute(FILTERS_ATTRIBUTE);
 	    MessageStreamsFactory factory =  
 		MessageStreamsFactory.getFactory();  
+	    ArrayList aspectNames = (ArrayList)
+		attributes.getAttribute(FILTERS_ATTRIBUTE);
 	    MessageReader reader = factory.getMessageReader(aspectNames);
 
 	    reader.finalizeAttributes(this);

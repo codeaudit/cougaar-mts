@@ -43,8 +43,6 @@ public class ChecksumStreamsAspect extends StandardAspect
 	"org.cougaar.core.security.checksum.enable";
     private static final String CHECKSUM_VALID_ATTR =
 	"org.cougaar.core.security.checksum.valid";
-    private static final String THIS_CLASS =
-	"org.cougaar.core.mts.ChecksumStreamsAspect";
 
 
     public Object getDelegate(Object delegatee, Class type) {
@@ -124,8 +122,7 @@ public class ChecksumStreamsAspect extends StandardAspect
 		   MisdeliveredMessageException
 	{
 	    // Register checksum Aspect as a Message Streaming filter
-	    message.addValue(MessageAttributes.FILTERS_ATTRIBUTE,
-			     THIS_CLASS);
+	    message.addFilter(ChecksumStreamsAspect.this);
 	    // Force on checksum 
 	    message.setAttribute(CHECKSUM_ENABLE_ATTR,
 				 Boolean.TRUE);
@@ -193,8 +190,13 @@ public class ChecksumStreamsAspect extends StandardAspect
 	    throws java.io.IOException
 	{
 	    //Send the Checksum as a tailer
-	    writeLong(stream, checksum);
-
+	    try {
+		writeLong(stream, checksum);
+	    } catch (java.io.IOException iox) {
+		iox.printStackTrace();
+		throw iox;
+	    }
+	    System.err.println("Checksum output finished");
 	    super.finishOutput();
 
 
@@ -271,14 +273,14 @@ public class ChecksumStreamsAspect extends StandardAspect
 	public void finishInput() 
 	    throws java.io.IOException
 	{
-	    
+	    System.err.println("Entering ChecksumStreamsAspect finishInput");
 	    // The tailer itself wasn't included in the checksum
 	    // computed by the sender.  So grab the computed value
 	    // before reading the remote value.
 	    long sum = checksum; 
 	    long checksum_as_read = readLong(stream);
-// 	    System.out.println("Read checksum=" +  checksum_as_read +
-// 			       "  Computed checksum=" + sum);
+ 	    System.out.println("Read checksum=" +  checksum_as_read +
+ 			       "  Computed checksum=" + sum);
 
 	    // added Checksum validity to message attributes
 	    if  (checksum_as_read ==  sum) 

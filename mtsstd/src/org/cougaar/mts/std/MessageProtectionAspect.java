@@ -41,9 +41,6 @@ import java.io.*;
 public class MessageProtectionAspect extends StandardAspect 
 {
 
-    private static final String THIS_CLASS =
-	"org.cougaar.core.mts.MessageProtectionAspect";
-
     private static MessageProtectionService svc;
 
     static MessageProtectionService getMessageProtectionService() {
@@ -182,8 +179,7 @@ public class MessageProtectionAspect extends StandardAspect
 		   MisdeliveredMessageException
 	{
 	    // Register Aspect as a Message Streaming filter
-	    message.addValue(MessageAttributes.FILTERS_ATTRIBUTE,
-			     THIS_CLASS);
+	    message.addFilter(MessageProtectionAspect.this);
 
 
 	    return super.forwardMessage(message);

@@ -92,14 +92,13 @@ public class CompressingStreamsAspect extends StandardAspect
 		   CommFailureException,
 		   MisdeliveredMessageException
 	{
-	    message.addValue(MessageAttributes.FILTERS_ATTRIBUTE,
-			     CompressingStreamsAspect.class.getName());
+	    message.addFilter(CompressingStreamsAspect.this);
 
 	    // Delegate the call down stream
 	    MessageAttributes result = super.forwardMessage(message);
 
 	    // The "test attribute was set on the message on the
-	    // reciever side and returned in the result
+	    // receiver side and returned in the result
 	    System.out.println("Compression Sender Result Test Attribute=" +
 			       result.getAttribute("test"));
 
@@ -151,7 +150,6 @@ public class CompressingStreamsAspect extends StandardAspect
 	public void finishOutput() 
 	    throws java.io.IOException
 	{
-	    super.finishOutput();
 	    // For testing purposes, send a "test" string.
 	    // Object Stream does not work (why?), so we have to do the
 	    // encoding by hand
@@ -162,12 +160,18 @@ public class CompressingStreamsAspect extends StandardAspect
 
 	    //Force the the stream to finish its output
 	    def_os.finish();
-	    def_os.flush();
+
+	    // It appears as though finish() has a somewhat nasty
+	    // side-effect: no further data can be written to the
+	    // stream on which the DeflaterOutputStream was built.
+	    // That means we can't write tailers after compression.
+	    // The reason for this side-effect remains a mystery.
 
 	    System.out.println("Compressed Output " +deflater.getTotalIn()+
 			       " bytes to " +deflater.getTotalOut()+
 			       " bytes");
 
+	    super.finishOutput();
 	}
     }
 
@@ -208,7 +212,7 @@ public class CompressingStreamsAspect extends StandardAspect
 	    byte[] bytes = new byte[count];
 	    inf_in.read(bytes);
 	    String data = new String(bytes);
-	    System.out.println("Compression Reciever Stream Test String="
+	    System.out.println("Compression Receiver Stream Test String="
 			       + data);
 
 	    // For test purposes

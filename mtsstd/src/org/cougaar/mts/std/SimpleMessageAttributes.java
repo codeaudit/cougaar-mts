@@ -73,6 +73,10 @@ public class SimpleMessageAttributes
 	addValue(attribute, value, data);
     }
 
+    public void pushValue(String attribute, Object value) {
+	pushValue(attribute, value, data);
+    }
+
     public void removeValue(String attribute, Object value) {
 	removeValue(attribute, value, data);
     }
@@ -87,6 +91,10 @@ public class SimpleMessageAttributes
 
     public void addLocalValue(String attribute, Object value) { 
 	addValue(attribute, value, local_data);
+   }
+
+    public void pushLocalValue(String attribute, Object value) { 
+	pushValue(attribute, value, local_data);
    }
 
     public void removeLocalValue(String attribute, Object value) {
@@ -139,6 +147,26 @@ public class SimpleMessageAttributes
 	    ArrayList list = new ArrayList();
 	    list.add(old);
 	    list.add(value);
+	    map.put(attribute, list);
+	}
+    }
+
+
+    /**
+     * Like addValue but add to the front. 
+     */
+    private void pushValue(String attribute, Object value, HashMap map) {
+	Object old = map.get(attribute);
+	if (old == null) {
+	    ArrayList list = new ArrayList();
+	    list.add(value);
+	    map.put(attribute, list);
+	} else if (old instanceof ArrayList) {
+	    ((ArrayList) old).add(0, value);
+	} else {
+	    ArrayList list = new ArrayList();
+	    list.add(old);
+	    list.add(0, value);
 	    map.put(attribute, list);
 	}
     }

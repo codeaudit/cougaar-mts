@@ -53,8 +53,9 @@ final class SendQueueImpl extends MessageQueue implements SendQueue
 
     /**
      * This is the callback from the internal thread.  */
-    void dispatch(AttributedMessage message) {
+    boolean dispatch(AttributedMessage message) {
 	router.routeMessage(message);
+	return true;
     }
 
 

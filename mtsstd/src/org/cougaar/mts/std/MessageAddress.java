@@ -76,9 +76,6 @@ public class MessageAddress implements Externalizable {
     return _as;
   }
 
-  private String getString() {
-    return _as;
-  }
 
   /** @return the object address part of a URL describing the entity on
    * the COUGAAR society's pseudo-web.  e.g. the URL of an entity could be 

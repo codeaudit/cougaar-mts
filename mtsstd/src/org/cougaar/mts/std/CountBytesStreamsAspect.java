@@ -33,12 +33,15 @@ import java.io.OutputStream;
 public class CountBytesStreamsAspect extends StandardAspect 
 {
 
+    // The name of a local attribute which will be used to store the
+    // count.
     private static final String COUNT_ATTR =
 	"org.cougaar.core.message.count";
-    private static final String THIS_CLASS =
-	"org.cougaar.core.mts.CountBytesStreamsAspect";
 
 
+
+    // Return delegates for MessageReader, MessageWriter and
+    // DestinationLink.
     public Object getDelegate(Object delegatee, Class type) {
 	if (type == MessageWriter.class) {
 	    MessageWriter wtr = (MessageWriter) delegatee;
@@ -48,6 +51,7 @@ public class CountBytesStreamsAspect extends StandardAspect
 	    return new CountingMessageReader(rdr);
 	} else if (type == DestinationLink.class) {
 	    DestinationLink link = (DestinationLink) delegatee;
+	    // Only RMI is relevant here
 	    Class cls = link.getProtocolClass();
 	    if (RMILinkProtocol.class.isAssignableFrom(cls))
 		return new BandwidthDestinationLink(link);
@@ -58,6 +62,7 @@ public class CountBytesStreamsAspect extends StandardAspect
 
 
 
+    // The DestinationLink delegate
     private class BandwidthDestinationLink 
 	extends DestinationLinkDelegateImplBase
     {
@@ -73,9 +78,11 @@ public class CountBytesStreamsAspect extends StandardAspect
 		   MisdeliveredMessageException
 	{
 	    // Register Aspect as a Message Streaming filter
- 	    message.addValue(MessageAttributes.FILTERS_ATTRIBUTE,
- 			     THIS_CLASS);
+ 	    message.addFilter(CountBytesStreamsAspect.this);
 
+	    // Compute the latency and print it along with the cached
+	    // byte count (the MessageWriter will do the actual
+	    // counting).
 	    long start = System.currentTimeMillis();
 	    MessageAttributes reply = super.forwardMessage(message);
 	    long elapsed = System.currentTimeMillis()-start;
@@ -92,6 +99,9 @@ public class CountBytesStreamsAspect extends StandardAspect
     }
 
 
+    // The MessageWriter delegate.  This will do the byte-counting by
+    // creating a simple FilterOutputStream that watches all the bytes
+    // go past,
     private class CountingMessageWriter
 	extends MessageWriterDelegateImplBase
     {
@@ -105,6 +115,11 @@ public class CountBytesStreamsAspect extends StandardAspect
 		super(wrapped);
 	    }
 
+
+	    // Count the bytes, whichever method is used to write
+	    // them.  Pass the byte or bytes to 'out' rather than
+	    // using super, since the default FilterOutputStream
+	    // methods aren't very efficient.
 
  	    public void write(int b) throws java.io.IOException {
  		out.write(b);
@@ -134,6 +149,7 @@ public class CountBytesStreamsAspect extends StandardAspect
 
 
 
+	// Create and return the byte-counting FilterOutputStream
 	public OutputStream getObjectOutputStream(ObjectOutput out)
 	    throws java.io.IOException
 	{
@@ -141,19 +157,33 @@ public class CountBytesStreamsAspect extends StandardAspect
 	    return new CountingOutputStream(raw_os);
 	}
 
+
+	// Save the message, since we'll need it later (in
+	// postProcess).
 	public void finalizeAttributes(AttributedMessage msg) {
 	    super.finalizeAttributes(msg);
 	    this.msg = msg;
 	}
 
+
+	// Stash the count in the saved message's attributes.  Note
+	// that we're doing this after the message has been sent.
+	// Even if it weren't a local attribute, the receive would
+	// never see it.  But other aspect delegates can get at it. In
+	// fact the DestinationLink delegate above does so.
 	public void postProcess() 
 	{
 	    super.postProcess();
-	    if (msg != null) msg.setAttribute(COUNT_ATTR, new Integer(count));
+	    if (msg != null) msg.setLocalAttribute(COUNT_ATTR, new Integer(count));
 	}
     }
 
 
+
+    // MessageReader delegate.  In this case it does nothing.
+    // Nonetheless it has to be here, since for reasons we don't yet
+    // understand, the filtered streams have to match exactly on the
+    // reader and writer.
     private class CountingMessageReader
 	extends MessageReaderDelegateImplBase
     {

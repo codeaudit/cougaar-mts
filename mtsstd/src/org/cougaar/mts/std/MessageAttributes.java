@@ -25,7 +25,6 @@ import java.io.Serializable;
 
 public interface MessageAttributes extends Serializable
 {
-    public String FILTERS_ATTRIBUTE = "Filters";
     public String IS_STREAMING_ATTRIBUTE = "IsStreaming";
     public String ENCRYPTED_SOCKET_ATTRIBUTE = "EncryptedSocket";
 
@@ -45,11 +44,13 @@ public interface MessageAttributes extends Serializable
     void setAttribute(String attribute, Object value);
     void removeAttribute(String attribute);
     void addValue(String attribute, Object value);
+    void pushValue(String attribute, Object value);
     void removeValue(String attribute, Object value);
 
     void setLocalAttribute(String attribute, Object value);
     void removeLocalAttribute(String attribute);
     void addLocalValue(String attribute, Object value);
+    void pushLocalValue(String attribute, Object value);
     void removeLocalValue(String attribute, Object value);
 
 }

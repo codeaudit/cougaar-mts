@@ -231,18 +231,6 @@ public final class MessageTransportServiceProvider
 	ThreadServiceProvider tsp = new ThreadServiceProvider(sb, "MTS");
 	tsp.provideServices(sb);
 	
-	if (Boolean.getBoolean("org.cougaar.message.transport.threadtest")) {
-	    String filename = 
-		System.getProperty("org.cougaar.message.transport.percentages");
-	    if (filename != null) {
-		ThreadControlService tcs = (ThreadControlService)
-		    sb.getService(this, ThreadControlService.class, null);
-		PercentageLatencyPolicy policy =
-		    new PercentageLatencyPolicy(filename);
-		tcs.setTimeSlicePolicy(policy);
-	    }
-	}
-
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);
 

@@ -23,10 +23,13 @@ package org.cougaar.core.mts;
 
 import org.cougaar.core.service.MessageStatisticsService;
 
-import java.io.IOException;
+import java.io.FilterOutputStream;
+import java.io.FilterInputStream;
+import java.io.ObjectInput;
 import java.io.InputStream;
+import java.io.ObjectOutput;
 import java.io.OutputStream;
-import java.net.Socket;
+
 
 /**
  * This aspect adds simple statistics gathering to the client side
@@ -91,14 +94,45 @@ public class StatisticsAspect
     }
 
 
-    public Object getDelegate(Object object, Class type) 
+    public Object getDelegate(Object delegatee, Class type) 
     {
-	if (type == Socket.class) {
-	    return new StatisticsSocket((Socket) object);
+	if (type == MessageWriter.class) {
+	    MessageWriter wtr = (MessageWriter) delegatee;
+	    return new StatisticsWriter(wtr);
+	} else if (type == MessageReader.class) {
+	    MessageReader rdr = (MessageReader) delegatee;
+	    return new StatisticsReader(rdr);
 	} else if (type == DestinationQueue.class) {
-	    return new StatisticsDestinationQueue((DestinationQueue) object);
-	} else {
-	    return null;
+	    return new StatisticsDestinationQueue((DestinationQueue) delegatee);
+	} else if (type == DestinationLink.class) {
+	    DestinationLink link = (DestinationLink) delegatee;
+	    // Only RMI is relevant here
+	    Class cls = link.getProtocolClass();
+	    if (RMILinkProtocol.class.isAssignableFrom(cls))
+		return new StatisticsLink(link);
+	}
+
+	return null;
+    }
+
+
+    private class StatisticsLink 
+	extends DestinationLinkDelegateImplBase
+    {
+	StatisticsLink(DestinationLink delegatee) {
+	    super(delegatee);
+	}
+
+
+	public MessageAttributes forwardMessage(AttributedMessage message) 
+	    throws NameLookupException, 
+		   UnregisteredNameException, 
+		   CommFailureException,
+		   MisdeliveredMessageException
+	{
+	    // Register Aspect as a Message Streaming filter
+ 	    message.addFilter(StatisticsAspect.this);
+	    return super.forwardMessage(message);
 	}
     }
 
@@ -147,39 +181,68 @@ public class StatisticsAspect
 
 
 
-    private class StatisticsSocket extends SocketDelegateImplBase {
-	private StatisticsSocket(Socket socket) {
-	    super(socket);
+    private static class StatisticsOutputStream extends FilterOutputStream {
+	int byteCount = 0;
+
+	public StatisticsOutputStream(OutputStream out) {
+	    super(out);
 	}
 
 
-	public OutputStream getOutputStream() 
-	    throws IOException 
+	public void write(int b) 
+	    throws java.io.IOException 
 	{
-	    OutputStream s = super.getOutputStream();
-	    return (s == null) ? null : new StatisticsStreamWrapper(s);
+	    out.write(b);
+	    byteCount += 1;
 	}
 
+	public void write(byte[] b) 
+	    throws java.io.IOException 
+	{
+	    out.write(b);
+	    byteCount += b.length;
+	}
 
+	public void write(byte[] b, int o, int len) 
+	    throws java.io.IOException 
+	{
+	    out.write(b, o, len);
+	    byteCount += len;
+	}
     }
 
+    private class StatisticsWriter
+	extends MessageWriterDelegateImplBase
+    {
 
-    private class StatisticsStreamWrapper extends OutputStream {
-	OutputStream wrapped;
-	int byteCount = 0;
-	public StatisticsStreamWrapper(OutputStream wrapped) {
-	    this.wrapped = wrapped;
+	StatisticsOutputStream wrapper;
+
+	StatisticsWriter(MessageWriter delegatee) {
+	    super(delegatee);
 	}
 
-	public void close() throws IOException {
-	    wrapped.close();
+
+
+	// Create and return the byte-counting FilterOutputStream
+	public OutputStream getObjectOutputStream(ObjectOutput out)
+	    throws java.io.IOException
+	{
+	    OutputStream raw_os = super.getObjectOutputStream(out);
+	    wrapper = new StatisticsOutputStream(raw_os);
+	    return wrapper;
 	}
 
-	public void flush() throws IOException {
-	    wrapped.flush();
+
+
+	public void finishOutput() 
+	    throws java.io.IOException
+	{
+	    super.finishOutput();
+	    int byteCount = wrapper.byteCount;
 	    int bin = 0;
 	    int maxBin = MessageStatistics.NBINS - 1;
-	    while (bin < maxBin && byteCount >= MessageStatistics.BIN_SIZES[bin]) {
+	    while (bin < maxBin && 
+		   byteCount >= MessageStatistics.BIN_SIZES[bin]) {
 		bin++;
 	    }
 	    messageLengthHistogram[bin]++;
@@ -187,32 +250,54 @@ public class StatisticsAspect
 
 	    if (Debug.isDebugEnabled(loggingService,STATISTICS))
 		loggingService.debug("byteCount = " + byteCount);
-
-	    byteCount = 0;
 	}
 
-	public void write(int b) throws IOException {
-	    wrapped.write(b);
-	    synchronized (StatisticsAspect.this) {
-		byteCount += 1;
-	    }
-	}
-
-	public void write(byte[] b) throws IOException {
-	    wrapped.write(b);
-	    synchronized (StatisticsAspect.this) {
-		byteCount += b.length;
-	    }
-	}
-
-	public void write(byte[] b, int o, int len) throws IOException {
-	    wrapped.write(b, o, len);
-	    synchronized (StatisticsAspect.this) {
-		byteCount += len;
-	    }
-	}
     }
 
 
+    // MessageReader delegate.  In this case it does nothing.
+    // Nonetheless it has to be here, since for reasons we don't yet
+    // understand, the filtered streams have to match exactly on the
+    // reader and writer.
+	// Does absolutely nothing but has to be here.
+    private static class DummyInputStream extends FilterInputStream {
+
+	private DummyInputStream(InputStream wrapped) {
+	    super(wrapped);
+	}
+
+	public int read() throws java.io.IOException {
+	    return in.read();
+	}
+
+	public int read(byte[] b, int off, int len) 
+	    throws java.io.IOException
+	{
+	    return in.read(b, off, len);
+	}
+
+	public int read(byte[] b) 
+	    throws java.io.IOException
+	{
+	    return in.read(b);
+	}
+    }
+
+    private static class StatisticsReader
+	extends MessageReaderDelegateImplBase
+    {
+
+
+	StatisticsReader(MessageReader delegatee) {
+	    super(delegatee);
+	}
+
+	public InputStream getObjectInputStream(ObjectInput in)
+	    throws java.io.IOException, ClassNotFoundException
+	{
+	    InputStream raw_is = super.getObjectInputStream(in);
+	    return new DummyInputStream(raw_is);
+	}
+    }
 
 }
