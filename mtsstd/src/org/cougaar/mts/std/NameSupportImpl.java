@@ -105,27 +105,43 @@ public class NameSupportImpl implements NameSupport
 					    String transportType)
     {
 	MessageAddress addr = address;
-
-	// This is not really a 'for' loop, it's a 2-pass lookup.  If
-	// a MessageAddress is returned on the first pass, that
-	// address is used for the second pass lookup.  This scheme is
-	// what allows a single MTImpl (on the Node) to receive
-	// messages for several Agents  (all the Agents in the Node).
-	for (int count=0; count<2; count++) {
-	    String key = CLUSTERDIR + addr.getAddress() + transportType ;
-	    try {
-                Object object = namingService.getRootContext().lookup(key);
-
-                if (object instanceof MessageAddress) {
-                    addr = (MessageAddress) object;
-                    continue;   // Follow the link?
-                }
-                return object;
-            } catch (NamingException ne) {
-		// unknown?
-		return null; 
-	    }
+	String key = CLUSTERDIR + addr.getAddress() + transportType ;
+	Object object;
+	DirContext ctx = null;
+       
+	try {
+	    ctx = namingService.getRootContext();
+	} catch (NamingException ne) {
+	    return null;
 	}
-        throw new RuntimeException("Address " + address + " loops");
+
+	try {
+	    object = ctx.lookup(key);
+	    if (object instanceof MessageAddress) {
+		addr = (MessageAddress) object;
+	    } else {
+		return object;
+	    }
+	} catch (NamingException ne) {
+	    // unknown?
+	    return null; 
+	}
+
+
+	// If we get here the lookup returned an address.  Use it as a
+	// forwarding pointer.
+	key = CLUSTERDIR + addr.getAddress() + transportType ;
+	try {
+	    object = ctx.lookup(key);
+	    if (object instanceof MessageAddress) {
+		throw new RuntimeException("Address " + address + " loops");
+	    } else {
+		return object;
+	    }
+	} catch (NamingException ne) {
+	    // unknown?
+	    return null; 
+	}
     }
+
 }

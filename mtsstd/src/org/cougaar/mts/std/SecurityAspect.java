@@ -23,12 +23,14 @@ import java.beans.Beans;
  * */
 public class SecurityAspect extends StandardAspect
 {
+    private static final String SECURITY_CLASS_PROPERTY =
+	"org.cougaar.message.security";
     private static MessageSecurityManager msm = null; 
 
     private static synchronized MessageSecurityManager ensure_msm() {
 	if (msm != null) return msm;
 
-	String name = System.getProperty("org.cougaar.message.security");
+	String name = System.getProperty(SECURITY_CLASS_PROPERTY);
 	if (name != null && (!name.equals("")) &&(!name.equals("none"))) {
 	    try {
 		// Object raw = Beans.instantiate(null, name);

@@ -240,7 +240,7 @@ public class MessageTransportServiceProvider
 		    (MessageTransportClient) requestor;
 		MessageAddress addr = client.getMessageAddress();
 		Object proxy = proxies.get(addr);
-		if (proxy == null) return;
+		if (proxy != service) return; // ???
 		proxies.remove(addr);
 		MessageTransportService svc = (MessageTransportService) proxy;
 		svc.unregisterClient(client); // ???
