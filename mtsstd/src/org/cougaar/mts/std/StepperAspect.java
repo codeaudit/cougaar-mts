@@ -98,7 +98,7 @@ public final class StepperAspect
 		}
 	    }
 	}
-	frame.setVisible(true);
+	if (!frame.isVisible()) frame.setVisible(true);
 	return frame;
     }
 
