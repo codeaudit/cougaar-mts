@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.naming.NS;
 import org.cougaar.core.component.ServiceBroker;
 
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.RMISocketFactory;
 import java.util.HashMap;
@@ -61,6 +62,7 @@ public class RMILinkProtocol
     private MT myProxy;
     private HashMap links, remoteRefs;
     private SocketFactory socfac;
+    private RMISocketControlService controlService;
 
     public RMILinkProtocol() {
 	super(); 
@@ -95,6 +97,10 @@ public class RMILinkProtocol
 	super_load();
 	ServiceBroker sb = getServiceBroker();
 	sb.addService(Service.class, this);
+
+	// RMISocketControlService could be null
+	controlService = (RMISocketControlService)
+	    sb.getService(this, RMISocketControlService.class, null);
     }
 
 
@@ -166,6 +172,9 @@ public class RMILinkProtocol
 
 	if (object == null || !getProxy) return (MT) object;
 
+	if (controlService != null) 
+	    controlService.setReferenceAddress((Remote) object, address);
+	
 
 	object = getClientSideProxy(object);
 	if (object instanceof MT) {

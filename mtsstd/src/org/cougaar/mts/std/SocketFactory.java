@@ -33,6 +33,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 
 
+
 /**
  * This is not really a factory, it just needs to use AspectFactory's
  * attachAspects method.  The purpose of this class is to create an
@@ -51,11 +52,9 @@ public class SocketFactory
     // happens.  Instead, the aspect delegation will be handled by a
     // special static call.
     private boolean use_ssl;
-    private LoggingService loggingService;
 
     public SocketFactory(boolean use_ssl, LoggingService loggingService) {
 	this.use_ssl = use_ssl;
-	this.loggingService = loggingService;
     }
 
     
@@ -67,7 +66,7 @@ public class SocketFactory
 	    try {
 		s = SSLSocketFactory.getDefault().createSocket(host, port);
 	    } catch (IOException ex) {
-		loggingService.error(null, ex);
+		ex.printStackTrace();
 		return null;
 	    }
 	} else {
@@ -75,7 +74,10 @@ public class SocketFactory
 	}
  	return AspectSupportImpl.attachRMISocketAspects(s);
     }
+
     
+
+
     public ServerSocket createServerSocket(int port) 
 	throws IOException 
     {
@@ -84,7 +86,7 @@ public class SocketFactory
 	    try {
 		s=SSLServerSocketFactory.getDefault().createServerSocket(port);
 	    } catch (IOException ex) {
-		loggingService.error(null, ex);
+		ex.printStackTrace();
 		return null;
 	    }
 	} else {
