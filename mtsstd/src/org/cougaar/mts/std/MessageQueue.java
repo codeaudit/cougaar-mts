@@ -21,15 +21,9 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
+import org.cougaar.core.component.ServiceBroker;
 
 import org.cougaar.util.CircularQueue;
-import org.cougaar.util.ReusableThreadPool;
-import org.cougaar.util.ReusableThread;
 
 /**
  * An abstract class which manages a circular queue of messages, and
@@ -38,33 +32,18 @@ import org.cougaar.util.ReusableThread;
  * invoked on each message as it's popped off. */
 abstract class MessageQueue implements Runnable
 {
-    private static final int maxThreadCount = 100;
-    private static ReusableThreadPool threadPool = 
-	new ReusableThreadPool(20, maxThreadCount);
-
-    private static Thread getThread(MessageQueue queue) {
-	return threadPool.getThread(queue, queue.name);
-    }
-
 
     private CircularQueue queue;
+    private ThreadService threadService;
     private Thread thread;
     private String name;
-    private boolean useThreadPool;
 
-    MessageQueue(String name) {
-	this(name, false);
-    }
 
-    MessageQueue(String name, boolean useThreadPool) {
+    MessageQueue(String name, ServiceBroker sb) {
 	this.name = name;
-	this.useThreadPool = useThreadPool;
+	this.threadService = 
+	    (ThreadService) sb.getService(this, ThreadService.class, null);
 	queue = new CircularQueue();
-	if (!useThreadPool) {
-	    thread = new Thread(this, name);
-	    thread.setDaemon(true);
-	    thread.start();
-	}
     }
 
 
@@ -80,13 +59,8 @@ abstract class MessageQueue implements Runnable
 	    // wait for a message to handle
 	    synchronized (queue) {
 		while (queue.isEmpty()) {
-		    if (!useThreadPool) {
-			try { queue.wait(); }
-			catch (InterruptedException ex) {}
-		    } else {
-			thread = null;
-			return;
-		    }
+		    thread = null;
+		    return;
 		}
 		m = (Message) queue.next(); // from top
 	    }
@@ -102,10 +76,8 @@ abstract class MessageQueue implements Runnable
     void add(Message m) {
 	synchronized (queue) {
 	    queue.add(m);
-	    if (!useThreadPool) {
-		queue.notify();
-	    } else if (thread == null) {
-		thread = getThread(this);
+	    if (thread == null) {
+		thread = threadService.getThread(this);
 		thread.start();
 	    }
 	}

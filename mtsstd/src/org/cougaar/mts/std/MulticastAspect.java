@@ -21,14 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.core.mts.MessageEnvelope;
-import org.cougaar.core.mts.MulticastMessageAddress;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,20 +28,21 @@ import java.util.Iterator;
 public class MulticastAspect extends StandardAspect
 {
 
-    private MessageTransportRegistry registry;
 
-    public MulticastAspect() {
-	super();
-	registry = MessageTransportRegistry.getRegistry();
+    public Object getDelegate(Object delegatee, Class type) 
+    {
+	if (type == SendLink.class) {
+	    return new SendLinkDelegate((SendLink) delegatee);
+	} else {
+	    return null;
+	}
     }
 
 
-    public Object getDelegate(Object delegate, Class type) 
+    public Object getReverseDelegate(Object delegatee, Class type) 
     {
-	if (type == SendLink.class) {
-	    return new SendLinkDelegate((SendLink) delegate);
-	} else if (type == MessageDeliverer.class) {
-	    return new DelivererDelegate((MessageDeliverer) delegate);
+	if (type == MessageDeliverer.class) {
+	    return new MessageDelivererDelegate((MessageDeliverer) delegatee);
 	} else {
 	    return null;
 	}
@@ -81,6 +74,7 @@ public class MulticastAspect extends StandardAspect
 		if (destination.equals(MessageAddress.LOCAL)) {
 		    if (Debug.debug(MULTICAST))
 			System.out.println("### MCAST: Local multicast");
+		    destination = getRegistry().getLocalAddress();
 		    msg = new MulticastMessageEnvelope(msg,  destination);
 		    link.sendMessage(msg);
 		} else {
@@ -89,7 +83,8 @@ public class MulticastAspect extends StandardAspect
 					   + destination);
 		    MulticastMessageAddress dst = 
 			(MulticastMessageAddress) destination;
-		    Iterator itr = registry.findRemoteMulticastTransports(dst);
+		    Iterator itr = 
+			getRegistry().findRemoteMulticastTransports(dst);
 		    MulticastMessageEnvelope envelope;
 		    MessageAddress addr;
 		    while (itr.hasNext()) {
@@ -110,32 +105,35 @@ public class MulticastAspect extends StandardAspect
 
 
 
-    public class DelivererDelegate extends MessageDelivererDelegateImplBase {
+    public class MessageDelivererDelegate
+	extends MessageDelivererDelegateImplBase 
+    {
 
-	public DelivererDelegate (MessageDeliverer deliverer) {
-	    super(deliverer);
+	public MessageDelivererDelegate (MessageDeliverer delegatee) {
+	    super(delegatee);
 	}
 	
-	public void deliverMessage(Message msg, MessageAddress dest) 
+	public void deliverMessage(Message msg, MessageAddress destination) 
 	    throws MisdeliveredMessageException
 	{
 	    if (msg instanceof MulticastMessageEnvelope) {
 		msg = ((MulticastMessageEnvelope) msg).getContents();
-		dest = msg.getTarget();
-		MulticastMessageAddress addr = (MulticastMessageAddress) dest;
+		MulticastMessageAddress addr = 
+		    (MulticastMessageAddress) msg.getTarget();
 		if (Debug.debug(MULTICAST))
 		    System.out.println("### MCAST: Received multicast to "
 					   + addr);
-		Iterator i = registry.findLocalMulticastReceivers(addr);
+		Iterator i = getRegistry().findLocalMulticastReceivers(addr);
+		MessageAddress localDestination = null;
 		while (i.hasNext()) {
-		    dest = (MessageAddress) i.next();
+		    localDestination = (MessageAddress) i.next();
 		    if (Debug.debug(MULTICAST))
 			System.out.println("### MCAST: Delivering to "
-					   + dest);
-		    deliverer.deliverMessage(msg, dest);
+					   + localDestination);
+		    deliverer.deliverMessage(msg, localDestination);
 		}
 	    } else {	
-		deliverer.deliverMessage(msg, dest);
+		super.deliverMessage(msg, destination);
 	    }
 	}
 	

@@ -39,8 +39,8 @@ class LoopbackLinkProtocol
 
     private HashMap links;
 
-    public LoopbackLinkProtocol(String id, AspectSupport aspectSupport) {
-	super(aspectSupport);
+    public LoopbackLinkProtocol() {
+	super();
 	links = new HashMap();
     }
 

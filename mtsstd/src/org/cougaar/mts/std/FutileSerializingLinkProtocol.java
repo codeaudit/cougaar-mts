@@ -21,12 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -42,10 +36,9 @@ class FutileSerializingLinkProtocol
 
     private HashMap links;
 
-    public FutileSerializingLinkProtocol(String id, 
-					 AspectSupport aspectSupport) 
+    public FutileSerializingLinkProtocol() 
     {
-	super(aspectSupport);
+	super();
 	links = new HashMap();
     }
 

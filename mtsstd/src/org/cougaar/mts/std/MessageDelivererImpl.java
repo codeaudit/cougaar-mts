@@ -39,10 +39,11 @@ import java.util.Iterator;
  * message on to the appropriate DestinationLink. */
 public class MessageDelivererImpl implements MessageDeliverer
 {
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
     private String name;
 
-    MessageDelivererImpl(String name, MessageTransportRegistry registry) {
+    MessageDelivererImpl(String name, MessageTransportRegistryService registry)
+    {
 	this.registry = registry;
 	this.name = name;
     }
@@ -68,6 +69,7 @@ public class MessageDelivererImpl implements MessageDeliverer
 		return;
 	    }
 	}
+	System.err.println("## No such agent as "  +addr);
 	throw new MisdeliveredMessageException(message);
     }
 

@@ -29,7 +29,6 @@ import org.cougaar.core.component.ContainerAPI;
 import org.cougaar.core.component.PropagatingServiceBroker;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.service.NamingService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
@@ -49,9 +48,9 @@ import java.util.HashMap;
  * transport policy to instance o the specified class.
  */
 
-public class MessageTransportServiceProvider 
+public final class MessageTransportServiceProvider 
     extends ContainerSupport
-    implements ContainerAPI, ServiceProvider
+    implements ContainerAPI, ServiceProvider, MessageTransportClient
 {
 
     private final static String POLICY_PROPERTY =
@@ -61,30 +60,22 @@ public class MessageTransportServiceProvider
     private final static String STATISTICS_ASPECT = 
 	"org.cougaar.core.mts.StatisticsAspect";
 
-    // Factories
-    private LinkProtocolFactory protocolFactory;
-    private SendQueueFactory sendQFactory;
-    private MessageDelivererFactory delivererFactory;
-    private DestinationQueueFactory destQFactory;
-    private RouterFactory routerFactory;
-    private ReceiveLinkFactory receiveLinkFactory;
+    // MTS address
+    private MessageAddress address;
 
-
-    // Singletons
-    private NameSupport nameSupport;
-    private MessageTransportRegistry registry;
+    // Services we use (more than once)
     private AspectSupport aspectSupport;
 
-    // Assuming one policy per provider, but could also be one per
-    // sender
-    private Router router;
-    private SendQueue sendQ;
-    private MessageDeliverer deliverer;
+    // Hang on to these because they implement services we provide.
     private WatcherAspect watcherAspect;
     private AgentStatusAspect agentStatusAspect;
 
+    // Implicit singleton -- one sendQ for all senders.
+    private SendQueue sendQ;
+
     private String id;
     private HashMap proxies;
+
 
 
 
@@ -98,19 +89,37 @@ public class MessageTransportServiceProvider
     }
  
 
+    
+    // The MTS itself as a client
+    public void receiveMessage(Message message) {
+	System.err.println("# MTS received unwanted message: " + message);
+    }
+
+    public MessageAddress getMessageAddress() {
+	return address;
+    }
+
+
+
+
     private void createNameSupport(String id) {
         ServiceBroker sb = getServiceBroker();
         if (sb == null) throw new RuntimeException("No service broker");
-	Object svc = sb.getService(this, NamingService.class, null);
-        Object ns = NameSupportImpl.makeInstance(id, (NamingService) svc);
-	ns = aspectSupport.attachAspects(ns, NameSupport.class);
-	nameSupport = (NameSupport) ns;
-	registry.setNameSupport(nameSupport);
+
+	NameSupportImpl impl = new NameSupportImpl(id, sb);
+
+	sb.addService(NameSupport.class, impl);
     }
 
 
     private void createAspectSupport() {
-	aspectSupport = AspectSupportImpl.makeInstance(this);
+        ServiceBroker sb = getServiceBroker();
+        if (sb == null) throw new RuntimeException("No service broker");
+
+	AspectSupportImpl impl = new AspectSupportImpl(this);
+	sb.addService(AspectSupport.class, impl);
+	aspectSupport = 
+	    (AspectSupport) sb.getService(this, AspectSupport.class, null);
 
 	// Do the standard set first, since they're assumed to be more
 	// generic than the user-specified set.
@@ -138,30 +147,29 @@ public class MessageTransportServiceProvider
     }
 
     private void createFactories() {
-	protocolFactory = new LinkProtocolFactory(id, this,
-						  registry, nameSupport, 
-						  aspectSupport);
-	receiveLinkFactory = new ReceiveLinkFactory(aspectSupport);
+	ServiceBroker sb = getServiceBroker();
+	ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory(sb);
+	sb.addService(ReceiveLinkService.class, receiveLinkFactory);
 
-	registry.setReceiveLinkFactory(receiveLinkFactory);
+	LinkProtocolFactory protocolFactory = 
+	    new LinkProtocolFactory(this, sb);
 
-	delivererFactory = new MessageDelivererFactory(registry,aspectSupport);
-	deliverer = delivererFactory.getMessageDeliverer(id+"/Deliverer");
+	MessageDelivererFactory delivererFactory = 
+	    new MessageDelivererFactory(sb);
+	MessageDeliverer deliverer = 
+	    delivererFactory.getMessageDeliverer(id+"/Deliverer");
 
 	LinkSelectionPolicy selectionPolicy = createSelectionPolicy();
 
 	
-	destQFactory = 
-	    new DestinationQueueFactory(registry, 
-					protocolFactory,
-					selectionPolicy,
-					aspectSupport);
-	routerFactory =
-	    new RouterFactory(registry, destQFactory, aspectSupport);
+	DestinationQueueFactory	destQFactory = 
+	    new DestinationQueueFactory(sb, protocolFactory, selectionPolicy);
+	RouterFactory routerFactory =
+	    new RouterFactory(sb, destQFactory);
 
-	router = routerFactory.getRouter();
+	Router router = routerFactory.getRouter();
 
-	sendQFactory = new SendQueueFactory(registry, aspectSupport);
+	SendQueueFactory sendQFactory = new SendQueueFactory(sb);
 	sendQ = sendQFactory.getSendQueue(id+"/OutQ", router);
 
 	protocolFactory.setDeliverer(deliverer);
@@ -198,7 +206,7 @@ public class MessageTransportServiceProvider
 	if (proxy != null) return proxy;
 	
 	// Make SendLink and attach aspect delegates
-	SendLink link = new SendLinkImpl(sendQ, addr);
+	SendLink link = new SendLinkImpl(sendQ, addr, getServiceBroker());
 	Class c = SendLink.class;
 	Object raw = aspectSupport.attachAspects(link, c);
 	link = (SendLink) raw;
@@ -208,20 +216,45 @@ public class MessageTransportServiceProvider
 	proxies.put(addr, proxy);
 	if (Debug.debug(DebugFlags.SERVICE))
 	    System.out.println("=== Created MessageTransportServiceProxy for " 
-			       +  requestor);
+			       +requestor+
+			       " with address "
+			       +client.getMessageAddress());
 	return proxy;
 
     }
 
 
-
     public void initialize() {
-	registry = MessageTransportRegistry.makeRegistry(id, this);
+        super.initialize();
+        ServiceBroker sb = getServiceBroker(); // is this mine or Node's ?
+	
+	// Later this will be replaced by a Node-level service
+	ThreadServiceProvider tsp = new ThreadServiceProvider();
+	sb.addService(ThreadService.class, tsp);
+
+	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
+	sb.addService(MessageTransportRegistryService.class, reg);
+
+	MessageTransportRegistryService registry = 
+	    (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class,  null);
+
 	createAspectSupport();
         createNameSupport(id);
 	createFactories();
-	registry.registerMTS();
-        super.initialize();
+
+	// The MTS itself as a client
+	NameSupport nameSupport = 
+	    (NameSupport) 
+	    sb.getService(this, NameSupport.class, null);
+	address = nameSupport.getNodeMessageAddress();
+
+	// MessageTransportService isn't available at this point, so
+	// do the calls manually (ugh).
+	MessageTransportService svc = 
+	    (MessageTransportService) findOrMakeProxy(this);
+	svc.registerClient(this);
+	registry.registerMTS(this);
     }
 
 

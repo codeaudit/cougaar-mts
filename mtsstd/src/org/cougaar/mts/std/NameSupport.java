@@ -21,12 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.MulticastMessageAddress;
-import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.component.Service;
 
 import java.util.Iterator;
 import javax.naming.directory.Attributes;
@@ -34,7 +29,8 @@ import javax.naming.directory.Attributes;
 /**
  * This is utility class which hides the grimy details of dealing with
  * NameServers from the rest of the message transport subsystem.  */
-public interface NameSupport {
+public interface NameSupport extends Service
+{
     String MTS_DIR =  "MessageTransports";
     String AGENT_DIR =  "Agents";
     String TOPOLOGY_DIR = "Topology";

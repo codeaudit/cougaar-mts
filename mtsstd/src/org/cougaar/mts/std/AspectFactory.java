@@ -21,9 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.ServiceBroker;
 
 import java.lang.reflect.Constructor;
 
@@ -38,10 +36,13 @@ import java.lang.reflect.Constructor;
 abstract public class AspectFactory implements DebugFlags
 {
     private AspectSupport aspectSupport;
+    protected ServiceBroker sb;
 
 
-    protected AspectFactory(AspectSupport aspectSupport) {
-	this.aspectSupport = aspectSupport;
+    protected AspectFactory(ServiceBroker sb) {
+	Object svc = sb.getService(this, AspectSupport.class, null);
+	aspectSupport = (AspectSupport) svc;
+	this.sb = sb;
     }
 
     public Object attachAspects(Object delegate, Class type) {

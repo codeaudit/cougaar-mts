@@ -21,10 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 
 import java.util.HashMap;
@@ -37,18 +34,18 @@ import java.util.HashMap;
 public class DestinationQueueFactory extends  AspectFactory
 {
     private HashMap queues;
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
     private LinkProtocolFactory protocolFactory;
     private LinkSelectionPolicy selectionPolicy;
 
-    DestinationQueueFactory(MessageTransportRegistry registry,
+    DestinationQueueFactory(ServiceBroker sb,
 			    LinkProtocolFactory protocolFactory,
-			    LinkSelectionPolicy selectionPolicy,
-			    AspectSupport aspectSupport) 
+			    LinkSelectionPolicy selectionPolicy) 
     {
-	super(aspectSupport);
+	super(sb);
 	queues = new HashMap();
-	this.registry = registry;
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
 	this.protocolFactory = protocolFactory;
 	this.selectionPolicy = selectionPolicy;
     }
@@ -66,11 +63,13 @@ public class DestinationQueueFactory extends  AspectFactory
 	if (q == null) {
 	    DestinationQueueImpl qimpl = 
 		new DestinationQueueImpl(destination,
+					 sb,
 					 registry,
 					 protocolFactory,
 					 selectionPolicy);
 	    q = (DestinationQueue) attachAspects(qimpl, 
 						 DestinationQueue.class);
+	    qimpl.setDelegate(q);
 	    queues.put(destination, q);
 	}
 	return q;

@@ -21,10 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
 
-import org.cougaar.core.node.*;
-
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,122 +30,163 @@ import java.util.ListIterator;
 import java.util.StringTokenizer;
 
 import org.cougaar.core.component.Container;
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 
 /**
  * This is utility class which supports loading aspects
  * @property org.cougaar.message.transport.aspects A comma-seperated
  * list of the MTS aspect classes to be instantiated.
  */
-public final class AspectSupportImpl 
-    implements AspectSupport, DebugFlags
+final class AspectSupportImpl implements ServiceProvider
 {
     private final static String ASPECTS_PROPERTY = 
 	"org.cougaar.message.transport.aspects";
 
-    private static AspectSupportImpl instance;
+    private static AspectSupport service;
 
-    public static AspectSupport instance() {
-	return instance;
+
+    AspectSupportImpl(Container container) {
+	service = new ServiceImpl(container);
     }
 
-    public static AspectSupport makeInstance(Container container) {
-	instance = new AspectSupportImpl(container);
-	return instance;
+
+    // The SocketFactory needs to attach aspect delegates for Socket.
+    // But the client side of the connection can't get at a
+    // ServiceBroker since the factory was serlialized and sent over
+    // by the server side of the connection.  To get around this
+    // problem we need to open a hole into the aspectSupport.  Give it
+    // package-access in a feeble attempt at security.
+    static Socket attachRMISocketAspects(Socket rmi_socket) {
+	return (Socket) service.attachAspects(rmi_socket, Socket.class);
     }
 
-    private ArrayList aspects;
-    private HashMap aspects_table;
-    private Container container;
 
-    // Should this be a singleton?
-    private AspectSupportImpl(Container container) {
-	aspects = new ArrayList();
-	aspects_table = new HashMap();
-	this.container = container;
+
+    public Object getService(ServiceBroker sb, 
+			     Object requestor, 
+			     Class serviceClass) 
+    {
+	if (serviceClass == AspectSupport.class) {
+	    return service;
+	} else {
+	    return null;
+	}
     }
+
+    public void releaseService(ServiceBroker sb, 
+			       Object requestor, 
+			       Class serviceClass, 
+			       Object service)
+    {
+    }
+
+
+
+
+
+    private static class ServiceImpl implements AspectSupport, DebugFlags
+    {
+
+	private ArrayList aspects;
+	private HashMap aspects_table;
+	private Container container;
+
+
+	private ServiceImpl(Container container) {
+	    aspects = new ArrayList();
+	    aspects_table = new HashMap();
+	    this.container = container;
+	}
     
  
-    public void readAspects() {
-	String classes = System.getProperty(ASPECTS_PROPERTY);
+	public void readAspects() {
+	    String classes = System.getProperty(ASPECTS_PROPERTY);
 
-	if (classes == null) return;
+	    if (classes == null) return;
 
-	StringTokenizer tokenizer = new StringTokenizer(classes, ",");
-	while (tokenizer.hasMoreElements()) {
-	    String classname = tokenizer.nextToken();
-	    try {
-		Class aspectClass = Class.forName(classname);
+	    StringTokenizer tokenizer = new StringTokenizer(classes, ",");
+	    while (tokenizer.hasMoreElements()) {
+		String classname = tokenizer.nextToken();
+		MessageTransportAspect aspect = findAspect(classname);
+		if (aspect != null) {
+		    System.err.println("Warning: ignoring duplicate aspect "+
+				       classname);
+		    continue;
+		}
+		try {
+		    Class aspectClass = Class.forName(classname);
+		    aspect =(MessageTransportAspect) aspectClass.newInstance();
+		    addAspect(aspect);
+		}
+		catch (Exception ex) {
+		    ex.printStackTrace();
+		    // System.err.println(ex);
+		}
+	    }
+	}
+
+	// Note that we allow multiple instances of a given aspect class
+	// but that only the most recent instance of any given class can
+	// be found by name.
+	public synchronized MessageTransportAspect findAspect(String classname)
+	{
+	    return (MessageTransportAspect) aspects_table.get(classname);
+	}
+
+
+	public void addAspect(MessageTransportAspect aspect)
+	{
+	    String classname = aspect.getClass().getName();
+	    synchronized (this) {
+		aspects.add(aspect);
+		aspects_table.put(classname, aspect);
+	    }
+	    container.add(aspect);
+	    if (Debug.debug(ASPECTS))
+		System.out.println("******* added aspect " + aspect);
+	}
+
+
+	/**
+	 * Loops through the aspects, allowing each one to attach an
+	 * aspect delegate in a cascaded series.  If any aspects attach a
+	 * delegate, the final aspect delegate is returned.  If no aspects
+	 * attach a delegate, the original object, as created by the
+	 * factory, is returned.  */
+	public Object attachAspects (Object delegate, 
+				     Class type)
+	{
+	    Iterator itr = aspects.iterator();
+	    while (itr.hasNext()) {
 		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) aspectClass.newInstance();
-		addAspect(aspect);
+		    (MessageTransportAspect) itr.next();
+
+		Object candidate = aspect.getDelegate(delegate, type);
+		if (candidate != null) {
+		    delegate = candidate;
+		    if (Debug.debug(ASPECTS))
+			System.out.println("======> " + delegate);
+		}
 	    }
-	    catch (Exception ex) {
-		ex.printStackTrace();
-		// System.err.println(ex);
+
+	    ListIterator litr = aspects.listIterator(aspects.size());
+	    while (litr.hasPrevious()) {
+		MessageTransportAspect aspect = 
+		    (MessageTransportAspect) litr.previous();
+
+		Object candidate = aspect.getReverseDelegate(delegate, type);
+		if (candidate != null) {
+		    delegate = candidate;
+		    if (Debug.debug(ASPECTS))
+			System.out.println("(r)======> " + delegate);
+		}
 	    }
-	}
-    }
-
-    // Note that we allow multiple instances of a given aspect class
-    // but that only the most recent instance of any given class can
-    // be found by name.
-    public synchronized MessageTransportAspect findAspect(String classname) {
-	return (MessageTransportAspect) aspects_table.get(classname);
-    }
-
-
-    public void addAspect(MessageTransportAspect aspect)
-    {
-	String classname = aspect.getClass().getName();
-	synchronized (this) {
-	    aspects.add(aspect);
-	    aspects_table.put(classname, aspect);
-	}
-	container.add(aspect);
-	if (Debug.debug(ASPECTS))
-	    System.out.println("******* added aspect " + aspect);
-    }
-
-
-    /**
-     * Loops through the aspects, allowing each one to attach an
-     * aspect delegate in a cascaded series.  If any aspects attach a
-     * delegate, the final aspect delegate is returned.  If no aspects
-     * attach a delegate, the original object, as created by the
-     * factory, is returned.  */
-    public Object attachAspects (Object delegate, 
-					      Class type)
-    {
-	Iterator itr = aspects.iterator();
-	while (itr.hasNext()) {
-	    MessageTransportAspect aspect = 
-		(MessageTransportAspect) itr.next();
-
-	    Object candidate = aspect.getDelegate(delegate, type);
-	    if (candidate != null) {
-		delegate = candidate;
-		if (Debug.debug(ASPECTS))
-		    System.out.println("======> " + delegate);
-	    }
-	}
-
-	ListIterator litr = aspects.listIterator(aspects.size());
-	while (litr.hasPrevious()) {
-	    MessageTransportAspect aspect = 
-		(MessageTransportAspect) litr.previous();
-
-	    Object candidate = aspect.getReverseDelegate(delegate, type);
-	    if (candidate != null) {
-		delegate = candidate;
-		if (Debug.debug(ASPECTS))
-		    System.out.println("(r)======> " + delegate);
-	    }
-	}
 	
-	return delegate;
+	    return delegate;
+	}
+
     }
-
-
 }
  
 

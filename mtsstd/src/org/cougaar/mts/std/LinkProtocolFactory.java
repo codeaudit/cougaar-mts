@@ -22,10 +22,10 @@
 package org.cougaar.core.mts;
 
 import org.cougaar.core.component.Container;
+import org.cougaar.core.component.ServiceBroker;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import java.lang.reflect.Constructor;
 
 
 /**
@@ -42,27 +42,19 @@ public final class LinkProtocolFactory
 {
     private static final String CLASSES_PROPERTY =
 	"org.cougaar.message.protocol.classes";
-    private static LinkProtocolFactory theFactory;
 
-    private AspectSupport aspectSupport;
-    private String id;
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
     private MessageDeliverer deliverer;
     private NameSupport nameSupport;
     private Container container;
 
-    public LinkProtocolFactory(String id, 
-			       Container container,
-			       MessageTransportRegistry registry,
-			       NameSupport nameSupport,
-			       AspectSupport aspectSupport)
+    public LinkProtocolFactory(Container container, ServiceBroker sb)
     {
-	this.id = id;
-	this.registry = registry;
-	this.nameSupport = nameSupport;
-	this.aspectSupport = aspectSupport;
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
+	nameSupport = (NameSupport)
+	    sb.getService(this, NameSupport.class, null);
 	this.container = container;
-	theFactory = this;
     }
 
     void setDeliverer(MessageDeliverer deliverer) {
@@ -71,25 +63,16 @@ public final class LinkProtocolFactory
 
     private void initProtocol(LinkProtocol protocol) {
 	protocol.setDeliverer(deliverer);
-	protocol.setRegistry(registry);
-	protocol.setNameSupport(nameSupport);
 	registry.addLinkProtocol(protocol);
 	container.add(protocol);
     }
 
 
     private LinkProtocol makeProtocol(String classname) {
-	// Assume for now all transport classes have a constructor of
-	// one argument (the id string).
-	Class[] types = { String.class, AspectSupport.class };
-	Object[] args = 
-	    { registry.getIdentifier(),  aspectSupport };
 	LinkProtocol protocol = null;
 	try {
 	    Class protocol_class = Class.forName(classname);
-	    Constructor constructor = 
-		protocol_class.getConstructor(types);
-	    protocol = (LinkProtocol) constructor.newInstance(args);
+	    protocol = (LinkProtocol) protocol_class.newInstance();
 	} catch (Exception xxx) {
 	    xxx.printStackTrace();
 	    return null;
@@ -103,9 +86,9 @@ public final class LinkProtocolFactory
 	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
 	if (protocol_classes == null || protocol_classes.equals("")) {
 	    // Make the two standard protocols if none specified.
-	    LinkProtocol protocol =new LoopbackLinkProtocol(id, aspectSupport);
+	    LinkProtocol protocol =new LoopbackLinkProtocol();
 	    initProtocol(protocol);
-	    protocol = new RMILinkProtocol(id, aspectSupport);
+	    protocol = new RMILinkProtocol();
 	    initProtocol(protocol);
 	} else {
 	    StringTokenizer tokenizer = 

@@ -44,7 +44,8 @@ public class FlushAspect extends StandardAspect
 
     private SendLinkDelegate findSendLink(Message message) {
 	MessageAddress addr = message.getOriginator();
-	return (SendLinkDelegate) delegates.get(addr);
+	Object result =  delegates.get(addr);
+	return (SendLinkDelegate) result;
     }
 
     private void registerSendLink(SendLinkDelegate link,
@@ -86,6 +87,10 @@ public class FlushAspect extends StandardAspect
 		   MisdeliveredMessageException
 	{
 	    SendLinkDelegate sendLink = findSendLink(message);
+	    if (sendLink == null) {
+		System.err.println("Warning: No SendLink for " +
+				   message.getOriginator());
+	    }
 	    try {
 		link.forwardMessage(message);
 		if (sendLink != null) sendLink.messageDelivered(message);
@@ -99,7 +104,7 @@ public class FlushAspect extends StandardAspect
 		if (sendLink != null) sendLink.messageFailed(message);
 		throw comm_ex;
 	    } catch (MisdeliveredMessageException misd_ex) {
-		if (link != null) sendLink.messageFailed(message);
+		if (sendLink != null) sendLink.messageFailed(message);
 		throw misd_ex;
 	    }
 	}

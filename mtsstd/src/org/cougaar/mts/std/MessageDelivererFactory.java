@@ -21,9 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.ServiceBroker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,13 +34,13 @@ import java.util.Iterator;
 public class MessageDelivererFactory extends AspectFactory
 {
     private ArrayList deliverers = new ArrayList();
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
 
-    MessageDelivererFactory(MessageTransportRegistry registry,
-			    AspectSupport aspectSupport)
+    MessageDelivererFactory(ServiceBroker sb)
     {
-	super(aspectSupport);
-	this.registry = registry;
+	super(sb);
+	registry = (MessageTransportRegistryService)
+	    sb.getService(this, MessageTransportRegistryService.class, null);
     }
 
     /**

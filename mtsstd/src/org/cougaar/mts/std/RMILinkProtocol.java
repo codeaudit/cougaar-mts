@@ -62,8 +62,8 @@ public class RMILinkProtocol
     private HashMap links, remoteRefs;
     private SocketFactory socfac;
 
-    public RMILinkProtocol(String id, AspectSupport aspectSupport) {
-	super(aspectSupport); 
+    public RMILinkProtocol() {
+	super(); 
 	links = new HashMap();
 	remoteRefs = new HashMap();
 	socfac = getSocketFactory();

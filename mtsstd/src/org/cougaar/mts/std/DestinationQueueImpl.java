@@ -21,12 +21,8 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
+import org.cougaar.core.component.ServiceBroker;
 
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -49,21 +45,24 @@ class DestinationQueueImpl
     private static final int MAX_DELAY = 60 * 1000; // 1 minute
     private MessageAddress destination;
     private LinkProtocolFactory protocolFactory;
-    private MessageTransportRegistry registry;
+    private MessageTransportRegistryService registry;
     private LinkSelectionPolicy selectionPolicy;
+    private DestinationQueue delegate;
 
     private ArrayList destinationLinks;
 
     DestinationQueueImpl(MessageAddress destination,
-			 MessageTransportRegistry registry,
+			 ServiceBroker sb,
+			 MessageTransportRegistryService registry,
 			 LinkProtocolFactory protocolFactory,
 			 LinkSelectionPolicy selectionPolicy)
     {
-	super(destination.toString(), true); // use thread pool
+	super(destination.toString(), sb);
 	this.destination = destination;
 	this.protocolFactory = protocolFactory;
 	this.registry =registry;
 	this.selectionPolicy = selectionPolicy;
+	this.delegate = this;
 
 	// cache DestinationLinks, per transport
 	destinationLinks = registry.getDestinationLinks(destination);
@@ -81,11 +80,15 @@ class DestinationQueueImpl
 	return destination.equals(address);
     }
     
+    void setDelegate(DestinationQueue delegate) {
+	this.delegate = delegate;
+    }
+
 
      /**
       * Processes the next dequeued message. */
     void dispatch(Message message) {
-	if (message != null) dispatchNextMessage(message);
+	if (message != null) delegate.dispatchNextMessage(message);
     }
 
     public void dispatchNextMessage(Message message) {
@@ -95,6 +98,9 @@ class DestinationQueueImpl
 	int retryCount = 0;
 	Exception lastException = null;
 	while (true) {
+	    if (retryCount > 0 && Debug.debug(SERVICE))
+		System.err.println("% Retrying " +message);
+
 	    links = destinationLinks.iterator();
 	    link = selectionPolicy.selectLink(links, message, retryCount, lastException);
 	    if (link != null) {
@@ -119,7 +125,10 @@ class DestinationQueueImpl
 		}
 
 		if (!link.retryFailedMessage(message, retryCount)) break;
+	    } else if (Debug.debug(POLICY)) {
+		System.out.println("#### No Protocol selected ");
 	    }
+
 
 	    retryCount++;
 	    try { Thread.sleep(delay);}

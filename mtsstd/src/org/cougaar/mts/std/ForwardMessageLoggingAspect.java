@@ -21,13 +21,6 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
-
-import org.cougaar.core.mts.Message;
-import org.cougaar.core.mts.MessageAddress;
-
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Iterator;
@@ -40,12 +33,13 @@ public class ForwardMessageLoggingAspect extends StandardAspect
     private static final char SEPR = '\t';
 
     private PrintStream log;
+    private boolean madeLog;
 
-    public ForwardMessageLoggingAspect() {
-	super();
+
+    private synchronized void ensureLog() {
+	if (madeLog) return;
 	log = System.out;  // default PrintStream
-	String logfile = 
-	    MessageTransportRegistry.getRegistry().getIdentifier() + 
+	String logfile = getRegistry().getIdentifier() + 
 	    "_MessageForwarding.log";
 	try {
 	    FileOutputStream fos = new FileOutputStream(logfile);
@@ -53,8 +47,8 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	} catch (java.io.FileNotFoundException fnf) {
 	    fnf.printStackTrace();
 	}
+	madeLog = true;
     }
-
 
     public Object getDelegate(Object delegate, Class type) 
     {
@@ -136,6 +130,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
     }
 
     private void logMessage(Message msg, String tag, DestinationLink link) {
+	ensureLog();
 	MessageAddress src = msg.getOriginator();
 	MessageAddress dst = msg.getTarget();
 	String dst_node = null;
@@ -147,8 +142,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    remote == null ? null : extractInetAddr(remote.toString());
 	Attributes match = new BasicAttributes(NameSupport.AGENT_ATTR, dst);
 	String attr = NameSupport.NODE_ATTR;
-	Iterator itr = 
-	    NameSupportImpl.instance().lookupInTopology(match, attr);	   
+	Iterator itr = getNameSupport().lookupInTopology(match, attr);	   
 	if (itr != null && itr.hasNext()) dst_node = (String) itr.next();
 
 

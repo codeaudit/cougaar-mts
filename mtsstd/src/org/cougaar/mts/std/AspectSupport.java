@@ -21,21 +21,17 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.service.*;
-
-import org.cougaar.core.node.*;
+import org.cougaar.core.component.Service;
 
 import java.util.ArrayList;
 
 /**
  * This is a utility class which supports loading aspects
  */
-public interface AspectSupport {
+public interface AspectSupport extends Service
+{
     MessageTransportAspect findAspect(String classname);
-
     void readAspects();
-
     void addAspect(MessageTransportAspect aspect);
-
     Object attachAspects(Object delegate,  Class type);
 }

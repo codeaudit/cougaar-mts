@@ -49,7 +49,7 @@ abstract public class LinkProtocol
     implements ContainerAPI, DebugFlags, ServiceProvider
 {
     protected MessageDeliverer deliverer;
-    protected MessageTransportRegistry registry;
+    protected MessageTransportRegistryService registry;
     protected NameSupport nameSupport;
     private AspectSupport aspectSupport;
     private BindingSite bindingSite;
@@ -102,8 +102,7 @@ abstract public class LinkProtocol
 
     
 
-    protected LinkProtocol(AspectSupport aspectSupport) {
-	this.aspectSupport = aspectSupport;
+    protected LinkProtocol() {
     }
 
     protected BindingSite getBindingSite() {
@@ -115,7 +114,25 @@ abstract public class LinkProtocol
     // Allow subclasses to provide their own load()
     protected void super_load() {
 	super.load();
+
+	ServiceBroker sb = getServiceBroker();
+	Object svc = null;
+
+	svc = sb.getService(this, MessageTransportRegistryService.class, null);
+	registry = (MessageTransportRegistryService) svc;
+	svc = sb.getService(this, NameSupport.class, null);
+	nameSupport = (NameSupport) svc;
+	svc = sb.getService(this, AspectSupport.class, null);
+	aspectSupport = (AspectSupport) svc;
+
     }
+
+    public void load() {
+	super_load();
+    }
+
+
+
 
 
     public Object getService(ServiceBroker sb,
@@ -139,14 +156,6 @@ abstract public class LinkProtocol
 	return aspectSupport.attachAspects(delegate, type);
     }
 
-    public void setRegistry(MessageTransportRegistry registry) {
-	this.registry = registry;
-    }
-
-
-    public void setNameSupport(NameSupport nameSupport) {
-	this.nameSupport = nameSupport;
-    }
 
     public void setDeliverer(MessageDeliverer deliverer) {
 	this.deliverer = deliverer;
