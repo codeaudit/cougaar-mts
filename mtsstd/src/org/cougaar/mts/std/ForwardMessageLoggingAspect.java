@@ -95,19 +95,21 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	    catch (Exception ex) {}
 	}
 
-	log.print(now);
-	log.print(SEPR);
-	log.print(tag);
-	log.print(SEPR);
-	log.print(src);
-	log.print(SEPR);
-	log.print(dst);
-	log.print(SEPR);
-	log.print(dst_node);
-	log.print(SEPR);
-	log.print(pclass.getName());
-	log.print(SEPR);
-	log.println(remote);
+	synchronized(this) {
+	    log.print(now);
+	    log.print(SEPR);
+	    log.print(tag);
+	    log.print(SEPR);
+	    log.print(src);
+	    log.print(SEPR);
+	    log.print(dst);
+	    log.print(SEPR);
+	    log.print(dst_node);
+	    log.print(SEPR);
+	    log.print(pclass.getName());
+	    log.print(SEPR);
+	    log.println(remote);
+	}
     }
 
 
