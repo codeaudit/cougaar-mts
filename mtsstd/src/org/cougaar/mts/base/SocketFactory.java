@@ -58,7 +58,7 @@ public class SocketFactory
 {
 
     private static transient Logger logger = 
-	Logging.getLogger("org.cougaar.core.mts.SocketFactory");
+	Logging.getLogger("org.cougaar.mts.base.SocketFactory");
     // This has to be set very early from outside
     private static transient SocketControlProvisionService PolicyProvider; 
 

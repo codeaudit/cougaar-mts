@@ -33,7 +33,7 @@ public class TransientIOException
     implements java.io.Serializable
 {
     private transient Logger logger = 
-	Logging.getLogger("org.cougaar.core.mts.TransientIOException");
+	Logging.getLogger("org.cougaar.mts.base.TransientIOException");
 
     public TransientIOException() 
     {

@@ -63,7 +63,7 @@ implements ServiceProvider
 
     // Some special aspect classes
     private final static String STATISTICS_ASPECT = 
-	"org.cougaar.core.mts.StatisticsAspect";
+	"org.cougaar.mts.std.StatisticsAspect";
 
     private final static String NOT_A_CLIENT =
 	"Requestor is not a MessageTransportClient";
