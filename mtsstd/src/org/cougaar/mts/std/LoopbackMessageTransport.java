@@ -33,7 +33,7 @@ class LoopbackMessageTransport
     // NB:  No aspects here!  Is that the right thing to do?
     public DestinationLink getDestinationLink(MessageAddress address) {
 	if (link == null) {
-	    link = (DestinationLink) attachTransportAspects(this, DestinationLink, this);
+	    link = (DestinationLink) attachAspects(this, DestinationLink, this);
 	}
 	return link;
     }

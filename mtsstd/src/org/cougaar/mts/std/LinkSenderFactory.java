@@ -20,12 +20,15 @@ public class LinkSenderFactory
 {
     private MessageTransportRegistry registry;
     private MessageTransportFactory transportFactory;
+    private LinkSelectionPolicy selectionPolicy;
 	
     LinkSenderFactory(MessageTransportRegistry registry,
-		      MessageTransportFactory transportFactory)
+		      MessageTransportFactory transportFactory,
+		      LinkSelectionPolicy selectionPolicy)
     {
 	this.registry = registry;
 	this.transportFactory = transportFactory;
+	this.selectionPolicy = selectionPolicy;
     }
 
 
@@ -38,7 +41,8 @@ public class LinkSenderFactory
     {
 	return new LinkSender(destination.toString(), destination,
 			      registry, transportFactory, 
-			      queue, queue_lock);
+			      queue, queue_lock,
+			      selectionPolicy);
     }
 
 }

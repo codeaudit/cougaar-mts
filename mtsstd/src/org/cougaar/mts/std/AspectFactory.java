@@ -27,25 +27,16 @@ abstract public class AspectFactory
 {
     private ArrayList aspects;
 
-    protected AspectFactory(ArrayList aspects) {
-	this.aspects = aspects;
-    }
-
     /**
      * Loops through the aspects, allowing each one to attach an
-     * aspect delegat in a cascaded series.  If any spects attach a
+     * aspect delegate in a cascaded series.  If any aspects attach a
      * delegate, the final aspect delegate is returned.  If no aspects
      * attach a delegate, the original object, as created by the
-     * factory, is returned.  The 'iface' argument describes the
-     * abstract type of the objects which the factory creates.  */
-    public Object attachAspects(Object delegate, int cutpoint) {
-	return attachTransportAspects(delegate, cutpoint, null);
-    }
-
-
-    public Object attachTransportAspects(Object delegate, 
-					 int cutpoint, 
-					 MessageTransport transport)
+     * factory, is returned.  */
+    public static Object attachAspects (ArrayList aspects,
+					Object delegate, 
+					int cutpoint, 
+					MessageTransport transport)
     {
 	if (aspects != null) {
 	    Iterator itr = aspects.iterator();
@@ -61,6 +52,22 @@ abstract public class AspectFactory
 	    }
 	}
 	return delegate;
+    }
+
+    protected AspectFactory(ArrayList aspects) {
+	this.aspects = aspects;
+    }
+
+    public Object attachAspects(Object delegate, int cutpoint) {
+	return attachAspects(aspects, delegate, cutpoint, null);
+    }
+
+
+    public Object attachAspects(Object delegate, 
+				int cutpoint, 
+				MessageTransport transport)
+    {
+	return attachAspects(aspects, delegate, cutpoint, transport);
     }
 
 

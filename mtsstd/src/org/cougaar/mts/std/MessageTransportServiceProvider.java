@@ -36,24 +36,28 @@ public class MessageTransportServiceProvider
 {
 
     // Factories
-    protected MessageTransportFactory transportFactory;
-    protected SendQueueFactory sendQFactory;
-    protected ReceiveQueueFactory recvQFactory;
-    protected DestinationQueueFactory destQFactory;
-    protected LinkSenderFactory linkSenderFactory;
-    protected RouterFactory routerFactory;
-    protected ReceiveLinkFactory receiveLinkFactory;
+    private MessageTransportFactory transportFactory;
+    private SendQueueFactory sendQFactory;
+    private ReceiveQueueFactory recvQFactory;
+    private DestinationQueueFactory destQFactory;
+    private LinkSenderFactory linkSenderFactory;
+    private RouterFactory routerFactory;
+    private ReceiveLinkFactory receiveLinkFactory;
 
 
     // Singletons
-    protected NameSupport nameSupport;
-    protected MessageTransportRegistry registry;
-    protected Router router;
-    protected SendQueue sendQ;
-    protected ReceiveQueue recvQ;
+    private NameSupport nameSupport;
+    private MessageTransportRegistry registry;
+    // Assuming one policy per provider, but could also be one per
+    // sender
+    private LinkSelectionPolicy selectionPolicy;
+    private Router router;
+    private SendQueue sendQ;
+    private ReceiveQueue recvQ;
 
     private String id;
     private HashMap proxies;
+
 
     private static ArrayList aspects;
     private static HashMap aspects_table;
@@ -61,6 +65,13 @@ public class MessageTransportServiceProvider
     public static MessageTransportAspect findAspect(String classname) {
 	return (MessageTransportAspect) aspects_table.get(classname);
     }
+
+
+    public MessageTransportServiceProvider(String id) {
+        this.id = id;
+	proxies = new HashMap();
+    }
+
 
     private void readAspects() {
 	String property = "org.cougaar.message.transport.aspects";
@@ -91,11 +102,6 @@ public class MessageTransportServiceProvider
         if (sb == null) throw new RuntimeException("No service broker");
         return new NewNameSupport(id, (NamingService)
                                   sb.getService(this, NamingService.class, null));
-    }
-
-    public MessageTransportServiceProvider(String id) {
-        this.id = id;
-	proxies = new HashMap();
     }
 
     public void initialize() {
@@ -129,13 +135,33 @@ public class MessageTransportServiceProvider
         super.initialize();
     }
 
-    protected void wireComponents(String id) {
+    private void getSelectionPolicy() {
+	String policy_classname = 
+	    System.getProperty("org.cougaar.message.transport.policy");
+	if (policy_classname == null) {
+	    selectionPolicy = new MinCostLinkSelectionPolicy();
+	} else {
+	    try {
+		Class policy_class = Class.forName(policy_classname);
+		selectionPolicy = (LinkSelectionPolicy) policy_class.newInstance();
+		System.out.println("Created " +  policy_classname);
+	    } catch (Exception ex) {
+		ex.printStackTrace();
+		selectionPolicy = new MinCostLinkSelectionPolicy();
+	    }
+	}	       
+    }
+
+
+
+    private void wireComponents(String id) {
+	getSelectionPolicy();
 	recvQFactory = new ReceiveQueueFactory(registry, aspects);
 	recvQ = recvQFactory.getReceiveQueue(id+"/InQ");
 
 
 	linkSenderFactory =
-	    new LinkSenderFactory(registry, transportFactory);
+	    new LinkSenderFactory(registry, transportFactory, selectionPolicy);
 	
 	destQFactory = 
 	    new DestinationQueueFactory(registry, 
@@ -159,23 +185,6 @@ public class MessageTransportServiceProvider
 
 
 
-    // Hmm, this is copied from AspectFactory, since we can't extend
-    // it. Ugh.
-    private Object attachAspects(Object delegate, int cutpoint)
-    {
-	if (aspects != null) {
-	    Iterator itr = aspects.iterator();
-	    while (itr.hasNext()) {
-		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) itr.next();
-		Object candidate = aspect.getDelegate(delegate, cutpoint);
-		if (candidate != null) delegate = candidate;
-		if (DEBUG_TRANSPORT) System.out.println("======> " + delegate);
-	    }
-	}
-	return delegate;
-    }
-
 
     private boolean validateRequestor(Object requestor, 
 				      Class serviceClass) 
@@ -192,7 +201,7 @@ public class MessageTransportServiceProvider
 	    Object proxy = proxies.get(requestor);
 	    if (proxy == null) {
 		proxy = new MessageTransportServiceProxy(registry, sendQ);
-		proxy = attachAspects(proxy, ServiceProxy);
+		proxy = AspectFactory.attachAspects(aspects, proxy, ServiceProxy, null);
 		proxies.put(requestor, proxy);
 	    }
 	    return proxy;

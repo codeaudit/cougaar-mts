@@ -34,27 +34,33 @@ public class LinkSender implements Runnable
     private DestinationQueue queue;
     private Object queueLock;
     private ArrayList destinationLinks;
+    private LinkSelectionPolicy selectionPolicy;
 
-    protected LinkSender(String name, 
-			 MessageAddress destination, 
-			 MessageTransportRegistry registry,
-			 MessageTransportFactory transportFactory,
-			 DestinationQueue queue,
-			 Object queueLock) 
+    LinkSender(String name, 
+	       MessageAddress destination, 
+	       MessageTransportRegistry registry,
+	       MessageTransportFactory transportFactory,
+	       DestinationQueue queue,
+	       Object queueLock,
+	       LinkSelectionPolicy selectionPolicy) 
     {
 	this.destination = destination;
 	this.queue = queue;
 	this.queueLock = queueLock;
 	this.transportFactory = transportFactory;
 	this.registry = registry;
+	this.selectionPolicy = selectionPolicy;
 
 	// cache DestinationLinks, per transport
 	destinationLinks = new ArrayList();
 	getDestinationLinks();
+	
 
 	thread = new Thread(this, name);
 	thread.start();
     }
+
+
 
 
     /**
@@ -73,25 +79,6 @@ public class LinkSender implements Runnable
 	}
     }
 
-    /**
-     *  Asks each DestinationLink for the cost of sending a given
-     *  message via the associated transport.  The DestinationLink
-     *  with the lowest cost is returned. */
-    protected DestinationLink findCheapestLink(Message message) {
-	int min_cost = -1;
-	DestinationLink cheapest = null;
-	Iterator itr = destinationLinks.iterator();
-	while (itr.hasNext()) {
-	    DestinationLink link = (DestinationLink) itr.next();
-	    int cost = link.cost(message);
-	    if (cost == Integer.MAX_VALUE) continue; // skip these
-	    if (cheapest == null || cost < min_cost) {
-		cheapest = link;
-		min_cost = cost;
-	    }
-	}
-	return cheapest;
-    }
 
     /**
      * The thread body pops messages off the corresponding
@@ -100,6 +87,8 @@ public class LinkSender implements Runnable
     public void run() {
 	Message message = null;
 	int delay = 500; // comes from a property
+	Iterator links;
+	DestinationLink link;
 	while (true) {
 	    synchronized (queueLock) {
 		while (queue.isEmpty()) {
@@ -110,7 +99,8 @@ public class LinkSender implements Runnable
 	    }
 	    if (message != null) {
 		while (true) {
-		    DestinationLink link = findCheapestLink(message);
+		    links = destinationLinks.iterator();
+		    link = selectionPolicy.selectLink(links, message);
 		    if (link != null) {
 			try {
 			    link.forwardMessage(message);

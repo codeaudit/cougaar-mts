@@ -136,7 +136,7 @@ public class RMIMessageTransport
 	DestinationLink link = (DestinationLink) links.get(address);
 	if (link == null) {
 	    link = new Link(address); // attach aspects
-	    link = (DestinationLink) attachTransportAspects(link, DestinationLink, this);
+	    link = (DestinationLink) attachAspects(link, DestinationLink, this);
 	    links.put(address, link);
 	}
 	return link;
