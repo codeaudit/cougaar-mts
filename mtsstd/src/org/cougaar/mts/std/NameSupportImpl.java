@@ -110,7 +110,7 @@ public final class NameSupportImpl implements ServiceProvider
 	    Application app = Application.getApplication(application);
 	    AddressEntry entry = new AddressEntry(agent, app, ref, CERT, TTL);
 	    try {
-		wpService.bind(entry);
+		wpService.rebind(entry);
 	    } catch (Exception ex) {
 		loggingService.error(null, ex);
 	    }
