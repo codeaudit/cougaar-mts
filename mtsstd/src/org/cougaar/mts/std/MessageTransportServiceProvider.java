@@ -169,14 +169,9 @@ public final class MessageTransportServiceProvider
 	sb.addService(SendQueue.class, sendQFactory);
 
 
-
-
-	// LinkProtocols
-	LinkProtocolFactory protocolFactory = 
-	    new LinkProtocolFactory(this, sb);
-	protocolFactory.loadProtocols();
+	// load LinkProtocols
+	new LinkProtocolFactory(this, sb);
     }
-
 
 
     private Object findOrMakeProxy(Object requestor) {

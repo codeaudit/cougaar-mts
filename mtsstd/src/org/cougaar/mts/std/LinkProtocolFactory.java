@@ -38,7 +38,7 @@ import java.util.StringTokenizer;
  * @property org.cougaar.message.protocol.classes A comma-separated
  * list of LinkProtocol classes to be instantiated.
  */
-public final class LinkProtocolFactory 
+final class LinkProtocolFactory 
 {
     private static final String CLASSES_PROPERTY =
 	"org.cougaar.message.protocol.classes";
@@ -47,13 +47,14 @@ public final class LinkProtocolFactory
     private NameSupport nameSupport;
     private Container container;
 
-    public LinkProtocolFactory(Container container, ServiceBroker sb)
+    LinkProtocolFactory(Container container, ServiceBroker sb)
     {
 	registry = (MessageTransportRegistryService)
 	    sb.getService(this, MessageTransportRegistryService.class, null);
 	nameSupport = (NameSupport)
 	    sb.getService(this, NameSupport.class, null);
 	this.container = container;
+	loadProtocols();
     }
 
 
@@ -76,7 +77,7 @@ public final class LinkProtocolFactory
 	return protocol;
     }
 
-    public void loadProtocols() {
+    private void loadProtocols() {
 	String protocol_classes = System.getProperty(CLASSES_PROPERTY);
 	if (protocol_classes == null || protocol_classes.equals("")) {
 	    // Make the two standard protocols if none specified.
