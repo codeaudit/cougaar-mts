@@ -35,6 +35,14 @@ public interface AgentStatusService extends Service
     public static class AgentState {
 	public long timestamp;
 	public int status;
+	public int sendCount;
+	public int deliveredCount;
+	public int lastDeliverTime;
+	public double averageDeliverTime;
+	public int unregisteredNameCount;
+	public int nameLookupFailureCount;
+	public int commFailureCount;
+	public int misdeliveredMessageCount;
     }
 
 

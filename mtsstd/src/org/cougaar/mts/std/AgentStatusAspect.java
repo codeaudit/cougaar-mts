@@ -24,6 +24,7 @@ package org.cougaar.core.mts;
 import org.cougaar.core.society.Message;
 import org.cougaar.core.society.MessageAddress;
 
+
 import java.util.HashMap;
 
 public class AgentStatusAspect 
@@ -37,35 +38,39 @@ public class AgentStatusAspect
 	states = new HashMap();
     }
     
-
-    public synchronized AgentState getAgentState(MessageAddress address) {
+   private synchronized AgentState ensureState(MessageAddress address)
+    {
 	AgentState state = (AgentState) states.get(address);
 	if (state == null) {
 	    state = new AgentState();
 	    state.status = UNREGISTERED;
 	    state.timestamp = System.currentTimeMillis();
+	    state.sendCount = 0;
+	    state.deliveredCount = 0;
+	    state.lastDeliverTime = 0;
+	    state.averageDeliverTime = 0;
+	    state.unregisteredNameCount = 0;
+	    state.nameLookupFailureCount = 0;
+	    state.commFailureCount = 0;
+	    state.misdeliveredMessageCount = 0;	  
 	    states.put(address, state);
 	}
-	
 	return state;
     }
 
-    private synchronized void updateState(MessageAddress address, int status) {
-	AgentState state = (AgentState) states.get(address);
-	if (state == null) {
-	    state = new AgentState();
-	    states.put(address, state);
-	}
-	state.timestamp = System.currentTimeMillis();
-	state.status = status;
-    }
-
+ 
     public Object getDelegate(Object object, Class type) {
 	if (type == DestinationLink.class) {
 	    return new AgentStatusDestinationLink((DestinationLink) object);
+	} else 	if (type == SendQueue.class) {
+	    return new SendQueueDelegate((SendQueue) object);
 	} else {
 	    return null;
 	}
+    }
+
+    public AgentState getAgentState(MessageAddress address) {
+	return ensureState(address);
     }
 
 
@@ -86,20 +91,51 @@ public class AgentStatusAspect
 
 	{
 	    MessageAddress addr = message.getTarget();
+	    AgentState state = ensureState(addr);
+	    
 	    try {
+		long startTime = System.currentTimeMillis();
 		server.forwardMessage(message);
-		updateState(addr, ACTIVE);
+		//successful Delivery
+		long endTime = System.currentTimeMillis();
+		long latency = endTime - startTime;
+		double alpha = 0.333;
+		synchronized (state) {
+		    state.status =  ACTIVE;
+		    state.timestamp = System.currentTimeMillis();
+		    state.deliveredCount++;
+		    state.lastDeliverTime = (int) latency;
+		    state.averageDeliverTime = (alpha * latency) +
+			((1-alpha) * latency);
+		}
+		    
 	    } catch (UnregisteredNameException unreg) {
-		updateState(addr, UNREGISTERED);
+		synchronized (state) {
+		    state.status = UNREGISTERED;
+		    state.timestamp = System.currentTimeMillis();
+		    state.unregisteredNameCount++;
+		}
 		throw unreg;
 	    } catch (NameLookupException namex) {
-		updateState(addr, UNKNOWN);
+		synchronized (state) {
+		    state.status =UNKNOWN;
+		    state.timestamp = System.currentTimeMillis();
+		    state.nameLookupFailureCount++;
+		}
 		throw namex;
 	    } catch (CommFailureException commex) {
-		updateState(addr, UNREACHABLE);
+		synchronized (state) {
+		    state.status =UNREACHABLE;
+		    state.timestamp = System.currentTimeMillis();
+		    state.commFailureCount++;
+		}
 		throw commex;
 	    } catch (MisdeliveredMessageException misd) {
-		updateState(addr, UNREGISTERED);
+		synchronized (state) {
+		    state.status =UNREGISTERED;
+		    state.timestamp = System.currentTimeMillis();
+		    state.misdeliveredMessageCount++;
+		}	
 		throw misd;
 	    }
 	}
@@ -108,5 +144,31 @@ public class AgentStatusAspect
 	    return server.cost(message);
 	}
     }
-   
+    public class SendQueueDelegate implements SendQueue
+    {
+	private SendQueue server;
+	
+	public SendQueueDelegate (SendQueue server)
+	{
+	    this.server = server;
+	}
+	
+	public void sendMessage(Message message) {
+	    MessageAddress addr = message.getTarget();
+	    AgentState state = ensureState(addr);
+	    synchronized (state) {
+		state.sendCount++;
+	    }	
+	    server.sendMessage(message);
+	}
+	
+	public boolean matches(String name){
+	    return server.matches(name);
+	}
+
+	public int size() {
+	    return server.size();
+	}
+    }
+
 }
