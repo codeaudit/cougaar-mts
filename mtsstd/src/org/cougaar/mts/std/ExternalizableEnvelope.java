@@ -61,14 +61,16 @@ public class ExternalizableEnvelope
 	throws java.io.IOException
     {
 	writer.preProcess(out);
-	OutputStream os = writer.getObjectOutputStream(out);
-	ObjectOutputStream oos = null;
-	if (os instanceof ObjectOutputStream)
-	    oos = (ObjectOutputStream) os;
-	else
-	    oos = new ObjectOutputStream(os);
-	oos.writeObject(contents);
-	writer.postProcess(out);
+	if (writer.proceed()) {
+	    OutputStream os = writer.getObjectOutputStream(out);
+	    ObjectOutputStream oos = null;
+	    if (os instanceof ObjectOutputStream)
+		oos = (ObjectOutputStream) os;
+	    else
+		oos = new ObjectOutputStream(os);
+	    oos.writeObject(contents);
+	    writer.postProcess(out);
+	}
     }
 
 
@@ -76,16 +78,18 @@ public class ExternalizableEnvelope
 	throws java.io.IOException, ClassNotFoundException
     {
 	reader.preProcess(in);
-	InputStream is = reader.getObjectInputStream(in);
-	ObjectInputStream ois = null;
-	if (is instanceof ObjectInputStream)
-	    ois = (ObjectInputStream) is;
-	else
-	    ois = new ObjectInputStream(is);
-	contents = (Message) ois.readObject();
-	setOriginator(contents.getOriginator());
-	setTarget(contents.getTarget());
-	reader.postProcess(in);
+	if (reader.proceed()) {
+	    InputStream is = reader.getObjectInputStream(in);
+	    ObjectInputStream ois = null;
+	    if (is instanceof ObjectInputStream)
+		ois = (ObjectInputStream) is;
+	    else
+		ois = new ObjectInputStream(is);
+	    contents = (Message) ois.readObject();
+	    setOriginator(contents.getOriginator());
+	    setTarget(contents.getTarget());
+	    reader.postProcess(in);
+	}
     }
 
     Message getContents() {

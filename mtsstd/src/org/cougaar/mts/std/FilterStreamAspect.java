@@ -82,7 +82,7 @@ public class FilterStreamAspect extends StandardAspect
 		Message contents = ((ExternalizableEnvelope) m).getContents();
 		super.deliverMessage(contents, dest);
 	    } else {
-		System.out.println("Received a message that isn't an" +
+		System.err.println("Received a message that isn't an" +
 				   " ExternalizableEnvelope");
 		super.deliverMessage(m, dest);
 	    }

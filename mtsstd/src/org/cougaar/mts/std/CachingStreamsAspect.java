@@ -85,10 +85,15 @@ public class CachingStreamsAspect extends StandardAspect
 	    return new TeeOutputStream(raw_os, byte_os);
 	}
 
+	public boolean proceed() {
+	    return cache == null;
+	}
+
 	public void preProcess(ObjectOutput out) 
 	    throws java.io.IOException
 	{
 	    out.writeObject(cache);
+	    if (cache != null) System.err.println("Sending cache " + cache);
 	    super.preProcess(out);
 	}
 
@@ -98,9 +103,6 @@ public class CachingStreamsAspect extends StandardAspect
 	{
 	    byte_os.flush();
 	    cache = byte_os.toByteArray();
-	    System.out.println("Wrote "
-			       +cache.length+ 
-			       " bytes in array");
 	    super.postProcess(out);
 	}
 
@@ -121,7 +123,7 @@ public class CachingStreamsAspect extends StandardAspect
 	{
 	    InputStream raw_is = super.getObjectInputStream(in);
 	    if (cache != null) {
-		System.out.println("Using cache " + cache);
+		System.err.println("Received cache " + cache);
 		return new ByteArrayInputStream((byte[]) cache);
 	    } else {
 		return raw_is;

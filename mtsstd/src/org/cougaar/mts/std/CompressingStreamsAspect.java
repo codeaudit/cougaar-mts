@@ -74,9 +74,6 @@ public class CompressingStreamsAspect extends StandardAspect
 	{
 	    def_os.finish();
 	    def_os.flush();
-	    System.out.println("Wrote " 
-			       +deflater.getTotalIn()+ " bytes in, "
-			       +deflater.getTotalOut()+ " bytes out ");
 	    super.postProcess(out);
 	}
 
