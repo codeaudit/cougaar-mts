@@ -36,6 +36,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
   public MessageTransportRegistry registry;
   private int requestRate = 0;
   private int replyRate = 333;
+  private int replySize = 0;
   boolean timerOn = false;
   private NodeKeeperTimerTask nodeKeeper;
   private MessageAddress myAddress;
@@ -124,14 +125,18 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
         cancelTimer(node);
         return;
       } else {
-        throw new IllegalArgumentException("TrafficMaskingGeneratorAspect.setRequestParameter() "+
-                                           "received an illegal avgPeriod argument: "+avgPeriod);
+        throw new IllegalArgumentException("TrafficMaskingGeneratorService."+
+                                           "setRequestParameter() "+
+                                           "received an illegal avgPeriod "+
+                                           "argument: "+avgPeriod);
       }
     }
     // check the avgSize
     if (avgSize < 1) {
-      throw new IllegalArgumentException("TrafficMaskingGeneratorAspect.setRequestParameter() "+
-                                         "received and illegal avgSize argument: "+avgSize);
+      throw new IllegalArgumentException("TrafficMaskingGeneratorService."+
+                                         "setRequestParameter() "+
+                                         "received and illegal avgSize "+
+                                         "argument: "+avgSize);
     }
 
      // if we already have a timer going for this node - cancel the current one
@@ -140,7 +145,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     }
     // start up a request masking timer for this node
     Timer maskingTimer = new Timer(true);
-    maskingTimer.scheduleAtFixedRate(new MaskingTimerTask(node, avgSize, avgPeriod), avgPeriod, avgPeriod);
+    MaskingTimerTask mtt = new MaskingTimerTask(node, avgSize, avgPeriod);
+    maskingTimer.scheduleAtFixedRate(mtt, avgPeriod, avgPeriod);
     // register with timer
     nodeTimerMap.put(node, maskingTimer);
     
@@ -157,7 +163,21 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
    *  @param avgSize The size in bytes of the contents of the fake reply message
    **/
   public void setReplyParameters(int thinkTime, int avgSize) {
-    // TODO
+    if (thinkTime < 1 || avgSize < 1) {
+      throw new IllegalArgumentException("TrafficMaskingGeneratorService."+
+                                         "setReplyParameters() received an "+
+                                         "a less than 1 argument");
+    }
+    // simply reset the size
+    replySize = avgSize;
+    // find the reply timer task and start a new one with
+    // the new thinktime - note you could miss a reply 
+    // but that's probably ok for now
+    if (replyTimerTask != null) {
+      replyTimerTask.cancel();
+    }
+    replyRate = thinkTime;
+    startReplyTimer();
   }
 
   /** Get information about the fake messages sent from this Node
@@ -185,7 +205,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
     // start up the masking task
     Timer maskingTimer = new Timer(true);
     // delay start by the requestRate 
-    maskingTimer.scheduleAtFixedRate(new AutoMaskingTimerTask(), requestRate, requestRate);
+    AutoMaskingTimerTask amtt = new AutoMaskingTimerTask();
+    maskingTimer.scheduleAtFixedRate(amtt, requestRate, requestRate);
 
     //start up the reply timer
     startReplyTimer();
@@ -252,13 +273,20 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
           Message internalmsg = ((MaskingMessageEnvelope) msg).getContents();
           if (internalmsg instanceof FakeRequestMessage) {
             FakeRequestMessage request = (FakeRequestMessage)internalmsg;
-            // create random contents to reply with
-            int replySize = random.nextInt(18000);
-            // if its less than 800 do a little hacking to make sure its not too small.
-            if (replySize < 800) {
-              replySize = replySize + 800;
+            // create random contents to reply with if the size wasn't set
+            int contentsSize;
+            if (replySize < 1) {
+              int randomReplySize = random.nextInt(18000);
+              // if its less than 800 do a little hacking 
+              //to make sure its not too small.
+              if (randomReplySize < 800) {
+                randomReplySize = randomReplySize + 800;
+              }
+              contentsSize = randomReplySize;
+            } else {
+              contentsSize = replySize;
             }
-            byte[] replyContents = new byte[replySize];
+            byte[] replyContents = new byte[contentsSize];
             random.nextBytes(replyContents);
             FakeReplyMessage reply = new FakeReplyMessage(request.getTarget(),
                                                           request.getOriginator(),
@@ -277,8 +305,7 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
           // any other kind of message enveloper just gets passed through
           deliverer.deliverMessage(msg, dest);
         }
-      }
-    
+      } 
   }  // end of MaskingDelivererDelegate inner class
 
   // creates fake-requests on a set timer - requests are a set size
@@ -300,11 +327,13 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       byte[] contents = new byte[requestSize];
       random.nextBytes(contents);
       myAddress = registry.getLocalAddress();
-      FakeRequestMessage request = new FakeRequestMessage(myAddress, destination, contents);
+      FakeRequestMessage request = 
+        new FakeRequestMessage(myAddress, destination, contents);
       maskingQDelegate.sendMessage(request);
       if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {
-        System.out.println("\n$$$ MaskingTimer about to send FakeRequest from: "+myAddress+
-                           " to: "+destination+" size of byte array: "+contents.length);
+        System.out.println("\n$$$ MaskingTimer about to send FakeRequest"+
+                           "from: "+myAddress+" to: "+destination+
+                           " size of byte array: "+contents.length);
       }
       // add to stats
       mystats.incrementCount();
@@ -323,7 +352,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
       if (fakedest != null) {
         //bound by 18K right now
         int randomSize = contentsGenerator.nextInt(18000);
-        // if its less than 800 do a little hacking to make sure its not too small.
+        // if its less than 800 do a little hacking to make 
+        //sure its not too small.
         if (randomSize < 800) {
           randomSize = randomSize + 800;
         }
@@ -333,7 +363,8 @@ public class TrafficMaskingGeneratorAspect extends StandardAspect
           new FakeRequestMessage(myAddress, fakedest, contents);
         maskingQDelegate.sendMessage(request);
         if (Debug.debug(TRAFFIC_MASKING_GENERATOR)) {        
-          System.out.println("\n&&& AutoMasking About to send FakeRequest from: "+myAddress+
+          System.out.println("\n&&& AutoMasking About to send "+
+                             "FakeRequest from: "+myAddress+
                              " to: "+fakedest+" size of byte array: "+
                              contents.length);
         }
