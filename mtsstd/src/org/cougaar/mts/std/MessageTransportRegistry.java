@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-
 /**
  * The MessageTransportRegistry singleton is a utility instance that
  * helps certain pieces of the message transport subsystem to find one
@@ -182,6 +181,10 @@ public class MessageTransportRegistry implements DebugFlags
     {
 	return nameSupport.lookupMulticast(addr);
     }
+
+  protected MessageAddress getLocalAddress() {
+    return nameSupport.getNodeMessageAddress();
+  }
 
 
 
