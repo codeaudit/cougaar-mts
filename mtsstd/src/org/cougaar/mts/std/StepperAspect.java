@@ -290,10 +290,12 @@ public final class StepperAspect
 	private JCheckBox pause;
 	private JTextArea messageWindow;
 	private MessageAddress destination;
+	private int count;
 
 	private StepController(DestinationQueueDelegate delegate,
 			       MessageAddress destination) 
 	{
+	    count = 0;
 	    this.delegate = delegate;
 	    this.destination = destination;
 
@@ -371,6 +373,12 @@ public final class StepperAspect
 	    messageWindow.setText(buf.toString());
 	}
 
+	private void increment() {
+	    setBorder(new TitledBorder(Integer.toString(++count) 
+				       +" messages to " 
+				       +destination));
+	}
+
 	private void clearMessage() {
 	    send.setEnabled(false);
 	    messageWindow.setText("");
@@ -431,6 +439,7 @@ public final class StepperAspect
 
 	public void dispatchNextMessage(AttributedMessage msg) {
 	    ensureWidget(msg.getTarget());
+	    widget.increment();
 	    if (!stepping) {
 		super.dispatchNextMessage(msg);
 	    } else {
@@ -443,8 +452,8 @@ public final class StepperAspect
 		    } catch (InterruptedException ex) {
 		    }
 		}
-		widget.clearMessage();
 		super.dispatchNextMessage(msg);
+		widget.clearMessage();
 	    }
 	}
 
