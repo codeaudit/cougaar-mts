@@ -51,12 +51,12 @@ final public class SendLinkImpl
     private Long incarnation;
 
     private class BlockingWPCallback implements Callback {
-	Object lock;
+	boolean callback;
 	AddressEntry entry;
 	
-	BlockingWPCallback(Object lock)
+	BlockingWPCallback()
 	{
-	    this.lock = lock;
+	    callback = false;
 	}
 	
 	public void execute(Response response) 
@@ -66,8 +66,9 @@ final public class SendLinkImpl
 		    loggingService.info("WP Response: "+response);
 		}
 		entry = ((Response.Get) response).getAddressEntry();
-		synchronized (lock) {
-		    lock.notify();
+		callback = true;
+		synchronized (this) {
+		    this.notify();
 		}
 	    } else {
 		loggingService.error("WP Error: "+response);
@@ -98,14 +99,13 @@ final public class SendLinkImpl
 	long incn = 0;
 	try {
 	    AddressEntry entry;
-	    Object lock = new Object();
-	    BlockingWPCallback callback = new BlockingWPCallback(lock);
-	    synchronized (lock) {
+	    BlockingWPCallback callback = new BlockingWPCallback();
+	    synchronized (callback) {
 		wp.get(agentID, VERSION, callback);
 		// Callback could be invoked in this thread!  Don't
 		// wait in that case.
-		while (callback.entry == null) {
-		    try { lock.wait(); }
+		while (!callback.callback) {
+		    try { callback.wait(); }
 		    catch (InterruptedException ex) {}
 		}
 	    }
