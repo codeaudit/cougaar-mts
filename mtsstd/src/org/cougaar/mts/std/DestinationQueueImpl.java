@@ -169,7 +169,7 @@ final class DestinationQueueImpl
 		if (cause instanceof java.rmi.UnmarshalException)
 		    cause = cause.getCause();
 		if (cause instanceof MessageSecurityException) {
-		    // Always log these,
+		    // Always log these.
 		    cause = cause.getCause();
 		    loggingService.error("Security Exception", cause);
 
@@ -177,6 +177,8 @@ final class DestinationQueueImpl
 		    resetState();
 		    return;
 		} else {
+		    // This is some other kind of CommFailure, not
+		    // related to security.  Retry.
 		    lastException = comm_failure;
 		    if (Debug.isErrorEnabled(loggingService,COMM)) 
 			loggingService.error(null, comm_failure);
