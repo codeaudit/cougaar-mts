@@ -33,21 +33,6 @@ public interface NameSupport extends Service
 {
     String MTS_DIR =  "MessageTransports";
     String AGENT_DIR =  "Agents";
-    String TOPOLOGY_DIR = "Topology";
-
-    String STATUS_ATTR = "Status";
-    String HOST_ATTR = "Host";
-    String NODE_ATTR = "Node";
-    String AGENT_ATTR = "Agent";
-    String INCARNATION_ATTR = "Incarnation";
-    String CATEGORY_ATTR = "Category";
-
-    String NODE_CATEGORY = "node";
-    String AGENT_CATEGORY = "agent";
-    String SYSTEM_CATEGORY = "system";
-
-    String REGISTERED_STATUS = "registered";
-    String UNREGISTERED_STATUS = "unregistered";
 
     MessageAddress  getNodeMessageAddress();
 
@@ -66,9 +51,13 @@ public interface NameSupport extends Service
 
     Iterator lookupMulticast(MulticastMessageAddress address);
 
+    /** @deprecated replaced by the topology services */
     void addToTopology(MessageAddress addr, String category);
+    /** @deprecated replaced by the topology services */
     void removeFromTopology(MessageAddress addr);
+    /** @deprecated replaced by the topology services */
     Iterator lookupInTopology(Attributes match, String attribute);
+    /** @deprecated replaced by the topology services */
     Iterator lookupInTopology(Attributes match, String[] ret_attr);
 
 }

@@ -238,15 +238,10 @@ final class MessageTransportRegistry
 	public void registerClient(MessageTransportClient client) {
 	    addLocalClient(client);
 	    registerClientWithSociety(client);
-	    String category = NameSupport.AGENT_CATEGORY;
-	    if (NodeAgent.class.isAssignableFrom(client.getClass()))
-		category = NameSupport.NODE_CATEGORY;
-	    nameSupport().addToTopology(client.getMessageAddress(), category);
 	}
 
 
 	public void unregisterClient(MessageTransportClient client) {
-	    nameSupport().removeFromTopology(client.getMessageAddress());
 	    unregisterClientWithSociety(client);
 	    removeLocalClient(client);
 	}

@@ -28,6 +28,7 @@ import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.NamingService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 
 import javax.naming.Name;
@@ -201,8 +202,8 @@ public final class NameSupportImpl implements ServiceProvider
 		    loggingService.error("Failed to register " +  name,
 					      e);
 	    }
-	    addToTopology(mts_address, SYSTEM_CATEGORY);
 
+            // Node is no longer registered as a topology SYSTEM entry
 	}
 
 	public Object lookupAddressInNameServer(MessageAddress address, 
@@ -321,65 +322,37 @@ public final class NameSupportImpl implements ServiceProvider
 	}
   
 
-
+        //
+        // These methods should be removed, along with the related
+        // NameSupport methods and delegating implementations.
+        //
 
 	public void addToTopology(MessageAddress addr, String category) {
-	    BasicAttributes attr = new BasicAttributes();
-	    attr.put(STATUS_ATTR, REGISTERED_STATUS);
-	    attr.put(HOST_ATTR, hostname);
-	    attr.put(NODE_ATTR, id);
-	    attr.put(AGENT_ATTR, addr);
-	    attr.put(CATEGORY_ATTR, category);
-	    attr.put(INCARNATION_ATTR,
-		     Long.toString(System.currentTimeMillis()));
-	    String key = TOPOLOGY_DIR + NS.DirSeparator + addr;
-	    try {
-		_registerWithSociety(key, addr, attr);
-	    } catch (NamingException ex) {
-		loggingService.error(null, ex);
-	    }
+          logRemovedTopologyUse();
 	}
 
 	public void removeFromTopology(MessageAddress addr) {
-	    // This should find the old object and change the attribute
-	    BasicAttributes attr = new BasicAttributes();
-	    attr.put(STATUS_ATTR, UNREGISTERED_STATUS);
-	    attr.put(AGENT_ATTR, addr);
-	    String key = TOPOLOGY_DIR + NS.DirSeparator + addr;
-	    try {
-		_registerWithSociety(key, addr, attr);
-	    } catch (NamingException ex) {
-		loggingService.error(null, ex);
-	    }
+          logRemovedTopologyUse();
 	}
 
 	public Iterator lookupInTopology(Attributes match, String attribute) {
-	    String[] ret_attr = { attribute };
-	    try {
-		DirContext ctx = namingService.getRootContext();
-		NamingEnumeration e = 
-		    ctx.search(TOPOLOGY_DIR, match, ret_attr);
-		// Return an Iterator instead of the messy NamingEnumeration
-		return new NamingIterator(e, attribute);
-	    } catch (NamingException ne) {
-		loggingService.error(null, ne);
-		return null;
-	    }
+          logRemovedTopologyUse();
+          return Collections.EMPTY_LIST.iterator();
 	}
 
 
 	public Iterator lookupInTopology(Attributes match, String[] ret_attr) {
-	    try {
-		DirContext ctx = namingService.getRootContext();
-		NamingEnumeration e = 
-		    ctx.search(TOPOLOGY_DIR, match, ret_attr);
-		// Return an Iterator instead of the messy NamingEnumeration
-		return new NamingIterator(e, null);
-	    } catch (NamingException ne) {
-		loggingService.error(null, ne);
-		return null;
-	    }
+          logRemovedTopologyUse();
+          return Collections.EMPTY_LIST.iterator();
 	}
+
+        private void logRemovedTopologyUse() {
+          if (loggingService.isErrorEnabled()) {
+            loggingService.error(
+                "MTS topology access has been disabled",
+                (new Exception("Topology client trace")));
+          }
+        }
 
     }
 

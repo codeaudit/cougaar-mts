@@ -143,12 +143,7 @@ public class ForwardMessageLoggingAspect extends StandardAspect
 	Object remote = link.getRemoteReference();
 	String remoteIP = 
 	    remote == null ? null : extractInetAddr(remote.toString());
-	Attributes match = new BasicAttributes(NameSupport.AGENT_ATTR, dst);
-	String attr = NameSupport.NODE_ATTR;
-	Iterator itr = getNameSupport().lookupInTopology(match, attr);	   
-	if (itr != null && itr.hasNext()) dst_node = (String) itr.next();
-
-
+        //dst_node = getTopologyReaderService().getNodeForAgent(dst.getAddress());
 
 	synchronized(this) {
 	    log.print(now);
