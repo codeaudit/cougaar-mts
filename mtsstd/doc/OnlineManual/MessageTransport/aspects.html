@@ -52,17 +52,10 @@ aspect delegates will be closer the raw instance. </p>
 instances of these interfaces will always have aspect delegates
 attached immediately after instantiation: DestinationLink,
 DestinationQueue, MessageDeliverer, NameSupport, Router, SendLink,
-SendQueue. In addition, the RMILinkProtocol provides two other places
-in which aspects can be attached: the RMI server object; and the
-client-side stub for remote MT objects. These two present a problem
-for the getDelegate and getReverseDelegate calls, since in both cases
-the relevant delegate interface is MT.class. In order to distinguish
-these two, we use MTImpl.class in the getDelegate and
-getReverseDelegate calls on for the RMI server object, even though the
-delegates themselves need only match the interface MT. Finally,
-aspect delegates may be attached indirectly to serialization streams,
-which has the effect of converting a direct tcp connection into a
-series of Filter Streams (see org.cougaar.core.mts.MessageWriter and
+SendQueue. In addition, aspect delegates may be attached indirectly to
+serialization streams, which has the effect of converting a direct tcp
+connection into a series of Filter Streams (see
+org.cougaar.core.mts.MessageWriter and
 org.cougaar.core.mts.MessageReader).</p>
 
 <p> Since most aspect delegates only want to provide a few methods of

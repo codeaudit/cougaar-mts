@@ -138,7 +138,7 @@ ReceiveLinkProviderService.  </p>
 
 <h5>Link Protocols</h5>
 
-<p> As the side-view diagram (Figure 3-9) makes clear, message flow is
+<p> As the side-view diagram  makes clear, message flow is
 divided into two parts, send and receive, with the linkage between the
 two left unspecified. There are a number of ways in which this linkage
 might be handled: it could be direct (for local messages), it could
@@ -160,6 +160,7 @@ defined as inner classes of LinkProtocol classes.  The protocol itself
 is responsible for the real work of moving Messages, and also acts as
 the &quot;factory&quot; for its DestinationLinks.</p>
 
+<p>For more details see <a href="linkprotocols.html>Link Protocols</a>.
 
 <h5>Link Selection Policy</h5>
 
@@ -168,9 +169,8 @@ need to pick one for each queued Message. The LinkSelectionPolicy, a
 service created by the MessageTransportServiceProvider, handles the
 job of selecting the best protocol for any given message. The default
 implementation class for this interface is
-MinCostLinkSelectionPolicy. A different class can be specified with
-the org.cougaar.message.transport.policy system property.
-LinkSelectionPolicy is an MTS-level service.</p>
+MinCostLinkSelectionPolicy.  Loading another implementation overrides
+this default.</p>
 
 <p> The MinCostLinkSelectionPolicy does what its name implies: it
 selects the cheapest DestinationLink. The DestinationLinks, in turn,

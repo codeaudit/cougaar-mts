@@ -10,8 +10,8 @@
   <h4>MTS Structural Components</h4>
 
 <p> The core of the MTS is implemented using classical OOP
-techniques. The classes are described in more detail in this
-section. The intention of the overall MTS design is that the core
+techniques. The classes are described in more detail in other
+sections. The intention of the overall MTS design is that the core
 structural components will remain as is, without addition (except for
 new Link Protocols) or modification (except for bug fixes).  Rather
 than modifying the core to add new behaviors or modify existing ones,
@@ -39,7 +39,8 @@ facilitates other pluggable messaging options. The logic of the
 refactor focused on separation of base MTS implementation from Aspect
 code, used by outside developers. What was necessary to core remained,
 including the basic MessageTransportService interface. The rest was
-refactored into two corresponding packages: </p>
+refactored into two packages for the standard service, plus another
+two for completely new LinkProtocols: </p>
 
 
 <p><b>org.cougaar.mts.base</b> </p>
@@ -53,9 +54,19 @@ refactored into two corresponding packages: </p>
 </ul>
 
 <p><b>org.cougaar.mts.std</b> </p>
-  <ul type=disc>
-    <li>Contains extensions, aspects local services and their required data structures</li>
+<ul type=disc>
+<li>Contains extensions, aspects local services and their required data structures</li>
     <li>May export Node-level service</li>
+  </ul>
+
+<p><b>org.cougaar.mts.corba</b> </p>
+  <ul type=disc>
+    <li>Contains the implementation of the CORBA LinkProtocol</li>
+  </ul>
+
+  <p><b>org.cougaar.mts.html</b> </p>
+  <ul type=disc>
+    <li>Contains the CSI implementations of the HTTP and HTTPS LinkProtocols</li>
   </ul>
 
 
