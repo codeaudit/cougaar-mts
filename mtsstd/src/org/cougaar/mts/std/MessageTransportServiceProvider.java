@@ -31,9 +31,11 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.component.StateObject;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
+import org.cougaar.core.thread.ThreadServiceImpl;
 import org.cougaar.core.node.Node;
 
 import java.util.ArrayList;
@@ -219,11 +221,7 @@ public final class MessageTransportServiceProvider
 
 	Debug.load(loggingService);
 
-	// Get the parent ThreadService, if any, before creating our
-	// own.
-	ThreadService parentThreadService = (ThreadService)
-	    sb.getService(this, ThreadService.class, null);
-	new ThreadServiceImpl(sb, parentThreadService, "MTS");
+	new ThreadServiceImpl(sb, "MTS");
 
 	MessageTransportRegistry reg = new MessageTransportRegistry(id, sb);
 	sb.addService(MessageTransportRegistryService.class, reg);

@@ -32,6 +32,7 @@ import java.util.Iterator;
 import org.cougaar.core.component.Service;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.service.ThreadService;
 
 
 public final class StepperAspect 

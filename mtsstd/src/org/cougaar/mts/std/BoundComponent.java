@@ -26,6 +26,7 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.util.GenericStateModelAdapter;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.core.service.ThreadService;
 
 /**
  * Root class of Components of the MTS.
