@@ -21,7 +21,7 @@ import org.cougaar.core.society.MessageStatistics;
  * redirecting calls to the MessageTransportRegistry and the
  * SendQueue.  */
 public class MessageTransportServiceProxy 
-    implements MessageTransportService, MessageStatistics
+    implements MessageTransportService
 {
     private MessageTransportRegistry registry;
     private SendQueue sendQ;
@@ -33,24 +33,6 @@ public class MessageTransportServiceProxy
 	this.registry = registry;
     }
 
-
-    /**
-     * MessageStatistics interface.  Delegate to the relevant aspect. 
-     */
-    public Statistics getMessageStatistics(boolean reset) {
-	if (Debug.DEBUG_TRANSPORT) System.out.println("#### Getting message statistics from aspect");
-	String cname = "org.cougaar.core.society.rmi.StatisticsAspect";
-	MessageTransportAspect aspect = 
-	    MessageTransportServiceProvider.findAspect(cname);
-	if (aspect != null) {
-	    Statistics stats = ((StatisticsAspect) aspect).getMessageStatistics(reset);
-	    if (Debug.DEBUG_TRANSPORT) System.out.println("#### Stats = " + stats);
-	    return stats;
-	} else {
-	    System.err.println("#### Requested statistics but no StatisticsAspect!");
-	    return null;
-	}
-    }
 
 
     /**

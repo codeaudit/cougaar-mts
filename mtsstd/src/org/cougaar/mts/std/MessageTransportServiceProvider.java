@@ -180,32 +180,29 @@ public class MessageTransportServiceProvider
 
 
 
-
-
-
-
-
-
-    private boolean validateRequestor(Object requestor, 
-				      Class serviceClass) 
-    {
-	return 
-	    requestor instanceof MessageTransportClient &&
-	    serviceClass == MessageTransportService.class;
-    }
-
     public Object getService(ServiceBroker sb, 
 			     Object requestor, 
 			     Class serviceClass) 
     {
-	if (validateRequestor(requestor, serviceClass)) {
-	    Object proxy = proxies.get(requestor);
-	    if (proxy == null) {
-		proxy = new MessageTransportServiceProxy(registry, sendQ);
-		proxy = AspectFactory.attachAspects(aspects, proxy, ServiceProxy, null);
-		proxies.put(requestor, proxy);
+	if (serviceClass == MessageTransportService.class) {
+	    if (requestor instanceof MessageTransportClient) {
+		Object proxy = proxies.get(requestor);
+		if (proxy == null) {
+		    proxy = new MessageTransportServiceProxy(registry, sendQ);
+		    proxy = AspectFactory.attachAspects(aspects, proxy, ServiceProxy, null);
+		    proxies.put(requestor, proxy);
+		    if (Debug.DEBUG_TRANSPORT)
+			System.out.println("======= Created MessageTransportServiceProxy for "
+					   +  requestor);
+		}
+		return proxy;
+	    } else {
+		return null;
 	    }
-	    return proxy;
+	} else if (serviceClass == MessageStatisticsService.class) {
+	    StatisticsAspect aspect = 
+		(StatisticsAspect) findAspect("org.cougaar.core.mts.StatisticsAspect");
+	    return aspect;
 	} else {
 	    return null;
 	}

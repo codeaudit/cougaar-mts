@@ -23,7 +23,7 @@ import java.io.OutputStream;
  */
 public class StatisticsAspect 
     extends StandardAspect
-    implements MessageStatistics, Debug
+    implements MessageStatistics, Debug, MessageStatisticsService
 
 {
     // This variable holds the total current size of ALL
