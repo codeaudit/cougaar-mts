@@ -166,6 +166,8 @@ public final class NameSupportImpl implements NameSupport
 	    System.err.println("Failed to register " +  name);
 	    e.printStackTrace();
 	}
+	addToTopology(mts_address);
+
     }
 
     public Object lookupAddressInNameServer(MessageAddress address, 
