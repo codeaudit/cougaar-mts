@@ -25,6 +25,7 @@ import org.cougaar.core.service.*;
 import org.cougaar.core.node.*;
 
 import java.io.*;
+import java.net.URI;
 
 /**
  * An address for a Message sender or receiver.
@@ -91,5 +92,13 @@ public abstract class MessageAddress
 
   public static final MessageAddress getMessageAddress(MessageAttributes mas) {
     return MessageAddressWithAttributes.getMessageAddressWithAttributes(mas);
+  }
+
+  public static final MessageAddress getMessageAddress(URI uri) {
+    return URIMessageAddress.getURIMessageAddress(uri);
+  }
+  public static final MessageAddress getMessageAddress(URI uri, MessageAttributes mas) {
+    MessageAddress ma = URIMessageAddress.getURIMessageAddress(uri);
+    return new MessageAddressWithAttributes(ma, mas);
   }
 }
