@@ -56,8 +56,7 @@ public class SerializationAspect extends StandardAspect
     }
 
     private class SerializingDestinationLink 
-	extends Thread
-	implements DestinationLink
+	implements DestinationLink, Runnable
 	
     {
 	PipedInputStream piped_is;
@@ -65,11 +64,12 @@ public class SerializationAspect extends StandardAspect
 	ObjectInputStream reader;
 	ObjectOutputStream writer;
 	DestinationLink link;
+	Thread thread;
 
 	SerializingDestinationLink(DestinationLink link) {
-	    super("SerializingDestinationLink " + link);
 	    this.link = link;
-	    setDaemon(true);
+	    thread = new Thread(this, "SerializingDestinationLink " + link);
+	    thread.setDaemon(true);
 	    try {
 		piped_is = new PipedInputStream();
 		piped_os = new PipedOutputStream();
@@ -78,7 +78,7 @@ public class SerializationAspect extends StandardAspect
 		BufferedOutputStream bos = new BufferedOutputStream(piped_os);
 		writer = new ObjectOutputStream(bos);
 
-		start();
+		thread.start();
 
 	    } 
 	    catch (Exception ex) {
