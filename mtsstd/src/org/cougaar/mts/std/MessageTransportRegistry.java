@@ -21,7 +21,7 @@
 
 package org.cougaar.core.mts;
 
-import org.cougaar.core.node.Node;
+import org.cougaar.core.node.NodeAgent;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
@@ -239,7 +239,7 @@ final class MessageTransportRegistry
 	    addLocalClient(client);
 	    registerClientWithSociety(client);
 	    String category = NameSupport.AGENT_CATEGORY;
-	    if (Node.class.isAssignableFrom(client.getClass()))
+	    if (NodeAgent.class.isAssignableFrom(client.getClass()))
 		category = NameSupport.NODE_CATEGORY;
 	    nameSupport().addToTopology(client.getMessageAddress(), category);
 	}
