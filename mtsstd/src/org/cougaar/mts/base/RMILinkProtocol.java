@@ -243,8 +243,13 @@ public class RMILinkProtocol
 	    // transient (though other kinds of SocketExceptions
 	    // really shouldn't be).
 	    else if (cause instanceof java.net.SocketException) {
-		cause = new TransientIOException(cause.getMessage());
-		throw new CommFailureException((Exception) cause);
+		// Throwing a CommFailureException doesn't seem right
+		// anymore (as of 1.4.2).  So don't do it anymore,
+		// but log it.
+		if (loggingService.isDebugEnabled())
+		    loggingService.debug("Got a SocketException as the cause of a MarshallException: "  + cause.getMessage(), ex);
+// 		cause = new TransientIOException(cause.getMessage());
+// 		throw new CommFailureException((Exception) cause);
 	    }
 	} else if (cause instanceof java.rmi.UnmarshalException) {
 	    Throwable remote_cause = cause.getCause();
