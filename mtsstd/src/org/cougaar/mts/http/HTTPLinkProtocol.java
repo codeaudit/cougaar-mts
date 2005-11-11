@@ -382,5 +382,6 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
 
     }
   
-  
+    protected void releaseNodeServant() {
+    }
 }

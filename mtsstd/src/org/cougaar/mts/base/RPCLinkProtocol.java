@@ -154,6 +154,18 @@ abstract public class RPCLinkProtocol
     abstract protected void findOrMakeNodeServant();
 
     /**
+     * Releases all resources associated with this link protocol.
+     * <p>
+     * 
+     * This method is invoked when the MTS is unloaded so the garbage
+     * collector can reclaim all resources that had been allocated.
+     * 
+     * Fix for bug 3965:
+     * http://bugs.cougaar.org/show_bug.cgi?id=3965
+     */
+    abstract protected void releaseNodeServant();
+    
+    /**
      * Force the proticol to remake its 'servant', typically because
      * the address of the Host on which the Node is running has changed.
      * Some protoocol (eg HTTP) can ignore this.
@@ -199,12 +211,18 @@ abstract public class RPCLinkProtocol
     public final void unregisterClient(MessageTransportClient client) {
 	synchronized (ipAddrLock) {
 	    try {
+        
 		// Assume node-redirect
 		MessageAddress addr = client.getMessageAddress();
 		getNameSupport().unregisterAgentInNameServer(ref,addr,
 							     getProtocolType());
 		clients.remove(client);
-	    } catch (Exception e) {
+
+        // Fix for bug 3965: need to release resources.
+        // http://bugs.cougaar.org/show_bug.cgi?id=3965
+        releaseNodeServant();
+        
+        } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error("Error unregistering client", e);
 	    }

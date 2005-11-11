@@ -36,6 +36,7 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.mts.std.RMISocketControlService;
+import org.cougaar.util.StateModelException;
 
 /**
  * This {@link LinkProtocol} handles message passing via RMI, one
@@ -79,6 +80,17 @@ public class RMILinkProtocol
     }
 
 
+    /**
+     * @see org.cougaar.util.GenericStateModelAdapter#unload()
+     */
+    public synchronized void unload() throws StateModelException {
+      super.unload();
+      if (controlService != null) {
+        ServiceBroker sb = getServiceBroker();
+        sb.releaseService(this, RMISocketControlService.class, controlService);
+      }
+      controlService = null;
+    }
 
     protected String getProtocolType() {
 	return "-RMI";
@@ -225,7 +237,14 @@ public class RMILinkProtocol
 	}
     }
 
-
+    protected void releaseNodeServant() {
+      try {
+        UnicastRemoteObject.unexportObject(myProxy, true);
+      } catch (java.rmi.NoSuchObjectException ex) {
+        // don't care
+      }
+      myProxy = null;
+    }
 
     protected void remakeNodeServant()
     {
@@ -341,6 +360,8 @@ public class RMILinkProtocol
 	}
 
     }
+
+
 
 }
 

@@ -202,6 +202,8 @@ public class CorbaLinkProtocol
 
     }
 
+    protected void releaseNodeServant() {
+    }
 
 }
    
