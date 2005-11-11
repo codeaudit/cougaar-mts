@@ -219,6 +219,12 @@ public class AspectSupportImpl implements ServiceProvider
 	}
 
     }
+
+    public void unload() {
+      // Nullify service otherwise it will not be reclaimed by the 
+      // garbage collector.
+      service = null;
+    }
 }
  
 

@@ -80,6 +80,10 @@ implements ServiceProvider
     private String id;
     private final HashMap proxies = new HashMap();
 
+    private AspectSupportImpl aspectSupportImpl;
+
+    private MessageStreamsFactory msgFactory;
+
     protected String specifyContainmentPoint() {
         return Agent.INSERTION_POINT + ".MessageTransport";
     }
@@ -113,8 +117,8 @@ implements ServiceProvider
         loggingService = 
             (LoggingService) csb.getService(this, LoggingService.class, null);
 
-        AspectSupportImpl impl = new AspectSupportImpl(this, loggingService);
-        csb.addService(AspectSupport.class, impl);
+        aspectSupportImpl = new AspectSupportImpl(this, loggingService);
+        csb.addService(AspectSupport.class, aspectSupportImpl);
 
         // Do the standard set first, since they're assumed to be more
         // generic than the user-specified set.
@@ -222,7 +226,7 @@ implements ServiceProvider
     private void createFactories() {
         ServiceBroker csb = getChildServiceBroker();
 
-        MessageStreamsFactory msgFactory = MessageStreamsFactory.makeFactory();
+        msgFactory = MessageStreamsFactory.makeFactory();
         add(msgFactory);
 
         ReceiveLinkFactory receiveLinkFactory = new ReceiveLinkFactory();
@@ -341,5 +345,15 @@ implements ServiceProvider
                 ((MessageWatcherServiceImpl) service).release();
             }
         } 
+    }
+
+    /**
+     * @see org.cougaar.core.component.ContainerSupport#unload()
+     */
+    public void unload() {
+      super.unload();
+      aspectSupportImpl.unload();
+      
+      msgFactory.releaseFactory();
     }
 }

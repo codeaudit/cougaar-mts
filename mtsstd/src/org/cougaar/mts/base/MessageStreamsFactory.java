@@ -29,6 +29,7 @@ package org.cougaar.mts.base;
 import java.util.ArrayList;
 import org.cougaar.mts.std.AspectFactory;
 import org.cougaar.mts.std.AttributedMessage; // for javadoc
+import org.cougaar.util.StateModelException;
 
 /**
  * This factory is used to create MessageReaders and MessageWriters
@@ -51,7 +52,6 @@ public final class MessageStreamsFactory
 	return factory;
     }
 
-
     private MessageStreamsFactory() 
     {
     }
@@ -69,6 +69,16 @@ public final class MessageStreamsFactory
  	return (MessageWriter) attachAspects(wtr, 
 					     MessageWriter.class,
 					     aspectNames);
+    }
+
+
+    /**
+     * Free resources
+     */
+    public void releaseFactory() {
+      // Nullify static variable so it can be reclaimed by the garbage
+      // collector.
+      factory = null;
     }
 
 }
