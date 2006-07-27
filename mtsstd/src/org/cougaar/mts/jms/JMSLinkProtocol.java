@@ -57,8 +57,8 @@ import org.cougaar.mts.std.AttributedMessage;
  *
  */
 public class JMSLinkProtocol extends RPCLinkProtocol {
-    private static final String JMS_URL = "tcp://fig.bbn.com:3035";
-    private static final String JMS_IMPL = "org.exolab.jms.jndi.InitialContextFactory";
+    private static final String JMS_URL = System.getProperty("org.cougaar.mts.jms.url");
+    private static final String JMS_IMPL = System.getProperty("org.cougaar.mts.jms.jndi.factory");
     private static final String factoryName = "ConnectionFactory";
     
     private Destination destination;
