@@ -25,24 +25,63 @@
  */
 package org.cougaar.mts.jms;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.MessageReply;
 import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
 /**
  *
  */
 public class MessageSender {
     private final Session session;
+    private final Map producers;
+    private final Logger log;
     
-    MessageSender(Session session) {
+    MessageSender(Session session, ServiceBroker sb) {
 	this.session = session;
+	this.producers = new HashMap();
+	log = Logging.getLogger(getClass().getName());
     }
     
-    MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage msg) {
-	// Construct a jms Message, send it, wait for an ack, return the result
-	return null;
+    MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
+    throws CommFailureException {
+	// Construct a jms Message, send it, wait for an ack, return the result.
+	//
+	// For now ignore the ack.
+	MessageProducer producer = (MessageProducer) producers.get(dest);
+	if (producer == null) {
+	    try {
+		producer = session.createProducer(dest);
+		producers.put(dest, producer);
+	    } catch (JMSException e) {
+		log.error("Couldn't create MessageProducer", e);
+		throw new CommFailureException(e);
+	    }
+	}
+	try {
+	    ObjectMessage msg = session.createObjectMessage(message);
+	    producer.send(msg);
+	    // TODO: Block, wait for the ack containing the MessageAttributes result
+	    MessageAttributes metadata = new MessageReply(message);
+	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
+		    MessageAttributes.DELIVERY_STATUS_DELIVERED);
+	    return metadata;
+	} catch (JMSException e) {
+	    log.error("Couldn't send JMS message", e);
+	    throw new CommFailureException(e);
+	}
     }
 }

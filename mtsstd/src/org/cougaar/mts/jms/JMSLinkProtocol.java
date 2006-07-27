@@ -41,6 +41,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
@@ -64,12 +65,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
     private ConnectionFactory factory = null;
     private Connection connection = null;
     private Session session;
-    private MessageSender sender;
     private MessageReceiver receiver;
     
     protected int computeCost(AttributedMessage message) {
 	// TODO Pick a better number
-	return Integer.MAX_VALUE;
+	return 1;
     }
 
    
@@ -87,8 +87,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		factory = (ConnectionFactory) context.lookup(factoryName);
 		connection = factory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		sender = new MessageSender(session);
-		receiver = new MessageReceiver(session);
+		ServiceBroker sb = getServiceBroker();
+		receiver = new MessageReceiver(session, sb);
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
 	    } catch (JMSException e) {
@@ -147,8 +147,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
     
     
     private class JMSLink extends Link {
+	private final MessageSender sender;
+	
 	JMSLink(MessageAddress addr) {
 	    super(addr);
+	    ServiceBroker sb = getServiceBroker();
+	    this.sender = new MessageSender(session, sb);
 	}
 
 	public boolean isValid() {
@@ -163,7 +167,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	    return null;
 	}
 
-	protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message) throws NameLookupException, UnregisteredNameException, CommFailureException, MisdeliveredMessageException {
+	protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
+	throws NameLookupException, UnregisteredNameException, CommFailureException, MisdeliveredMessageException {
 	    if (destination instanceof Destination) {
 		return sender.handleOutgoingMessage((Destination) destination, message);
 	    } else {

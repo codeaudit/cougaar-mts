@@ -25,24 +25,65 @@
  */
 package org.cougaar.mts.jms;
 
+import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.ObjectMessage;
 import javax.jms.Session;
+
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.MessageDeliverer;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
 /**
  *
  */
 public class MessageReceiver {
-    private final Session session;
+    private final Logger log;
+    private final MessageDeliverer deliverer;
     
-    MessageReceiver(Session session) {
-	this.session = session;
+    MessageReceiver(Session session, ServiceBroker sb) {
+	// no use for the Session now, but we'll need it later
+	// to send the acks
+	this.log = Logging.getLogger(getClass().getName());
+	this.deliverer = (MessageDeliverer) 
+	    sb.getService(this,  MessageDeliverer.class, null);
     }
     
     void handleIncomingMessage(Message msg) {
 	// If it's a data message, extract it, do more or less what MTImpl does
 	// and send an ack with the result.
 	//
-	// If it's an ack, wake up the waiter,
+	// If it's an ack, wake up the waiter.
+	//
+	// For now ignore the acks
+	if (msg instanceof ObjectMessage) {
+	    ObjectMessage omsg = (ObjectMessage) msg;
+	    try {
+		Object domainObject = omsg.getObject();
+		if (domainObject instanceof AttributedMessage) {
+		    AttributedMessage message = (AttributedMessage) domainObject;
+		    try {
+			MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
+			if (log.isInfoEnabled()) {
+			    log.info("Reply " + reply);
+			}
+			// TODO: return the reply in an ack message
+		    } catch (MisdeliveredMessageException e) {
+			log.error("Couldn't deliver message to " + message.getTarget(), e);
+		    }
+		} else {
+		    log.warn(domainObject + " is not an AttributedMessage");
+		}
+	    } catch (JMSException e) {
+		log.error("Couldn't extract data from ObjectMessage", e);
+	    }	    
+	} else {
+	    log.warn("Received a JMS message that wasn't an ObjectMessage");
+	}
     }
 
 }
