@@ -43,10 +43,12 @@ import org.cougaar.util.log.Logging;
 public class MessageReceiver {
     private final Logger log;
     private final MessageDeliverer deliverer;
+    private final AckSync sync;
     
-    MessageReceiver(Session session, MessageDeliverer deliverer) {
+    MessageReceiver(Session session, AckSync sync, MessageDeliverer deliverer) {
 	// no use for the Session now, but we'll need it later
 	// to send the acks
+	this.sync = sync;
 	this.deliverer = deliverer;
 	this.log = Logging.getLogger(getClass().getName());
     }

@@ -67,6 +67,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
     private Connection connection = null;
     private Session session;
     private MessageReceiver receiver;
+    private final AckSync sync = new AckSync();
     
     protected int computeCost(AttributedMessage message) {
 	// TODO Pick a better number
@@ -91,7 +92,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		ServiceBroker sb = getServiceBroker();
 		MessageDeliverer deliverer = (MessageDeliverer) 
 		    sb.getService(this,  MessageDeliverer.class, null);
-		receiver = new MessageReceiver(session, deliverer);
+		receiver = new MessageReceiver(session, sync, deliverer);
 		connection.start();
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
@@ -155,7 +156,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	
 	JMSLink(MessageAddress addr) {
 	    super(addr);
-	    this.sender = new MessageSender(session);
+	    this.sender = new MessageSender(session, sync);
 	}
 
 	protected Object decodeRemoteRef(URI ref) throws Exception {

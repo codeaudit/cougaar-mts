@@ -47,10 +47,12 @@ import org.cougaar.util.log.Logging;
 public class MessageSender {
     private final Session session;
     private final Map producers;
+    private final AckSync sync;
     private final Logger log;
     
-    MessageSender(Session session) {
+    MessageSender(Session session, AckSync sync) {
 	this.session = session;
+	this.sync = sync;
 	this.producers = new HashMap();
 	log = Logging.getLogger(getClass().getName());
     }
@@ -72,7 +74,7 @@ public class MessageSender {
 	}
 	try {
 	    ObjectMessage msg = session.createObjectMessage(message);
-	    producer.send(msg);
+	    sync.sendMessage(msg, producer);
 	    // TODO: Block, wait for the ack containing the MessageAttributes result
 	    MessageAttributes metadata = new MessageReply(message);
 	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
