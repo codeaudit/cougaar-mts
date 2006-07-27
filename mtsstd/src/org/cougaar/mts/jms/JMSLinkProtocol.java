@@ -46,6 +46,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
@@ -88,7 +89,10 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		connection = factory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		ServiceBroker sb = getServiceBroker();
-		receiver = new MessageReceiver(session, sb);
+		MessageDeliverer deliverer = (MessageDeliverer) 
+		    sb.getService(this,  MessageDeliverer.class, null);
+		receiver = new MessageReceiver(session, deliverer);
+		connection.start();
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
 	    } catch (JMSException e) {
@@ -105,11 +109,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		getNameSupport().getNodeMessageAddress().getAddress();
 	    try {
 		destination = session.createQueue(myAddress);
-		context.bind(myAddress, destination);
-		URI uri = new URI("jms://" + myAddress);
-		setNodeURI(uri);
 		MessageConsumer consumer = session.createConsumer(destination);
 		consumer.setMessageListener(new Listener());
+		context.rebind(myAddress, destination);
+		URI uri = new URI("jms://" + myAddress);
+		setNodeURI(uri);
 	    } catch (JMSException e) {
 		loggingService.error("Couldn't make JMS queue", e);
 	    } catch (URISyntaxException e) {
@@ -151,15 +155,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	
 	JMSLink(MessageAddress addr) {
 	    super(addr);
-	    ServiceBroker sb = getServiceBroker();
-	    this.sender = new MessageSender(session, sb);
+	    this.sender = new MessageSender(session);
 	}
 
-	public boolean isValid() {
-	    return true;
-	}
-	
 	protected Object decodeRemoteRef(URI ref) throws Exception {
+	    if (ref == null) {
+		loggingService.warn("Got null remote ref for " + getDestination());
+		return null;
+	    }
 	    String node = ref.getHost();
 	    if (session != null) {
 		return context.lookup(node); // ???

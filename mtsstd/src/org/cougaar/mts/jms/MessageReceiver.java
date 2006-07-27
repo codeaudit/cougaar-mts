@@ -30,7 +30,6 @@ import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
-import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
@@ -45,15 +44,19 @@ public class MessageReceiver {
     private final Logger log;
     private final MessageDeliverer deliverer;
     
-    MessageReceiver(Session session, ServiceBroker sb) {
+    MessageReceiver(Session session, MessageDeliverer deliverer) {
 	// no use for the Session now, but we'll need it later
 	// to send the acks
+	this.deliverer = deliverer;
 	this.log = Logging.getLogger(getClass().getName());
-	this.deliverer = (MessageDeliverer) 
-	    sb.getService(this,  MessageDeliverer.class, null);
     }
     
+    
     void handleIncomingMessage(Message msg) {
+	if (deliverer == null) {
+	    log.error("Message arrived before MessageDelivererService was available");
+	    return;
+	}
 	// If it's a data message, extract it, do more or less what MTImpl does
 	// and send an ack with the result.
 	//

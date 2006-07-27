@@ -34,7 +34,6 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
-import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.MessageReply;
@@ -50,7 +49,7 @@ public class MessageSender {
     private final Map producers;
     private final Logger log;
     
-    MessageSender(Session session, ServiceBroker sb) {
+    MessageSender(Session session) {
 	this.session = session;
 	this.producers = new HashMap();
 	log = Logging.getLogger(getClass().getName());
