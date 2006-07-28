@@ -103,10 +103,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	if (destination != null) return;
 	ensureSession();
 	if (session != null) {
-	    String myAddress = 
-		getNameSupport().getNodeMessageAddress().getAddress();
+	    String node = getNameSupport().getNodeMessageAddress().getAddress();
+	    String destinationID = node; // TODO: should be more specific
+	    // TODO: Check for leftover queue, flush it or delete it if it exists
 	    try {
-		destination = session.createQueue(myAddress);
+		destination = session.createQueue(destinationID);
 		sync = new AckSync(destination, session);
 		MessageConsumer consumer = session.createConsumer(destination);
 		consumer.setMessageListener(new Listener());
@@ -115,19 +116,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		    sb.getService(this,  MessageDeliverer.class, null);
 		receiver = new MessageReceiver(session, sync, deliverer);
 		connection.start();
-		String destinationID = myAddress; // TODO: should be more specific
-		
-		// TODO: If it already exists in the jndi server we need to clear out pending messages
-		context.rebind(destinationID, destination);
-		
 		URI uri = new URI("jms://" + destinationID);
 		setNodeURI(uri);
 	    } catch (JMSException e) {
 		loggingService.error("Couldn't make JMS queue", e);
 	    } catch (URISyntaxException e) {
 		loggingService.error("Couldn't make JMS URI", e);
-	    } catch (NamingException e) {
-		loggingService.error("Couldn't register JMS Destination", e);
 	    }
 	}
     }
