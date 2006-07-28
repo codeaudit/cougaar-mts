@@ -38,7 +38,7 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- *
+ *  This utility class handles incoming JMS messages
  */
 public class MessageReceiver {
     private final Logger log;

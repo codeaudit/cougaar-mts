@@ -54,12 +54,13 @@ import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- *
+ *  This class implements a Cougaar LinkProtocol that uses JMS as the
+ *  transport.
  */
 public class JMSLinkProtocol extends RPCLinkProtocol {
     private static final String JMS_URL = System.getProperty("org.cougaar.mts.jms.url");
-    private static final String JMS_IMPL = System.getProperty("org.cougaar.mts.jms.jndi.factory");
-    private static final String factoryName = "ConnectionFactory";
+    private static final String JNDI_FACTORY = System.getProperty("org.cougaar.mts.jms.jndi.factory");
+    private static final String JMS_FACTORY = System.getProperty("org.cougaar.mts.jms.factory");
     
     private Destination destination;
     private Context context;
@@ -83,10 +84,10 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	if (session == null) {
 	    try {
 		Hashtable properties = new Hashtable();
-		properties.put(Context.INITIAL_CONTEXT_FACTORY, JMS_IMPL);
+		properties.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
 		properties.put(Context.PROVIDER_URL, JMS_URL);
 		context = new InitialContext(properties);
-		factory = (ConnectionFactory) context.lookup(factoryName);
+		factory = (ConnectionFactory) context.lookup(JMS_FACTORY);
 		connection = factory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		

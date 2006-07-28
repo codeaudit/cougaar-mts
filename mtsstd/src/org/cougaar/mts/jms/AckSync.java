@@ -38,8 +38,12 @@ import javax.jms.Session;
 import org.cougaar.core.mts.MessageAttributes;
 
 /**
- * @author rshapiro
- *
+ *  This utility class does the low-level work to force
+ *  the jms linkprotocol to behave like a synchronous rpc.
+ *  In particular it blocks the sending thread until 
+ *  an ack for the outgoing message arrives, generates and sends acks
+ *  for incoming messages, and processes received acks by waking
+ *  the corresponding thread.
  */
 public class AckSync {
     private static final String ID_PROP = "JMS_MSG_ID";

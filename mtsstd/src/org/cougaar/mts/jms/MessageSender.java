@@ -41,7 +41,7 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- *
+ *  This utility class handles outgoing JMS messages
  */
 public class MessageSender {
     private final Session session;
