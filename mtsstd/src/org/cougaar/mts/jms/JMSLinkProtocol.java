@@ -104,10 +104,28 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
-	    String destinationID = node; // TODO: should be more specific
-	    // TODO: Check for leftover queue, flush it or delete it if it exists
+	    String destinationID = node; // TODO: Registered name should be more specific
+	    
+	    // Check for leftover queue, flush it manually
 	    try {
-		destination = session.createQueue(destinationID);
+		Object old = context.lookup(destinationID);
+		if (old instanceof Destination) {
+		    loggingService.info("Found old Queue");
+		    destination = (Destination) old;
+		    MessageConsumer flush = session.createConsumer(destination);
+		    while (flush.receiveNoWait() != null) {
+			loggingService.info("Flushing old message");
+		    }
+		    flush.close();
+		}
+	    } catch (NamingException e1) {
+		// No old one exists -- ignore
+	    } catch (JMSException e) {
+		loggingService.error("Error flushing old message", e);
+	    }
+	    
+	    try {
+		if (destination == null) destination = session.createQueue(destinationID);
 		sync = new AckSync(destination, session);
 		MessageConsumer consumer = session.createConsumer(destination);
 		consumer.setMessageListener(new Listener());
