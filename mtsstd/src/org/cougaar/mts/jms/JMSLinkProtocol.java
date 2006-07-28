@@ -67,7 +67,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
     private Connection connection = null;
     private Session session;
     private MessageReceiver receiver;
-    private final AckSync sync = new AckSync();
+    private AckSync sync;
     
     protected int computeCost(AttributedMessage message) {
 	// TODO Pick a better number
@@ -89,11 +89,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		factory = (ConnectionFactory) context.lookup(factoryName);
 		connection = factory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		ServiceBroker sb = getServiceBroker();
-		MessageDeliverer deliverer = (MessageDeliverer) 
-		    sb.getService(this,  MessageDeliverer.class, null);
-		receiver = new MessageReceiver(session, sync, deliverer);
-		connection.start();
+		
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
 	    } catch (JMSException e) {
@@ -110,8 +106,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		getNameSupport().getNodeMessageAddress().getAddress();
 	    try {
 		destination = session.createQueue(myAddress);
+		sync = new AckSync(destination, session);
 		MessageConsumer consumer = session.createConsumer(destination);
 		consumer.setMessageListener(new Listener());
+		ServiceBroker sb = getServiceBroker();
+		MessageDeliverer deliverer = (MessageDeliverer) 
+		    sb.getService(this,  MessageDeliverer.class, null);
+		receiver = new MessageReceiver(session, sync, deliverer);
+		connection.start();
 		context.rebind(myAddress, destination);
 		URI uri = new URI("jms://" + myAddress);
 		setNodeURI(uri);

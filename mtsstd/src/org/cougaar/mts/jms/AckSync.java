@@ -25,22 +25,101 @@
  */
 package org.cougaar.mts.jms;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
+import javax.jms.Session;
+
+import org.cougaar.core.mts.MessageAttributes;
 
 /**
  * @author rshapiro
  *
  */
 public class AckSync {
+    private static final String ID_PROP = "JMS_MSG_ID";
+    private static int ID = 0;
     
-    AckSync() {
-	
+    private final Destination originator;
+    private final Session session;
+    private final Map producers;
+    private final Map unacked;
+    private final Map ackData;
+    
+    AckSync(Destination originator, Session session) {
+	this.originator = originator;
+	this.session = session;
+	this.producers = new HashMap();
+	this.unacked = new HashMap();
+	this.ackData = new HashMap();
     }
     
-    void sendMessage(Message msg, MessageProducer producer) throws JMSException {
-	producer.send(msg);
+    MessageAttributes sendMessage(Message msg, MessageProducer producer) throws JMSException {
+	msg.setJMSReplyTo(originator);
+	Integer id = new Integer(++ID);
+	msg.setIntProperty(ID_PROP, id.intValue());
+	Object lock = new Object();
+	unacked.put(id, lock);
+	synchronized (lock) {
+	    producer.send(msg);
+	    while (true) {
+		try {
+		    lock.wait();
+		    break;
+		} catch (InterruptedException ex) {
+		    
+		}
+	    }
+	}
+	// System.err.println(id + " woke up!");
+	MessageAttributes attrs = (MessageAttributes) ackData.get(id);
+	ackData.remove(id);
+	unacked.remove(id);
+	/*
+	 *  metadata = new MessageReply(message);
+	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
+		    MessageAttributes.DELIVERY_STATUS_DELIVERED);
+	 */
+	return attrs;
+    }
+    
+    void ackMessage(ObjectMessage omsg, MessageAttributes reply) throws JMSException {
+	Ack ack = new Ack(reply, omsg.getIntProperty(ID_PROP));
+	ObjectMessage ackMsg = session.createObjectMessage(ack);
+	Destination dest = omsg.getJMSReplyTo();
+	MessageProducer producer = (MessageProducer) producers.get(dest);
+	if (producer == null) {
+	    producer = session.createProducer(dest);
+	    producers.put(dest, producer);
+	}
+	producer.send(ackMsg);
+    }
+    
+    boolean isAck(ObjectMessage msg) {
+	try {
+	    Object raw = msg.getObject();
+	    if (raw instanceof Ack) {
+		Ack ack = (Ack) raw;
+		Integer id = new Integer(ack.getId());
+		ackData.put(id, ack.getAttrs());
+		Object lock = unacked.get(id);
+		if (lock != null) {
+		    synchronized (lock) {
+			lock.notify();
+		    }
+		}
+		return true;
+	    } else {
+		return false;
+	    }
+	} catch (JMSException e) {
+	   return false;
+	}
     }
 
 }

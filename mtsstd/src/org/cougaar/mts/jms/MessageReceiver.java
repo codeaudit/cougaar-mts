@@ -67,15 +67,17 @@ public class MessageReceiver {
 	// For now ignore the acks
 	if (msg instanceof ObjectMessage) {
 	    ObjectMessage omsg = (ObjectMessage) msg;
+	    if (sync.isAck(omsg))  {
+		// it's an ack -- no further work here
+		return;
+	    }
 	    try {
 		Object domainObject = omsg.getObject();
 		if (domainObject instanceof AttributedMessage) {
 		    AttributedMessage message = (AttributedMessage) domainObject;
 		    try {
 			MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
-			if (log.isInfoEnabled()) {
-			    log.info("Reply " + reply);
-			}
+			sync.ackMessage(omsg, reply);
 			// TODO: return the reply in an ack message
 		    } catch (MisdeliveredMessageException e) {
 			log.error("Couldn't deliver message to " + message.getTarget(), e);

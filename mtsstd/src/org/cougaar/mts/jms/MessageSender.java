@@ -36,7 +36,6 @@ import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.MessageReply;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
@@ -74,11 +73,9 @@ public class MessageSender {
 	}
 	try {
 	    ObjectMessage msg = session.createObjectMessage(message);
-	    sync.sendMessage(msg, producer);
+	    MessageAttributes metadata = sync.sendMessage(msg, producer);
 	    // TODO: Block, wait for the ack containing the MessageAttributes result
-	    MessageAttributes metadata = new MessageReply(message);
-	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
-		    MessageAttributes.DELIVERY_STATUS_DELIVERED);
+	   
 	    return metadata;
 	} catch (JMSException e) {
 	    log.error("Couldn't send JMS message", e);
