@@ -73,7 +73,7 @@ public class AckSync {
 	    producer.send(msg);
 	    while (true) {
 		try {
-		    lock.wait();
+		    lock.wait(); // TODO:  Set a maximum wait time?
 		    break;
 		} catch (InterruptedException ex) {
 		    
