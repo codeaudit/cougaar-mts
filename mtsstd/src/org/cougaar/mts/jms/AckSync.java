@@ -80,15 +80,9 @@ public class AckSync {
 		}
 	    }
 	}
-	// System.err.println(id + " woke up!");
 	MessageAttributes attrs = (MessageAttributes) ackData.get(id);
 	ackData.remove(id);
 	unacked.remove(id);
-	/*
-	 *  metadata = new MessageReply(message);
-	    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE, 
-		    MessageAttributes.DELIVERY_STATUS_DELIVERED);
-	 */
 	return attrs;
     }
     

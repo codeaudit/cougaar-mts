@@ -59,12 +59,6 @@ public class MessageReceiver {
 	    log.error("Message arrived before MessageDelivererService was available");
 	    return;
 	}
-	// If it's a data message, extract it, do more or less what MTImpl does
-	// and send an ack with the result.
-	//
-	// If it's an ack, wake up the waiter.
-	//
-	// For now ignore the acks
 	if (msg instanceof ObjectMessage) {
 	    ObjectMessage omsg = (ObjectMessage) msg;
 	    if (sync.isAck(omsg))  {
@@ -78,7 +72,6 @@ public class MessageReceiver {
 		    try {
 			MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
 			sync.ackMessage(omsg, reply);
-			// TODO: return the reply in an ack message
 		    } catch (MisdeliveredMessageException e) {
 			log.error("Couldn't deliver message to " + message.getTarget(), e);
 		    }

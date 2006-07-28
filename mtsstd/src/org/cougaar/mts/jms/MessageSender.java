@@ -58,9 +58,6 @@ public class MessageSender {
     
     MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
     throws CommFailureException {
-	// Construct a jms Message, send it, wait for an ack, return the result.
-	//
-	// For now ignore the ack.
 	MessageProducer producer = (MessageProducer) producers.get(dest);
 	if (producer == null) {
 	    try {
@@ -74,8 +71,6 @@ public class MessageSender {
 	try {
 	    ObjectMessage msg = session.createObjectMessage(message);
 	    MessageAttributes metadata = sync.sendMessage(msg, producer);
-	    // TODO: Block, wait for the ack containing the MessageAttributes result
-	   
 	    return metadata;
 	} catch (JMSException e) {
 	    log.error("Couldn't send JMS message", e);

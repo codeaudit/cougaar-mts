@@ -115,8 +115,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		    sb.getService(this,  MessageDeliverer.class, null);
 		receiver = new MessageReceiver(session, sync, deliverer);
 		connection.start();
-		context.rebind(myAddress, destination);
-		URI uri = new URI("jms://" + myAddress);
+		String destinationID = myAddress; // TODO: should be more specific
+		
+		// TODO: If it already exists in the jndi server we need to clear out pending messages
+		context.rebind(destinationID, destination);
+		
+		URI uri = new URI("jms://" + destinationID);
 		setNodeURI(uri);
 	    } catch (JMSException e) {
 		loggingService.error("Couldn't make JMS queue", e);
@@ -133,11 +137,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
     }
 
     protected void releaseNodeServant() {
-	// TODO Auto-generated method stub
+	// TODO Unclear what to do here
     }
 
     protected void remakeNodeServant() {
-	// TODO Auto-generated method stub
+	// TODO Unclear what to do here
     }
 
     protected Boolean usesEncryptedSocket() {
@@ -167,9 +171,9 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		loggingService.warn("Got null remote ref for " + getDestination());
 		return null;
 	    }
-	    String node = ref.getHost();
+	    String node = ref.getHost(); // The "host" portion of the uri is all we care about
 	    if (session != null) {
-		return context.lookup(node); // ???
+		return context.lookup(node);
 	    }
 	    return null;
 	}
