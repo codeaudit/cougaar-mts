@@ -69,6 +69,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private Session session;
     private MessageReceiver receiver;
     private AckSync sync;
+    private MessageConsumer consumer;
     
     protected int computeCost(AttributedMessage message) {
 	// TODO Pick a better number
@@ -103,7 +104,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
-	    String destinationID = node; // TODO: Registered name should be more specific
+	    String destinationID = node; // TODO: Destination name should be more specific
 	    
 	    // Check for leftover queue, flush it manually
 	    try {
@@ -126,7 +127,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    try {
 		if (destination == null) destination = session.createQueue(destinationID);
 		sync = new AckSync(destination, session);
-		MessageConsumer consumer = session.createConsumer(destination);
+		consumer = session.createConsumer(destination);
 		consumer.setMessageListener(this);
 		ServiceBroker sb = getServiceBroker();
 		MessageDeliverer deliverer = (MessageDeliverer) 
@@ -148,11 +149,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
     protected void releaseNodeServant() {
-	// TODO Unclear what to do here
+	// Bogus mechanism added by Sebastian.  Ignore.
     }
 
     protected void remakeNodeServant() {
-	// TODO Unclear what to do here
+	// Only used when a host's address changes.  Ignore for now.
     }
 
     protected Boolean usesEncryptedSocket() {
