@@ -62,6 +62,9 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private static final String JNDI_FACTORY = System.getProperty("org.cougaar.mts.jms.jndi.factory");
     private static final String JMS_FACTORY = System.getProperty("org.cougaar.mts.jms.factory");
     
+    // For now use the name server as a unique id of the society
+    private static final String SOCIETY_UID = System.getProperty("org.cougaar.name.server");
+    
     private Destination destination;
     private Context context;
     private ConnectionFactory factory = null;
@@ -104,8 +107,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
-	    String destinationID = node; // TODO: Destination name should be more specific
-	    
+	    String destinationID = node + "." + SOCIETY_UID;
 	    // Check for leftover queue, flush it manually
 	    try {
 		Object old = context.lookup(destinationID);
@@ -180,9 +182,9 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		loggingService.warn("Got null remote ref for " + getDestination());
 		return null;
 	    }
-	    String node = ref.getHost(); // The "host" portion of the uri is all we care about
+	    String destination = ref.getUserInfo() +"@"+ ref.getHost() +":"+ ref.getPort(); 
 	    if (session != null) {
-		return context.lookup(node);
+		return context.lookup(destination);
 	    }
 	    return null;
 	}
