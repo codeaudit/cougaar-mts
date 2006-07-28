@@ -57,7 +57,7 @@ import org.cougaar.mts.std.AttributedMessage;
  *  This class implements a Cougaar LinkProtocol that uses JMS as the
  *  transport.
  */
-public class JMSLinkProtocol extends RPCLinkProtocol {
+public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener {
     private static final String JMS_URL = System.getProperty("org.cougaar.mts.jms.url");
     private static final String JNDI_FACTORY = System.getProperty("org.cougaar.mts.jms.jndi.factory");
     private static final String JMS_FACTORY = System.getProperty("org.cougaar.mts.jms.factory");
@@ -90,7 +90,6 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		factory = (ConnectionFactory) context.lookup(JMS_FACTORY);
 		connection = factory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
 	    } catch (JMSException e) {
@@ -128,7 +127,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 		if (destination == null) destination = session.createQueue(destinationID);
 		sync = new AckSync(destination, session);
 		MessageConsumer consumer = session.createConsumer(destination);
-		consumer.setMessageListener(new Listener());
+		consumer.setMessageListener(this);
 		ServiceBroker sb = getServiceBroker();
 		MessageDeliverer deliverer = (MessageDeliverer) 
 		    sb.getService(this,  MessageDeliverer.class, null);
@@ -160,15 +159,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol {
 	return Boolean.FALSE;
     }
     
-    
-    
-    private class Listener implements MessageListener {
-	public void onMessage(Message msg) {
-	    receiver.handleIncomingMessage(msg);
-	}
+    // MessageListener
+    public void onMessage(Message msg) {
+	receiver.handleIncomingMessage(msg);
     }
     
-    
+   
     
     private class JMSLink extends Link {
 	private final MessageSender sender;
