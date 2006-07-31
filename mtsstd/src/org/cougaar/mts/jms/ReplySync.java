@@ -36,76 +36,81 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.CommFailureException;
 
 /**
  *  This utility class does the low-level work to force
  *  the jms linkprotocol to behave like a synchronous rpc.
  *  In particular it blocks the sending thread until 
- *  an ack for the outgoing message arrives, generates and sends acks
- *  for incoming messages, and processes received acks by waking
+ *  a reply for the outgoing message arrives, generates and sends replies
+ *  for incoming messages, and processes received replies by waking
  *  the corresponding thread.
  */
-public class AckSync {
+public class ReplySync {
     private static final String ID_PROP = "JMS_MSG_ID";
     private static int ID = 0;
     
     private final Destination originator;
     private final Session session;
     private final Map producers;
-    private final Map unacked;
-    private final Map ackData;
+    private final Map pending;
+    private final Map replyData;
     
-    AckSync(Destination originator, Session session) {
+    ReplySync(Destination originator, Session session) {
 	this.originator = originator;
 	this.session = session;
 	this.producers = new HashMap();
-	this.unacked = new HashMap();
-	this.ackData = new HashMap();
+	this.pending = new HashMap();
+	this.replyData = new HashMap();
     }
     
-    MessageAttributes sendMessage(Message msg, MessageProducer producer) throws JMSException {
+    MessageAttributes sendMessage(Message msg, MessageProducer producer) 
+    throws JMSException,CommFailureException {
 	msg.setJMSReplyTo(originator);
 	Integer id = new Integer(++ID);
 	msg.setIntProperty(ID_PROP, id.intValue());
 	Object lock = new Object();
-	unacked.put(id, lock);
+	pending.put(id, lock);
 	synchronized (lock) {
 	    producer.send(msg);
 	    while (true) {
 		try {
-		    lock.wait(); // TODO:  Set a maximum wait time?
+		    lock.wait(10000); // TODO:  Set a maximum wait time?
 		    break;
 		} catch (InterruptedException ex) {
 		    
 		}
 	    }
 	}
-	MessageAttributes attrs = (MessageAttributes) ackData.get(id);
-	ackData.remove(id);
-	unacked.remove(id);
+	MessageAttributes attrs = (MessageAttributes) replyData.get(id);
+	replyData.remove(id);
+	pending.remove(id);
+	if (attrs == null) {
+	    throw new CommFailureException(new RuntimeException("Waited too long for reply"));
+	}
 	return attrs;
     }
     
-    void ackMessage(ObjectMessage omsg, MessageAttributes reply) throws JMSException {
-	Ack ack = new Ack(reply, omsg.getIntProperty(ID_PROP));
-	ObjectMessage ackMsg = session.createObjectMessage(ack);
+    void replyToMessage(ObjectMessage omsg, MessageAttributes replyData) throws JMSException {
+	Reply reply = new Reply(replyData, omsg.getIntProperty(ID_PROP));
+	ObjectMessage replyMsg = session.createObjectMessage(reply);
 	Destination dest = omsg.getJMSReplyTo();
 	MessageProducer producer = (MessageProducer) producers.get(dest);
 	if (producer == null) {
 	    producer = session.createProducer(dest);
 	    producers.put(dest, producer);
 	}
-	producer.send(ackMsg);
+	producer.send(replyMsg);
     }
     
-    boolean isAck(ObjectMessage msg) {
+    boolean isReply(ObjectMessage msg) {
 	try {
 	    Object raw = msg.getObject();
-	    if (raw instanceof Ack) {
-		Ack ack = (Ack) raw;
-		Integer id = new Integer(ack.getId());
-		ackData.put(id, ack.getAttrs());
-		Object lock = unacked.get(id);
+	    if (raw instanceof Reply) {
+		Reply reply = (Reply) raw;
+		Integer id = new Integer(reply.getId());
+		replyData.put(id, reply.getAttrs());
+		Object lock = pending.get(id);
 		if (lock != null) {
 		    synchronized (lock) {
 			lock.notify();

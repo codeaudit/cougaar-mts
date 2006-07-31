@@ -43,9 +43,9 @@ import org.cougaar.util.log.Logging;
 public class MessageReceiver {
     private final Logger log;
     private final MessageDeliverer deliverer;
-    private final AckSync sync;
+    private final ReplySync sync;
     
-    MessageReceiver(Session session, AckSync sync, MessageDeliverer deliverer) {
+    MessageReceiver(Session session, ReplySync sync, MessageDeliverer deliverer) {
 	// no use for the Session now, but we'll need it later
 	// to send the acks
 	this.sync = sync;
@@ -54,14 +54,15 @@ public class MessageReceiver {
     }
     
     
-    void handleIncomingMessage(Message msg) {
+    void handleIncomingMessage(Message msg) 
+    throws MisdeliveredMessageException {
 	if (deliverer == null) {
 	    log.error("Message arrived before MessageDelivererService was available");
 	    return;
 	}
 	if (msg instanceof ObjectMessage) {
 	    ObjectMessage omsg = (ObjectMessage) msg;
-	    if (sync.isAck(omsg))  {
+	    if (sync.isReply(omsg))  {
 		// it's an ack -- no further work here
 		return;
 	    }
@@ -69,18 +70,14 @@ public class MessageReceiver {
 		Object domainObject = omsg.getObject();
 		if (domainObject instanceof AttributedMessage) {
 		    AttributedMessage message = (AttributedMessage) domainObject;
-		    try {
-			MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
-			sync.ackMessage(omsg, reply);
-		    } catch (MisdeliveredMessageException e) {
-			log.error("Couldn't deliver message to " + message.getTarget(), e);
-		    }
+		    MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
+		    sync.replyToMessage(omsg, reply);
 		} else {
 		    log.warn(domainObject + " is not an AttributedMessage");
 		}
 	    } catch (JMSException e) {
-		log.error("Couldn't extract data from ObjectMessage", e);
-	    }	    
+		log.warn("JMS error: ", e);
+	    }
 	} else {
 	    log.warn("Received a JMS message that wasn't an ObjectMessage");
 	}

@@ -71,7 +71,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private Connection connection = null;
     private Session session;
     private MessageReceiver receiver;
-    private AckSync sync;
+    private ReplySync sync;
     private MessageConsumer consumer;
     
     protected int computeCost(AttributedMessage message) {
@@ -127,8 +127,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    }
 	    
 	    try {
-		if (destination == null) destination = session.createQueue(destinationID);
-		sync = new AckSync(destination, session);
+		if (destination == null) {
+		    destination = session.createQueue(destinationID);
+		    context.rebind(destinationID, destination);
+		    if (loggingService.isInfoEnabled()) {
+			loggingService.info("Made queue " + destinationID);
+		    }
+		}
+		sync = new ReplySync(destination, session);
 		consumer = session.createConsumer(destination);
 		consumer.setMessageListener(this);
 		ServiceBroker sb = getServiceBroker();
@@ -142,6 +148,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		loggingService.error("Couldn't make JMS queue", e);
 	    } catch (URISyntaxException e) {
 		loggingService.error("Couldn't make JMS URI", e);
+	    } catch (NamingException e) {
+		loggingService.error("Couldn't register JMS queue in jndi", e);
 	    }
 	}
     }
@@ -164,7 +172,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     
     // MessageListener
     public void onMessage(Message msg) {
-	receiver.handleIncomingMessage(msg);
+	try {
+	    receiver.handleIncomingMessage(msg);
+	} catch (MisdeliveredMessageException e) {
+	    loggingService.error("Misdelivered message");
+	    // TODO: Let the sender know
+	}
     }
     
    
@@ -182,9 +195,21 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		loggingService.warn("Got null remote ref for " + getDestination());
 		return null;
 	    }
-	    String destination = ref.getUserInfo() +"@"+ ref.getHost() +":"+ ref.getPort(); 
 	    if (session != null) {
-		return context.lookup(destination);
+		String destination = ref.getSchemeSpecificPart().substring(2); 
+		if (loggingService.isInfoEnabled()) {
+		    loggingService.info("Looking for Destination queue " + destination+
+			    " from reference " + ref);
+		}
+		try {
+		    Object d = context.lookup(destination);
+		    if (loggingService.isInfoEnabled()) loggingService.info("Got " + d);
+		    return d;
+		} catch (Exception e) {
+		    // TODO Auto-generated catch block
+		    e.printStackTrace();
+		    throw e;
+		}
 	    }
 	    return null;
 	}

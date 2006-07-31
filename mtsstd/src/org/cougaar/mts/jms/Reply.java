@@ -33,15 +33,15 @@ import org.cougaar.core.mts.MessageAttributes;
  *  Instances of this class are used as the contents
  *  of a jms ObjectMessage that acks a domain message.
  */
-public class Ack implements Serializable {
+public class Reply implements Serializable {
     private MessageAttributes attrs;
     private int id;
     
-    public Ack() {
+    public Reply() {
 	
     }
     
-    Ack(MessageAttributes attrs, int id) {
+    Reply(MessageAttributes attrs, int id) {
 	this.attrs = attrs;
 	this.id = id;
     }

@@ -46,10 +46,10 @@ import org.cougaar.util.log.Logging;
 public class MessageSender {
     private final Session session;
     private final Map producers;
-    private final AckSync sync;
+    private final ReplySync sync;
     private final Logger log;
     
-    MessageSender(Session session, AckSync sync) {
+    MessageSender(Session session, ReplySync sync) {
 	this.session = session;
 	this.sync = sync;
 	this.producers = new HashMap();
