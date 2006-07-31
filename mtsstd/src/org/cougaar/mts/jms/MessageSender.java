@@ -36,6 +36,7 @@ import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
@@ -57,7 +58,7 @@ public class MessageSender {
     }
     
     MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
-    throws CommFailureException {
+    throws CommFailureException,MisdeliveredMessageException {
 	MessageProducer producer = (MessageProducer) producers.get(dest);
 	if (producer == null) {
 	    try {

@@ -37,6 +37,7 @@ import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.MisdeliveredMessageException;
 
 /**
  *  This utility class does the low-level work to force
@@ -65,7 +66,7 @@ public class ReplySync {
     }
     
     MessageAttributes sendMessage(Message msg, MessageProducer producer) 
-    throws JMSException,CommFailureException {
+    throws JMSException,CommFailureException,MisdeliveredMessageException {
 	msg.setJMSReplyTo(originator);
 	Integer id = new Integer(++ID);
 	msg.setIntProperty(ID_PROP, id.intValue());
@@ -82,16 +83,20 @@ public class ReplySync {
 		}
 	    }
 	}
-	MessageAttributes attrs = (MessageAttributes) replyData.get(id);
+	Object result = replyData.get(id);
 	replyData.remove(id);
 	pending.remove(id);
-	if (attrs == null) {
-	    throw new CommFailureException(new RuntimeException("Waited too long for reply"));
+	if (result instanceof MessageAttributes) {
+	    return (MessageAttributes) result;
+	} else if (result instanceof MisdeliveredMessageException) {
+	    MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
+	    throw ex;
+	} else {
+	    throw new CommFailureException(new RuntimeException("Weird data " + result));
 	}
-	return attrs;
     }
     
-    void replyToMessage(ObjectMessage omsg, MessageAttributes replyData) throws JMSException {
+    void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
 	Reply reply = new Reply(replyData, omsg.getIntProperty(ID_PROP));
 	ObjectMessage replyMsg = session.createObjectMessage(reply);
 	Destination dest = omsg.getJMSReplyTo();
@@ -109,7 +114,7 @@ public class ReplySync {
 	    if (raw instanceof Reply) {
 		Reply reply = (Reply) raw;
 		Integer id = new Integer(reply.getId());
-		replyData.put(id, reply.getAttrs());
+		replyData.put(id, reply.getData());
 		Object lock = pending.get(id);
 		if (lock != null) {
 		    synchronized (lock) {

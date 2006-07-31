@@ -54,8 +54,7 @@ public class MessageReceiver {
     }
     
     
-    void handleIncomingMessage(Message msg) 
-    throws MisdeliveredMessageException {
+    void handleIncomingMessage(Message msg) {
 	if (deliverer == null) {
 	    log.error("Message arrived before MessageDelivererService was available");
 	    return;
@@ -70,8 +69,12 @@ public class MessageReceiver {
 		Object domainObject = omsg.getObject();
 		if (domainObject instanceof AttributedMessage) {
 		    AttributedMessage message = (AttributedMessage) domainObject;
-		    MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
-		    sync.replyToMessage(omsg, reply);
+		    try {
+			MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
+			sync.replyToMessage(omsg, reply);
+		    } catch (MisdeliveredMessageException e) {
+			sync.replyToMessage(omsg, e);
+		    }
 		} else {
 		    log.warn(domainObject + " is not an AttributedMessage");
 		}

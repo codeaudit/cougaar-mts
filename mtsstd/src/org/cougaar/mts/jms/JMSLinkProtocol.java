@@ -172,12 +172,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     
     // MessageListener
     public void onMessage(Message msg) {
-	try {
-	    receiver.handleIncomingMessage(msg);
-	} catch (MisdeliveredMessageException e) {
-	    loggingService.error("Misdelivered message");
-	    // TODO: Let the sender know
-	}
+	receiver.handleIncomingMessage(msg);
     }
     
    

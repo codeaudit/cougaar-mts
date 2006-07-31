@@ -27,31 +27,25 @@
 package org.cougaar.mts.jms;
 
 import java.io.Serializable;
-
-import org.cougaar.core.mts.MessageAttributes;
 /**
  *  Instances of this class are used as the contents
  *  of a jms ObjectMessage that acks a domain message.
  */
 public class Reply implements Serializable {
-    private MessageAttributes attrs;
+    private Object data;
     private int id;
     
     public Reply() {
 	
     }
     
-    Reply(MessageAttributes attrs, int id) {
-	this.attrs = attrs;
+    Reply(Object data, int id) {
+	this.data = data;
 	this.id = id;
     }
 
-    public MessageAttributes getAttrs() {
-        return attrs;
-    }
-
-    public void setAttrs(MessageAttributes attrs) {
-        this.attrs = attrs;
+    public Object getData() {
+        return data;
     }
 
     public int getId() {
