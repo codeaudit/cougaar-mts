@@ -25,6 +25,7 @@
  */
 package org.cougaar.mts.jms;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -61,6 +62,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private static final String JMS_URL = System.getProperty("org.cougaar.mts.jms.url");
     private static final String JNDI_FACTORY = System.getProperty("org.cougaar.mts.jms.jndi.factory");
     private static final String JMS_FACTORY = System.getProperty("org.cougaar.mts.jms.factory");
+    private static final String WEBLOGIC_SERVERNAME = 
+	System.getProperty("org.cougaar.mts.jms.weblogic.server");
     
     // For now use the name server as a unique id of the society
     private static final String SOCIETY_UID = System.getProperty("org.cougaar.name.server");
@@ -110,8 +113,38 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	return session;
     }
     
+    // Weblogic hackery - reflective since we can't have a compile-time dependency
+    private Destination makeWLQueue(String destinationID)  {
+	String weblogicHelperClassname = "weblogic.jms.extensions.JMSHelper";
+	Class[] params = { Context.class, String.class, String.class, String.class };
+	Object[] args = { context, WEBLOGIC_SERVERNAME, destinationID, destinationID };
+	try {
+	    Class weblogicHelperClass = Class.forName(weblogicHelperClassname);
+	    Method meth = weblogicHelperClass.getMethod("createPermanentQueueAsync", params);
+	    meth.invoke(weblogicHelperClass, args);
+	} catch (Exception e) {
+	    loggingService.error("Weblogic error: failed to create queue", e);
+	    return null;
+	}
+	while (true) {
+	    try {
+		return session.createQueue(destinationID);
+	    } catch (JMSException e) {
+		try {
+		    Thread.sleep(3000);
+		} catch (InterruptedException e1) {
+		    // ignore
+		}
+	    }
+	}
+    }
+    
     protected Destination makeQueue(String destinationID) throws JMSException {
-	return session.createQueue(destinationID);
+	if (WEBLOGIC_SERVERNAME != null) {
+	    return makeWLQueue(destinationID);
+	} else {
+	    return session.createQueue(destinationID);
+	}
     }
 
     protected void findOrMakeNodeServant() {
@@ -213,8 +246,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    if (loggingService.isInfoEnabled()) loggingService.info("Got " + d);
 		    return d;
 		} catch (Exception e) {
-		    // TODO Auto-generated catch block
-		    e.printStackTrace();
+		    loggingService.error("JNDI error: " + e.getMessage());
 		    throw e;
 		}
 	    }
