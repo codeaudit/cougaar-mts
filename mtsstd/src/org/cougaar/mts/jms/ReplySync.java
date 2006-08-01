@@ -76,7 +76,7 @@ public class ReplySync {
 	    producer.send(msg);
 	    while (true) {
 		try {
-		    lock.wait(10000); // TODO:  Set a maximum wait time?
+		    lock.wait(); // TODO:  Set a maximum wait time?
 		    break;
 		} catch (InterruptedException ex) {
 		    
