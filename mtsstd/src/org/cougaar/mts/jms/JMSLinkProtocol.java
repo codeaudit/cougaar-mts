@@ -101,6 +101,18 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    }
 	}
     }
+    
+    protected Context getContext() {
+	return context;
+    }
+    
+    protected Session getSession() {
+	return session;
+    }
+    
+    protected Destination makeQueue(String destinationID) throws JMSException {
+	return session.createQueue(destinationID);
+    }
 
     protected void findOrMakeNodeServant() {
 	if (destination != null) return;
@@ -128,7 +140,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    
 	    try {
 		if (destination == null) {
-		    destination = session.createQueue(destinationID);
+		    destination = makeQueue(destinationID);
 		    context.rebind(destinationID, destination);
 		    if (loggingService.isInfoEnabled()) {
 			loggingService.info("Made queue " + destinationID);
