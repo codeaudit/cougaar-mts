@@ -65,7 +65,7 @@ public class MessageSender {
 		producer = session.createProducer(dest);
 		producers.put(dest, producer);
 	    } catch (JMSException e) {
-		log.error("Couldn't create MessageProducer", e);
+		log.error("Couldn't create MessageProducer: " +e.getMessage(), e);
 		throw new CommFailureException(e);
 	    }
 	}
@@ -74,7 +74,7 @@ public class MessageSender {
 	    MessageAttributes metadata = sync.sendMessage(msg, producer);
 	    return metadata;
 	} catch (JMSException e) {
-	    log.error("Couldn't send JMS message", e);
+	    log.error("Couldn't send JMS message: " +e.getErrorCode(), e);
 	    throw new CommFailureException(e);
 	}
     }
