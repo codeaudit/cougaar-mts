@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadControlService;
@@ -84,7 +85,7 @@ public class PrioritizedThreadsAspect
 	agent_priorities = new HashMap();
 	Properties p = new Properties();
 	String priorities_file = 
-	    System.getProperty("org.cougaar.lib.quo.priorities");
+	    SystemProperties.getProperty("org.cougaar.lib.quo.priorities");
 	if (priorities_file != null) {
 	    try {
 		FileInputStream fis = new FileInputStream(priorities_file);

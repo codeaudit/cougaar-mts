@@ -42,6 +42,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -59,14 +60,14 @@ import org.cougaar.mts.std.AttributedMessage;
  *  transport.
  */
 public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener {
-    private static final String JMS_URL = System.getProperty("org.cougaar.mts.jms.url");
-    private static final String JNDI_FACTORY = System.getProperty("org.cougaar.mts.jms.jndi.factory");
-    private static final String JMS_FACTORY = System.getProperty("org.cougaar.mts.jms.factory");
+    private static final String JMS_URL = SystemProperties.getProperty("org.cougaar.mts.jms.url");
+    private static final String JNDI_FACTORY = SystemProperties.getProperty("org.cougaar.mts.jms.jndi.factory");
+    private static final String JMS_FACTORY = SystemProperties.getProperty("org.cougaar.mts.jms.factory");
     private static final String WEBLOGIC_SERVERNAME = 
-	System.getProperty("org.cougaar.mts.jms.weblogic.server");
+	SystemProperties.getProperty("org.cougaar.mts.jms.weblogic.server");
     
     // For now use the name server as a unique id of the society
-    private static final String SOCIETY_UID = System.getProperty("org.cougaar.name.server");
+    private static final String SOCIETY_UID = SystemProperties.getProperty("org.cougaar.name.server");
     
     private Destination destination;
     private Context context;

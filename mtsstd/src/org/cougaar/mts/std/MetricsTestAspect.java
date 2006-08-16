@@ -28,6 +28,7 @@ package org.cougaar.mts.std;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
@@ -72,7 +73,7 @@ public class MetricsTestAspect
 	svc = (MetricsService)
 	    sb.getService(this, MetricsService.class, null);
 
-	String path = System.getProperty("org.cougaar.metrics.callback");
+	String path = SystemProperties.getProperty("org.cougaar.metrics.callback");
 	if (path != null) {
 	    svc.subscribeToValue(path, this);
 	    System.out.println("Subscribed to " +path);
@@ -102,13 +103,13 @@ public class MetricsTestAspect
     }
 
     public void runTest() {
-	String path = System.getProperty("org.cougaar.metrics.query");
+	String path = SystemProperties.getProperty("org.cougaar.metrics.query");
 	if (path != null) {
 	    Metric val = svc.getValue(path);
 	    System.out.println(path+ "=" +val);
 	}
 
-	String key = System.getProperty("org.cougaar.metrics.key");
+	String key = SystemProperties.getProperty("org.cougaar.metrics.key");
 	if (key != null) {
 	    Metric m = new MetricImpl(new Long(System.currentTimeMillis()),
 				      0.3,

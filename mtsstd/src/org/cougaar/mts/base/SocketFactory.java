@@ -37,6 +37,7 @@ import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
@@ -156,7 +157,7 @@ public class SocketFactory
 
     private static Class serverWrapperClass;
     static {
-	String classname = System.getProperty(WRAPPER_CLASS_PROP);
+	String classname = SystemProperties.getProperty(WRAPPER_CLASS_PROP);
 	if (classname != null) {
 	    try {
 		serverWrapperClass = Class.forName(classname);

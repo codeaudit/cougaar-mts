@@ -28,6 +28,7 @@ package org.cougaar.mts.std;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
@@ -79,13 +80,13 @@ public class MetricsBlastTestAspect
 	svc = (MetricsService)
 	    sb.getService(this, MetricsService.class, null);
 
-	path = System.getProperty("org.cougaar.metrics.callback");
+	path = SystemProperties.getProperty("org.cougaar.metrics.callback");
 	if (path != null) {
 	    svc.subscribeToValue(path, this);
 	    System.out.println("Subscribed to " +path);
 
 
-	    key = System.getProperty("org.cougaar.metrics.key");
+	    key = SystemProperties.getProperty("org.cougaar.metrics.key");
 	    if (key !=null) {
 		System.out.println("Blasting to " +key);
 		blasterThread = new Thread(new Blaster(), "blaster");

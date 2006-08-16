@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -239,7 +240,7 @@ abstract public class RPCLinkProtocol
 	    try {
 		InetAddress local = InetAddress.getLocalHost();
 		String hostaddr = local.getHostAddress();
-		System.setProperty("java.rmi.server.hostname", hostaddr);
+		SystemProperties.setProperty("java.rmi.server.hostname", hostaddr);
 	    } catch (java.net.UnknownHostException ex) {
 		// log something
 		if (loggingService.isWarnEnabled())

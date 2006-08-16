@@ -25,6 +25,8 @@
  */
 
 package org.cougaar.mts.std;
+
+import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -59,7 +61,7 @@ public class SecurityAspect extends StandardAspect
     private static synchronized MessageSecurityManager ensure_msm() {
 	if (msm != null) return msm;
 
-	String name = System.getProperty(SECURITY_CLASS_PROPERTY);
+	String name = SystemProperties.getProperty(SECURITY_CLASS_PROPERTY);
 	if (name != null && (!name.equals("")) &&(!name.equals("none"))) {
 	    try {
 		// Object raw = Beans.instantiate(null, name);
