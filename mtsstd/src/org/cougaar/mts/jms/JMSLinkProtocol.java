@@ -25,7 +25,6 @@
  */
 package org.cougaar.mts.jms;
 
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -113,47 +112,18 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected Session getSession() {
 	return session;
     }
-    
-    // Weblogic hackery - reflective since we can't have a compile-time dependency
-    private Destination makeWLQueue(String destinationID)  {
-	String weblogicHelperClassname = "weblogic.jms.extensions.JMSHelper";
-	Class[] params = { Context.class, String.class, String.class, String.class };
-	Object[] args = { context, WEBLOGIC_SERVERNAME, destinationID, destinationID };
-	try {
-	    Class weblogicHelperClass = Class.forName(weblogicHelperClassname);
-	    Method meth = weblogicHelperClass.getMethod("createPermanentQueueAsync", params);
-	    meth.invoke(weblogicHelperClass, args);
-	} catch (Exception e) {
-	    loggingService.error("Weblogic error: failed to create queue", e);
-	    return null;
-	}
-	while (true) {
-	    try {
-		return session.createQueue(destinationID);
-	    } catch (JMSException e) {
-		try {
-		    Thread.sleep(3000);
-		} catch (InterruptedException e1) {
-		    // ignore
-		}
-	    }
-	}
-    }
-    
-    protected Destination makeQueue(String destinationID) throws JMSException {
-	if (WEBLOGIC_SERVERNAME != null) {
-	    return makeWLQueue(destinationID);
-	} else {
-	    return session.createQueue(destinationID);
-	}
-    }
 
     protected void findOrMakeNodeServant() {
 	if (destination != null) return;
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
-	    String destinationID = node + "." + SOCIETY_UID;
+	    String destinationID;
+	    if (WEBLOGIC_SERVERNAME  != null) {
+		destinationID = WEBLOGIC_SERVERNAME + "/" + node;
+	    } else {
+		destinationID = node + "." + SOCIETY_UID;
+	    }
 	    // Check for leftover queue, flush it manually
 	    try {
 		Object old = context.lookup(destinationID);
@@ -167,14 +137,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    flush.close();
 		}
 	    } catch (NamingException e1) {
-		// No old one exists -- ignore
+		loggingService.info("Queue " +destinationID+ " doesn't exist yet");
 	    } catch (JMSException e) {
 		loggingService.error("Error flushing old message", e);
 	    }
 	    
 	    try {
 		if (destination == null) {
-		    destination = makeQueue(destinationID);
+		    destination = session.createQueue(destinationID);
 		    context.rebind(destinationID, destination);
 		    if (loggingService.isInfoEnabled()) {
 			loggingService.info("Made queue " + destinationID);
