@@ -7,5 +7,6 @@
 	<classpathentry kind="lib" path="/jars/lib/log4j.jar"/>
 	<classpathentry kind="lib" path="/jars/lib/servlet.jar"/>
 	<classpathentry kind="lib" path="/jars/lib/jms-1.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/bootstrap"/>
 	<classpathentry kind="output" path="tmp/classes"/>
 </classpath>
