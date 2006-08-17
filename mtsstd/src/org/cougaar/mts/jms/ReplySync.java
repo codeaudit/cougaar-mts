@@ -25,9 +25,11 @@
  */
 package org.cougaar.mts.jms;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -38,6 +40,8 @@ import javax.jms.Session;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.util.log.Logger;
+import org.cougaar.util.log.Logging;
 
 /**
  *  This utility class does the low-level work to force
@@ -48,7 +52,8 @@ import org.cougaar.mts.base.MisdeliveredMessageException;
  *  the corresponding thread.
  */
 public class ReplySync {
-    private static final String ID_PROP = "JMS_MSG_ID";
+    private static final String ID_PROP = "MTS_MSG_ID";
+    private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static int ID = 0;
     
     private final Destination originator;
@@ -56,6 +61,7 @@ public class ReplySync {
     private final Map producers;
     private final Map pending;
     private final Map replyData;
+    private final Logger log;
     
     ReplySync(Destination originator, Session session) {
 	this.originator = originator;
@@ -63,13 +69,17 @@ public class ReplySync {
 	this.producers = new HashMap();
 	this.pending = new HashMap();
 	this.replyData = new HashMap();
+	this.log = Logging.getLogger(getClass().getName());
     }
     
     MessageAttributes sendMessage(Message msg, MessageProducer producer) 
     throws JMSException,CommFailureException,MisdeliveredMessageException {
 	msg.setJMSReplyTo(originator);
+	msg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	Integer id = new Integer(++ID);
 	msg.setIntProperty(ID_PROP, id.intValue());
+	msg.setBooleanProperty(IS_MTS_REPLY_PROP, false);
+	
 	Object lock = new Object();
 	pending.put(id, lock);
 	synchronized (lock) {
@@ -97,12 +107,16 @@ public class ReplySync {
     }
     
     void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
-	Reply reply = new Reply(replyData, omsg.getIntProperty(ID_PROP));
-	ObjectMessage replyMsg = session.createObjectMessage(reply);
+	ObjectMessage replyMsg = session.createObjectMessage((Serializable) replyData);
+	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
+	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
+	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
+	
 	Destination dest = omsg.getJMSReplyTo();
 	MessageProducer producer = (MessageProducer) producers.get(dest);
 	if (producer == null) {
 	    producer = session.createProducer(dest);
+	    producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	    producers.put(dest, producer);
 	}
 	producer.send(replyMsg);
@@ -110,22 +124,23 @@ public class ReplySync {
     
     boolean isReply(ObjectMessage msg) {
 	try {
-	    Object raw = msg.getObject();
-	    if (raw instanceof Reply) {
-		Reply reply = (Reply) raw;
-		Integer id = new Integer(reply.getId());
-		replyData.put(id, reply.getData());
-		Object lock = pending.get(id);
-		if (lock != null) {
-		    synchronized (lock) {
-			lock.notify();
-		    }
-		}
-		return true;
-	    } else {
+	    boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
+	    log.debug("Value of " +IS_MTS_REPLY_PROP+ " property is " + isReply);
+	    if (!isReply) {
 		return false;
 	    }
+	    int id = msg.getIntProperty(ID_PROP);
+	    log.debug("Value of " +ID_PROP+ " property is " + id);
+	    replyData.put(id, msg.getObject());
+	    Object lock = pending.get(id);
+	    if (lock != null) {
+		synchronized (lock) {
+		    lock.notify();
+		}
+	    }
+	    return true;
 	} catch (JMSException e) {
+	   log.error("Error checking reply status: " + e.getMessage(), e);
 	   return false;
 	}
     }

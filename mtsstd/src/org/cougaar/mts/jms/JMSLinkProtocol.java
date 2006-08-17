@@ -78,8 +78,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private MessageConsumer consumer;
     
     protected int computeCost(AttributedMessage message) {
-	// TODO Pick a better number
-	return 1;
+	// TODO Better cost function for JMS transport
+	return 1500;
     }
 
    
@@ -120,7 +120,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
 	    String destinationID;
 	    if (WEBLOGIC_SERVERNAME  != null) {
-		destinationID = WEBLOGIC_SERVERNAME + "/" + node;
+		destinationID = /*WEBLOGIC_SERVERNAME + "/" + */ node;
 	    } else {
 		destinationID = node + "." + SOCIETY_UID;
 	    }
@@ -131,8 +131,10 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    loggingService.info("Found old Queue");
 		    destination = (Destination) old;
 		    MessageConsumer flush = session.createConsumer(destination);
-		    while (flush.receiveNoWait() != null) {
-			loggingService.info("Flushing old message");
+		    Object flushedMessage = flush.receiveNoWait();
+		    while (flushedMessage != null) {
+			loggingService.info("Flushing old message "  + flushedMessage);
+			flushedMessage = flush.receiveNoWait();
 		    }
 		    flush.close();
 		}
