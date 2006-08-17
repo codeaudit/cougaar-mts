@@ -129,7 +129,7 @@ public class ReplySync {
 	    if (!isReply) {
 		return false;
 	    }
-	    int id = msg.getIntProperty(ID_PROP);
+	    Integer id = new Integer(msg.getIntProperty(ID_PROP));
 	    log.debug("Value of " +ID_PROP+ " property is " + id);
 	    replyData.put(id, msg.getObject());
 	    Object lock = pending.get(id);
