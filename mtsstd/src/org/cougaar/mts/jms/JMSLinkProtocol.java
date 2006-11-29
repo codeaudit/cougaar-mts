@@ -117,6 +117,19 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
     
+    protected MessageSender makeMessageSender(Session session, ReplySync sync) {
+	return new MessageSender(session, sync);
+    }
+    
+    protected MessageReceiver makeMessageReceiver(Session session, ReplySync sync,
+	    MessageDeliverer deliverer) {
+	return new MessageReceiver(session, sync, deliverer);
+    }
+    
+    protected ReplySync makeReplySync(Destination destination, Session session) {
+	return new ReplySync(destination, session);
+    }
+    
     protected Destination makeServantDestination(String myServantId) 
     throws JMSException, NamingException {
 	Destination destination = session.createQueue(myServantId);
@@ -189,13 +202,13 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		if (destination == null) {
 		    destination = makeServantDestination(myServantId);
 		}
-		sync = new ReplySync(destination, session);
+		sync = makeReplySync(destination, session);
 		consumer = session.createConsumer(destination);
 		consumer.setMessageListener(this);
 		ServiceBroker sb = getServiceBroker();
 		MessageDeliverer deliverer = (MessageDeliverer) 
 		    sb.getService(this,  MessageDeliverer.class, null);
-		receiver = new MessageReceiver(session, sync, deliverer);
+		receiver = makeMessageReceiver(session, sync, deliverer);
 		connection.start();
 		URI uri = new URI("jms://" + myServantId);
 		setNodeURI(uri);
@@ -232,12 +245,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     
    
     
-    private class JMSLink extends Link {
+    protected class JMSLink extends Link {
 	private final MessageSender sender;
 	
-	JMSLink(MessageAddress addr) {
+	protected JMSLink(MessageAddress addr) {
 	    super(addr);
-	    this.sender = new MessageSender(session, sync);
+	    this.sender = makeMessageSender(session, sync);
 	}
 
 	protected Object decodeRemoteRef(URI ref) throws Exception {

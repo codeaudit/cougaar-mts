@@ -45,7 +45,7 @@ public class MessageReceiver {
     private final MessageDeliverer deliverer;
     private final ReplySync sync;
     
-    MessageReceiver(Session session, ReplySync sync, MessageDeliverer deliverer) {
+    public MessageReceiver(Session session, ReplySync sync, MessageDeliverer deliverer) {
 	// no use for the Session now, but we'll need it later
 	// to send the acks
 	this.sync = sync;
@@ -54,7 +54,7 @@ public class MessageReceiver {
     }
     
     
-    void handleIncomingMessage(Message msg) {
+    public void handleIncomingMessage(Message msg) {
 	if (deliverer == null) {
 	    log.error("Message arrived before MessageDelivererService was available");
 	    return;

@@ -53,14 +53,14 @@ public class MessageSender implements AttributeConstants {
     private final ReplySync sync;
     private final Logger log;
     
-    MessageSender(Session session, ReplySync sync) {
+    public MessageSender(Session session, ReplySync sync) {
 	this.session = session;
 	this.sync = sync;
 	this.producers = new HashMap();
 	log = Logging.getLogger(getClass().getName());
     }
     
-    MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
+    public MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
     throws CommFailureException,MisdeliveredMessageException {
 	MessageProducer producer = (MessageProducer) producers.get(dest);
 	if (producer == null) {

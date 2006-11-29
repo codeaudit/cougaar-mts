@@ -65,11 +65,11 @@ public class ReplySync {
     private final int timeout;
     private final Logger log;
     
-    ReplySync(Destination originator, Session session) {
+    public ReplySync(Destination originator, Session session) {
 	this(originator, session, DEFAULT_TIMEOUT);
     }
     
-    ReplySync(Destination originator, Session session, int timeout) {
+    public ReplySync(Destination originator, Session session, int timeout) {
 	this.originator = originator;
 	this.session = session;
 	this.producers = new HashMap();
@@ -79,7 +79,7 @@ public class ReplySync {
 	this.timeout = timeout;
     }
     
-    MessageAttributes sendMessage(Message msg, MessageProducer producer) 
+    public MessageAttributes sendMessage(Message msg, MessageProducer producer) 
     throws JMSException,CommFailureException,MisdeliveredMessageException {
 	msg.setJMSReplyTo(originator);
 	msg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -113,7 +113,7 @@ public class ReplySync {
 	}
     }
     
-    void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
+    public void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
 	ObjectMessage replyMsg = session.createObjectMessage((Serializable) replyData);
 	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
@@ -129,7 +129,7 @@ public class ReplySync {
 	producer.send(replyMsg);
     }
     
-    boolean isReply(ObjectMessage msg) {
+   public boolean isReply(ObjectMessage msg) {
 	try {
 	    boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
 	    log.debug("Value of " +IS_MTS_REPLY_PROP+ " property is " + isReply);
