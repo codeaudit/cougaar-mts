@@ -28,6 +28,7 @@ package org.cougaar.mts.jms;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
+import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -87,16 +88,54 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	return new JMSLink(address);
     }
     
-    private void ensureSession() {
+    protected void fillContextProperties(Map properties) {
+	properties.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
+	properties.put(Context.PROVIDER_URL, JMS_URL);
+    }
+    
+    protected InitialContext makeInitialContext(Hashtable properties)  throws NamingException {
+	return new InitialContext(properties);
+    }
+    
+    protected ConnectionFactory makeConnectionFactory() throws NamingException {
+	return (ConnectionFactory) context.lookup(JMS_FACTORY);
+    }
+    
+    protected Connection makeConnection() throws JMSException {
+	return factory.createConnection();
+    }
+    
+    protected Session makeSession() throws JMSException {
+	return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+    
+    protected String getMyServantId(String node) {
+	if (WEBLOGIC_SERVERNAME  != null) {
+	    return /*WEBLOGIC_SERVERNAME + "/" + */ node;
+	} else {
+	    return node + "." + SOCIETY_UID;
+	}
+    }
+    
+    protected Destination makeServantDestination(String myServantId) 
+    throws JMSException, NamingException {
+	Destination destination = session.createQueue(myServantId);
+	context.rebind(myServantId, destination);
+	if (loggingService.isInfoEnabled()) {
+	    loggingService.info("Made queue " + myServantId);
+	}
+	return destination;
+    }
+    
+    protected void ensureSession() {
 	if (session == null) {
 	    try {
 		Hashtable properties = new Hashtable();
-		properties.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-		properties.put(Context.PROVIDER_URL, JMS_URL);
-		context = new InitialContext(properties);
-		factory = (ConnectionFactory) context.lookup(JMS_FACTORY);
-		connection = factory.createConnection();
-		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		fillContextProperties(properties);
+		context = makeInitialContext(properties);
+		factory = makeConnectionFactory();
+		connection = makeConnection();
+		session = makeSession();
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
 	    } catch (JMSException e) {
@@ -105,6 +144,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
     
+    
+    
+    protected ConnectionFactory getFactory() {
+        return factory;
+    }
+
     protected Context getContext() {
 	return context;
     }
@@ -118,15 +163,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
-	    String destinationID;
-	    if (WEBLOGIC_SERVERNAME  != null) {
-		destinationID = /*WEBLOGIC_SERVERNAME + "/" + */ node;
-	    } else {
-		destinationID = node + "." + SOCIETY_UID;
-	    }
+	    String myServantId = getMyServantId(node);
+	    
 	    // Check for leftover queue, flush it manually
 	    try {
-		Object old = context.lookup(destinationID);
+		Object old = context.lookup(myServantId);
 		if (old instanceof Destination) {
 		    loggingService.info("Found old Queue");
 		    destination = (Destination) old;
@@ -139,18 +180,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    flush.close();
 		}
 	    } catch (NamingException e1) {
-		loggingService.info("Queue " +destinationID+ " doesn't exist yet");
+		loggingService.info("Queue " +myServantId+ " doesn't exist yet");
 	    } catch (JMSException e) {
 		loggingService.error("Error flushing old message", e);
 	    }
 	    
 	    try {
 		if (destination == null) {
-		    destination = session.createQueue(destinationID);
-		    context.rebind(destinationID, destination);
-		    if (loggingService.isInfoEnabled()) {
-			loggingService.info("Made queue " + destinationID);
-		    }
+		    destination = makeServantDestination(myServantId);
 		}
 		sync = new ReplySync(destination, session);
 		consumer = session.createConsumer(destination);
@@ -160,7 +197,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    sb.getService(this,  MessageDeliverer.class, null);
 		receiver = new MessageReceiver(session, sync, deliverer);
 		connection.start();
-		URI uri = new URI("jms://" + destinationID);
+		URI uri = new URI("jms://" + myServantId);
 		setNodeURI(uri);
 	    } catch (JMSException e) {
 		loggingService.error("Couldn't make JMS queue", e);
