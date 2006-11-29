@@ -62,7 +62,7 @@ import org.cougaar.mts.std.AttributedMessage;
 public class HTTPLinkProtocol extends RPCLinkProtocol 
 {
   
-    public final String SERVLET_URI = "/httpmts";
+	public final String SERVLET_URI = "/httpmts";
 
     /**
      * The preferred ServletService API to get the http/https port,
@@ -205,8 +205,8 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
             String s = getProtocol();
             s = Character.toUpperCase(s.charAt(0))+s.substring(1);
             s = "get"+s+"Port";
-            Method m = ssClass.getMethod(s, null);
-            Object ret = m.invoke(ss, null);
+            Method m = ssClass.getMethod(s, new Class[]{});
+            Object ret = m.invoke(ss, new Object[] {});
             port = ((Integer) ret).intValue();
           } catch (Exception e) {
             if (logger.isWarnEnabled()) {
