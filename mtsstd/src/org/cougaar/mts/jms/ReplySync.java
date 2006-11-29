@@ -52,6 +52,7 @@ import org.cougaar.util.log.Logging;
  *  the corresponding thread.
  */
 public class ReplySync {
+    private static final int DEFAULT_TIMEOUT = 5000;
     private static final String ID_PROP = "MTS_MSG_ID";
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static int ID = 0;
@@ -61,15 +62,21 @@ public class ReplySync {
     private final Map producers;
     private final Map pending;
     private final Map replyData;
+    private final int timeout;
     private final Logger log;
     
     ReplySync(Destination originator, Session session) {
+	this(originator, session, DEFAULT_TIMEOUT);
+    }
+    
+    ReplySync(Destination originator, Session session, int timeout) {
 	this.originator = originator;
 	this.session = session;
 	this.producers = new HashMap();
 	this.pending = new HashMap();
 	this.replyData = new HashMap();
 	this.log = Logging.getLogger(getClass().getName());
+	this.timeout = timeout;
     }
     
     MessageAttributes sendMessage(Message msg, MessageProducer producer) 
@@ -86,7 +93,7 @@ public class ReplySync {
 	    producer.send(msg);
 	    while (true) {
 		try {
-		    lock.wait(); // TODO:  Set a maximum wait time?
+		    lock.wait(timeout); // TODO:  Should be set dynamically
 		    break;
 		} catch (InterruptedException ex) {
 		    
