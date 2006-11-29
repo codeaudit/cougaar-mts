@@ -34,10 +34,8 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.util.UnaryPredicate;
-
 import org.cougaar.mts.std.AttributedMessage;
-import org.cougaar.mts.std.AspectFactory;  // for javadoc only
+import org.cougaar.util.UnaryPredicate;
 
 /**
  * This Component implements the {@link

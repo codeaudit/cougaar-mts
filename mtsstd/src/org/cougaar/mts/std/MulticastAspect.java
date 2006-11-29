@@ -31,18 +31,10 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.SimpleMessageAttributes;
-
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
-import org.cougaar.mts.base.DestinationQueue;
-import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.SendLink;
-import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 

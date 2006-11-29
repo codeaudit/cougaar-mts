@@ -28,23 +28,18 @@ package org.cougaar.mts.std;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-
-import org.cougaar.mts.base.MessageDeliverer;
-import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
-import org.cougaar.mts.base.MessageReader;
-import org.cougaar.mts.base.MessageReaderDelegateImplBase;
-import org.cougaar.mts.base.MessageWriter;
-import org.cougaar.mts.base.MessageWriterDelegateImplBase;
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
-import org.cougaar.mts.base.LinkProtocol; // javadoc
+import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.LinkProtocolService;
+import org.cougaar.mts.base.MessageDeliverer;
+import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RMILinkProtocol;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
  *  This test Aspect is an example of using a {@link

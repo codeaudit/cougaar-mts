@@ -26,15 +26,13 @@
 
 package org.cougaar.mts.base;
 
+import java.util.ArrayList;
+
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
-import org.cougaar.mts.std.MessageTimeoutAspect;
-import org.cougaar.mts.std.DeliveryVerificationAspect;
-
-import java.util.ArrayList;
 
 /**
  * This {@link ServiceProvider} provides and implements the {@link

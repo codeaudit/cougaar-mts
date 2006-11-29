@@ -25,8 +25,6 @@
  */
 
 package org.cougaar.mts.base;
-import java.util.StringTokenizer;
-
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;

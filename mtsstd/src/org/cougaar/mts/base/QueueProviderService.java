@@ -29,7 +29,6 @@ package org.cougaar.mts.base;
 import java.util.ArrayList;
 
 import org.cougaar.core.component.Service;
-import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
 /**

@@ -37,6 +37,9 @@ import java.io.OutputStream;
 
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.MessageReader;
@@ -44,14 +47,9 @@ import org.cougaar.mts.base.MessageReaderDelegateImplBase;
 import org.cougaar.mts.base.MessageWriter;
 import org.cougaar.mts.base.MessageWriterDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.NameLookupException;
-import org.cougaar.mts.base.SendLink;
-import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
-import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
  * This class provides an example of adding trailers to serialized

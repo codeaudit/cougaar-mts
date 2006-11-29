@@ -28,18 +28,12 @@ package org.cougaar.mts.base;
 import java.util.ArrayList;
 
 import org.cougaar.core.component.ServiceBroker;
-
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.wp.AddressEntry;
-import org.cougaar.core.service.wp.Callback;
-import org.cougaar.core.service.wp.Response;
-import org.cougaar.core.service.wp.WhitePagesService;
-import org.cougaar.core.thread.SchedulableStatus;
+import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
 
 

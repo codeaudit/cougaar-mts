@@ -35,22 +35,18 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.base.RMILinkProtocol;
+import org.cougaar.mts.base.CommFailureException;
+import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.MessageReader;
 import org.cougaar.mts.base.MessageReaderDelegateImplBase;
 import org.cougaar.mts.base.MessageWriter;
 import org.cougaar.mts.base.MessageWriterDelegateImplBase;
-import org.cougaar.mts.base.DestinationQueue;
-import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.base.NameLookupException;
-import org.cougaar.mts.base.SendLink;
-import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
-import org.cougaar.mts.base.SendLinkDelegateImplBase;
+import org.cougaar.mts.base.RMILinkProtocol;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
  * This test Aspect preserializes messages into a byte array, sends

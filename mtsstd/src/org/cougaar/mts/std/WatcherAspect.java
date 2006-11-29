@@ -32,17 +32,13 @@ import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportWatcher;
-import org.cougaar.core.service.MessageWatcherService; // javadoc
-
-import org.cougaar.mts.base.MessageTransportServiceProvider; // javadoc
-import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
-import org.cougaar.mts.base.SendQueueDelegateImplBase;
+import org.cougaar.mts.base.MessageTransportServiceProvider;
+import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SendQueue;
+import org.cougaar.mts.base.SendQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**

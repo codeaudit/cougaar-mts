@@ -28,7 +28,6 @@ package org.cougaar.mts.std;
 import java.rmi.RemoteException;
 
 import org.cougaar.mts.base.CougaarIOException;
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.MT;
 
 /** 
