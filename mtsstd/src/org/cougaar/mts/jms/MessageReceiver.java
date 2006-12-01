@@ -45,9 +45,7 @@ public class MessageReceiver {
     private final MessageDeliverer deliverer;
     private final ReplySync sync;
     
-    public MessageReceiver(Session session, ReplySync sync, MessageDeliverer deliverer) {
-	// no use for the Session now, but we'll need it later
-	// to send the acks
+    public MessageReceiver(ReplySync sync, MessageDeliverer deliverer) {
 	this.sync = sync;
 	this.deliverer = deliverer;
 	this.log = Logging.getLogger(getClass().getName());

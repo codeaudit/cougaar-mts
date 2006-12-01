@@ -58,6 +58,9 @@ public class ReplySync {
     private static int ID = 0;
     
     private final Destination originator;
+    // TODO Session can't be final, it needs to be reconnected when the JMS server fails
+    // Unless a new ReplySync is made each time a new session is made.
+    // On session failure, destroy this ReplySync and release all the threads
     private final Session session;
     private final Map producers;
     private final Map pending;
@@ -79,18 +82,18 @@ public class ReplySync {
 	this.timeout = timeout;
     }
     
-    public MessageAttributes sendMessage(Message msg, MessageProducer producer) 
+    public MessageAttributes sendMessage(Message msgJMS, MessageProducer producer) 
     throws JMSException,CommFailureException,MisdeliveredMessageException {
-	msg.setJMSReplyTo(originator);
-	msg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
+	msgJMS.setJMSReplyTo(originator);
+	msgJMS.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	Integer id = new Integer(++ID);
-	msg.setIntProperty(ID_PROP, id.intValue());
-	msg.setBooleanProperty(IS_MTS_REPLY_PROP, false);
+	msgJMS.setIntProperty(ID_PROP, id.intValue());
+	msgJMS.setBooleanProperty(IS_MTS_REPLY_PROP, false);
 	
 	Object lock = new Object();
 	pending.put(id, lock);
 	synchronized (lock) {
-	    producer.send(msg);
+	    producer.send(msgJMS);
 	    while (true) {
 		try {
 		    lock.wait(timeout); // TODO:  Should be set dynamically

@@ -69,17 +69,28 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     // For now use the name server as a unique id of the society
     private static final String SOCIETY_UID = SystemProperties.getProperty("org.cougaar.name.server");
     
-    private Destination destination;
+    // JNDI naming context to get JMS connection factory and destinations
     private Context context;
-    private ConnectionFactory factory = null;
-    private Connection connection = null;
+    // Connection factory for our JMS server
+    private ConnectionFactory factory;
+    // Connection to our JMS Server
+    private Connection connection;
+    // Session to our JMS Server
     private Session session;
+    // Our JMS destination queue/topic for receiving messages. 
+    private Destination servantDestination; 
+    // manager for receiving messages
     private MessageReceiver receiver;
+    // manager for sending messages and waiting for replys
     private ReplySync sync;
+    //
     private MessageConsumer consumer;
     
     protected int computeCost(AttributedMessage message) {
 	// TODO Better cost function for JMS transport
+	// TODO JAZ This might be the place to ensure the session and Servent 
+	//      Be careful not to test on each call.  if failed only test once per retry period.
+	//      for non-infinite cost, our Servant up and remote destination available
 	return 1500;
     }
 
@@ -94,8 +105,20 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
     
     protected InitialContext makeInitialContext(Hashtable properties)  throws NamingException {
-	return new InitialContext(properties);
+	return new InitialContext(properties);	
     }
+    
+    protected Destination lookupDestinationInContext(String DestinationName) throws NamingException {
+	Object raw = context.lookup(DestinationName);
+	if (raw instanceof Destination)
+	    return (Destination) raw;
+	else 
+	    return null;
+    }
+    
+    protected void rebindDestintionInContext(String name, Destination destination) throws NamingException{
+	context.rebind(name, destination);
+	}	
     
     protected ConnectionFactory makeConnectionFactory() throws NamingException {
 	return (ConnectionFactory) context.lookup(JMS_FACTORY);
@@ -123,7 +146,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     
     protected MessageReceiver makeMessageReceiver(Session session, ReplySync sync,
 	    MessageDeliverer deliverer) {
-	return new MessageReceiver(session, sync, deliverer);
+		// TODO remove session?
+	return new MessageReceiver(sync, deliverer);
     }
     
     protected ReplySync makeReplySync(Destination destination, Session session) {
@@ -133,7 +157,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected Destination makeServantDestination(String myServantId) 
     throws JMSException, NamingException {
 	Destination destination = session.createQueue(myServantId);
-	context.rebind(myServantId, destination);
+	rebindDestintionInContext(myServantId, destination);
 	if (loggingService.isInfoEnabled()) {
 	    loggingService.info("Made queue " + myServantId);
 	}
@@ -172,7 +196,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
     protected void findOrMakeNodeServant() {
-	if (destination != null) return;
+	if (servantDestination != null) return;
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
@@ -180,11 +204,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    
 	    // Check for leftover queue, flush it manually
 	    try {
-		Object old = context.lookup(myServantId);
-		if (old instanceof Destination) {
+		Destination old = lookupDestinationInContext(myServantId);
+		if (old != null) {
 		    loggingService.info("Found old Queue");
-		    destination = (Destination) old;
-		    MessageConsumer flush = session.createConsumer(destination);
+		    servantDestination = (Destination) old;
+		    MessageConsumer flush = session.createConsumer(servantDestination);
 		    Object flushedMessage = flush.receiveNoWait();
 		    while (flushedMessage != null) {
 			loggingService.info("Flushing old message "  + flushedMessage);
@@ -199,11 +223,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    }
 	    
 	    try {
-		if (destination == null) {
-		    destination = makeServantDestination(myServantId);
+		if (servantDestination == null) {
+		    servantDestination = makeServantDestination(myServantId);
 		}
-		sync = makeReplySync(destination, session);
-		consumer = session.createConsumer(destination);
+		sync = makeReplySync(servantDestination, session);
+		consumer = session.createConsumer(servantDestination);
 		consumer.setMessageListener(this);
 		ServiceBroker sb = getServiceBroker();
 		MessageDeliverer deliverer = (MessageDeliverer) 
@@ -227,10 +251,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
     protected void releaseNodeServant() {
-	// Bogus mechanism added by Sebastian.  Ignore.
+	// TODO should this tear down context->factory->conntection->session
     }
 
     protected void remakeNodeServant() {
+	// TODO should attempt to reconnect to a failed JMS server.
+	// JMSLinkProtocol could internally call this method
 	// Only used when a host's address changes.  Ignore for now.
     }
 
@@ -244,7 +270,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
     
    
-    
+    // MTS Station to send a message to a specific remote Agent
+    // Even if multiple remote Agents are on the same Node, there will be one instance per Agent
     protected class JMSLink extends Link {
 	private final MessageSender sender;
 	
@@ -259,13 +286,15 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		return null;
 	    }
 	    if (session != null) {
-		String destination = ref.getSchemeSpecificPart().substring(2); 
+		String destinationName = ref.getSchemeSpecificPart().substring(2); 
 		if (loggingService.isInfoEnabled()) {
-		    loggingService.info("Looking for Destination queue " + destination+
+		    loggingService.info("Looking for Destination queue " + destinationName+
 			    " from reference " + ref);
 		}
 		try {
-		    Object d = context.lookup(destination);
+		    // TODO if JNDI server is down this will not work
+		    // is test for null good enough
+		    Destination d = lookupDestinationInContext(destinationName);
 		    if (loggingService.isInfoEnabled()) loggingService.info("Got " + d);
 		    return d;
 		} catch (Exception e) {
