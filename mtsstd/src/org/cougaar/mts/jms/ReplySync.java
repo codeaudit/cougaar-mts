@@ -62,11 +62,11 @@ public class ReplySync {
     // Unless a new ReplySync is made each time a new session is made.
     // On session failure, destroy this ReplySync and release all the threads
     private final Session session;
-    private final Map producers;
     private final Map pending;
     private final Map replyData;
     private final int timeout;
     private final Logger log;
+    private MessageProducer genericProducer;
     
     public ReplySync(Destination originator, Session session) {
 	this(originator, session, DEFAULT_TIMEOUT);
@@ -75,7 +75,6 @@ public class ReplySync {
     public ReplySync(Destination originator, Session session, int timeout) {
 	this.originator = originator;
 	this.session = session;
-	this.producers = new HashMap();
 	this.pending = new HashMap();
 	this.replyData = new HashMap();
 	this.log = Logging.getLogger(getClass().getName());
@@ -103,8 +102,7 @@ public class ReplySync {
 		}
 	    }
 	}
-	Object result = replyData.get(id);
-	replyData.remove(id);
+	Object result = replyData.remove(id);
 	pending.remove(id);
 	if (result instanceof MessageAttributes) {
 	    return (MessageAttributes) result;
@@ -118,24 +116,25 @@ public class ReplySync {
     
     public void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
 	ObjectMessage replyMsg = session.createObjectMessage((Serializable) replyData);
+	//TODO Per-Message parameters need to be exposed to JMS implimentation
 	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
 	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
 	
 	Destination dest = omsg.getJMSReplyTo();
-	MessageProducer producer = (MessageProducer) producers.get(dest);
-	if (producer == null) {
-	    producer = session.createProducer(dest);
-	    producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-	    producers.put(dest, producer);
+	if (genericProducer == null) {
+	    genericProducer = session.createProducer(null);
+	    genericProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	}
-	producer.send(replyMsg);
+	genericProducer.send(dest,replyMsg);
     }
     
    public boolean isReply(ObjectMessage msg) {
 	try {
 	    boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
-	    log.debug("Value of " +IS_MTS_REPLY_PROP+ " property is " + isReply);
+	    if (log.isDebugEnabled()) {
+		log.debug("Value of " +IS_MTS_REPLY_PROP+ " property is " + isReply);
+	    }
 	    if (!isReply) {
 		return false;
 	    }
