@@ -26,6 +26,7 @@
 package org.cougaar.mts.jms;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,6 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
 import org.cougaar.core.mts.MessageAttributes;
@@ -51,7 +51,7 @@ import org.cougaar.util.log.Logging;
  *  the corresponding thread.
  */
 public class ReplySync {
-    private static final int DEFAULT_TIMEOUT = 5000;
+    public static final int DEFAULT_TIMEOUT = 5000;
     private static final String ID_PROP = "MTS_MSG_ID";
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static int ID = 0;
@@ -74,18 +74,28 @@ public class ReplySync {
 	this.timeout = timeout;
     }
     
-    public MessageAttributes sendMessage(Message msgJMS, Destination destination, MessageProducer producer) 
+    protected void setMessageProperties(Message message, 
+	    Integer id,
+	    URI uri,
+	    Destination destination) 
+    throws JMSException {
+	message.setIntProperty(ID_PROP, id.intValue());
+	message.setBooleanProperty(IS_MTS_REPLY_PROP, false);
+    }
+    
+    public MessageAttributes sendMessage(Message message, 
+	    URI uri,
+	    Destination destination) 
     throws JMSException,CommFailureException,MisdeliveredMessageException {
-	msgJMS.setJMSReplyTo(lp.getServant());
-	msgJMS.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
+	message.setJMSReplyTo(lp.getServant());
+	message.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	Integer id = new Integer(++ID);
-	msgJMS.setIntProperty(ID_PROP, id.intValue());
-	msgJMS.setBooleanProperty(IS_MTS_REPLY_PROP, false);
+	setMessageProperties(message, id, uri, destination);
 	
 	Object lock = new Object();
 	pending.put(id, lock);
 	synchronized (lock) {
-	    producer.send(destination, msgJMS);
+	    lp.getGenericProducer().send(destination, message);
 	    while (true) {
 		try {
 		    lock.wait(timeout); // TODO:  Should be set dynamically
@@ -106,17 +116,22 @@ public class ReplySync {
 	    throw new CommFailureException(new RuntimeException("Weird data " + result));
 	}
     }
+
+    protected void setReplyProperties(ObjectMessage omsg, ObjectMessage replyMsg) 
+    throws JMSException {
+	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
+	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
+    }
     
     public void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
 	ObjectMessage replyMsg = lp.getSession().createObjectMessage((Serializable) replyData);
-	//TODO Per-Message parameters need to be exposed to JMS implimentation
 	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
-	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
-	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
-	//TODO Making to reply producer should be exposed to the JMS implementation
+	setReplyProperties(omsg, replyMsg);
 	Destination dest = omsg.getJMSReplyTo();
 	lp.getGenericProducer().send(dest,replyMsg);
     }
+
+    
     
    public boolean isReply(ObjectMessage msg) {
 	try {

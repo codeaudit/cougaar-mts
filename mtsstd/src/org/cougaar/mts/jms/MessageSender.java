@@ -25,9 +25,10 @@
  */
 package org.cougaar.mts.jms;
 
+import java.net.URI;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
 import org.cougaar.core.mts.AttributeConstants;
@@ -53,29 +54,28 @@ public class MessageSender implements AttributeConstants {
 	log = Logging.getLogger(getClass().getName());
     }
     
-    public MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
+    public MessageAttributes handleOutgoingMessage(URI uri, Destination destination, 
+	    AttributedMessage mtsMessage) 
     throws CommFailureException,MisdeliveredMessageException {
-	MessageProducer producer = lp.getGenericProducer();
-	
 	try {
-	    Object deadline = message.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
+	    Object deadline = mtsMessage.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
 	    long ttl = 0;
 	    if (deadline != null) {
 		if (deadline instanceof Long) {
 		    ttl = ((Long) deadline).longValue()-System.currentTimeMillis();
 		    if (ttl < 0) {
 			log.warn("Message already expired");
-			MessageAttributes metadata = new MessageReply(message);
+			MessageAttributes metadata = new MessageReply(mtsMessage);
 			metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
 					      MessageAttributes.DELIVERY_STATUS_DROPPED);
 			return metadata;
 		    }
 		}
 	    }
-	    ObjectMessage msg = lp.getSession().createObjectMessage(message);
-	    msg.setJMSExpiration(ttl);
+	    ObjectMessage jmsMessage = lp.getSession().createObjectMessage(mtsMessage);
+	    jmsMessage.setJMSExpiration(ttl);
 	    log.debug("TTL would be " + ttl);
-	    MessageAttributes metadata = sync.sendMessage(msg, dest, producer);
+	    MessageAttributes metadata = sync.sendMessage(jmsMessage, uri, destination);
 	    return metadata;
 	} catch (JMSException e) {
 	    log.error("Couldn't send JMS message: " +e.getErrorCode(), e);

@@ -117,17 +117,20 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	return new InitialContext(properties);	
     }
     
-    protected Destination lookupDestinationInContext(String DestinationName) throws NamingException {
-	Object raw = context.lookup(DestinationName);
+    protected Destination lookupDestinationInContext(String destinationName)
+    throws NamingException {
+	Object raw = context.lookup(destinationName);
 	if (raw instanceof Destination)
 	    return (Destination) raw;
 	else 
 	    return null;
     }
     
-    protected void rebindDestintionInContext(String name, Destination destination) throws NamingException{
+    protected void rebindDestinationInContext(String name, Destination destination) 
+    throws NamingException{
+	// Make a delegating Destination with extra fields
 	context.rebind(name, destination);
-	}	
+    }	
     
     protected ConnectionFactory makeConnectionFactory() throws NamingException {
 	return (ConnectionFactory) context.lookup(JMS_FACTORY);
@@ -154,7 +157,6 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
     
     protected MessageReceiver makeMessageReceiver(ReplySync sync, MessageDeliverer deliverer) {
-		// TODO remove session?
 	return new MessageReceiver(sync, deliverer);
     }
     
@@ -165,7 +167,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected Destination makeServantDestination(String myServantId) 
     throws JMSException, NamingException {
 	Destination destination = session.createQueue(myServantId);
-	rebindDestintionInContext(myServantId, destination);
+	rebindDestinationInContext(myServantId, destination);
 	if (loggingService.isInfoEnabled()) {
 	    loggingService.info("Made queue " + myServantId);
 	}
@@ -280,10 +282,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
     protected URI makeURI(String myServantId) throws URISyntaxException {
-	return new URI("jms://" + myServantId);
+	return new URI("jms", myServantId, null, null, null);
     }
 
-
+    protected String extractDestinationName(URI ref) {
+	return ref.getAuthority();
+    }
     protected void flushObsoleteMessages() throws JMSException {
 	MessageConsumer flush = session.createConsumer(servantDestination);
 	Object flushedMessage = flush.receiveNoWait();
@@ -334,6 +338,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     // Even if multiple remote Agents are on the same Node, there will be one instance per Agent
     protected class JMSLink extends Link {
 	private final MessageSender sender;
+	private URI uri;
 	
 	protected JMSLink(MessageAddress addr) {
 	    super(addr);
@@ -360,7 +365,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		return null;
 	    }
 	    if (session != null) {
-		String destinationName = ref.getSchemeSpecificPart().substring(2); 
+		String destinationName = extractDestinationName(ref); 
 		if (loggingService.isInfoEnabled()) {
 		    loggingService.info("Looking for Destination queue " + destinationName+
 			    " from reference " + ref);
@@ -370,6 +375,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    // is test for null good enough
 		    Destination d = lookupDestinationInContext(destinationName);
 		    if (loggingService.isInfoEnabled()) loggingService.info("Got " + d);
+		    this.uri = ref;
 		    return d;
 		} catch (Exception e) {
 		    loggingService.error("JNDI error: " + e.getMessage());
@@ -382,7 +388,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
 	throws NameLookupException, UnregisteredNameException, CommFailureException, MisdeliveredMessageException {
 	    if (destination instanceof Destination) {
-		return sender.handleOutgoingMessage((Destination) destination, message);
+		return sender.handleOutgoingMessage(uri, (Destination) destination, message);
 	    } else {
 		loggingService.error(destination + " is not a javax.jmx.Destination");
 		return null;
