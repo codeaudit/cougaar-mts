@@ -175,8 +175,7 @@ abstract public class RPCLinkProtocol
 
 
 
-    protected void setNodeURI(URI ref)
-    {
+    protected void setNodeURI(URI ref) {
 	this.ref = ref;
     }
 
@@ -189,21 +188,24 @@ abstract public class RPCLinkProtocol
 	return link != null && link.remote_ref != null;
     }
 
-
+    protected boolean isServantAlive() {
+	return true;
+    }
 
     public final void registerClient(MessageTransportClient client) {
 	synchronized (ipAddrLock) {
 	    findOrMakeNodeServant();
-	    try {
-		// Assume node-redirect
-		MessageAddress addr = client.getMessageAddress();
-		getNameSupport().registerAgentInNameServer(ref,addr,
-							   getProtocolType());
-		clients.add(client);
-	    } catch (Exception e) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error("Error registering client", e);
+	    if (isServantAlive()) {
+		try {
+		    // Assume node-redirect
+		    MessageAddress addr = client.getMessageAddress();
+		    getNameSupport().registerAgentInNameServer(ref, addr, getProtocolType());
+		} catch (Exception e) {
+		    if (loggingService.isErrorEnabled())
+			loggingService.error("Error registering client", e);
+		}
 	    }
+	    clients.add(client);
 	}
     }
 
@@ -221,11 +223,28 @@ abstract public class RPCLinkProtocol
 
         // Fix for bug 3965: need to release resources.
         // http://bugs.cougaar.org/show_bug.cgi?id=3965
+	// 
+	// XXX: We do NOT want to release the node servant when a single
+	// client unregisters.  Releasing node-level resources has to 
+	// happen elsewhere (don't know where yet).
         releaseNodeServant();
         
         } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error("Error unregistering client", e);
+	    }
+	}
+    }
+    
+    public final void reregisterClients() {
+	synchronized (ipAddrLock) {
+	    if (ref != null) {
+		String protocolType = getProtocolType();
+		for (int i=0; i<clients.size(); i++) {
+		    MessageTransportClient client = (MessageTransportClient) clients.get(i);
+		    MessageAddress addr = client.getMessageAddress();
+		    getNameSupport().registerAgentInNameServer(ref, addr, protocolType);
+		}
 	    }
 	}
     }
