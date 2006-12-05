@@ -25,15 +25,10 @@
  */
 package org.cougaar.mts.jms;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.jms.Session;
 
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAttributes;
@@ -48,31 +43,20 @@ import org.cougaar.util.log.Logging;
  *  This utility class handles outgoing JMS messages
  */
 public class MessageSender implements AttributeConstants {
-    private final Session session;
-    private final Map producers;
     private final ReplySync sync;
     private final Logger log;
+    private final JMSLinkProtocol lp;
     
-    public MessageSender(Session session, ReplySync sync) {
-	this.session = session;
+    public MessageSender(JMSLinkProtocol lp, ReplySync sync) {
 	this.sync = sync;
-	this.producers = new HashMap();
+	this.lp = lp;
 	log = Logging.getLogger(getClass().getName());
     }
     
     public MessageAttributes handleOutgoingMessage(Destination dest, AttributedMessage message) 
     throws CommFailureException,MisdeliveredMessageException {
-	MessageProducer producer = (MessageProducer) producers.get(dest);
-	if (producer == null) {
-	    try {
-		producer = session.createProducer(dest);
-		producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-		producers.put(dest, producer);
-	    } catch (JMSException e) {
-		log.error("Couldn't create MessageProducer: " +e.getMessage(), e);
-		throw new CommFailureException(e);
-	    }
-	}
+	MessageProducer producer = lp.getGenericProducer();
+	
 	try {
 	    Object deadline = message.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
 	    long ttl = 0;
@@ -88,10 +72,10 @@ public class MessageSender implements AttributeConstants {
 		    }
 		}
 	    }
-	    ObjectMessage msg = session.createObjectMessage(message);
+	    ObjectMessage msg = lp.getSession().createObjectMessage(message);
 	    msg.setJMSExpiration(ttl);
 	    log.debug("TTL would be " + ttl);
-	    MessageAttributes metadata = sync.sendMessage(msg, producer);
+	    MessageAttributes metadata = sync.sendMessage(msg, dest, producer);
 	    return metadata;
 	} catch (JMSException e) {
 	    log.error("Couldn't send JMS message: " +e.getErrorCode(), e);

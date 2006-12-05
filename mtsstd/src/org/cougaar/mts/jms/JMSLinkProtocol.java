@@ -32,11 +32,14 @@ import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -85,6 +88,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private ReplySync sync;
     //
     private MessageConsumer consumer;
+    
+    private MessageProducer genericProducer; // shared for all outgoing messages
+    
+    public JMSLinkProtocol() {
+	 sync = makeReplySync();
+    }
     
     protected int computeCost(AttributedMessage message) {
 	// TODO Better cost function for JMS transport
@@ -140,18 +149,17 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
     
-    protected MessageSender makeMessageSender(Session session, ReplySync sync) {
-	return new MessageSender(session, sync);
+    protected MessageSender makeMessageSender(ReplySync sync) {
+	return new MessageSender(this, sync);
     }
     
-    protected MessageReceiver makeMessageReceiver(Session session, ReplySync sync,
-	    MessageDeliverer deliverer) {
+    protected MessageReceiver makeMessageReceiver(ReplySync sync, MessageDeliverer deliverer) {
 		// TODO remove session?
 	return new MessageReceiver(sync, deliverer);
     }
     
-    protected ReplySync makeReplySync(Destination destination, Session session) {
-	return new ReplySync(destination, session);
+    protected ReplySync makeReplySync() {
+	return new ReplySync(this);
     }
     
     protected Destination makeServantDestination(String myServantId) 
@@ -172,16 +180,34 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		context = makeInitialContext(properties);
 		factory = makeConnectionFactory();
 		connection = makeConnection();
+		connection.setExceptionListener(new JMSExceptionListener());
 		session = makeSession();
+		genericProducer = makeProducer(null);
 	    } catch (NamingException e) {
 		loggingService.error("Couldn't get JMS session", e);
+		session = null;
 	    } catch (JMSException e) {
 		loggingService.error("Couldn't get JMS session", e);
+		session = null;
 	    }
 	}
     }
+
+
+    protected MessageProducer makeProducer(Destination destination) throws JMSException {
+	MessageProducer producer = session.createProducer(destination);
+	producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+	return producer;
+    }
     
     
+    protected MessageProducer getGenericProducer() {
+        return genericProducer;
+    }
+
+    protected Destination getServant() {
+	return servantDestination;
+    }
     
     protected ConnectionFactory getFactory() {
         return factory;
@@ -197,6 +223,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 
     protected void findOrMakeNodeServant() {
 	if (servantDestination != null) return;
+	setNodeURI(null);
 	ensureSession();
 	if (session != null) {
 	    String node = getNameSupport().getNodeMessageAddress().getAddress();
@@ -208,13 +235,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		if (old != null) {
 		    loggingService.info("Found old Queue");
 		    servantDestination = (Destination) old;
-		    MessageConsumer flush = session.createConsumer(servantDestination);
-		    Object flushedMessage = flush.receiveNoWait();
-		    while (flushedMessage != null) {
-			loggingService.info("Flushing old message "  + flushedMessage);
-			flushedMessage = flush.receiveNoWait();
-		    }
-		    flush.close();
+		    flushObsoleteMessages();
 		}
 	    } catch (NamingException e1) {
 		loggingService.info("Queue " +myServantId+ " doesn't exist yet");
@@ -226,15 +247,27 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		if (servantDestination == null) {
 		    servantDestination = makeServantDestination(myServantId);
 		}
-		sync = makeReplySync(servantDestination, session);
+		if (consumer != null) {
+		    // Old listener from a previous session
+		    try {
+			consumer.setMessageListener(null);
+			consumer.close();
+		    } catch (Exception e) {
+			// Errors here should logged but otherwise ignored
+			loggingService.info("Error closing old message listener: " 
+				+ e.getMessage());
+		    }
+		}
 		consumer = session.createConsumer(servantDestination);
 		consumer.setMessageListener(this);
-		ServiceBroker sb = getServiceBroker();
-		MessageDeliverer deliverer = (MessageDeliverer) 
+		if (receiver == null) {
+		    ServiceBroker sb = getServiceBroker();
+		    MessageDeliverer deliverer = (MessageDeliverer) 
 		    sb.getService(this,  MessageDeliverer.class, null);
-		receiver = makeMessageReceiver(session, sync, deliverer);
+		    receiver = makeMessageReceiver(sync, deliverer);
+		}
 		connection.start();
-		URI uri = new URI("jms://" + myServantId);
+		URI uri = makeURI(myServantId);
 		setNodeURI(uri);
 	    } catch (JMSException e) {
 		loggingService.error("Couldn't make JMS queue", e);
@@ -246,18 +279,34 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
 
+    protected URI makeURI(String myServantId) throws URISyntaxException {
+	return new URI("jms://" + myServantId);
+    }
+
+
+    protected void flushObsoleteMessages() throws JMSException {
+	MessageConsumer flush = session.createConsumer(servantDestination);
+	Object flushedMessage = flush.receiveNoWait();
+	while (flushedMessage != null) {
+	    loggingService.info("Flushing old message "  + flushedMessage);
+	    flushedMessage = flush.receiveNoWait();
+	}
+	flush.close();
+    }
+
     protected String getProtocolType() {
 	return "-JMS";
     }
 
     protected void releaseNodeServant() {
-	// TODO should this tear down context->factory->conntection->session
+	// TODO should this tear down context->factory->connection->session
+	// producers and consummer
     }
 
     protected void remakeNodeServant() {
-	// TODO should attempt to reconnect to a failed JMS server.
-	// JMSLinkProtocol could internally call this method
-	// Only used when a host's address changes.  Ignore for now.
+	session = null;
+	servantDestination = null;
+	findOrMakeNodeServant();
     }
 
     protected Boolean usesEncryptedSocket() {
@@ -269,6 +318,17 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	receiver.handleIncomingMessage(msg);
     }
     
+    protected boolean isServantAlive() {
+	return session != null;
+    }
+    
+    protected class JMSExceptionListener implements ExceptionListener {
+	public void onException(JMSException ex) {
+	   loggingService.error("JMS Connection error", ex);
+	   session = null; // could generate NPE's elsewhere...
+	   servantDestination = null;
+	}
+    }
    
     // MTS Station to send a message to a specific remote Agent
     // Even if multiple remote Agents are on the same Node, there will be one instance per Agent
@@ -277,9 +337,23 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	
 	protected JMSLink(MessageAddress addr) {
 	    super(addr);
-	    this.sender = makeMessageSender(session, sync);
+	    this.sender = makeMessageSender(sync);
 	}
 
+	public boolean isValid() {
+	    // Remake our servant if necessary. If that fails, the link is considered invalid,
+	    // since the remote reference must be unreachable.
+	    if (!isServantAlive()) {
+		remakeNodeServant();
+		if (!isServantAlive()) {
+		    return false;
+		} else {
+		    reregisterClients();
+		}
+	    }
+	    return super.isValid();
+	}
+	
 	protected Object decodeRemoteRef(URI ref) throws Exception {
 	    if (ref == null) {
 		loggingService.warn("Got null remote ref for " + getDestination());

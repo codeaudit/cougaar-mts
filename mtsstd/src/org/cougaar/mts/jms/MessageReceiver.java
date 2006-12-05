@@ -28,7 +28,6 @@ package org.cougaar.mts.jms;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
-import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.MessageDeliverer;

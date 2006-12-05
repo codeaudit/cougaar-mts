@@ -35,7 +35,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
-import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
@@ -57,33 +56,27 @@ public class ReplySync {
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static int ID = 0;
     
-    private final Destination originator;
-    // TODO Session can't be final, it needs to be reconnected when the JMS server fails
-    // Unless a new ReplySync is made each time a new session is made.
-    // On session failure, destroy this ReplySync and release all the threads
-    private final Session session;
+    private final JMSLinkProtocol lp;
     private final Map pending;
     private final Map replyData;
     private final int timeout;
     private final Logger log;
-    private MessageProducer genericProducer;
     
-    public ReplySync(Destination originator, Session session) {
-	this(originator, session, DEFAULT_TIMEOUT);
+    public ReplySync(JMSLinkProtocol lp) {
+	this(lp, DEFAULT_TIMEOUT);
     }
     
-    public ReplySync(Destination originator, Session session, int timeout) {
-	this.originator = originator;
-	this.session = session;
+    public ReplySync(JMSLinkProtocol lp, int timeout) {
+	this.lp = lp;
 	this.pending = new HashMap();
 	this.replyData = new HashMap();
 	this.log = Logging.getLogger(getClass().getName());
 	this.timeout = timeout;
     }
     
-    public MessageAttributes sendMessage(Message msgJMS, MessageProducer producer) 
+    public MessageAttributes sendMessage(Message msgJMS, Destination destination, MessageProducer producer) 
     throws JMSException,CommFailureException,MisdeliveredMessageException {
-	msgJMS.setJMSReplyTo(originator);
+	msgJMS.setJMSReplyTo(lp.getServant());
 	msgJMS.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	Integer id = new Integer(++ID);
 	msgJMS.setIntProperty(ID_PROP, id.intValue());
@@ -92,7 +85,7 @@ public class ReplySync {
 	Object lock = new Object();
 	pending.put(id, lock);
 	synchronized (lock) {
-	    producer.send(msgJMS);
+	    producer.send(destination, msgJMS);
 	    while (true) {
 		try {
 		    lock.wait(timeout); // TODO:  Should be set dynamically
@@ -115,18 +108,14 @@ public class ReplySync {
     }
     
     public void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
-	ObjectMessage replyMsg = session.createObjectMessage((Serializable) replyData);
+	ObjectMessage replyMsg = lp.getSession().createObjectMessage((Serializable) replyData);
 	//TODO Per-Message parameters need to be exposed to JMS implimentation
 	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
 	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
-	
+	//TODO Making to reply producer should be exposed to the JMS implementation
 	Destination dest = omsg.getJMSReplyTo();
-	if (genericProducer == null) {
-	    genericProducer = session.createProducer(null);
-	    genericProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-	}
-	genericProducer.send(dest,replyMsg);
+	lp.getGenericProducer().send(dest,replyMsg);
     }
     
    public boolean isReply(ObjectMessage msg) {
