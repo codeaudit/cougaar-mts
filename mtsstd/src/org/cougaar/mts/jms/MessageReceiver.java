@@ -73,13 +73,16 @@ public class MessageReceiver {
 			sync.replyToMessage(omsg, e);
 		    }
 		} else {
-		    log.warn(domainObject + " is not an AttributedMessage");
+		    if (log.isWarnEnabled())
+		    	log.warn(domainObject + " is not an AttributedMessage");
 		}
 	    } catch (JMSException e) {
-		log.warn("JMS error: ", e);
+		    if (log.isWarnEnabled())			
+			log.warn("JMS Error handling new message: Cause=" + e.getCause());
 	    }
 	} else {
-	    log.warn("Received a JMS message that wasn't an ObjectMessage");
+	    if (log.isWarnEnabled())			
+		log.warn("Received a JMS message that wasn't an ObjectMessage");
 	}
     }
 

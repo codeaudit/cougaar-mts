@@ -63,9 +63,12 @@ import org.cougaar.mts.std.AttributedMessage;
  *  transport.
  */
 public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener {
+    //TODO What is the advantage of using -D over plugin parameters.
+    // Plugin parameters would allow multiple JMS protocol instances
     private static final String JMS_URL = SystemProperties.getProperty("org.cougaar.mts.jms.url");
     private static final String JNDI_FACTORY = SystemProperties.getProperty("org.cougaar.mts.jms.jndi.factory");
     private static final String JMS_FACTORY = SystemProperties.getProperty("org.cougaar.mts.jms.factory");
+    //TODO Weblogic specific code should be pulled out
     private static final String WEBLOGIC_SERVERNAME = 
 	SystemProperties.getProperty("org.cougaar.mts.jms.weblogic.server");
     
@@ -86,13 +89,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     private MessageReceiver receiver;
     // manager for sending messages and waiting for replys
     private ReplySync sync;
-    //
+    // JMS Callback object to receive jms messages
     private MessageConsumer consumer;
-    
+    // JMS object for sending messages, not bound to a specific defination.
     private MessageProducer genericProducer; // shared for all outgoing messages
     
-    public JMSLinkProtocol() {
-	 sync = makeReplySync();
+    public void load() {
+	super.load();
+	sync = makeReplySync();
     }
     
     protected int computeCost(AttributedMessage message) {
@@ -168,9 +172,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     throws JMSException, NamingException {
 	Destination destination = session.createQueue(myServantId);
 	rebindDestinationInContext(myServantId, destination);
-	if (loggingService.isInfoEnabled()) {
+	if (loggingService.isInfoEnabled())
 	    loggingService.info("Made queue " + myServantId);
-	}
 	return destination;
     }
     
@@ -186,10 +189,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		session = makeSession();
 		genericProducer = makeProducer(null);
 	    } catch (NamingException e) {
-		loggingService.error("Couldn't get JMS session", e);
+		if (loggingService.isWarnEnabled()) 
+		    loggingService.warn("Couldn't get JMS session: Cause=" + e.getMessage());
 		session = null;
 	    } catch (JMSException e) {
-		loggingService.error("Couldn't get JMS session", e);
+		if (loggingService.isWarnEnabled()) 
+		    loggingService.warn("Couldn't get JMS session: Cause=" +e.getMessage());
 		session = null;
 	    }
 	}
@@ -235,14 +240,17 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    try {
 		Destination old = lookupDestinationInContext(myServantId);
 		if (old != null) {
-		    loggingService.info("Found old Queue");
+		    if (loggingService.isInfoEnabled())
+			loggingService.info("Found old Queue");
 		    servantDestination = (Destination) old;
 		    flushObsoleteMessages();
 		}
 	    } catch (NamingException e1) {
-		loggingService.info("Queue " +myServantId+ " doesn't exist yet");
+		if (loggingService.isInfoEnabled())			
+		    loggingService.info("Queue " +myServantId+ " doesn't exist yet");
 	    } catch (JMSException e) {
-		loggingService.error("Error flushing old message", e);
+		if (loggingService.isWarnEnabled())
+		    loggingService.warn("Error flushing old message: Cause=" +e.getMessage());
 	    }
 	    
 	    try {
@@ -255,8 +263,9 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 			consumer.setMessageListener(null);
 			consumer.close();
 		    } catch (Exception e) {
-			// Errors here should logged but otherwise ignored
-			loggingService.info("Error closing old message listener: " 
+			// JMS Errors here should logged but otherwise ignored
+			if (loggingService.isInfoEnabled())
+			    loggingService.info("Error closing old message listener: " 
 				+ e.getMessage());
 		    }
 		}
@@ -272,11 +281,14 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		URI uri = makeURI(myServantId);
 		setNodeURI(uri);
 	    } catch (JMSException e) {
-		loggingService.error("Couldn't make JMS queue", e);
+		if (loggingService.isWarnEnabled())	
+		    loggingService.warn("Couldn't make JMS queue"+ e.getMessage());
 	    } catch (URISyntaxException e) {
-		loggingService.error("Couldn't make JMS URI", e);
+		if (loggingService.isWarnEnabled())
+		    loggingService.warn("Couldn't make JMS URI"+ e.getMessage());
 	    } catch (NamingException e) {
-		loggingService.error("Couldn't register JMS queue in jndi", e);
+		if (loggingService.isWarnEnabled())
+		    loggingService.warn("Couldn't register JMS queue in jndi"+ e.getMessage());
 	    }
 	}
     }
@@ -292,7 +304,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	MessageConsumer flush = session.createConsumer(servantDestination);
 	Object flushedMessage = flush.receiveNoWait();
 	while (flushedMessage != null) {
-	    loggingService.info("Flushing old message "  + flushedMessage);
+	    if (loggingService.isInfoEnabled())
+		loggingService.info("Flushing old message "  + flushedMessage);
 	    flushedMessage = flush.receiveNoWait();
 	}
 	flush.close();
@@ -328,7 +341,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     
     protected class JMSExceptionListener implements ExceptionListener {
 	public void onException(JMSException ex) {
-	   loggingService.error("JMS Connection error", ex);
+	    if (loggingService.isWarnEnabled())
+		loggingService.warn("JMS Connection error: Cause="+ ex.getMessage());
 	   session = null; // could generate NPE's elsewhere...
 	   servantDestination = null;
 	}
@@ -336,7 +350,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
    
     // MTS Station to send a message to a specific remote Agent
     // Even if multiple remote Agents are on the same Node, there will be one instance per Agent
-    protected class JMSLink extends Link {
+    public class JMSLink extends Link {
 	private final MessageSender sender;
 	private URI uri;
 	
@@ -361,7 +375,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	
 	protected Object decodeRemoteRef(URI ref) throws Exception {
 	    if (ref == null) {
-		loggingService.warn("Got null remote ref for " + getDestination());
+		if (loggingService.isWarnEnabled())
+		    loggingService.warn("Got null remote ref for " + getDestination());
 		return null;
 	    }
 	    if (session != null) {
@@ -374,11 +389,13 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    // TODO if JNDI server is down this will not work
 		    // is test for null good enough
 		    Destination d = lookupDestinationInContext(destinationName);
-		    if (loggingService.isInfoEnabled()) loggingService.info("Got " + d);
+		    if (loggingService.isInfoEnabled()) 
+			loggingService.info("Got " + d);
 		    this.uri = ref;
 		    return d;
 		} catch (Exception e) {
-		    loggingService.error("JNDI error: " + e.getMessage());
+		    if (loggingService.isWarnEnabled()) 
+			loggingService.warn("JNDI error: " + e.getMessage());
 		    throw e;
 		}
 	    }
@@ -390,7 +407,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	    if (destination instanceof Destination) {
 		return sender.handleOutgoingMessage(uri, (Destination) destination, message);
 	    } else {
-		loggingService.error(destination + " is not a javax.jmx.Destination");
+		if (loggingService.isErrorEnabled()) 	
+		    loggingService.error(destination + " is not a javax.jmx.Destination");
 		return null;
 	    }
 	}

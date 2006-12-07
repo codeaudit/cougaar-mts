@@ -78,7 +78,8 @@ public class MessageSender implements AttributeConstants {
 	    MessageAttributes metadata = sync.sendMessage(jmsMessage, uri, destination);
 	    return metadata;
 	} catch (JMSException e) {
-	    log.error("Couldn't send JMS message: " +e.getErrorCode(), e);
+	    if (log.isWarnEnabled())
+		log.warn("Couldn't send JMS message: errorCode=" +e.getErrorCode() +" Cause=" + e.getCause());
 	    throw new CommFailureException(e);
 	}
     }

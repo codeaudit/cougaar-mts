@@ -60,7 +60,7 @@ public class ReplySync {
     private final Map pending;
     private final Map replyData;
     private final int timeout;
-    private final Logger log;
+    protected final Logger log;
     
     public ReplySync(JMSLinkProtocol lp) {
 	this(lp, DEFAULT_TIMEOUT);
@@ -94,17 +94,19 @@ public class ReplySync {
 	
 	Object lock = new Object();
 	pending.put(id, lock);
+	long startTime=System.currentTimeMillis();
 	synchronized (lock) {
 	    lp.getGenericProducer().send(destination, message);
 	    while (true) {
 		try {
-		    lock.wait(timeout); // TODO:  Should be set dynamically
+		    lock.wait(timeout); // TODO:  timeout should be set dynamically
 		    break;
 		} catch (InterruptedException ex) {
 		    
 		}
 	    }
 	}
+	long sendTime = System.currentTimeMillis()-startTime;
 	Object result = replyData.remove(id);
 	pending.remove(id);
 	if (result instanceof MessageAttributes) {
@@ -112,8 +114,10 @@ public class ReplySync {
 	} else if (result instanceof MisdeliveredMessageException) {
 	    MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
 	    throw ex;
+	} else if (sendTime >= timeout){
+	    throw new CommFailureException(new RuntimeException("Timeout waiting for reply = " + sendTime));
 	} else {
-	    throw new CommFailureException(new RuntimeException("Weird data " + result));
+	    throw new CommFailureException(new RuntimeException("Weird Reply" + result));
 	}
     }
 
