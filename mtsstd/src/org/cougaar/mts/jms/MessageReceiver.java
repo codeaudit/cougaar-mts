@@ -76,9 +76,13 @@ public class MessageReceiver {
 		    if (log.isWarnEnabled())
 		    	log.warn(domainObject + " is not an AttributedMessage");
 		}
-	    } catch (JMSException e) {
+	    } catch (JMSException e1) {
 		    if (log.isWarnEnabled())			
-			log.warn("JMS Error handling new message: Cause=" + e.getCause());
+			log.warn("JMS Error handling new message: Cause=" + e1.getMessage());
+	    }
+	    catch (Exception e2) {
+		    if (log.isWarnEnabled())			
+			log.warn("Error handling new message: Cause=" + e2.getMessage());
 	    }
 	} else {
 	    if (log.isWarnEnabled())			

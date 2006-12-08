@@ -260,6 +260,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		if (consumer != null) {
 		    // Old listener from a previous session
 		    try {
+			// unsubscribe out of date consumer.
 			consumer.setMessageListener(null);
 			consumer.close();
 		    } catch (Exception e) {
@@ -404,12 +405,22 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 
 	protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
 	throws NameLookupException, UnregisteredNameException, CommFailureException, MisdeliveredMessageException {
-	    if (destination instanceof Destination) {
-		return sender.handleOutgoingMessage(uri, (Destination) destination, message);
-	    } else {
+	    if (!(destination instanceof Destination)) {
 		if (loggingService.isErrorEnabled()) 	
 		    loggingService.error(destination + " is not a javax.jmx.Destination");
 		return null;
+	    }
+	    try {
+		return sender.handleOutgoingMessage(uri, (Destination) destination, message);
+	    } catch (CommFailureException e1) {
+		decache();
+		throw e1;
+	    } catch (MisdeliveredMessageException e2) {
+		decache();
+		throw e2;
+	    } catch (Exception e3) {
+		decache();
+		throw new CommFailureException(e3);
 	    }
 	}
 
