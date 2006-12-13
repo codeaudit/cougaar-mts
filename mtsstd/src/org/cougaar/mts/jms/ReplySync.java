@@ -34,7 +34,9 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
@@ -56,7 +58,7 @@ public class ReplySync {
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static int ID = 0;
     
-    private final JMSLinkProtocol lp;
+    protected final JMSLinkProtocol lp;
     private final Map pending;
     private final Map replyData;
     private final int timeout;
@@ -73,7 +75,7 @@ public class ReplySync {
 	this.log = Logging.getLogger(getClass().getName());
 	this.timeout = timeout;
     }
-    
+       
     protected void setMessageProperties(Message message, 
 	    Integer id,
 	    URI uri,
@@ -127,12 +129,20 @@ public class ReplySync {
 	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
     }
     
+    protected Session getLinkProtocolSession() {
+	return lp.getSession();
+    }
+    
+    protected MessageProducer getLinkProtocolGenericProducer() {
+	return lp.getGenericProducer();
+    }
+    
     public void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
-	ObjectMessage replyMsg = lp.getSession().createObjectMessage((Serializable) replyData);
+	ObjectMessage replyMsg = getLinkProtocolSession().createObjectMessage((Serializable) replyData);
 	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
 	setReplyProperties(omsg, replyMsg);
 	Destination dest = omsg.getJMSReplyTo();
-	lp.getGenericProducer().send(dest,replyMsg);
+	getLinkProtocolGenericProducer().send(dest,replyMsg);
     }
 
     
