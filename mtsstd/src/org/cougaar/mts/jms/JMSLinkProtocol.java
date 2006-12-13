@@ -353,7 +353,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     // Even if multiple remote Agents are on the same Node, there will be one instance per Agent
     public class JMSLink extends Link {
 	private final MessageSender sender;
-	private URI uri;
+	protected URI uri;
 	
 	protected JMSLink(MessageAddress addr) {
 	    super(addr);
