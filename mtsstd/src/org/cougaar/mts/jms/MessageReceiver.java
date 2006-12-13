@@ -40,7 +40,7 @@ import org.cougaar.util.log.Logging;
  *  This utility class handles incoming JMS messages
  */
 public class MessageReceiver {
-    private final Logger log;
+    protected final Logger log;
     private final MessageDeliverer deliverer;
     private final ReplySync sync;
     
@@ -52,6 +52,8 @@ public class MessageReceiver {
     
     
     public void handleIncomingMessage(Message msg) {
+	if (log.isDebugEnabled())
+	    log.debug("Recieved JMS message="+msg);
 	if (deliverer == null) {
 	    log.error("Message arrived before MessageDelivererService was available");
 	    return;
