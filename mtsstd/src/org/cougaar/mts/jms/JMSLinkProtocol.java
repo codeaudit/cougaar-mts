@@ -270,7 +270,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 				+ e.getMessage());
 		    }
 		}
-		consumer = session.createConsumer(servantDestination);
+		consumer=makeMessageConsumer(session,servantDestination,myServantId);
 		consumer.setMessageListener(this);
 		if (receiver == null) {
 		    ServiceBroker sb = getServiceBroker();
@@ -294,6 +294,10 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
 
+    protected String getSelector(String myServantId) {
+	return null;
+    }
+
     protected URI makeURI(String myServantId) throws URISyntaxException {
 	return new URI("jms", myServantId, null, null, null);
     }
@@ -301,8 +305,15 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected String extractDestinationName(URI ref) {
 	return ref.getAuthority();
     }
+    
+    protected MessageConsumer makeMessageConsumer(Session session, Destination destination, String ServantID) 
+    throws JMSException {
+	MessageConsumer consumer = session.createConsumer(destination);
+	return consumer;
+    }
+    
     protected void flushObsoleteMessages() throws JMSException {
-	MessageConsumer flush = session.createConsumer(servantDestination);
+	MessageConsumer flush = makeMessageConsumer(session,servantDestination,null);
 	Object flushedMessage = flush.receiveNoWait();
 	while (flushedMessage != null) {
 	    if (loggingService.isInfoEnabled())
