@@ -261,8 +261,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    // Old listener from a previous session
 		    try {
 			// unsubscribe out of date consumer.
-			consumer.setMessageListener(null);
-			consumer.close();
+			closeConsumer(consumer);
 		    } catch (Exception e) {
 			// JMS Errors here should logged but otherwise ignored
 			if (loggingService.isInfoEnabled())
@@ -271,7 +270,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    }
 		}
 		consumer=makeMessageConsumer(session,servantDestination,myServantId);
-		consumer.setMessageListener(this);
+		subscribeConsumer(consumer, this);
 		if (receiver == null) {
 		    ServiceBroker sb = getServiceBroker();
 		    MessageDeliverer deliverer = (MessageDeliverer) 
@@ -294,6 +293,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
 
+
     protected String getSelector(String myServantId) {
 	return null;
     }
@@ -312,14 +312,27 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	return consumer;
     }
     
+    protected void closeConsumer(MessageConsumer consumer) throws JMSException {
+	consumer.setMessageListener(null);
+	consumer.close();
+    }
+
+    protected void subscribeConsumer(MessageConsumer consumer, JMSLinkProtocol protocol) throws JMSException {
+	consumer.setMessageListener(this);
+    }
+    
     protected void flushObsoleteMessages() throws JMSException {
+	int flushCount=0;
 	MessageConsumer flush = makeMessageConsumer(session,servantDestination,null);
 	Object flushedMessage = flush.receiveNoWait();
 	while (flushedMessage != null) {
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("Flushing old message "  + flushedMessage);
+	    flushCount+=1;
+	    if (loggingService.isDebugEnabled())
+		loggingService.debug("Flushing old message "  + flushedMessage);
 	    flushedMessage = flush.receiveNoWait();
 	}
+	if (loggingService.isInfoEnabled())
+	    loggingService.info("Flushed " +flushCount+ " old messages ");
 	flush.close();
     }
 
