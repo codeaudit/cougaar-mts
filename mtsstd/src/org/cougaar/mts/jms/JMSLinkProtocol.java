@@ -96,7 +96,6 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     
     public void load() {
 	super.load();
-	sync = makeReplySync();
     }
     
     protected int computeCost(AttributedMessage message) {
@@ -156,12 +155,18 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	}
     }
     
-    protected MessageSender makeMessageSender(ReplySync sync) {
-	return new MessageSender(this, sync);
+    protected MessageSender makeMessageSender(ReplySync replySync) {
+	return new MessageSender(this, replySync);
     }
     
     protected MessageReceiver makeMessageReceiver(ReplySync sync, MessageDeliverer deliverer) {
 	return new MessageReceiver(sync, deliverer);
+    }
+    
+    protected final ReplySync findOrMakeReplySync() {
+	if (sync == null) 
+	    sync = makeReplySync();
+	return sync;
     }
     
     protected ReplySync makeReplySync() {
@@ -275,7 +280,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		    ServiceBroker sb = getServiceBroker();
 		    MessageDeliverer deliverer = (MessageDeliverer) 
 		    sb.getService(this,  MessageDeliverer.class, null);
-		    receiver = makeMessageReceiver(sync, deliverer);
+		    receiver = makeMessageReceiver(findOrMakeReplySync(), deliverer);
 		}
 		connection.start();
 		URI uri = makeURI(myServantId);
@@ -381,7 +386,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	
 	protected JMSLink(MessageAddress addr) {
 	    super(addr);
-	    this.sender = makeMessageSender(sync);
+	    this.sender = makeMessageSender(findOrMakeReplySync());
 	}
 
 	public boolean isValid() {
