@@ -136,7 +136,7 @@ public class OldIncarnationAspect extends StandardAspect
 		// Bogus message from old incarnation.  Pretend normal
 		// delivery but don't process it.
 		if (loggingService.isInfoEnabled())
-		    loggingService.info("Detected obsolete incarnation number " 
+		    loggingService.info("Detected remote obsolete incarnation number " 
 					+incarnation+ " in message " +message);
 		long new_incarnation = incarnationSvc.getIncarnation(sender);
 
@@ -179,7 +179,7 @@ public class OldIncarnationAspect extends StandardAspect
 	    // agents. 
 	    if (!registry.isLocalClient(message.getOriginator())) {
 		if (loggingService.isWarnEnabled()) {
-		    loggingService.warn("Blocking message from obsolete agent: " 
+		    loggingService.warn("Blocking message from local obsolete agent: " 
 					+message);
 		}
 		return DummyReturn;
