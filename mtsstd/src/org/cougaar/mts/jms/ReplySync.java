@@ -147,7 +147,7 @@ public class ReplySync {
 
     
     
-   public boolean isReply(ObjectMessage msg) {
+    public boolean isReply(ObjectMessage msg) {
 	try {
 	    boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
 	    if (log.isDebugEnabled()) {
@@ -164,11 +164,15 @@ public class ReplySync {
 		synchronized (lock) {
 		    lock.notify();
 		}
+	    } else {
+		if (log.isWarnEnabled()) {
+		    log.warn("Got reply for message we did not send "+ id);
+		}
 	    }
 	    return true;
 	} catch (JMSException e) {
-	   log.error("Error checking reply status: " + e.getMessage(), e);
-	   return false;
+	    log.error("Error checking reply status: " + e.getMessage(), e);
+	    return false;
 	}
     }
 

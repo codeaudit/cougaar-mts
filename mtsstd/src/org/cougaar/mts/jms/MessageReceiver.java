@@ -53,7 +53,7 @@ public class MessageReceiver {
     
     public void handleIncomingMessage(Message msg) {
 	if (log.isDebugEnabled())
-	    log.debug("Recieved JMS message="+msg);
+	    log.debug("Received JMS message="+msg);
 	if (deliverer == null) {
 	    log.error("Message arrived before MessageDelivererService was available");
 	    return;
