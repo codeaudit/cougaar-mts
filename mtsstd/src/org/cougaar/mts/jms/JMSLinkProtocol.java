@@ -190,7 +190,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 		context = makeInitialContext(properties);
 		factory = makeConnectionFactory();
 		connection = makeConnection();
-		connection.setExceptionListener(new JMSExceptionListener());
+		JMSExceptionListener exceptionListener=new JMSExceptionListener();
+		connection.setExceptionListener(exceptionListener);
 		session = makeSession();
 		genericProducer = makeProducer(null);
 	    } catch (NamingException e) {
@@ -206,34 +207,38 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
 
-    protected MessageProducer makeProducer(Destination destination) throws JMSException {
-	MessageProducer producer = session.createProducer(destination);
-	producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-	return producer;
+ 
+    protected Context getContext() {
+	return context;
     }
     
-    
-    protected MessageProducer getGenericProducer() {
-        return genericProducer;
-    }
-
-    protected Destination getServant() {
-	return servantDestination;
+    protected void closeContext () throws NamingException {
+	context.close();
     }
     
     protected ConnectionFactory getFactory() {
         return factory;
     }
-
-    protected Context getContext() {
-	return context;
+    
+    protected Connection getConnection() {
+	return connection;
+    }
+    
+    protected void closeConnection() throws JMSException {
+	// Closing a contection also closes sessions, producers and consumers
+	connection.close();
     }
     
     protected Session getSession() {
 	return session;
     }
-
-    protected void findOrMakeNodeServant() {
+     
+ 
+    protected Destination getServant() {
+	return servantDestination;
+    }
+    
+   protected void findOrMakeNodeServant() {
 	if (servantDestination != null) return;
 	setNodeURI(null);
 	ensureSession();
@@ -311,12 +316,17 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	return ref.getAuthority();
     }
     
+    protected MessageConsumer getConsumer() {
+        return consumer;
+    }
+    
     protected MessageConsumer makeMessageConsumer(Session session, Destination destination, String ServantID) 
     throws JMSException {
 	MessageConsumer consumer = session.createConsumer(destination);
 	return consumer;
     }
     
+    // Utility close method
     protected void closeConsumer(MessageConsumer consumer) throws JMSException {
 	consumer.setMessageListener(null);
 	consumer.close();
@@ -326,6 +336,23 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 	consumer.setMessageListener(this);
     }
     
+    protected MessageProducer makeProducer(Destination destination) throws JMSException {
+	MessageProducer producer = session.createProducer(destination);
+	producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+	return producer;
+    }
+    
+    protected MessageProducer getGenericProducer() {
+        return genericProducer;
+    }
+
+    // Utility close method
+    protected void closeProducer(MessageProducer producer) throws JMSException {
+	producer.close();
+    }
+  
+    
+
     protected void flushObsoleteMessages() throws JMSException {
 	int flushCount=0;
 	MessageConsumer flush = makeMessageConsumer(session,servantDestination,null);
@@ -346,8 +373,25 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
     protected void releaseNodeServant() {
-	// TODO should this tear down context->factory->connection->session
-	// producers and consummer
+	// Tear down context->factory->connection->session->producers and consumers
+	    if (loggingService.isInfoEnabled()) {
+		loggingService.warn("Releasing Servant");
+	    }
+	// Closing connection closes session, producers, consummers, and exception listener
+	try {
+	    closeConnection();
+	} catch (JMSException e) {
+	    if (loggingService.isWarnEnabled()) {
+		loggingService.warn("Problem Closing Connection: " +e);
+	    }
+	}
+	try {
+	    closeContext();
+	} catch (NamingException e) {
+	    if (loggingService.isWarnEnabled()) {
+		loggingService.warn("Problem Closing Context: " +e);
+	    }
+	}
     }
 
     protected void remakeNodeServant() {
