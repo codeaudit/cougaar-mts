@@ -61,7 +61,7 @@ public class MessageReceiver {
 	if (msg instanceof ObjectMessage) {
 	    ObjectMessage omsg = (ObjectMessage) msg;
 	    if (sync.isReply(omsg))  {
-		// it's an ack -- no further work here
+		// it's an ack -- Work is done in isReply
 		return;
 	    }
 	    try {
