@@ -396,10 +396,14 @@ abstract public class RPCLinkProtocol
 	{
 	    synchronized (lookup_lock) {
 		lookup_pending = false;
-		if (incn > incarnation) {
+		if (incn > incarnation ) {
 		    // tell the incarnation service
 		    incarnationService.updateIncarnation(target, incn);
 		    incarnation = incn;
+		}else if (incn == 0) {
+		    // Reset the incarnation number, for nameserver bootstrap
+		    // don't tell incarnation service, it will ignore 0;
+		    incarnation = 0;
 		}
 		lookup_result =
 		    (entry != null && incn == incarnation)
@@ -446,13 +450,19 @@ abstract public class RPCLinkProtocol
 		    // newer value -- decache the stub
 		    incarnation = incn;
 		    decache();
+		} else if (incn == 0){	
+		    // incarnation number reset for nameserver bootstrap
+		    if (loggingService.isWarnEnabled())
+			loggingService.warn("Incarnation service callback has zero incarnation number for " +addr);
+		    incarnation = 0;
+		    decache();
 		} else if (incn < incarnation) {
 		    // out-of-date info
 		    if (loggingService.isWarnEnabled())
 			loggingService.warn("Incarnation service callback has out of date incarnation number " 
-					    +incn+
-					    " for " 
-					    +addr);
+				+incn+
+				" for " 
+				+addr);
 		}
 	    }
 	}
@@ -496,15 +506,25 @@ abstract public class RPCLinkProtocol
 	    // the IncarnationService callbacks, the reference can now
 	    // be clobbered subsequently by another thread.  Deal with
 	    // that here.
+	    
+	    // JAZ remote lock is no longer around the remote call.
+	    // The look isonly be held long enough to get the reference
+	    // and "commit to the remote call"
+	    // Why was it around a remote call an not just the remote ref?
+	    // Does this have something to do with detecting that the message is intransiant
+	   
+	    Object committedRemoteRef; // URI, URL etc		
 	    synchronized (remote_lock) {
-		if (remote_ref == null) {
+		committedRemoteRef=remote_ref;
+	    }
+		if (committedRemoteRef == null) {
 		    Exception cause = 
 			new Exception("Inconsistent remote reference cache");
 		    throw new NameLookupException(cause);
 		} else {
-		    return forwardByProtocol(remote_ref, message);
+		    return forwardByProtocol(committedRemoteRef, message);
 		}
-	    }
+
 	}
 
 
