@@ -39,6 +39,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.util.log.Logger;
@@ -97,6 +98,7 @@ public class ReplySync {
 	Object lock = new Object();
 	pending.put(id, lock);
 	long startTime=System.currentTimeMillis();
+	SchedulableStatus.beginNetIO("JMS RPC");
 	synchronized (lock) {
 	    lp.getGenericProducer().send(destination, message);
 	    while (true) {
@@ -108,6 +110,7 @@ public class ReplySync {
 		}
 	    }
 	}
+	SchedulableStatus.endBlocking();
 	long sendTime = System.currentTimeMillis()-startTime;
 	Object result = replyData.remove(id);
 	pending.remove(id);
@@ -157,7 +160,9 @@ public class ReplySync {
 		return false;
 	    }
 	    Integer id = new Integer(msg.getIntProperty(ID_PROP));
-	    log.debug("Value of " +ID_PROP+ " property is " + id);
+	    if (log.isDebugEnabled()) {
+	        log.debug("Value of " +ID_PROP+ " property is " + id);
+	    }
 	    replyData.put(id, msg.getObject());
 	    Object lock = pending.get(id);
 	    if (lock != null) {
@@ -166,7 +171,7 @@ public class ReplySync {
 		}
 	    } else {
 		if (log.isWarnEnabled()) {
-		    log.warn("Got reply for message we did not send "+ id);
+		    log.warn("Got reply for message we timed out, id="+ id + " msg=" +msg);
 		}
 	    }
 	    return true;
