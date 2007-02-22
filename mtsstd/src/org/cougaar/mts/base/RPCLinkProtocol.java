@@ -221,14 +221,11 @@ abstract public class RPCLinkProtocol
 							     getProtocolType());
 		clients.remove(client);
 
-        // Fix for bug 3965: need to release resources.
-        // http://bugs.cougaar.org/show_bug.cgi?id=3965
-	// 
-	// XXX: We do NOT want to release the node servant when a single
-	// client unregisters.  Releasing node-level resources has to 
-	// happen elsewhere (don't know where yet).
-        releaseNodeServant();
-        
+                if (clients.isEmpty()) {
+                    // Fix for bug 3965:  Release RMI stub on node shutdown.
+                    releaseNodeServant();
+                }
+
         } catch (Exception e) {
 		if (loggingService.isErrorEnabled())
 		    loggingService.error("Error unregistering client", e);
