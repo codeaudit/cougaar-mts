@@ -59,8 +59,8 @@ public class ReplySync {
     private static int ID = 0;
 
     protected final JMSLinkProtocol lp;
-    private final Map pending;
-    private final Map replyData;
+    private final Map<Integer, Object> pending;
+    private final Map<Integer, Object> replyData;
     private final int timeout;
     protected final Logger log;
 
@@ -70,8 +70,8 @@ public class ReplySync {
 
     public ReplySync(JMSLinkProtocol lp, int timeout) {
         this.lp = lp;
-        this.pending = new HashMap();
-        this.replyData = new HashMap();
+        this.pending = new HashMap<Integer, Object>();
+        this.replyData = new HashMap<Integer, Object>();
         this.log = Logging.getLogger(getClass().getName());
         this.timeout = timeout;
     }

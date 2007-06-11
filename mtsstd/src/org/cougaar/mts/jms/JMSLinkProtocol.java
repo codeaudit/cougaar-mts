@@ -111,12 +111,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
         return new JMSLink(address);
     }
 
-    protected void fillContextProperties(Map properties) {
+    protected void fillContextProperties(Map<String,Object> properties) {
         properties.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
         properties.put(Context.PROVIDER_URL, JMS_URL);
     }
 
-    protected InitialContext makeInitialContext(Hashtable properties)
+    protected InitialContext makeInitialContext(Hashtable<String,Object> properties)
             throws NamingException {
         return new InitialContext(properties);
     }
@@ -189,7 +189,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected void ensureSession() {
         if (session == null) {
             try {
-                Hashtable properties = new Hashtable();
+                Hashtable<String,Object> properties = new Hashtable<String,Object>();
                 fillContextProperties(properties);
                 context = makeInitialContext(properties);
                 factory = makeConnectionFactory();
@@ -256,7 +256,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 if (old != null) {
                     if (loggingService.isInfoEnabled())
                         loggingService.info("Found old Queue");
-                    servantDestination = (Destination) old;
+                    servantDestination = old;
                     flushObsoleteMessages();
                 }
             } catch (NamingException e1) {
