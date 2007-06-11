@@ -144,6 +144,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected Connection makeConnection() throws JMSException {
         return factory.createConnection();
     }
+    
+    protected void makeSessionExceptionListener() throws JMSException {
+        JMSExceptionListener exceptionListener = new JMSExceptionListener();
+        connection.setExceptionListener(exceptionListener);
+    }
 
     protected Session makeSession() throws JMSException {
         return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -186,7 +191,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
         return destination;
     }
 
-    protected void ensureSession() {
+    protected Session ensureSession() {
         if (session == null) {
             try {
                 Hashtable<String,Object> properties = new Hashtable<String,Object>();
@@ -194,8 +199,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 context = makeInitialContext(properties);
                 factory = makeConnectionFactory();
                 connection = makeConnection();
-                JMSExceptionListener exceptionListener = new JMSExceptionListener();
-                connection.setExceptionListener(exceptionListener);
+                makeSessionExceptionListener();
                 session = makeSession();
                 genericProducer = makeProducer(null);
             } catch (NamingException e) {
@@ -210,14 +214,19 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 session = null;
             }
         }
+        return session;
     }
+
 
     protected Context getContext() {
         return context;
     }
 
     protected void closeContext() throws NamingException {
-        context.close();
+        if (context != null) {
+            context.close();
+            context = null;
+        }
     }
 
     protected ConnectionFactory getFactory() {
@@ -230,7 +239,10 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 
     protected void closeConnection() throws JMSException {
         // Closing a contection also closes sessions, producers and consumers
-        connection.close();
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
     protected Session getSession() {
@@ -411,6 +423,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 loggingService.warn("Problem Closing Context: " + e);
             }
         }
+        session = null;
+        servantDestination = null;
     }
 
     protected void remakeNodeServant() {
