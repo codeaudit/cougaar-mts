@@ -46,139 +46,144 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- *  This utility class does the low-level work to force
- *  the jms linkprotocol to behave like a synchronous rpc.
- *  In particular it blocks the sending thread until 
- *  a reply for the outgoing message arrives, generates and sends replies
- *  for incoming messages, and processes received replies by waking
- *  the corresponding thread.
+ * This utility class does the low-level work to force the jms linkprotocol to
+ * behave like a synchronous rpc. In particular it blocks the sending thread
+ * until a reply for the outgoing message arrives, generates and sends replies
+ * for incoming messages, and processes received replies by waking the
+ * corresponding thread.
  */
 public class ReplySync {
     public static final int DEFAULT_TIMEOUT = 5000;
     private static final String ID_PROP = "MTS_MSG_ID";
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static int ID = 0;
-    
+
     protected final JMSLinkProtocol lp;
     private final Map pending;
     private final Map replyData;
     private final int timeout;
     protected final Logger log;
-    
+
     public ReplySync(JMSLinkProtocol lp) {
-	this(lp, DEFAULT_TIMEOUT);
+        this(lp, DEFAULT_TIMEOUT);
     }
-    
+
     public ReplySync(JMSLinkProtocol lp, int timeout) {
-	this.lp = lp;
-	this.pending = new HashMap();
-	this.replyData = new HashMap();
-	this.log = Logging.getLogger(getClass().getName());
-	this.timeout = timeout;
-    }
-       
-    protected void setMessageProperties(Message message, 
-	    Integer id,
-	    URI uri,
-	    Destination destination) 
-    throws JMSException {
-	message.setIntProperty(ID_PROP, id.intValue());
-	message.setBooleanProperty(IS_MTS_REPLY_PROP, false);
-    }
-    
-    public MessageAttributes sendMessage(Message message, 
-	    URI uri,
-	    Destination destination) 
-    throws JMSException,CommFailureException,MisdeliveredMessageException {
-	message.setJMSReplyTo(lp.getServant());
-	message.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
-	Integer id = new Integer(++ID);
-	setMessageProperties(message, id, uri, destination);
-	
-	Object lock = new Object();
-	pending.put(id, lock);
-	long startTime=System.currentTimeMillis();
-	SchedulableStatus.beginNetIO("JMS RPC");
-	synchronized (lock) {
-	    lp.getGenericProducer().send(destination, message);
-	    while (true) {
-		try {
-		    lock.wait(timeout); // TODO:  timeout should be set dynamically
-		    break;
-		} catch (InterruptedException ex) {
-		    
-		}
-	    }
-	}
-	SchedulableStatus.endBlocking();
-	long sendTime = System.currentTimeMillis()-startTime;
-	Object result = replyData.remove(id);
-	pending.remove(id);
-	if (result instanceof MessageAttributes) {
-	    return (MessageAttributes) result;
-	} else if (result instanceof MisdeliveredMessageException) {
-	    MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
-	    throw ex;
-	} else if (sendTime >= timeout){
-	    throw new CommFailureException(new RuntimeException("Timeout waiting for reply = " + sendTime));
-	} else {
-	    throw new CommFailureException(new RuntimeException("Weird Reply" + result));
-	}
+        this.lp = lp;
+        this.pending = new HashMap();
+        this.replyData = new HashMap();
+        this.log = Logging.getLogger(getClass().getName());
+        this.timeout = timeout;
     }
 
-    protected void setReplyProperties(ObjectMessage omsg, ObjectMessage replyMsg) 
-    throws JMSException {
-	replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
-	replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
+    protected void setMessageProperties(Message message,
+                                        Integer id,
+                                        URI uri,
+                                        Destination destination)
+            throws JMSException {
+        message.setIntProperty(ID_PROP, id.intValue());
+        message.setBooleanProperty(IS_MTS_REPLY_PROP, false);
     }
-    
+
+    public MessageAttributes sendMessage(Message message,
+                                         URI uri,
+                                         Destination destination)
+            throws JMSException,
+                CommFailureException,
+                MisdeliveredMessageException {
+        message.setJMSReplyTo(lp.getServant());
+        message.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        Integer id = new Integer(++ID);
+        setMessageProperties(message, id, uri, destination);
+
+        Object lock = new Object();
+        pending.put(id, lock);
+        long startTime = System.currentTimeMillis();
+        SchedulableStatus.beginNetIO("JMS RPC");
+        synchronized (lock) {
+            lp.getGenericProducer().send(destination, message);
+            while (true) {
+                try {
+                    lock.wait(timeout); // TODO: timeout should be set
+                                        // dynamically
+                    break;
+                } catch (InterruptedException ex) {
+
+                }
+            }
+        }
+        SchedulableStatus.endBlocking();
+        long sendTime = System.currentTimeMillis() - startTime;
+        Object result = replyData.remove(id);
+        pending.remove(id);
+        if (result instanceof MessageAttributes) {
+            return (MessageAttributes) result;
+        } else if (result instanceof MisdeliveredMessageException) {
+            MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
+            throw ex;
+        } else if (sendTime >= timeout) {
+            throw new CommFailureException(new RuntimeException("Timeout waiting for reply = "
+                    + sendTime));
+        } else {
+            throw new CommFailureException(new RuntimeException("Weird Reply"
+                    + result));
+        }
+    }
+
+    protected void setReplyProperties(ObjectMessage omsg, ObjectMessage replyMsg)
+            throws JMSException {
+        replyMsg.setBooleanProperty(IS_MTS_REPLY_PROP, true);
+        replyMsg.setIntProperty(ID_PROP, omsg.getIntProperty(ID_PROP));
+    }
+
     protected Session getLinkProtocolSession() {
-	return lp.getSession();
-    }
-    
-    protected MessageProducer getLinkProtocolGenericProducer() {
-	return lp.getGenericProducer();
-    }
-    
-    public void replyToMessage(ObjectMessage omsg, Object replyData) throws JMSException {
-	ObjectMessage replyMsg = getLinkProtocolSession().createObjectMessage((Serializable) replyData);
-	replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
-	setReplyProperties(omsg, replyMsg);
-	Destination dest = omsg.getJMSReplyTo();
-	getLinkProtocolGenericProducer().send(dest,replyMsg);
+        return lp.getSession();
     }
 
-    
-    
+    protected MessageProducer getLinkProtocolGenericProducer() {
+        return lp.getGenericProducer();
+    }
+
+    public void replyToMessage(ObjectMessage omsg, Object replyData)
+            throws JMSException {
+        ObjectMessage replyMsg = getLinkProtocolSession().createObjectMessage((Serializable) replyData);
+        replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        setReplyProperties(omsg, replyMsg);
+        Destination dest = omsg.getJMSReplyTo();
+        getLinkProtocolGenericProducer().send(dest, replyMsg);
+    }
+
     public boolean isReply(ObjectMessage msg) {
-	try {
-	    boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
-	    if (log.isDebugEnabled()) {
-		log.debug("Value of " +IS_MTS_REPLY_PROP+ " property is " + isReply);
-	    }
-	    if (!isReply) {
-		return false;
-	    }
-	    Integer id = new Integer(msg.getIntProperty(ID_PROP));
-	    if (log.isDebugEnabled()) {
-	        log.debug("Value of " +ID_PROP+ " property is " + id);
-	    }
-	    replyData.put(id, msg.getObject());
-	    Object lock = pending.get(id);
-	    if (lock != null) {
-		synchronized (lock) {
-		    lock.notify();
-		}
-	    } else {
-		if (log.isWarnEnabled()) {
-		    log.warn("Got reply for message we timed out, id="+ id + " msg=" +msg);
-		}
-	    }
-	    return true;
-	} catch (JMSException e) {
-	    log.error("Error checking reply status: " + e.getMessage(), e);
-	    return false;
-	}
+        try {
+            boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
+            if (log.isDebugEnabled()) {
+                log.debug("Value of " + IS_MTS_REPLY_PROP + " property is "
+                        + isReply);
+            }
+            if (!isReply) {
+                return false;
+            }
+            Integer id = new Integer(msg.getIntProperty(ID_PROP));
+            if (log.isDebugEnabled()) {
+                log.debug("Value of " + ID_PROP + " property is " + id);
+            }
+            replyData.put(id, msg.getObject());
+            Object lock = pending.get(id);
+            if (lock != null) {
+                synchronized (lock) {
+                    lock.notify();
+                }
+            } else {
+                if (log.isWarnEnabled()) {
+                    log.warn("Got reply for message we timed out, id=" + id
+                            + " msg=" + msg);
+                }
+            }
+            return true;
+        } catch (JMSException e) {
+            log.error("Error checking reply status: " + e.getMessage(), e);
+            return false;
+        }
     }
 
 }

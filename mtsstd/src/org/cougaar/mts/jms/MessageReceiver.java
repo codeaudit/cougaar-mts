@@ -37,59 +37,60 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- *  This utility class handles incoming JMS messages
+ * This utility class handles incoming JMS messages
  */
 public class MessageReceiver {
     protected final Logger log;
     private final MessageDeliverer deliverer;
     private final ReplySync sync;
-    
+
     public MessageReceiver(ReplySync sync, MessageDeliverer deliverer) {
-	this.sync = sync;
-	this.deliverer = deliverer;
-	this.log = Logging.getLogger(getClass().getName());
+        this.sync = sync;
+        this.deliverer = deliverer;
+        this.log = Logging.getLogger(getClass().getName());
     }
-    
-    
+
     public void handleIncomingMessage(Message msg) {
-	if (log.isDebugEnabled())
-	    log.debug("Received JMS message="+msg);
-	if (deliverer == null) {
-	    log.error("Message arrived before MessageDelivererService was available");
-	    return;
-	}
-	if (msg instanceof ObjectMessage) {
-	    ObjectMessage omsg = (ObjectMessage) msg;
-	    if (sync.isReply(omsg))  {
-		// it's an ack -- Work is done in isReply
-		return;
-	    }
-	    try {
-		Object domainObject = omsg.getObject();
-		if (domainObject instanceof AttributedMessage) {
-		    AttributedMessage message = (AttributedMessage) domainObject;
-		    try {
-			MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
-			sync.replyToMessage(omsg, reply);
-		    } catch (MisdeliveredMessageException e) {
-			sync.replyToMessage(omsg, e);
-		    }
-		} else {
-		    if (log.isWarnEnabled())
-		    	log.warn(domainObject + " is not an AttributedMessage");
-		}
-	    } catch (JMSException e1) {
-		    if (log.isWarnEnabled())			
-			log.warn("JMS Error handling new message: Cause=" + e1.getMessage());
-	    }
-	    catch (Exception e2) {
-		    if (log.isWarnEnabled())			
-			log.warn("Error handling new message: Cause=" + e2.getMessage());
-	    }
-	} else {
-	    if (log.isWarnEnabled())			
-		log.warn("Received a JMS message that wasn't an ObjectMessage");
-	}
+        if (log.isDebugEnabled())
+            log.debug("Received JMS message=" + msg);
+        if (deliverer == null) {
+            log.error("Message arrived before MessageDelivererService was available");
+            return;
+        }
+        if (msg instanceof ObjectMessage) {
+            ObjectMessage omsg = (ObjectMessage) msg;
+            if (sync.isReply(omsg)) {
+                // it's an ack -- Work is done in isReply
+                return;
+            }
+            try {
+                Object domainObject = omsg.getObject();
+                if (domainObject instanceof AttributedMessage) {
+                    AttributedMessage message = (AttributedMessage) domainObject;
+                    try {
+                        MessageAttributes reply = deliverer.deliverMessage(message,
+                                                                           message.getTarget());
+                        sync.replyToMessage(omsg, reply);
+                    } catch (MisdeliveredMessageException e) {
+                        sync.replyToMessage(omsg, e);
+                    }
+                } else {
+                    if (log.isWarnEnabled())
+                        log.warn(domainObject + " is not an AttributedMessage");
+                }
+            } catch (JMSException e1) {
+                if (log.isWarnEnabled())
+                    log.warn("JMS Error handling new message: Cause="
+                            + e1.getMessage());
+            } catch (Exception e2) {
+                if (log.isWarnEnabled())
+                    log.warn("Error handling new message: Cause="
+                            + e2.getMessage());
+            }
+        } else {
+            if (log.isWarnEnabled())
+                log.warn("Received a JMS message that wasn't an ObjectMessage");
+        }
     }
 
 }
