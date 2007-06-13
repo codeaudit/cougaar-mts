@@ -189,7 +189,7 @@ abstract public class RPCLinkProtocol
     }
 
     protected boolean isServantAlive() {
-	return true;
+	return ref != null;
     }
 
     public final void registerClient(MessageTransportClient client) {

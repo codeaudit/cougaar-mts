@@ -224,7 +224,11 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 
     protected void closeContext() throws NamingException {
         if (context != null) {
-            context.close();
+            try {
+                context.close();
+            } catch (NullPointerException e) {
+                // Don't care if context got set to null by another thread.
+            }
             context = null;
         }
     }
@@ -240,7 +244,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     protected void closeConnection() throws JMSException {
         // Closing a contection also closes sessions, producers and consumers
         if (connection != null) {
-            connection.close();
+            try {
+                connection.close();
+            } catch (NullPointerException e) {
+                // Ignore these, it just means another thread
+                // already did the close
+            }
             connection = null;
         }
     }
@@ -261,6 +270,10 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
         if (session != null) {
             String node = getNameSupport().getNodeMessageAddress().getAddress();
             String myServantId = getMyServantId(node);
+            if (myServantId==null) {
+                if (loggingService.isWarnEnabled())
+                    loggingService.warn("Servant Id not set");
+            }   
 
             // Check for leftover queue, flush it manually
             try {
@@ -282,7 +295,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
             }
 
             try {
-                if (servantDestination == null) {
+                if (servantDestination == null ) {
                     servantDestination = makeServantDestination(myServantId);
                 }
                 if (consumer != null) {
@@ -354,8 +367,13 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 
     // Utility close method
     protected void closeConsumer(MessageConsumer consumer) throws JMSException {
-        consumer.setMessageListener(null);
-        consumer.close();
+        try {
+            consumer.setMessageListener(null);
+            consumer.close();
+        } catch (NullPointerException e) {
+            // Don't care if consumer is set to null
+            // during this operation.
+        }
     }
 
     protected void subscribeConsumer(MessageConsumer consumer,
@@ -373,11 +391,6 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
 
     protected MessageProducer getGenericProducer() {
         return genericProducer;
-    }
-
-    // Utility close method
-    protected void closeProducer(MessageProducer producer) throws JMSException {
-        producer.close();
     }
 
     protected void flushObsoleteMessages() throws JMSException {
@@ -423,14 +436,33 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 loggingService.warn("Problem Closing Context: " + e);
             }
         }
-        session = null;
         servantDestination = null;
+        consumer = null;
+        receiver = null;
+        session = null;
+        connection = null;
+        context = null;
     }
 
+    private Object remakeLock = new Object();
+    private boolean remakeInProgress = false;
+    
+    // This method should only be runnable
+    // in one thread at a time.  But the 
+    // other calls can't block.  Instead
+    // they return immediately.
+    // TODO add a min retry period
     protected void remakeNodeServant() {
+        synchronized (remakeLock) {
+            if (remakeInProgress) {
+                return;
+            }
+            remakeInProgress = true;
+        }
         session = null;
         servantDestination = null;
         findOrMakeNodeServant();
+        remakeInProgress = false;
     }
 
     protected Boolean usesEncryptedSocket() {
@@ -443,7 +475,9 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
     }
 
     protected boolean isServantAlive() {
-        return session != null;
+        return super.isServantAlive() &&
+        session != null && servantDestination != null && 
+        consumer!=null && receiver != null;
     }
 
     protected class JMSExceptionListener implements ExceptionListener {
@@ -451,8 +485,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
             if (loggingService.isWarnEnabled())
                 loggingService.warn("JMS Connection error: Cause="
                         + ex.getMessage());
-            session = null; // could generate NPE's elsewhere...
-            servantDestination = null;
+           releaseNodeServant();
         }
     }
 
