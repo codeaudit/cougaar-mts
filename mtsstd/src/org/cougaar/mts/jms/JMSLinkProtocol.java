@@ -204,12 +204,12 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 genericProducer = makeProducer(null);
             } catch (NamingException e) {
                 if (loggingService.isWarnEnabled())
-                    loggingService.warn("Couldn't get JMS session: Cause="
+                    loggingService.warn("Couldn't get JMS session: Naming Cause="
                             + e.getMessage());
                 session = null;
             } catch (JMSException e) {
                 if (loggingService.isWarnEnabled())
-                    loggingService.warn("Couldn't get JMS session: Cause="
+                    loggingService.warn("Couldn't get JMS session: JMS Cause="
                             + e.getMessage());
                 session = null;
             }
@@ -327,16 +327,19 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
                 setNodeURI(uri);
             } catch (JMSException e) {
                 if (loggingService.isWarnEnabled())
-                    loggingService.warn("Couldn't make JMS queue"
+                    loggingService.warn("Couldn't make JMS queue "
                             + e.getMessage());
+                releaseNodeServant();
             } catch (URISyntaxException e) {
                 if (loggingService.isWarnEnabled())
-                    loggingService.warn("Couldn't make JMS URI"
+                    loggingService.warn("Couldn't make JMS URI "
                             + e.getMessage());
+                releaseNodeServant();
             } catch (NamingException e) {
                 if (loggingService.isWarnEnabled())
                     loggingService.warn("Couldn't register JMS queue in jndi"
                             + e.getMessage());
+                releaseNodeServant();
             }
         }
     }
