@@ -123,7 +123,7 @@ public class AgentStatusAspect
 
 	if (destq_fact != null) {
 	    destq_fact.addListener(this);
-	    sb.releaseService(this, DestinationQueueProviderService.class, sendq_fact);
+	    sb.releaseService(this, DestinationQueueProviderService.class, destq_fact);
 	} else if (lsvc.isInfoEnabled()) {
 	    lsvc.info("Couldn't get DestinationQueueProviderService");
 	}
