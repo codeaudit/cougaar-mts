@@ -170,7 +170,7 @@
     <!-- jarfiles required by this module, relative to various other paths -->
     <!-- WARNING: Only relative paths work here. -->
     <property name="compile.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.lib}/bootstrap.jar,${target.sys}/jms-1.1.jar,${target.sys}/log4j.jar,${target.sys}/servlet.jar"/>
-    <!-- Put absolute paths on this list, in the form of a path. -->
+	<!-- Put absolute paths on this list, in the form of a path. -->
     <property name="compile.abs.jarlist" value=""/>
 
     <!-- javadoc package spec for building javadocs -->
@@ -315,7 +315,8 @@
 	    includes="**/*Impl.class"> 
 	<classpath>
 	  <path location="${module.classes}" />
-	  <path refid="compile.classpath"/>
+	  <path location="${TARGETBASE}/util/tmp/classes"/>
+	  <path location="${TARGETBASE}/core/tmp/classes"/>
 	</classpath>
       </rmic>	    
     </target>
