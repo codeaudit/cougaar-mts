@@ -37,7 +37,7 @@ import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
-import org.cougaar.mts.base.RMILinkProtocol;
+import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
@@ -57,7 +57,7 @@ public class ServiceTestAspect extends StandardAspect
 	    if (svc == null) {
 		ServiceBroker sb = getServiceBroker();
 		Object raw = sb.getService(this,
-					   RMILinkProtocol.Service.class, 
+					   RPCLinkProtocol.Service.class, 
 					   null);
 		svc = (LinkProtocolService) raw;
 	    }

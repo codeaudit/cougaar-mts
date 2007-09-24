@@ -54,8 +54,7 @@ final class LinkProtocolFactory
 	if (!reg.hasLinkProtocols()) {
 	LinkProtocol protocol =new LoopbackLinkProtocol();
 	initProtocol(protocol);
-	protocol = new RMILinkProtocol();
-	initProtocol(protocol);
+	makeProtocol("org.cougaar.mts.rmi.RMILinkProtocol");
 	}
     }
 
@@ -65,7 +64,6 @@ final class LinkProtocolFactory
     }
 
 
-    // Vestigial.
     private LinkProtocol makeProtocol(String classname) {
 	LinkProtocol protocol = null;
 	try {

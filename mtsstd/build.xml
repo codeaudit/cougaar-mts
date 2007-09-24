@@ -169,12 +169,12 @@
     
     <!-- jarfiles required by this module, relative to various other paths -->
     <!-- WARNING: Only relative paths work here. -->
-    <property name="compile.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.lib}/bootstrap.jar,${target.sys}/jms-1.1.jar,${target.sys}/servlet.jar"/>
+    <property name="compile.jarlist" value="${target.lib}/core.jar,${target.lib}/util.jar,${target.lib}/bootstrap.jar,${target.sys}/servlet.jar"/>
     <!-- Put absolute paths on this list, in the form of a path. -->
     <property name="compile.abs.jarlist" value=""/>
 
     <!-- javadoc package spec for building javadocs -->
-    <property name="javadoc.packages" value="org.cougaar.mts.base,org.cougaar.mts.corba,org.cougaar.mts.corba.idlj,org.cougaar.mts.http,org.cougaar.mts.std"/>
+    <property name="javadoc.packages" value="org.cougaar.mts.base,org.cougaar.mts.std"/>
 
     <!-- Extra jars needed at run / unit-test time. -->
     <!-- WARNING: Only relative paths work here. -->

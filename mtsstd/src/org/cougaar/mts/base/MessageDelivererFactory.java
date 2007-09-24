@@ -60,8 +60,7 @@ public class MessageDelivererFactory
     {
 	// Could restrict this request to LinkProtocols
 	if (serviceClass == MessageDeliverer.class) {
-	    if (requestor instanceof LinkProtocol || requestor instanceof MTImpl) 
-		return deliverer;
+	    return deliverer;
 	} 
 	return null;
     }

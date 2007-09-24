@@ -44,7 +44,7 @@ import org.cougaar.mts.base.MessageWriter;
 import org.cougaar.mts.base.MessageWriterDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
-import org.cougaar.mts.base.RMILinkProtocol;
+import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
@@ -67,9 +67,9 @@ public class PreserializingStreamsAspect extends StandardAspect
 	    return new PSMessageReader(rdr);
 	} else if (type == DestinationLink.class) {
 	    DestinationLink link = (DestinationLink) delegatee;
-	    // Only RMI is relevant here
+	    // Only RPC is relevant here
 	    Class cls = link.getProtocolClass();
-	    if (RMILinkProtocol.class.isAssignableFrom(cls))
+	    if (RPCLinkProtocol.class.isAssignableFrom(cls))
 		return new PSDestinationLink(link);
 	}
 	 
