@@ -317,6 +317,7 @@
 	  <path location="${module.classes}" />
 	  <path location="${TARGETBASE}/util/tmp/classes"/>
 	  <path location="${TARGETBASE}/core/tmp/classes"/>
+	  <path location="${TARGETBASE}/mtsstd/tmp/classes"/>
 	  <path refid="compile.classpath"/>
 	</classpath>
       </rmic>	    
