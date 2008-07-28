@@ -63,8 +63,6 @@ class MessageReceiver {
     }
 
     void handleIncomingMessage(AttributedMessage msg) {
-        if (log.isDebugEnabled())
-            log.debug("Received FILE message=" + msg);
         if (deliverer == null) {
             log.error("Message arrived before MessageDelivererService was available");
             return;
@@ -108,8 +106,9 @@ class MessageReceiver {
                 Object rawObject = ois.readObject();
                 if (rawObject instanceof AttributedMessage) {
                     handleIncomingMessage((AttributedMessage) rawObject);
-                } else if (rawObject instanceof Exception) {
-
+                    if (log.isInfoEnabled()) {
+                        log.info("Handled message in " + file);
+                    }
                 } else {
                     throw new IllegalStateException(rawObject + " is not an AttributedMessage");
                 }

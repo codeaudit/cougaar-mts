@@ -99,6 +99,9 @@ class ReplySync {
         // rename the temp file to a unique name in the directory
         File messageFile = new File(dataDir, temp.getName());
         temp.renameTo(messageFile);
+        if (log.isInfoEnabled()) {
+            log.info("Wrote message to " + messageFile);
+        }
     }
 
     private void setMessageProperties(AttributedMessage message, Integer id, URI uri) {
@@ -114,6 +117,9 @@ class ReplySync {
         setMessageProperties(message, id, uri);
 
         Object lock = new Object();
+        if (log.isInfoEnabled()) {
+            log.info("Sending message " + id);
+        }
         pending.put(id, lock);
         long startTime = System.currentTimeMillis();
         SchedulableStatus.beginNetIO("FILE RPC");
@@ -125,8 +131,7 @@ class ReplySync {
             }
             while (true) {
                 try {
-                    lock.wait(timeout); // TODO: timeout should be set
-                                        // dynamically
+                    lock.wait(timeout); // TODO: timeout should be set dynamically
                     break;
                 } catch (InterruptedException ex) {
 
@@ -174,15 +179,22 @@ class ReplySync {
 
     boolean isReply(AttributedMessage msg) {
         boolean isReply = (Boolean) msg.getAttribute(IS_MTS_REPLY_PROP);
-        if (log.isDebugEnabled()) {
-            log.debug("Value of " + IS_MTS_REPLY_PROP + " property is " + isReply);
-        }
+        
+        Integer id = (Integer) msg.getAttribute(ID_PROP);
         if (!isReply) {
+            if (log.isInfoEnabled()) {
+                log.info("Received message " + id);
+            }
             return false;
         }
-        Integer id = (Integer) msg.getAttribute(ID_PROP);
-        if (log.isDebugEnabled()) {
-            log.debug("Value of " + ID_PROP + " property is " + id);
+        
+        if (log.isInfoEnabled()) {
+            log.info("Handling reply to " + id);
+        }
+        
+        if (id == null) {
+            log.error("Ack message has no value for attribute " + ID_PROP);
+            return true;
         }
         Object exception = msg.getAttribute(DELIVERY_EXCEPTION_PROP);
         if (exception != null) {
@@ -197,7 +209,7 @@ class ReplySync {
             }
         } else {
             if (log.isWarnEnabled()) {
-                log.warn("Got reply for message we timed out, id=" + id + " msg=" + msg);
+                log.warn("Got reply for message we timed out, id=" + id);
             }
         }
         return true;
