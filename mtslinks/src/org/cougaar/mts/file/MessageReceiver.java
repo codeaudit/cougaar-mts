@@ -41,16 +41,19 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * This utility class handles incoming JMS messages
+ * This utility class handles incoming file messages
  */
-public class MessageReceiver {
-    protected final Logger log;
+class MessageReceiver {
+    private final Logger log;
     private final MessageDeliverer deliverer;
     private final ReplySync sync;
     private final URI servantUri;
-    private Schedulable poller;
-    public MessageReceiver(ReplySync sync, MessageDeliverer deliverer,
-                           URI servantUri, ThreadService threads) {
+    private final Schedulable poller;
+
+    MessageReceiver(ReplySync sync,
+                    MessageDeliverer deliverer,
+                    URI servantUri,
+                    ThreadService threads) {
         this.sync = sync;
         this.deliverer = deliverer;
         this.servantUri = servantUri;
@@ -58,10 +61,10 @@ public class MessageReceiver {
         poller = threads.getThread(this, new FilePoller(), "File Poller");
         poller.schedule(0, 1);
     }
-    
-    public void handleIncomingMessage(AttributedMessage msg) {
+
+    void handleIncomingMessage(AttributedMessage msg) {
         if (log.isDebugEnabled())
-            log.debug("Received JMS message=" + msg);
+            log.debug("Received FILE message=" + msg);
         if (deliverer == null) {
             log.error("Message arrived before MessageDelivererService was available");
             return;
@@ -81,13 +84,12 @@ public class MessageReceiver {
     }
 
     private class FilePoller implements Runnable {
-        private File directory;
-        
+        private final File directory;
+
         FilePoller() {
-            File rootDirectory = new File(servantUri.getPath());
-            directory = new File(rootDirectory, "msgs");
+            directory =  FileLinkProtocol.getDataSubdirectory(servantUri);
         }
-        
+
         public void run() {
             if (directory.exists()) {
                 File[] contents = directory.listFiles();
@@ -107,12 +109,12 @@ public class MessageReceiver {
                 if (rawObject instanceof AttributedMessage) {
                     handleIncomingMessage((AttributedMessage) rawObject);
                 } else if (rawObject instanceof Exception) {
-                    
+
                 } else {
                     throw new IllegalStateException(rawObject + " is not an AttributedMessage");
                 }
             } catch (Exception e) {
-                log.error("Error reading '" +file+ "': " + e.getMessage(), e);
+                log.error("Error reading '" + file + "': " + e.getMessage(), e);
             } finally {
                 if (fis != null) {
                     try {

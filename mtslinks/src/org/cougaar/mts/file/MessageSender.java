@@ -37,27 +37,25 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * This utility class handles outgoing JMS messages
+ * This utility class handles outgoing fi;e messages
  */
-public class MessageSender implements AttributeConstants {
+class MessageSender implements AttributeConstants {
     private final ReplySync sync;
     private final Logger log;
 
-    public MessageSender(FileLinkProtocol lp, ReplySync sync) {
+    MessageSender(FileLinkProtocol lp, ReplySync sync) {
         this.sync = sync;
         log = Logging.getLogger(getClass().getName());
     }
 
-    public MessageAttributes handleOutgoingMessage(URI uri,
-                                                   AttributedMessage mtsMessage)
+    MessageAttributes handleOutgoingMessage(URI uri, AttributedMessage mtsMessage) 
             throws CommFailureException,
-                MisdeliveredMessageException {
+            MisdeliveredMessageException {
         Object deadline = mtsMessage.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
         long ttl = 0;
         if (deadline != null) {
             if (deadline instanceof Long) {
-                ttl = ((Long) deadline).longValue()
-                - System.currentTimeMillis();
+                ttl = ((Long) deadline).longValue() - System.currentTimeMillis();
                 if (ttl < 0) {
                     log.warn("Message already expired");
                     MessageAttributes metadata = new MessageReply(mtsMessage);

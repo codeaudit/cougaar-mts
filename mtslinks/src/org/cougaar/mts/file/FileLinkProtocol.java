@@ -23,53 +23,52 @@ import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.annotations.Cougaar;
+
 /**
  * Send messages via file-sharing.
  */
 public class FileLinkProtocol extends RPCLinkProtocol {
+    private static final String DATA_SUBDIRECTORY = "msgs";
+    private static final String TMP_SUBDIRECTORY = "temp";
 
- // manager for receiving messages
+    // manager for receiving messages
     private MessageReceiver receiver;
     // manager for sending messages and waiting for replys
     private ReplySync sync;
-    
+
     private URI servantUri;
-    
-    @Cougaar.Arg(name="rootDirectory", required=true)
+
+    @Cougaar.Arg(name = "rootDirectory", required = true)
     private String rootDirectory;
-    
+
     @Cougaar.ObtainService
     private ThreadService threadService;
-    
-    public FileLinkProtocol() {
-        
-    }
-    
+
     URI getServantUri() {
         return servantUri;
     }
-    
-    protected final ReplySync findOrMakeReplySync() {
+
+    private ReplySync findOrMakeReplySync() {
         if (sync == null)
             sync = makeReplySync();
         return sync;
     }
-    
-    protected MessageSender makeMessageSender(ReplySync replySync) {
+
+    private MessageSender makeMessageSender(ReplySync replySync) {
         return new MessageSender(this, replySync);
     }
 
-    protected MessageReceiver makeMessageReceiver(ReplySync sync,
-                                                  MessageDeliverer deliverer,
-                                                  URI servantUri) {
+    private MessageReceiver makeMessageReceiver(ReplySync sync,
+                                                MessageDeliverer deliverer,
+                                                URI servantUri) {
         return new MessageReceiver(sync, deliverer, servantUri, threadService);
     }
 
-    protected ReplySync makeReplySync() {
+    private ReplySync makeReplySync() {
         return new ReplySync(this);
     }
-    
-    protected URI makeURI(String myServantId) throws URISyntaxException {
+
+    private URI makeURI(String myServantId) throws URISyntaxException {
         File file = new File(rootDirectory, myServantId);
         file.mkdirs();
         if (file.isDirectory() && file.canWrite() && file.canRead()) {
@@ -78,7 +77,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
             throw new URISyntaxException(file.getAbsolutePath(), "Bogus path '");
         }
     }
-    
+
     protected int computeCost(AttributedMessage message) {
         // very cheap
         return 0;
@@ -92,19 +91,19 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         if (servantUri != null) {
             return;
         }
-        
+
         // start polling file system
         String node = getNameSupport().getNodeMessageAddress().getAddress();
         try {
             servantUri = makeURI(node);
         } catch (URISyntaxException e) {
-            loggingService.error("Failed to make URI for node " +node, e);
+            loggingService.error("Failed to make URI for node " + node, e);
             return;
         }
         if (receiver == null) {
             ServiceBroker sb = getServiceBroker();
             MessageDeliverer deliverer = sb.getService(this, MessageDeliverer.class, null);
-            receiver = makeMessageReceiver(findOrMakeReplySync(),  deliverer, servantUri);
+            receiver = makeMessageReceiver(findOrMakeReplySync(), deliverer, servantUri);
         }
         setNodeURI(servantUri);
 
@@ -126,20 +125,18 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return false;
     }
 
-    
-    class FileLink extends Link {
+    private class FileLink extends Link {
         private final MessageSender sender;
-        protected URI uri;
+        private URI uri;
 
-        protected FileLink(MessageAddress addr) {
+        FileLink(MessageAddress addr) {
             super(addr);
             this.sender = makeMessageSender(findOrMakeReplySync());
         }
 
         public boolean isValid() {
             // Remake our servant if necessary. If that fails, the link is
-            // considered invalid,
-            // since the remote reference must be unreachable.
+            // considered invalid, since the remote reference must be unreachable.
             if (!isServantAlive()) {
                 remakeNodeServant();
                 if (!isServantAlive()) {
@@ -155,12 +152,11 @@ public class FileLinkProtocol extends RPCLinkProtocol {
             return uri = ref;
         }
 
-        protected MessageAttributes forwardByProtocol(Object destination,
-                                                      AttributedMessage message)
+        protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
                 throws NameLookupException,
-                    UnregisteredNameException,
-                    CommFailureException,
-                    MisdeliveredMessageException {
+                UnregisteredNameException,
+                CommFailureException,
+                MisdeliveredMessageException {
             try {
                 return sender.handleOutgoingMessage(uri, message);
             } catch (CommFailureException e1) {
@@ -178,5 +174,15 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         public Class<?> getProtocolClass() {
             return FileLinkProtocol.this.getClass();
         }
+    }
+    
+    static File getDataSubdirectory(URI uri) {
+        File rootDirectory = new File(uri.getPath());
+        return new File(rootDirectory, DATA_SUBDIRECTORY);
+    }
+    
+    static File getTmpSubdirectory(URI uri) {
+        File rootDirectory = new File(uri.getPath());
+        return new File(rootDirectory, TMP_SUBDIRECTORY);
     }
 }

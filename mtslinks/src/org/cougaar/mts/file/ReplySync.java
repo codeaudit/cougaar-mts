@@ -49,25 +49,25 @@ import org.cougaar.util.log.Logging;
  * for incoming messages, and processes received replies by waking the
  * corresponding thread.
  */
-public class ReplySync {
-    public static final int DEFAULT_TIMEOUT = 5000;
+class ReplySync {
+    private static final int DEFAULT_TIMEOUT = 5000;
     private static final String ID_PROP = "MTS_MSG_ID";
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static final String ORIGINATING_URI_PROP = "ORIGINATING_URI";
     private static final String DELIVERY_EXCEPTION_PROP = "DELIVERY_EXCEPTION";
     private static int ID = 0;
 
-    protected final FileLinkProtocol lp;
+    private final FileLinkProtocol lp;
     private final Map<Integer, Object> pending;
     private final Map<Integer, Object> replyData;
     private final int timeout;
-    protected final Logger log;
+    private final Logger log;
 
-    public ReplySync(FileLinkProtocol lp) {
+    ReplySync(FileLinkProtocol lp) {
         this(lp, DEFAULT_TIMEOUT);
     }
 
-    public ReplySync(FileLinkProtocol lp, int timeout) {
+    ReplySync(FileLinkProtocol lp, int timeout) {
         this.lp = lp;
         this.pending = new HashMap<Integer, Object>();
         this.replyData = new HashMap<Integer, Object>();
@@ -77,14 +77,12 @@ public class ReplySync {
 
     private void writeMessage(URI directory, AttributedMessage message) 
             throws IOException {
-        File directoryPath = new File(directory.getPath());
-        
         // serialize message to a temp file
-        File tempDir = new File(directoryPath, "tmp");
-        File dataDir = new File(directoryPath, "msgs");
+        File tempDir = FileLinkProtocol.getTmpSubdirectory(directory);
+        File dataDir = FileLinkProtocol.getDataSubdirectory(directory);
         tempDir.mkdirs();
         dataDir.mkdir();
-        
+
         File temp = File.createTempFile("FileLinkProtocol", ".msg", tempDir);
         FileOutputStream fos = null;
         try {
@@ -97,24 +95,21 @@ public class ReplySync {
                 fos.close();
             }
         }
-        
+
         // rename the temp file to a unique name in the directory
         File messageFile = new File(dataDir, temp.getName());
         temp.renameTo(messageFile);
     }
-    
-    protected void setMessageProperties(AttributedMessage message,
-                                        Integer id,
-                                        URI uri) {
+
+    private void setMessageProperties(AttributedMessage message, Integer id, URI uri) {
         message.setAttribute(ID_PROP, id.intValue());
         message.setAttribute(IS_MTS_REPLY_PROP, false);
         message.setAttribute(ORIGINATING_URI_PROP, lp.getServantUri());
     }
 
-    public MessageAttributes sendMessage(AttributedMessage message,
-                                         URI uri)
+    MessageAttributes sendMessage(AttributedMessage message, URI uri) 
             throws CommFailureException,
-                MisdeliveredMessageException {
+            MisdeliveredMessageException {
         Integer id = new Integer(++ID);
         setMessageProperties(message, id, uri);
 
@@ -130,7 +125,8 @@ public class ReplySync {
             }
             while (true) {
                 try {
-                    lock.wait(timeout); // TODO: timeout should be set dynamically
+                    lock.wait(timeout); // TODO: timeout should be set
+                                        // dynamically
                     break;
                 } catch (InterruptedException ex) {
 
@@ -150,19 +146,16 @@ public class ReplySync {
             throw new CommFailureException(new RuntimeException("Timeout waiting for reply = "
                     + sendTime));
         } else {
-            throw new CommFailureException(new RuntimeException("Weird Reply"
-                    + result));
+            throw new CommFailureException(new RuntimeException("Weird Reply" + result));
         }
     }
 
-    protected void setReplyProperties(AttributedMessage omsg, 
-                                      AttributedMessage replyMsg) {
+    private void setReplyProperties(AttributedMessage omsg, AttributedMessage replyMsg) {
         replyMsg.setAttribute(IS_MTS_REPLY_PROP, true);
         replyMsg.setAttribute(ID_PROP, omsg.getAttribute(ID_PROP));
     }
 
-    public void replyToMessage(AttributedMessage originalMsg, 
-                               MessageAttributes replyData) {
+    void replyToMessage(AttributedMessage originalMsg, MessageAttributes replyData) {
         AttributedMessage replyMsg = new AttributedMessage(null, replyData);
         setReplyProperties(originalMsg, replyMsg);
         URI originatingUri = (URI) originalMsg.getAttribute(ORIGINATING_URI_PROP);
@@ -173,23 +166,21 @@ public class ReplySync {
         }
     }
 
-    public void replyToMessage(AttributedMessage originalMessage,
-                               MisdeliveredMessageException exception) {
+    void replyToMessage(AttributedMessage originalMessage, MisdeliveredMessageException exception) {
         MessageAttributes attrs = new SimpleMessageAttributes();
         attrs.setAttribute(DELIVERY_EXCEPTION_PROP, exception);
         replyToMessage(originalMessage, attrs);
-    }   
-    
-    public boolean isReply(AttributedMessage msg) {
+    }
+
+    boolean isReply(AttributedMessage msg) {
         boolean isReply = (Boolean) msg.getAttribute(IS_MTS_REPLY_PROP);
         if (log.isDebugEnabled()) {
-            log.debug("Value of " + IS_MTS_REPLY_PROP + " property is "
-                      + isReply);
+            log.debug("Value of " + IS_MTS_REPLY_PROP + " property is " + isReply);
         }
         if (!isReply) {
             return false;
         }
-        Integer id =  (Integer) msg.getAttribute(ID_PROP);
+        Integer id = (Integer) msg.getAttribute(ID_PROP);
         if (log.isDebugEnabled()) {
             log.debug("Value of " + ID_PROP + " property is " + id);
         }
@@ -206,8 +197,7 @@ public class ReplySync {
             }
         } else {
             if (log.isWarnEnabled()) {
-                log.warn("Got reply for message we timed out, id=" + id
-                         + " msg=" + msg);
+                log.warn("Got reply for message we timed out, id=" + id + " msg=" + msg);
             }
         }
         return true;
