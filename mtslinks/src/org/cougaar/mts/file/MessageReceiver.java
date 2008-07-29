@@ -62,21 +62,27 @@ class MessageReceiver {
         poller.schedule(0, 1);
     }
 
-    void handleIncomingMessage(AttributedMessage msg) {
+    void handleIncomingMessage(MessageAttributes attrs) {
         if (deliverer == null) {
             log.error("Message arrived before MessageDelivererService was available");
             return;
         }
-        if (sync.isReply(msg)) {
+        if (sync.isReply(attrs)) {
             // it's an ack -- Work is done in isReply
             return;
-        } else {
+        } 
+        if (attrs instanceof AttributedMessage) {
+            AttributedMessage message = (AttributedMessage) attrs;
+            if (log.isInfoEnabled()) {
+                log.info("Delivering " + message+ " from " +message.getOriginator() 
+                         + " to " + message.getTarget());
+            }
             try {
-                MessageAttributes reply = deliverer.deliverMessage(msg, msg.getTarget());
-                sync.replyToMessage(msg, reply);
+                MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
+                sync.replyToMessage(message, reply);
             } catch (MisdeliveredMessageException e) {
                 log.error(e.getMessage(), e);
-                sync.replyToMessage(msg, e);
+                sync.replyToMessage(message, e);
             }
         }
     }
@@ -104,13 +110,13 @@ class MessageReceiver {
                 fis = new FileInputStream(file);
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 Object rawObject = ois.readObject();
-                if (rawObject instanceof AttributedMessage) {
-                    handleIncomingMessage((AttributedMessage) rawObject);
-                    if (log.isInfoEnabled()) {
-                        log.info("Handled message in " + file);
+                if (rawObject instanceof MessageAttributes) {
+                    handleIncomingMessage((MessageAttributes) rawObject);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Handled message in " + file);
                     }
                 } else {
-                    throw new IllegalStateException(rawObject + " is not an AttributedMessage");
+                    throw new IllegalStateException(rawObject + " is not MessageAttributes");
                 }
             } catch (Exception e) {
                 log.error("Error reading '" + file + "': " + e.getMessage(), e);

@@ -75,7 +75,7 @@ class ReplySync {
         this.timeout = timeout;
     }
 
-    private void writeMessage(URI directory, AttributedMessage message) 
+    private void writeMessage(URI directory, MessageAttributes message) 
             throws IOException {
         // serialize message to a temp file
         File tempDir = FileLinkProtocol.getTmpSubdirectory(directory);
@@ -99,8 +99,8 @@ class ReplySync {
         // rename the temp file to a unique name in the directory
         File messageFile = new File(dataDir, temp.getName());
         temp.renameTo(messageFile);
-        if (log.isInfoEnabled()) {
-            log.info("Wrote message to " + messageFile);
+        if (log.isDebugEnabled()) {
+            log.debug("Wrote message to " + messageFile);
         }
     }
 
@@ -117,9 +117,6 @@ class ReplySync {
         setMessageProperties(message, id, uri);
 
         Object lock = new Object();
-        if (log.isInfoEnabled()) {
-            log.info("Sending message " + id);
-        }
         pending.put(id, lock);
         long startTime = System.currentTimeMillis();
         SchedulableStatus.beginNetIO("FILE RPC");
@@ -134,7 +131,7 @@ class ReplySync {
                     lock.wait(timeout); // TODO: timeout should be set dynamically
                     break;
                 } catch (InterruptedException ex) {
-
+                    // keep waiting
                 }
             }
         }
@@ -143,6 +140,9 @@ class ReplySync {
         Object result = replyData.remove(id);
         pending.remove(id);
         if (result instanceof MessageAttributes) {
+            if (log.isDebugEnabled()) {
+                log.debug("Response to message " +id+ " was " +result);
+            }
             return (MessageAttributes) result;
         } else if (result instanceof MisdeliveredMessageException) {
             MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
@@ -155,17 +155,16 @@ class ReplySync {
         }
     }
 
-    private void setReplyProperties(AttributedMessage omsg, AttributedMessage replyMsg) {
-        replyMsg.setAttribute(IS_MTS_REPLY_PROP, true);
-        replyMsg.setAttribute(ID_PROP, omsg.getAttribute(ID_PROP));
+    private void setReplyProperties(AttributedMessage omsg, MessageAttributes reply) {
+        reply.setAttribute(IS_MTS_REPLY_PROP, true);
+        reply.setAttribute(ID_PROP, omsg.getAttribute(ID_PROP));
     }
 
     void replyToMessage(AttributedMessage originalMsg, MessageAttributes replyData) {
-        AttributedMessage replyMsg = new AttributedMessage(null, replyData);
-        setReplyProperties(originalMsg, replyMsg);
+        setReplyProperties(originalMsg, replyData);
         URI originatingUri = (URI) originalMsg.getAttribute(ORIGINATING_URI_PROP);
         try {
-            writeMessage(originatingUri, replyMsg);
+            writeMessage(originatingUri, replyData);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -177,30 +176,30 @@ class ReplySync {
         replyToMessage(originalMessage, attrs);
     }
 
-    boolean isReply(AttributedMessage msg) {
-        boolean isReply = (Boolean) msg.getAttribute(IS_MTS_REPLY_PROP);
+    boolean isReply(MessageAttributes attrs) {
+        boolean isReply = (Boolean) attrs.getAttribute(IS_MTS_REPLY_PROP);
         
-        Integer id = (Integer) msg.getAttribute(ID_PROP);
+        Integer id = (Integer) attrs.getAttribute(ID_PROP);
         if (!isReply) {
-            if (log.isInfoEnabled()) {
-                log.info("Received message " + id);
+            if (log.isDebugEnabled()) {
+                log.debug("Received message " + id);
             }
             return false;
         }
         
-        if (log.isInfoEnabled()) {
-            log.info("Handling reply to " + id);
+        if (log.isDebugEnabled()) {
+            log.debug("Handling reply to " + id);
         }
         
         if (id == null) {
             log.error("Ack message has no value for attribute " + ID_PROP);
             return true;
         }
-        Object exception = msg.getAttribute(DELIVERY_EXCEPTION_PROP);
+        Object exception = attrs.getAttribute(DELIVERY_EXCEPTION_PROP);
         if (exception != null) {
             replyData.put(id, exception);
         } else {
-            replyData.put(id, msg);
+            replyData.put(id, attrs);
         }
         Object lock = pending.get(id);
         if (lock != null) {

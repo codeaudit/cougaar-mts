@@ -65,6 +65,9 @@ class MessageSender implements AttributeConstants {
                 }
             }
         }
+        if (log.isInfoEnabled()) {
+            log.info("Sending message " + mtsMessage+ " to " + uri);
+        }
         MessageAttributes metadata = sync.sendMessage(mtsMessage, uri);
         return metadata;
     }
