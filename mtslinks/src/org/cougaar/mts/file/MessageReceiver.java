@@ -63,7 +63,9 @@ class MessageReceiver {
                 MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
                 sync.replyToMessage(message, reply);
             } catch (MisdeliveredMessageException e) {
-                log.error(e.getMessage(), e);
+                if (log.isDebugEnabled()) {
+                    log.debug(e.getMessage(), e);
+                }
                 sync.replyToMessage(message, e);
             }
         }
