@@ -37,7 +37,7 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * This utility class handles outgoing fi;e messages
+ * This utility class handles outgoing file messages
  */
 class MessageSender implements AttributeConstants {
     private final FileLinkProtocol protocol;
@@ -52,17 +52,14 @@ class MessageSender implements AttributeConstants {
             throws CommFailureException,
             MisdeliveredMessageException {
         Object deadline = mtsMessage.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
-        long ttl = 0;
-        if (deadline != null) {
-            if (deadline instanceof Long) {
-                ttl = ((Long) deadline).longValue() - System.currentTimeMillis();
-                if (ttl < 0) {
-                    log.warn("Message already expired");
-                    MessageAttributes metadata = new MessageReply(mtsMessage);
-                    metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-                                          MessageAttributes.DELIVERY_STATUS_DROPPED);
-                    return metadata;
-                }
+        if (deadline instanceof Long) {
+            long ttl = (Long) deadline - System.currentTimeMillis();
+            if (ttl < 0) {
+                log.warn("Message already expired");
+                MessageAttributes metadata = new MessageReply(mtsMessage);
+                metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
+                                      MessageAttributes.DELIVERY_STATUS_DROPPED);
+                return metadata;
             }
         }
         if (log.isInfoEnabled()) {

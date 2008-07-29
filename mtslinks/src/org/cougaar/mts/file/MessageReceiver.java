@@ -48,10 +48,6 @@ class MessageReceiver {
     }
 
     void handleIncomingMessage(MessageAttributes attrs) {
-        if (deliverer == null) {
-            log.error("Message arrived before MessageDelivererService was available");
-            return;
-        }
         ReplySync sync = protocol.getReplySync();
         if (sync.isReply(attrs)) {
             // it's an ack -- Work is done in isReply
