@@ -106,7 +106,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         File file = new File(rootDirectory, myServantId);
         file.mkdirs();
         if (file.isDirectory() && file.canWrite() && file.canRead()) {
-            return new URI("file", null, file.getAbsolutePath(), null, null);
+            return new URI("file", "", file.getAbsolutePath(), null, null);
         } else {
             throw new URISyntaxException(file.getAbsolutePath(), "Bogus path '");
         }
