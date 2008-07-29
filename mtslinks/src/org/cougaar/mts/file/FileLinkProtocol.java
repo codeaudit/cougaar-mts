@@ -46,13 +46,13 @@ public class FileLinkProtocol extends RPCLinkProtocol {
 
     private URI servantUri;
 
-    @Cougaar.Arg(name = "rootDirectory", required = true)
+    @Cougaar.Arg(name = "rootDirectory", defaultValue="/tmp/cougaar")
     private String rootDirectory;
 
     @Cougaar.ObtainService
     private ThreadService threadService;
 
-    URI getServantUri() {
+    protected URI getServantUri() {
         return servantUri;
     }
 
@@ -102,7 +102,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return new MessageReceiver(this, deliverer);
     }
 
-    private URI makeURI(String myServantId) throws URISyntaxException {
+    protected URI makeURI(String myServantId) throws URISyntaxException {
         File file = new File(rootDirectory, myServantId);
         file.mkdirs();
         if (file.isDirectory() && file.canWrite() && file.canRead()) {
