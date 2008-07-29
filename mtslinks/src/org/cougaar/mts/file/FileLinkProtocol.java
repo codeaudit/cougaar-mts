@@ -63,7 +63,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
          return sync;
     }
 
-    File getDataSubdirectory(URI uri) {
+    private File getDataSubdirectory(URI uri) {
         File rootDirectory = new File(uri.getPath());
         return new File(rootDirectory, DATA_SUBDIRECTORY);
     }
@@ -71,6 +71,27 @@ public class FileLinkProtocol extends RPCLinkProtocol {
     private File getTmpSubdirectory(URI uri) {
         File rootDirectory = new File(uri.getPath());
         return new File(rootDirectory, TMP_SUBDIRECTORY);
+    }
+    
+    private void deleteFile(File file) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                deleteFile(child);
+            }
+        }
+        file.delete();
+    }
+    
+    private void cleanup() {
+        if (servantUri != null) {
+            File root = new File(servantUri.getPath());
+            deleteFile(root);
+        }
+    }
+    
+    public void unload() {
+        super.unload();
+        cleanup();
     }
 
     private MessageSender makeMessageSender() {
@@ -189,6 +210,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
 
     protected void releaseNodeServant() {
         // Maybe delete the incoming message directory?
+        cleanup();
     }
 
     protected void remakeNodeServant() {
