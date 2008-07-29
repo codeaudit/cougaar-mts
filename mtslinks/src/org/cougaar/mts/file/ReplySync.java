@@ -25,10 +25,7 @@
  */
 package org.cougaar.mts.file;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,57 +54,30 @@ class ReplySync {
     private static final String DELIVERY_EXCEPTION_PROP = "DELIVERY_EXCEPTION";
     private static int ID = 0;
 
-    private final FileLinkProtocol lp;
+    private final FileLinkProtocol protocol;
     private final Map<Integer, Object> pending;
     private final Map<Integer, Object> replyData;
     private final int timeout;
     private final Logger log;
 
-    ReplySync(FileLinkProtocol lp) {
-        this(lp, DEFAULT_TIMEOUT);
+    ReplySync(FileLinkProtocol protocol) {
+        this(protocol, DEFAULT_TIMEOUT);
     }
 
-    ReplySync(FileLinkProtocol lp, int timeout) {
-        this.lp = lp;
+    ReplySync(FileLinkProtocol protocol, int timeout) {
+        this.protocol = protocol;
         this.pending = new HashMap<Integer, Object>();
         this.replyData = new HashMap<Integer, Object>();
         this.log = Logging.getLogger(getClass().getName());
         this.timeout = timeout;
     }
 
-    private void writeMessage(URI directory, MessageAttributes message) 
-            throws IOException {
-        // serialize message to a temp file
-        File tempDir = FileLinkProtocol.getTmpSubdirectory(directory);
-        File dataDir = FileLinkProtocol.getDataSubdirectory(directory);
-        tempDir.mkdirs();
-        dataDir.mkdir();
-
-        File temp = File.createTempFile("FileLinkProtocol", ".msg", tempDir);
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(temp);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(message);
-            oos.flush();
-        } finally {
-            if (fos != null) {
-                fos.close();
-            }
-        }
-
-        // rename the temp file to a unique name in the directory
-        File messageFile = new File(dataDir, temp.getName());
-        temp.renameTo(messageFile);
-        if (log.isDebugEnabled()) {
-            log.debug("Wrote message to " + messageFile);
-        }
-    }
+    
 
     private void setMessageProperties(AttributedMessage message, Integer id, URI uri) {
         message.setAttribute(ID_PROP, id.intValue());
         message.setAttribute(IS_MTS_REPLY_PROP, false);
-        message.setAttribute(ORIGINATING_URI_PROP, lp.getServantUri());
+        message.setAttribute(ORIGINATING_URI_PROP, protocol.getServantUri());
     }
 
     MessageAttributes sendMessage(AttributedMessage message, URI uri) 
@@ -122,7 +92,7 @@ class ReplySync {
         SchedulableStatus.beginNetIO("FILE RPC");
         synchronized (lock) {
             try {
-                writeMessage(uri, message);
+                protocol.processOutgoingMessage(uri, message);
             } catch (IOException e) {
                 throw new CommFailureException(e);
             }
@@ -164,7 +134,7 @@ class ReplySync {
         setReplyProperties(originalMsg, replyData);
         URI originatingUri = (URI) originalMsg.getAttribute(ORIGINATING_URI_PROP);
         try {
-            writeMessage(originatingUri, replyData);
+            protocol.processOutgoingMessage(originatingUri, replyData);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }

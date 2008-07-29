@@ -7,6 +7,12 @@
 package org.cougaar.mts.file;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -14,6 +20,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.MessageDeliverer;
@@ -33,7 +40,8 @@ public class FileLinkProtocol extends RPCLinkProtocol {
 
     // manager for receiving messages
     private MessageReceiver receiver;
-    // manager for sending messages and waiting for replys
+    
+    // manager for sending messages and waiting for replies
     private ReplySync sync;
 
     private URI servantUri;
@@ -48,24 +56,29 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return servantUri;
     }
 
-    private ReplySync findOrMakeReplySync() {
-        if (sync == null)
-            sync = makeReplySync();
-        return sync;
+    ReplySync getReplySync() {
+         if (sync == null) {
+             sync = new ReplySync(this);
+         }
+         return sync;
     }
 
-    private MessageSender makeMessageSender(ReplySync replySync) {
-        return new MessageSender(this, replySync);
+    File getDataSubdirectory(URI uri) {
+        File rootDirectory = new File(uri.getPath());
+        return new File(rootDirectory, DATA_SUBDIRECTORY);
     }
 
-    private MessageReceiver makeMessageReceiver(ReplySync sync,
-                                                MessageDeliverer deliverer,
-                                                URI servantUri) {
-        return new MessageReceiver(sync, deliverer, servantUri, threadService);
+    private File getTmpSubdirectory(URI uri) {
+        File rootDirectory = new File(uri.getPath());
+        return new File(rootDirectory, TMP_SUBDIRECTORY);
     }
 
-    private ReplySync makeReplySync() {
-        return new ReplySync(this);
+    private MessageSender makeMessageSender() {
+        return new MessageSender(this);
+    }
+
+    private MessageReceiver makeMessageReceiver(MessageDeliverer deliverer) {
+        return new MessageReceiver(this, deliverer);
     }
 
     private URI makeURI(String myServantId) throws URISyntaxException {
@@ -75,6 +88,64 @@ public class FileLinkProtocol extends RPCLinkProtocol {
             return new URI("file", null, file.getAbsolutePath(), null, null);
         } else {
             throw new URISyntaxException(file.getAbsolutePath(), "Bogus path '");
+        }
+    }
+    
+    /**
+     * Override to use a medium other than, or in addition to, local files.
+     */
+    protected void processOutgoingMessage(URI destination, MessageAttributes message) 
+            throws IOException {
+        // serialize message to a temp file
+        File tempDir = getTmpSubdirectory(destination);
+        File dataDir = getDataSubdirectory(destination);
+        tempDir.mkdirs();
+        dataDir.mkdir();
+
+        File temp = File.createTempFile("FileLinkProtocol", ".msg", tempDir);
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(temp);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(message);
+            oos.flush();
+        } finally {
+            if (fos != null) {
+                fos.close();
+            }
+        }
+
+        // rename the temp file to a unique name in the directory
+        File messageFile = new File(dataDir, temp.getName());
+        temp.renameTo(messageFile);
+        if (loggingService.isDebugEnabled()) {
+            loggingService.debug("Wrote message to " + messageFile);
+        }
+    }
+    
+    /**
+     * Override to poll something other than the local file system.
+     * Each poll should invoke {@link processIncomingMessage} for
+     * each new item.
+     */
+    protected Runnable makePollerTask() {
+        return new FilePoller();
+    }
+    
+    /**
+     * Read and dispatch an incoming message on a stream.
+     * 
+     * This is protected so that it can be invoked by
+     * a subclass, not (typically) to be overridden.
+     */
+    protected void processingIncomingMessage(InputStream stream) 
+            throws IOException, ClassNotFoundException {
+        ObjectInputStream ois = new ObjectInputStream(stream);
+        Object rawObject = ois.readObject();
+        if (rawObject instanceof MessageAttributes) {
+            receiver.handleIncomingMessage((MessageAttributes) rawObject);
+        } else {
+            throw new IllegalStateException(rawObject + " is not MessageAttributes");
         }
     }
 
@@ -103,7 +174,10 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         if (receiver == null) {
             ServiceBroker sb = getServiceBroker();
             MessageDeliverer deliverer = sb.getService(this, MessageDeliverer.class, null);
-            receiver = makeMessageReceiver(findOrMakeReplySync(), deliverer, servantUri);
+            receiver = makeMessageReceiver(deliverer);
+            Runnable pollerTask = makePollerTask();
+            Schedulable poller = threadService.getThread(this ,pollerTask, "Message Poller");
+            poller.schedule(0, 1);
         }
         setNodeURI(servantUri);
 
@@ -131,7 +205,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
 
         FileLink(MessageAddress addr) {
             super(addr);
-            this.sender = makeMessageSender(findOrMakeReplySync());
+            this.sender = makeMessageSender();
         }
 
         public boolean isValid() {
@@ -176,13 +250,42 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         }
     }
     
-    static File getDataSubdirectory(URI uri) {
-        File rootDirectory = new File(uri.getPath());
-        return new File(rootDirectory, DATA_SUBDIRECTORY);
-    }
-    
-    static File getTmpSubdirectory(URI uri) {
-        File rootDirectory = new File(uri.getPath());
-        return new File(rootDirectory, TMP_SUBDIRECTORY);
+    private class FilePoller implements Runnable {
+        private final File directory;
+
+        FilePoller() {
+            directory =  getDataSubdirectory(getServantUri());
+        }
+
+        public void run() {
+            if (directory.exists()) {
+                File[] contents = directory.listFiles();
+                for (File file : contents) {
+                    processFile(file);
+                    file.delete();
+                }
+            }
+        }
+
+        private void processFile(File file) {
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Handling message in " + file);
+            }
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+                processingIncomingMessage(fis);
+            } catch (Exception e) {
+                loggingService.error("Error reading '" + file + "': " + e.getMessage(), e);
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                        // don't care
+                    }
+                }
+            }
+        }
     }
 }

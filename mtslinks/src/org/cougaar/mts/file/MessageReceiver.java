@@ -25,15 +25,7 @@
  */
 package org.cougaar.mts.file;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.URI;
-
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.std.AttributedMessage;
@@ -46,20 +38,13 @@ import org.cougaar.util.log.Logging;
 class MessageReceiver {
     private final Logger log;
     private final MessageDeliverer deliverer;
-    private final ReplySync sync;
-    private final URI servantUri;
-    private final Schedulable poller;
+    private final FileLinkProtocol protocol;
 
-    MessageReceiver(ReplySync sync,
-                    MessageDeliverer deliverer,
-                    URI servantUri,
-                    ThreadService threads) {
-        this.sync = sync;
+    MessageReceiver(FileLinkProtocol protocol, MessageDeliverer deliverer) {
+        this.protocol = protocol;
         this.deliverer = deliverer;
-        this.servantUri = servantUri;
         this.log = Logging.getLogger(getClass().getName());
-        poller = threads.getThread(this, new FilePoller(), "File Poller");
-        poller.schedule(0, 1);
+       
     }
 
     void handleIncomingMessage(MessageAttributes attrs) {
@@ -67,6 +52,7 @@ class MessageReceiver {
             log.error("Message arrived before MessageDelivererService was available");
             return;
         }
+        ReplySync sync = protocol.getReplySync();
         if (sync.isReply(attrs)) {
             // it's an ack -- Work is done in isReply
             return;
@@ -87,48 +73,5 @@ class MessageReceiver {
         }
     }
 
-    private class FilePoller implements Runnable {
-        private final File directory;
-
-        FilePoller() {
-            directory =  FileLinkProtocol.getDataSubdirectory(servantUri);
-        }
-
-        public void run() {
-            if (directory.exists()) {
-                File[] contents = directory.listFiles();
-                for (File file : contents) {
-                    processFile(file);
-                    file.delete();
-                }
-            }
-        }
-
-        private void processFile(File file) {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(file);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                Object rawObject = ois.readObject();
-                if (rawObject instanceof MessageAttributes) {
-                    handleIncomingMessage((MessageAttributes) rawObject);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Handled message in " + file);
-                    }
-                } else {
-                    throw new IllegalStateException(rawObject + " is not MessageAttributes");
-                }
-            } catch (Exception e) {
-                log.error("Error reading '" + file + "': " + e.getMessage(), e);
-            } finally {
-                if (fis != null) {
-                    try {
-                        fis.close();
-                    } catch (IOException e) {
-                        // don't care
-                    }
-                }
-            }
-        }
-    }
+    
 }

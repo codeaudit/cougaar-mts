@@ -40,11 +40,11 @@ import org.cougaar.util.log.Logging;
  * This utility class handles outgoing fi;e messages
  */
 class MessageSender implements AttributeConstants {
-    private final ReplySync sync;
+    private final FileLinkProtocol protocol;
     private final Logger log;
 
-    MessageSender(FileLinkProtocol lp, ReplySync sync) {
-        this.sync = sync;
+    MessageSender(FileLinkProtocol protocol) {
+        this.protocol = protocol;
         log = Logging.getLogger(getClass().getName());
     }
 
@@ -68,7 +68,7 @@ class MessageSender implements AttributeConstants {
         if (log.isInfoEnabled()) {
             log.info("Sending message " + mtsMessage+ " to " + uri);
         }
-        MessageAttributes metadata = sync.sendMessage(mtsMessage, uri);
+        MessageAttributes metadata = protocol.getReplySync().sendMessage(mtsMessage, uri);
         return metadata;
     }
 }
