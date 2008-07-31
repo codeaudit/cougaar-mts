@@ -186,15 +186,6 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return true;
     }
     
-    protected void closeNodeServant() {
-        servantUri = null;
-        setNodeURI(null);
-        if (poller != null) {
-            poller.cancelTimer();
-            poller = null;
-        }
-    }
-    
     protected void findOrMakeNodeServant() {
         if (servantUri != null) {
             return;
@@ -202,7 +193,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
 
         String node = getNameSupport().getNodeMessageAddress().getAddress();
         if (!establishConnections(node)) {
-            closeNodeServant();
+            releaseNodeServant();
             return;
         }
         
@@ -211,7 +202,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
             setNodeURI(servantUri);
         } catch (URISyntaxException e) {
             loggingService.error("Failed to make URI for node " + node, e);
-            closeNodeServant();
+            releaseNodeServant();
             return;
         }
         
@@ -233,12 +224,19 @@ public class FileLinkProtocol extends RPCLinkProtocol {
     }
 
     protected void releaseNodeServant() {
-        // Maybe delete the incoming message directory?
-        cleanup();
+        servantUri = null;
+        setNodeURI(null);
+        if (poller != null) {
+            poller.cancelTimer();
+            poller = null;
+        }
     }
-
+    
     protected void remakeNodeServant() {
-        // no-op
+        if (isServantAlive()) {
+            releaseNodeServant();
+        }
+        findOrMakeNodeServant();
     }
 
     protected Boolean usesEncryptedSocket() {
@@ -323,7 +321,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
                 processingIncomingMessage(fis);
             } catch (Exception e) {
                 loggingService.error("Error reading '" + file + "': " + e.getMessage(), e);
-                closeNodeServant();
+                releaseNodeServant();
             } finally {
                 if (fis != null) {
                     try {
