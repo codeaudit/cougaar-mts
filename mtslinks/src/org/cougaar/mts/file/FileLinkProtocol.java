@@ -59,9 +59,13 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return servantUri;
     }
 
+    protected int getReplyTimeoutMillis() {
+        return 5000;
+    }
+    
     ReplySync getReplySync() {
          if (sync == null) {
-             sync = new ReplySync(this);
+             sync = new ReplySync(this, getReplyTimeoutMillis());
          }
          return sync;
     }

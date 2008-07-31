@@ -47,7 +47,6 @@ import org.cougaar.util.log.Logging;
  * corresponding thread.
  */
 class ReplySync {
-    private static final int DEFAULT_TIMEOUT = 5000;
     private static final String ID_PROP = "MTS_MSG_ID";
     private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
     private static final String ORIGINATING_URI_PROP = "ORIGINATING_URI";
@@ -60,10 +59,6 @@ class ReplySync {
     private final int timeout;
     private final Logger log;
 
-    ReplySync(FileLinkProtocol protocol) {
-        this(protocol, DEFAULT_TIMEOUT);
-    }
-
     ReplySync(FileLinkProtocol protocol, int timeout) {
         this.protocol = protocol;
         this.pending = new HashMap<Integer, Object>();
@@ -71,8 +66,6 @@ class ReplySync {
         this.log = Logging.getLogger(getClass().getName());
         this.timeout = timeout;
     }
-
-    
 
     private void setMessageProperties(AttributedMessage message, Integer id, URI uri) {
         message.setAttribute(ID_PROP, id.intValue());
@@ -118,10 +111,10 @@ class ReplySync {
             MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
             throw ex;
         } else if (sendTime >= timeout) {
-            throw new CommFailureException(new RuntimeException("Timeout waiting for reply = "
+            throw new CommFailureException(new Exception("Timeout waiting for reply = "
                     + sendTime));
         } else {
-            throw new CommFailureException(new RuntimeException("Weird Reply" + result));
+            throw new CommFailureException(new Exception("Weird Reply" + result));
         }
     }
 
