@@ -45,6 +45,9 @@ public class FileLinkProtocol extends RPCLinkProtocol {
     private ReplySync sync;
 
     private URI servantUri;
+    
+    // Check periodically for incoming data
+    private Schedulable poller;
 
     @Cougaar.Arg(name = "rootDirectory", defaultValue="/tmp/cougaar")
     private String rootDirectory;
@@ -179,30 +182,51 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return new FileLink(address);
     }
 
+    protected boolean establishConnections(String node) {
+        return true;
+    }
+    
+    protected void closeNodeServant() {
+        servantUri = null;
+        setNodeURI(null);
+        if (poller != null) {
+            poller.cancelTimer();
+            poller = null;
+        }
+    }
+    
     protected void findOrMakeNodeServant() {
         if (servantUri != null) {
             return;
         }
 
-        // start polling file system
         String node = getNameSupport().getNodeMessageAddress().getAddress();
-        try {
-            servantUri = makeURI(node);
-        } catch (URISyntaxException e) {
-            loggingService.error("Failed to make URI for node " + node, e);
+        if (!establishConnections(node)) {
+            closeNodeServant();
             return;
         }
+        
+        try {
+            servantUri = makeURI(node);
+            setNodeURI(servantUri);
+        } catch (URISyntaxException e) {
+            loggingService.error("Failed to make URI for node " + node, e);
+            closeNodeServant();
+            return;
+        }
+        
+        // start polling for input
         if (receiver == null) {
             ServiceBroker sb = getServiceBroker();
             MessageDeliverer deliverer = sb.getService(this, MessageDeliverer.class, null);
             receiver = makeMessageReceiver(deliverer);
-            Runnable pollerTask = makePollerTask();
-            Schedulable poller = threadService.getThread(this ,pollerTask, "Message Poller");
-            poller.schedule(0, 1);
         }
-        setNodeURI(servantUri);
-
+        
+        Runnable task = makePollerTask();
+        poller = threadService.getThread(this, task, "Message Poller");
+        poller.schedule(0, 1);
     }
+
 
     protected String getProtocolType() {
         return "-FILE";
@@ -299,6 +323,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
                 processingIncomingMessage(fis);
             } catch (Exception e) {
                 loggingService.error("Error reading '" + file + "': " + e.getMessage(), e);
+                closeNodeServant();
             } finally {
                 if (fis != null) {
                     try {
