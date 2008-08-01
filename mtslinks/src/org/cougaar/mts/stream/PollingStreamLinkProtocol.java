@@ -69,9 +69,17 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
     abstract protected Runnable makePollerTask();
 
     /**
-     * How long we should wait for the Ack to any given message.
+     * How long we should wait for the ack to any given message.
      */
     abstract protected int getReplyTimeoutMillis();
+    
+    /**
+     * If the protocol needs to create any external connections of any kind,
+     * do that here.
+     * 
+     * @return success or failure
+     */
+    abstract protected boolean establishConnections(String node);
     
     
     protected URI getServantUri() {
@@ -134,9 +142,6 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
         return new StreamLink(address);
     }
 
-    protected boolean establishConnections(String node) {
-        return true;
-    }
     
     protected void findOrMakeNodeServant() {
         if (servantUri != null) {

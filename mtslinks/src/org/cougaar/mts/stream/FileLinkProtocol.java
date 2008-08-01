@@ -58,6 +58,10 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol {
         }
     }
     
+    protected boolean establishConnections(String node) {
+        return true;
+    }
+    
     protected void processOutgoingMessage(URI destination, MessageAttributes message) 
             throws IOException {
         // serialize message to a temp file
