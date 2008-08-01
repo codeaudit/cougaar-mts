@@ -23,49 +23,53 @@
  *  
  * </copyright>
  */
-package org.cougaar.mts.file;
+package org.cougaar.mts.stream;
 
-import java.net.URI;
-
-import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.MessageReply;
+import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * This utility class handles outgoing file messages
+ * This utility class handles incoming file messages
  */
-class MessageSender implements AttributeConstants {
-    private final FileLinkProtocol protocol;
+class MessageReceiver {
     private final Logger log;
+    private final MessageDeliverer deliverer;
+    private final PollingStreamLinkProtocol protocol;
 
-    MessageSender(FileLinkProtocol protocol) {
+    MessageReceiver(PollingStreamLinkProtocol protocol, MessageDeliverer deliverer) {
         this.protocol = protocol;
-        log = Logging.getLogger(getClass().getName());
+        this.deliverer = deliverer;
+        this.log = Logging.getLogger(getClass().getName());
+       
     }
 
-    MessageAttributes handleOutgoingMessage(URI uri, AttributedMessage mtsMessage) 
-            throws CommFailureException,
-            MisdeliveredMessageException {
-        Object deadline = mtsMessage.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
-        if (deadline instanceof Long) {
-            long ttl = (Long) deadline - System.currentTimeMillis();
-            if (ttl < 0) {
-                log.warn("Message already expired");
-                MessageAttributes metadata = new MessageReply(mtsMessage);
-                metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-                                      MessageAttributes.DELIVERY_STATUS_DROPPED);
-                return metadata;
+    void handleIncomingMessage(MessageAttributes attrs) {
+        ReplySync sync = protocol.getReplySync();
+        if (sync.isReply(attrs)) {
+            // it's an ack -- Work is done in isReply
+            return;
+        } 
+        if (attrs instanceof AttributedMessage) {
+            AttributedMessage message = (AttributedMessage) attrs;
+            if (log.isInfoEnabled()) {
+                log.info("Delivering " + message+ " from " +message.getOriginator() 
+                         + " to " + message.getTarget());
+            }
+            try {
+                MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
+                sync.replyToMessage(message, reply);
+            } catch (MisdeliveredMessageException e) {
+                if (log.isDebugEnabled()) {
+                    log.debug(e.getMessage(), e);
+                }
+                sync.replyToMessage(message, e);
             }
         }
-        if (log.isInfoEnabled()) {
-            log.info("Sending message " + mtsMessage+ " to " + uri);
-        }
-        MessageAttributes metadata = protocol.getReplySync().sendMessage(mtsMessage, uri);
-        return metadata;
     }
+
+    
 }

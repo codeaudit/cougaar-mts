@@ -23,7 +23,7 @@
  *  
  * </copyright>
  */
-package org.cougaar.mts.file;
+package org.cougaar.mts.stream;
 
 import java.io.IOException;
 import java.net.URI;
@@ -53,13 +53,13 @@ class ReplySync {
     private static final String DELIVERY_EXCEPTION_PROP = "DELIVERY_EXCEPTION";
     private static int ID = 0;
 
-    private final FileLinkProtocol protocol;
+    private final PollingStreamLinkProtocol protocol;
     private final Map<Integer, Object> pending;
     private final Map<Integer, Object> replyData;
     private final int timeout;
     private final Logger log;
 
-    ReplySync(FileLinkProtocol protocol, int timeout) {
+    ReplySync(PollingStreamLinkProtocol protocol, int timeout) {
         this.protocol = protocol;
         this.pending = new HashMap<Integer, Object>();
         this.replyData = new HashMap<Integer, Object>();

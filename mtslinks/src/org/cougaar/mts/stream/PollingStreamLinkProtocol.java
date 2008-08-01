@@ -4,15 +4,11 @@
  *
  */
 
-package org.cougaar.mts.file;
+package org.cougaar.mts.stream;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -32,12 +28,10 @@ import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.annotations.Cougaar;
 
 /**
- * Send messages via file-sharing.
+ * Send messages via serialization on abstract reliable Streams,
+ * polling for input.
  */
-public class FileLinkProtocol extends RPCLinkProtocol {
-    private static final String DATA_SUBDIRECTORY = "msgs";
-    private static final String TMP_SUBDIRECTORY = "temp";
-
+abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
     // manager for receiving messages
     private MessageReceiver receiver;
     
@@ -48,9 +42,6 @@ public class FileLinkProtocol extends RPCLinkProtocol {
     
     // Check periodically for incoming data
     private Schedulable poller;
-
-    @Cougaar.Arg(name = "rootDirectory", defaultValue="/tmp/cougaar")
-    private String rootDirectory;
 
     @Cougaar.ObtainService
     private ThreadService threadService;
@@ -70,37 +61,6 @@ public class FileLinkProtocol extends RPCLinkProtocol {
          return sync;
     }
 
-    private File getDataSubdirectory(URI uri) {
-        File rootDirectory = new File(uri.getPath());
-        return new File(rootDirectory, DATA_SUBDIRECTORY);
-    }
-
-    private File getTmpSubdirectory(URI uri) {
-        File rootDirectory = new File(uri.getPath());
-        return new File(rootDirectory, TMP_SUBDIRECTORY);
-    }
-    
-    private void deleteFile(File file) {
-        if (file.isDirectory()) {
-            for (File child : file.listFiles()) {
-                deleteFile(child);
-            }
-        }
-        file.delete();
-    }
-    
-    private void cleanup() {
-        if (servantUri != null) {
-            File root = new File(servantUri.getPath());
-            deleteFile(root);
-        }
-    }
-    
-    public void unload() {
-        super.unload();
-        cleanup();
-    }
-
     private MessageSender makeMessageSender() {
         return new MessageSender(this);
     }
@@ -109,56 +69,13 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return new MessageReceiver(this, deliverer);
     }
 
-    protected URI makeURI(String myServantId) throws URISyntaxException {
-        File file = new File(rootDirectory, myServantId);
-        file.mkdirs();
-        if (file.isDirectory() && file.canWrite() && file.canRead()) {
-            return new URI("file", "", file.getAbsolutePath(), null, null);
-        } else {
-            throw new URISyntaxException(file.getAbsolutePath(), "Bogus path '");
-        }
-    }
+    abstract protected URI makeURI(String myServantId) 
+        throws URISyntaxException;
     
-    /**
-     * Override to use a medium other than, or in addition to, local files.
-     */
-    protected void processOutgoingMessage(URI destination, MessageAttributes message) 
-            throws IOException {
-        // serialize message to a temp file
-        File tempDir = getTmpSubdirectory(destination);
-        File dataDir = getDataSubdirectory(destination);
-        tempDir.mkdirs();
-        dataDir.mkdir();
-
-        File temp = File.createTempFile("FileLinkProtocol", ".msg", tempDir);
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(temp);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(message);
-            oos.flush();
-        } finally {
-            if (fos != null) {
-                fos.close();
-            }
-        }
-
-        // rename the temp file to a unique name in the directory
-        File messageFile = new File(dataDir, temp.getName());
-        temp.renameTo(messageFile);
-        if (loggingService.isDebugEnabled()) {
-            loggingService.debug("Wrote message to " + messageFile);
-        }
-    }
+    abstract protected void processOutgoingMessage(URI destination, MessageAttributes message)
+        throws IOException;
     
-    /**
-     * Override to poll something other than the local file system.
-     * Each poll should invoke {@link processIncomingMessage} for
-     * each new item.
-     */
-    protected Runnable makePollerTask() {
-        return new FilePoller();
-    }
+    abstract protected Runnable makePollerTask();
     
     /**
      * Read and dispatch an incoming message on a stream.
@@ -197,13 +114,8 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         }
     }
 
-    protected int computeCost(AttributedMessage message) {
-        // very cheap
-        return 0;
-    }
-
     protected DestinationLink createDestinationLink(MessageAddress address) {
-        return new FileLink(address);
+        return new StreamLink(address);
     }
 
     protected boolean establishConnections(String node) {
@@ -242,11 +154,6 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         poller.schedule(0, 1);
     }
 
-
-    protected String getProtocolType() {
-        return "-FILE";
-    }
-
     protected void releaseNodeServant() {
         servantUri = null;
         setNodeURI(null);
@@ -267,11 +174,11 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         return false;
     }
 
-    private class FileLink extends Link {
+    private class StreamLink extends Link {
         private final MessageSender sender;
         private URI uri;
 
-        FileLink(MessageAddress addr) {
+        StreamLink(MessageAddress addr) {
             super(addr);
             this.sender = makeMessageSender();
         }
@@ -314,46 +221,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         }
 
         public Class<?> getProtocolClass() {
-            return FileLinkProtocol.this.getClass();
-        }
-    }
-    
-    private class FilePoller implements Runnable {
-        private final File directory;
-
-        FilePoller() {
-            directory =  getDataSubdirectory(getServantUri());
-        }
-
-        public void run() {
-            if (directory.exists()) {
-                File[] contents = directory.listFiles();
-                for (File file : contents) {
-                    processFile(file);
-                    file.delete();
-                }
-            }
-        }
-
-        private void processFile(File file) {
-            if (loggingService.isDebugEnabled()) {
-                loggingService.debug("Handling message in " + file);
-            }
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(file);
-                processingIncomingMessage(fis);
-            } catch (Exception e) {
-                loggingService.error("Error reading '" + file + "': " + e.getMessage(), e);
-            } finally {
-                if (fis != null) {
-                    try {
-                        fis.close();
-                    } catch (IOException e) {
-                        // don't care
-                    }
-                }
-            }
+            return PollingStreamLinkProtocol.this.getClass();
         }
     }
 }
