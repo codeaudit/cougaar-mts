@@ -85,6 +85,10 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol {
         // very cheap
         return 0;
     }
+    
+    protected int getReplyTimeoutMillis() {
+        return 1000;
+    }
 
     protected String getProtocolType() {
         return "-FILE";

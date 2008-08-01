@@ -29,7 +29,8 @@ import org.cougaar.util.annotations.Cougaar;
 
 /**
  * Send messages via serialization on abstract reliable Streams,
- * polling for input.
+ * polling for input.  Reliability is handled by sending an 
+ * ack for each message.
  */
 abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
     // manager for receiving messages
@@ -45,13 +46,36 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
 
     @Cougaar.ObtainService
     private ThreadService threadService;
+    
+    /**
+     * Construct a URI that uniquely identifies this node. 
+     * It will be used by other nodes to contact it.
+     * 
+     * @param myServantId the node name
+     */
+    abstract protected URI makeURI(String myServantId) 
+        throws URISyntaxException;
 
+    /**
+     * Send a message or an ack to the given destination.
+     */
+    abstract protected void processOutgoingMessage(URI destination, MessageAttributes message)
+        throws IOException;
+
+    /**
+     * Make a Runnable that will run periodically to look for new messages
+     * and process one per run if available.
+     */
+    abstract protected Runnable makePollerTask();
+
+    /**
+     * How long we should wait for the Ack to any given message.
+     */
+    abstract protected int getReplyTimeoutMillis();
+    
+    
     protected URI getServantUri() {
         return servantUri;
-    }
-
-    protected int getReplyTimeoutMillis() {
-        return 5000;
     }
     
     ReplySync getReplySync() {
@@ -69,14 +93,6 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
         return new MessageReceiver(this, deliverer);
     }
 
-    abstract protected URI makeURI(String myServantId) 
-        throws URISyntaxException;
-    
-    abstract protected void processOutgoingMessage(URI destination, MessageAttributes message)
-        throws IOException;
-    
-    abstract protected Runnable makePollerTask();
-    
     /**
      * Read and dispatch an incoming message on a stream.
      * 
