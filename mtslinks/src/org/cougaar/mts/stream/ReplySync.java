@@ -130,7 +130,8 @@ class ReplySync {
         try {
             protocol.processOutgoingMessage(originatingUri, replyData);
         } catch (IOException e) {
-            log.error(e.getMessage(), e);
+            log.warn("Unable to reply to delivered message from " +originatingUri + ": "
+                     + e.getMessage());
         }
     }
 
