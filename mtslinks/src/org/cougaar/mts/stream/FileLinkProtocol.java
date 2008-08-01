@@ -28,6 +28,16 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol {
     @Cougaar.Arg(name = "rootDirectory", defaultValue="/tmp/cougaar")
     private String rootDirectory;
 
+    
+    protected int computeCost(AttributedMessage message) {
+        // very cheap
+        return 0;
+    }
+    
+    protected String getProtocolType() {
+        return "-FILE";
+    }
+    
     private File getDataSubdirectory(URI uri) {
         File rootDirectory = new File(uri.getPath());
         return new File(rootDirectory, DATA_SUBDIRECTORY);
@@ -81,18 +91,10 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol {
         return new FilePoller();
     }
     
-    protected int computeCost(AttributedMessage message) {
-        // very cheap
-        return 0;
-    }
-    
     protected int getReplyTimeoutMillis() {
         return 1000;
     }
-
-    protected String getProtocolType() {
-        return "-FILE";
-    }
+    
 
     private class FilePoller implements Runnable {
         private final File directory;
