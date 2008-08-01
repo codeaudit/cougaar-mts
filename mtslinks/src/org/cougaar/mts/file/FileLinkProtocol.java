@@ -166,14 +166,34 @@ public class FileLinkProtocol extends RPCLinkProtocol {
      * This is protected so that it can be invoked by
      * a subclass, not (typically) to be overridden.
      */
-    protected void processingIncomingMessage(InputStream stream) 
-            throws IOException, ClassNotFoundException {
-        ObjectInputStream ois = new ObjectInputStream(stream);
-        Object rawObject = ois.readObject();
+    protected void processingIncomingMessage(InputStream stream) {
+        Object rawObject = null;
+        ObjectInputStream ois  = null;
+        
+        try {
+            ois = new ObjectInputStream(stream);
+        } catch (IOException e) {
+            loggingService.warn("Processing Incoming message, stream error :" 
+                                + e.getMessage());
+            releaseNodeServant();
+            return;
+        }
+        
+        try {
+            rawObject = ois.readObject();
+        } catch (ClassNotFoundException e) {
+            loggingService.warn("Processing Incoming message, unknown object type :"
+                                + e.getMessage());
+            return;
+        } catch (IOException e) {
+            loggingService.warn("Processing Incoming message, deserializing error :" 
+                                + e.getMessage());
+            return;
+        }
         if (rawObject instanceof MessageAttributes) {
             receiver.handleIncomingMessage((MessageAttributes) rawObject);
         } else {
-            throw new IllegalStateException(rawObject + " is not MessageAttributes");
+            loggingService.warn("Processing Incoming message is not MessageAttributes");
         }
     }
 
@@ -218,7 +238,7 @@ public class FileLinkProtocol extends RPCLinkProtocol {
         }
         
         Runnable task = makePollerTask();
-        poller = threadService.getThread(this, task, "Message Poller");
+        poller = threadService.getThread(this, task, "Message Poller", ThreadService.WILL_BLOCK_LANE);
         poller.schedule(0, 1);
     }
 
@@ -325,7 +345,6 @@ public class FileLinkProtocol extends RPCLinkProtocol {
                 processingIncomingMessage(fis);
             } catch (Exception e) {
                 loggingService.error("Error reading '" + file + "': " + e.getMessage(), e);
-                releaseNodeServant();
             } finally {
                 if (fis != null) {
                     try {
