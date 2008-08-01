@@ -40,7 +40,7 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * This utility class does the low-level work to force the file linkprotocol to
+ * This utility class does the low-level work to force the stream linkprotocol to
  * behave like a synchronous rpc. In particular it blocks the sending thread
  * until a reply for the outgoing message arrives, generates and sends replies
  * for incoming messages, and processes received replies by waking the
@@ -82,12 +82,14 @@ class ReplySync {
         Object lock = new Object();
         pending.put(id, lock);
         long startTime = System.currentTimeMillis();
-        SchedulableStatus.beginNetIO("FILE RPC");
         synchronized (lock) {
+            SchedulableStatus.beginNetIO("Stream RPC");
             try {
                 protocol.processOutgoingMessage(uri, message);
             } catch (IOException e) {
                 throw new CommFailureException(e);
+            } finally {
+                SchedulableStatus.endBlocking();
             }
             while (true) {
                 try {
@@ -98,7 +100,6 @@ class ReplySync {
                 }
             }
         }
-        SchedulableStatus.endBlocking();
         long sendTime = System.currentTimeMillis() - startTime;
         Object result = replyData.remove(id);
         pending.remove(id);
