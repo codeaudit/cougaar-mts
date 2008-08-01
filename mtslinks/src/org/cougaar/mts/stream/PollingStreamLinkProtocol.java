@@ -116,7 +116,6 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
         } catch (IOException e) {
             loggingService.warn("Processing Incoming message, stream error :" 
                                 + e.getMessage());
-            releaseNodeServant();
             return;
         }
         
