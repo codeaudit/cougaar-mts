@@ -31,13 +31,15 @@ import org.cougaar.util.annotations.Cougaar;
  * Send messages via serialization on abstract reliable Streams,
  * polling for input.  Reliability is handled by sending an 
  * ack for each message.
+ * 
+ * @param <I> The class of the ID object for each outgoing message
  */
-abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
+abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
     // manager for receiving messages
-    private MessageReceiver receiver;
+    private MessageReceiver<I> receiver;
     
     // manager for sending messages and waiting for replies
-    private ReplySync sync;
+    private ReplySync<I> sync;
 
     private URI servantUri;
     
@@ -59,7 +61,7 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
     /**
      * Send a message or an ack to the given destination.
      */
-    abstract protected void processOutgoingMessage(URI destination, MessageAttributes message)
+    abstract protected I processOutgoingMessage(URI destination, MessageAttributes message)
         throws IOException;
 
     /**
@@ -86,19 +88,19 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
         return servantUri;
     }
     
-    ReplySync getReplySync() {
+    ReplySync<I> getReplySync() {
          if (sync == null) {
-             sync = new ReplySync(this, getReplyTimeoutMillis());
+             sync = new ReplySync<I>(this, getReplyTimeoutMillis());
          }
          return sync;
     }
 
-    private MessageSender makeMessageSender() {
-        return new MessageSender(this);
+    private MessageSender<I> makeMessageSender() {
+        return new MessageSender<I>(this);
     }
 
-    private MessageReceiver makeMessageReceiver(MessageDeliverer deliverer) {
-        return new MessageReceiver(this, deliverer);
+    private MessageReceiver<I> makeMessageReceiver(MessageDeliverer deliverer) {
+        return new MessageReceiver<I>(this, deliverer);
     }
 
     /**
@@ -195,7 +197,7 @@ abstract public class PollingStreamLinkProtocol extends RPCLinkProtocol {
     }
 
     private class StreamLink extends Link {
-        private final MessageSender sender;
+        private final MessageSender<I> sender;
         private URI uri;
 
         StreamLink(MessageAddress addr) {

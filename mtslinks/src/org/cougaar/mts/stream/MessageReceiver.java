@@ -34,13 +34,15 @@ import org.cougaar.util.log.Logging;
 
 /**
  * This utility class handles incoming file messages
+ * 
+ * @param <I> The class of the ID object for each outgoing message
  */
-class MessageReceiver {
+class MessageReceiver<I> {
     private final Logger log;
     private final MessageDeliverer deliverer;
-    private final PollingStreamLinkProtocol protocol;
+    private final PollingStreamLinkProtocol<I> protocol;
 
-    MessageReceiver(PollingStreamLinkProtocol protocol, MessageDeliverer deliverer) {
+    MessageReceiver(PollingStreamLinkProtocol<I> protocol, MessageDeliverer deliverer) {
         this.protocol = protocol;
         this.deliverer = deliverer;
         this.log = Logging.getLogger(getClass().getName());
@@ -48,7 +50,7 @@ class MessageReceiver {
     }
 
     void handleIncomingMessage(MessageAttributes attrs) {
-        ReplySync sync = protocol.getReplySync();
+        ReplySync<I> sync = protocol.getReplySync();
         if (sync.isReply(attrs)) {
             // it's an ack -- Work is done in isReply
             return;

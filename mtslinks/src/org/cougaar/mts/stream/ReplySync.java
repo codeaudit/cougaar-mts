@@ -45,21 +45,24 @@ import org.cougaar.util.log.Logging;
  * until a reply for the outgoing message arrives, generates and sends replies
  * for incoming messages, and processes received replies by waking the
  * corresponding thread.
+ * 
+ * @param <I> The class of the ID object for each outgoing message
  */
-class ReplySync {
-    private static final String ID_PROP = "MTS_MSG_ID";
-    private static final String IS_MTS_REPLY_PROP = "MTS_REPLY";
-    private static final String ORIGINATING_URI_PROP = "ORIGINATING_URI";
-    private static final String DELIVERY_EXCEPTION_PROP = "DELIVERY_EXCEPTION";
-    private static int ID = 0;
+class ReplySync<I> {
+    private static final String MESSAGE_NUMBER_PROP = "org.cougaar.mts.stream.number";
+    private static final String MESSAGE_ID_PROP = "org.cougaar.mts.stream.id";
+    private static final String IS_MTS_REPLY_PROP = "org.cougaar.mts.stream.replyp";
+    private static final String ORIGINATING_URI_PROP = "org.cougaar.mts.stream.orig";
+    private static final String DELIVERY_EXCEPTION_PROP = "org.cougaar.mts.stream.ex";
+    private static int MESSAGE_NUMBER = 0;
 
-    private final PollingStreamLinkProtocol protocol;
+    private final PollingStreamLinkProtocol<I> protocol;
     private final Map<Integer, Object> pending;
     private final Map<Integer, Object> replyData;
     private final int timeout;
     private final Logger log;
 
-    ReplySync(PollingStreamLinkProtocol protocol, int timeout) {
+    ReplySync(PollingStreamLinkProtocol<I> protocol, int timeout) {
         this.protocol = protocol;
         this.pending = new HashMap<Integer, Object>();
         this.replyData = new HashMap<Integer, Object>();
@@ -68,7 +71,7 @@ class ReplySync {
     }
 
     private void setMessageProperties(AttributedMessage message, Integer id, URI uri) {
-        message.setAttribute(ID_PROP, id.intValue());
+        message.setAttribute(MESSAGE_NUMBER_PROP, id.intValue());
         message.setAttribute(IS_MTS_REPLY_PROP, false);
         message.setAttribute(ORIGINATING_URI_PROP, protocol.getServantUri());
     }
@@ -76,16 +79,17 @@ class ReplySync {
     MessageAttributes sendMessage(AttributedMessage message, URI uri) 
             throws CommFailureException,
             MisdeliveredMessageException {
-        Integer id = new Integer(++ID);
-        setMessageProperties(message, id, uri);
+        int messageNumber = ++MESSAGE_NUMBER;
+        setMessageProperties(message, messageNumber, uri);
 
         Object lock = new Object();
-        pending.put(id, lock);
+        pending.put(messageNumber, lock);
         long startTime = System.currentTimeMillis();
         synchronized (lock) {
             SchedulableStatus.beginNetIO("Stream RPC");
             try {
-                protocol.processOutgoingMessage(uri, message);
+                I id = protocol.processOutgoingMessage(uri, message);
+                message.setLocalAttribute(MESSAGE_ID_PROP, id);
             } catch (IOException e) {
                 throw new CommFailureException(e);
             } finally {
@@ -101,11 +105,11 @@ class ReplySync {
             }
         }
         long sendTime = System.currentTimeMillis() - startTime;
-        Object result = replyData.remove(id);
-        pending.remove(id);
+        Object result = replyData.remove(messageNumber);
+        pending.remove(messageNumber);
         if (result instanceof MessageAttributes) {
             if (log.isDebugEnabled()) {
-                log.debug("Response to message " +id+ " was " +result);
+                log.debug("Response to message " +messageNumber+ " was " +result);
             }
             return (MessageAttributes) result;
         } else if (result instanceof MisdeliveredMessageException) {
@@ -121,7 +125,7 @@ class ReplySync {
 
     private void setReplyProperties(AttributedMessage omsg, MessageAttributes reply) {
         reply.setAttribute(IS_MTS_REPLY_PROP, true);
-        reply.setAttribute(ID_PROP, omsg.getAttribute(ID_PROP));
+        reply.setAttribute(MESSAGE_NUMBER_PROP, omsg.getAttribute(MESSAGE_NUMBER_PROP));
     }
 
     void replyToMessage(AttributedMessage originalMsg, MessageAttributes replyData) {
@@ -144,7 +148,7 @@ class ReplySync {
     boolean isReply(MessageAttributes attrs) {
         boolean isReply = (Boolean) attrs.getAttribute(IS_MTS_REPLY_PROP);
         
-        Integer id = (Integer) attrs.getAttribute(ID_PROP);
+        Integer id = (Integer) attrs.getAttribute(MESSAGE_NUMBER_PROP);
         if (!isReply) {
             if (log.isDebugEnabled()) {
                 log.debug("Received message " + id);
@@ -157,7 +161,7 @@ class ReplySync {
         }
         
         if (id == null) {
-            log.error("Ack message has no value for attribute " + ID_PROP);
+            log.error("Ack message has no value for attribute " + MESSAGE_NUMBER_PROP);
             return true;
         }
         Object exception = attrs.getAttribute(DELIVERY_EXCEPTION_PROP);

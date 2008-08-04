@@ -21,7 +21,7 @@ import org.cougaar.util.annotations.Cougaar;
 /**
  * Send messages via file-sharing.
  */
-public class FileLinkProtocol extends PollingStreamLinkProtocol {
+public class FileLinkProtocol extends PollingStreamLinkProtocol<File> {
     private static final String DATA_SUBDIRECTORY = "msgs";
     private static final String TMP_SUBDIRECTORY = "temp";
 
@@ -62,7 +62,7 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol {
         return true;
     }
     
-    protected void processOutgoingMessage(URI destination, MessageAttributes message) 
+    protected File processOutgoingMessage(URI destination, MessageAttributes message) 
             throws IOException {
         // serialize message to a temp file
         File tempDir = getTmpSubdirectory(destination);
@@ -89,6 +89,7 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol {
         if (loggingService.isDebugEnabled()) {
             loggingService.debug("Wrote message to " + messageFile);
         }
+        return messageFile;
     }
     
     protected Runnable makePollerTask() {

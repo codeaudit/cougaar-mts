@@ -38,12 +38,14 @@ import org.cougaar.util.log.Logging;
 
 /**
  * This utility class handles outgoing file messages
+ * 
+ * @param <I> The class of the ID object for each outgoing message
  */
-class MessageSender implements AttributeConstants {
-    private final PollingStreamLinkProtocol protocol;
+class MessageSender<I> implements AttributeConstants {
+    private final PollingStreamLinkProtocol<I> protocol;
     private final Logger log;
 
-    MessageSender(PollingStreamLinkProtocol protocol) {
+    MessageSender(PollingStreamLinkProtocol<I> protocol) {
         this.protocol = protocol;
         log = Logging.getLogger(getClass().getName());
     }
