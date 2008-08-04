@@ -53,59 +53,13 @@ import org.cougaar.mts.std.AttributedMessage;
  */
 abstract public class RPCLinkProtocol extends LinkProtocol {
 
-    private URI ref;
     private IncarnationService incarnationService;
     private WhitePagesService wpService;
-    private Map<MessageAddress, DestinationLink> links;
-    private Object ipAddrLock = new Object();
+    private Map<MessageAddress, DestinationLink> links =
+        new HashMap<MessageAddress,DestinationLink>();
     private List<MessageTransportClient> clients = new ArrayList<MessageTransportClient>();
-
-    // Just for testing -- an example of supplying a service from a
-    // LinkProtocol.
-
-    public interface Service extends LinkProtocolService {
-        // protocol-specific methods would go here.
-    }
-
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
-        if (serviceClass == Service.class) {
-            return new ServiceProxy();
-        } else {
-            return null;
-        }
-    }
-
-    public void releaseService(ServiceBroker sb,
-                               Object requestor,
-                               Class serviceClass,
-                               Object service) {
-
-        if (serviceClass == Service.class) {
-            // no-op for this example
-        }
-    }
-
-    // If LinkProtocols classes want to define this method, eg in
-    // order to provide a service, they should not in general invoke
-    // super.load(), since if they do they'll end up clobbering any
-    // services defined by super classes service. Instead they should
-    // use super_load(), defined in LinkProtocol, which runs the
-    // standard load() method without running any intervening ones.
-    public void load() {
-        super_load();
-        links = new HashMap<MessageAddress,DestinationLink>();
-
-        ServiceBroker sb = getServiceBroker();
-        sb.addService(Service.class, this);
-
-        incarnationService = sb.getService(this, IncarnationService.class, null);
-        if (incarnationService == null && loggingService.isWarnEnabled())
-            loggingService.warn("Couldn't load IncarnationService");
-
-        wpService = sb.getService(this, WhitePagesService.class, null);
-        if (wpService == null && loggingService.isWarnEnabled())
-            loggingService.warn("Couldn't load WhitePagesService");
-    }
+    private URI ref;
+    private Object ipAddrLock = new Object();
 
     // subclass responsibility
 
@@ -155,15 +109,37 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * HTTP) can ignore this.
      */
     abstract protected void remakeNodeServant();
-
-    protected void setNodeURI(URI ref) {
-        this.ref = ref;
-    }
+    
 
     public boolean addressKnown(MessageAddress address) {
         throw new RuntimeException("The addressKnown method of RMILinkProtocol is no longer supported");
     }
 
+    // If LinkProtocols classes want to define this method, eg in
+    // order to provide a service, they should not in general invoke
+    // super.load(), since if they do they'll end up clobbering any
+    // services defined by super classes service. Instead they should
+    // use super_load(), defined in LinkProtocol, which runs the
+    // standard load() method without running any intervening ones.
+    public void load() {
+        super_load();
+
+        ServiceBroker sb = getServiceBroker();
+        sb.addService(Service.class, this);
+
+        incarnationService = sb.getService(this, IncarnationService.class, null);
+        if (incarnationService == null && loggingService.isWarnEnabled())
+            loggingService.warn("Couldn't load IncarnationService");
+
+        wpService = sb.getService(this, WhitePagesService.class, null);
+        if (wpService == null && loggingService.isWarnEnabled())
+            loggingService.warn("Couldn't load WhitePagesService");
+    }
+    
+    protected void setNodeURI(URI ref) {
+        this.ref = ref;
+    }
+    
     protected boolean isServantAlive() {
         return ref != null;
     }
@@ -264,6 +240,31 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         return link;
     }
+    
+    // Just for testing -- an example of supplying a service from a
+    // LinkProtocol.
+
+    public interface Service extends LinkProtocolService {
+        // protocol-specific methods would go here.
+    }
+
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == Service.class) {
+            return new ServiceProxy();
+        } else {
+            return null;
+        }
+    }
+
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
+
+        if (serviceClass == Service.class) {
+            // no-op for this example
+        }
+    }
 
     private class WPCallback implements Callback {
         Link link;
@@ -272,12 +273,12 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
             this.link = link;
         }
 
-        private long extractIncarnation(Map entries) {
+        private long extractIncarnation(Map<String,AddressEntry> entries) {
             // parse "(.. type=version uri=version:///1234/blah)"
             if (entries == null)
                 return 0;
 
-            AddressEntry ae = (AddressEntry) entries.get("version");
+            AddressEntry ae = entries.get("version");
             if (ae == null)
                 return 0;
 
@@ -296,11 +297,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         public void execute(Response response) {
             Response.GetAll rg = (Response.GetAll) response;
-            Map entries = rg.getAddressEntries();
+            Map<String,AddressEntry> entries = rg.getAddressEntries();
             AddressEntry entry = null;
             long incn = 0;
             if (entries != null) {
-                entry = (AddressEntry) entries.get(getProtocolType());
+                entry = entries.get(getProtocolType());
                 incn = extractIncarnation(entries);
             }
             if (loggingService.isDebugEnabled())
@@ -333,10 +334,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         abstract protected Object decodeRemoteRef(URI ref) throws Exception;
 
         abstract protected MessageAttributes forwardByProtocol(Object remote,
-                                                               AttributedMessage message) throws NameLookupException,
-                                                                                         UnregisteredNameException,
-                                                                                         CommFailureException,
-                                                                                         MisdeliveredMessageException;
+                                                               AttributedMessage message) 
+        throws NameLookupException,
+        UnregisteredNameException,
+        CommFailureException,
+        MisdeliveredMessageException;
 
         // WP callback
         private void handleWPCallback(AddressEntry entry, long incn) {
@@ -428,10 +430,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
             }
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message) throws NameLookupException,
-                                                                          UnregisteredNameException,
-                                                                          CommFailureException,
-                                                                          MisdeliveredMessageException {
+        public MessageAttributes forwardMessage(AttributedMessage message) 
+                throws NameLookupException,
+                UnregisteredNameException,
+                CommFailureException,
+                MisdeliveredMessageException {
             cacheRemote();
             // Ordinarily cacheRemote either throws an Exception or
             // caches a non-null reference. But with the addition of
