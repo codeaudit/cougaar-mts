@@ -29,7 +29,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
@@ -59,7 +61,7 @@ public class AspectSupportImpl implements ServiceProvider
     // problem we need to open a hole into the aspectSupport.  Give it
     // package-access in a feeble attempt at security.
     public static Socket attachRMISocketAspects(Socket rmi_socket) {
-	return (Socket) service.attachAspects(rmi_socket, Socket.class);
+	return service.attachAspects(rmi_socket, Socket.class);
     }
 
 
@@ -90,8 +92,8 @@ public class AspectSupportImpl implements ServiceProvider
 	implements AspectSupport
     {
 
-	private ArrayList aspects;
-	private HashMap aspects_table;
+	private List<MessageTransportAspect> aspects;
+	private Map<String, MessageTransportAspect> aspects_table;
 	private Container container;
 	private LoggingService loggingService;
 
@@ -99,8 +101,8 @@ public class AspectSupportImpl implements ServiceProvider
 	private ServiceImpl(Container container,
 			    LoggingService loggingService) 
 	{
-	    aspects = new ArrayList();
-	    aspects_table = new HashMap();
+	    aspects = new ArrayList<MessageTransportAspect>();
+	    aspects_table = new HashMap<String, MessageTransportAspect>();
 	    this.container = container;
 	    this.loggingService = loggingService;
 	}
@@ -128,7 +130,7 @@ public class AspectSupportImpl implements ServiceProvider
 	// be found by name.
 	public synchronized MessageTransportAspect findAspect(String classname)
 	{
-	    return (MessageTransportAspect) aspects_table.get(classname);
+	    return aspects_table.get(classname);
 	}
 
 
@@ -160,59 +162,52 @@ public class AspectSupportImpl implements ServiceProvider
 	 * delegate, the final aspect delegate is returned.  If no aspects
 	 * attach a delegate, the original object, as created by the
 	 * factory, is returned.  */
-	public Object attachAspects (Object delegate, 
-				     Class type,
-				     ArrayList candidateClassNames)
-	{
+	public <T> T attachAspects (T delegate, 
+	                            Class<T> type,
+	                            List<String> candidateClassNames) {
 	    if (candidateClassNames == null) return delegate;
-	    ArrayList candidates = new ArrayList(candidateClassNames.size());
-	    Iterator itr = candidateClassNames.iterator();
+	    List<MessageTransportAspect> candidates = 
+	        new ArrayList<MessageTransportAspect>(candidateClassNames.size());
+	    Iterator<String> itr = candidateClassNames.iterator();
 	    while (itr.hasNext()) {
-		String candidateClassName = (String) itr.next();
-		Object candidate = findAspect(candidateClassName);
-		if (candidate != null) candidates.add(candidate);
+	        String candidateClassName = itr.next();
+	        MessageTransportAspect candidate = findAspect(candidateClassName);
+	        if (candidate != null) {
+	            candidates.add(candidate);
+	        }
 	    }
 	    return attach(delegate, type, candidates);
 	}
 
 
-	public Object attachAspects (Object delegate, 
-				     Class type)
-	{
+	public <T> T attachAspects (T delegate, Class<T> type) {
 	    return attach(delegate, type, aspects);
 	}
 
-	private Object attach (Object delegate, 
-			       Class type,
-			       ArrayList candidates)
-	{
-	    Iterator itr = candidates.iterator();
+	private <T> T attach (T delegate, Class<T> type, List<MessageTransportAspect> candidates) {
+	    Iterator<MessageTransportAspect> itr = candidates.iterator();
 	    while (itr.hasNext()) {
-		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) itr.next();
-
-		Object candidate = aspect.getDelegate(delegate, type);
-		if (candidate != null) {
-		    delegate = candidate;
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("attached " + delegate);
-		}
+	        MessageTransportAspect aspect = itr.next();
+	        T candidate = (T) aspect.getDelegate(delegate, type);
+	        if (candidate != null) {
+	            delegate = candidate;
+	            if (loggingService.isDebugEnabled())
+	                loggingService.debug("attached " + delegate);
+	        }
 	    }
 
-	    ListIterator litr = candidates.listIterator(candidates.size());
+	    ListIterator<MessageTransportAspect> litr = candidates.listIterator(candidates.size());
 	    while (litr.hasPrevious()) {
-		MessageTransportAspect aspect = 
-		    (MessageTransportAspect) litr.previous();
-
-		Object candidate = aspect.getReverseDelegate(delegate, type);
-		if (candidate != null) {
-		    delegate = candidate;
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("reverse attached " 
-						  + delegate);
-		}
+	        MessageTransportAspect aspect =  litr.previous();
+	        T candidate = (T) aspect.getReverseDelegate(delegate, type);
+	        if (candidate != null) {
+	            delegate = candidate;
+	            if (loggingService.isDebugEnabled())
+	                loggingService.debug("reverse attached " 
+	                                     + delegate);
+	        }
 	    }
-	
+
 	    return delegate;
 	}
 

@@ -147,8 +147,8 @@ abstract public class LinkProtocol
 
 
 
-    public Object attachAspects(Object delegate, Class type) {
-	return getAspectSupport().attachAspects(delegate, type);
+    public <T> T attachAspects(T delegate, Class<T> type) {
+        return getAspectSupport().attachAspects(delegate, type);
     }
 
 

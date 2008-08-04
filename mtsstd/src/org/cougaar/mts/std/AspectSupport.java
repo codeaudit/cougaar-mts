@@ -26,6 +26,8 @@
 
 package org.cougaar.mts.std;
 import java.util.ArrayList;
+import java.util.List;
+
 import org.cougaar.mts.base.MessageTransportAspect;
 import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.core.component.Service;
@@ -57,13 +59,16 @@ public interface AspectSupport extends Service
     
     /**
      * Allow each global aspect to attach a delegate to given
-     * object at the cut-point indictated by the given type.
+     * object at the cut-point indicated by the given type.
+     * 
+     * The generic parameter T enforces that the object provided
+     * matches the type provided.
      */
-    Object attachAspects(Object object,  Class type);
+    <T> T attachAspects(T object,  Class<T> type);
 
     /**
-     * Allow each aspect in the list of canidates to attach a delegate
-     * to given object at the cut-point indictated by the given type.
+     * Allow each aspect in the list of candidates to attach a delegate
+     * to given object at the cut-point indicated by the given type.
      */
-    Object attachAspects(Object delegate,  Class type, ArrayList candidates);
+    <T> T attachAspects(T delegate,  Class<T> type, List<String> candidates);
 }
