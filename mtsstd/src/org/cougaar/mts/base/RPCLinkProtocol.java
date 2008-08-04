@@ -56,8 +56,14 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
     private IncarnationService incarnationService;
     private WhitePagesService wpService;
     private Map<MessageAddress, DestinationLink> links =
-        new HashMap<MessageAddress,DestinationLink>();
+            new HashMap<MessageAddress, DestinationLink>();
     private List<MessageTransportClient> clients = new ArrayList<MessageTransportClient>();
+
+    /**
+     * Reference for this node in the White Pages. The assumption is that rpc
+     * communication is node-to-node, with the node taking responsibility for
+     * dispatch to the agent.
+     */
     private URI ref;
     private Object ipAddrLock = new Object();
 
@@ -76,6 +82,10 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
     /**
      * @return the cost of transmitting the message over this protocol.
+     * 
+     * This is invoked from the Link inner class and is defined here because the
+     * cost mathematics is typically not specific to a given link and is
+     * therefore easier to implement at the protocol level.
      */
     abstract protected int computeCost(AttributedMessage message);
 
@@ -109,10 +119,9 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * HTTP) can ignore this.
      */
     abstract protected void remakeNodeServant();
-    
 
     public boolean addressKnown(MessageAddress address) {
-        throw new RuntimeException("The addressKnown method of RMILinkProtocol is no longer supported");
+        throw new RuntimeException("The addressKnown method is not supported");
     }
 
     // If LinkProtocols classes want to define this method, eg in
@@ -135,11 +144,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         if (wpService == null && loggingService.isWarnEnabled())
             loggingService.warn("Couldn't load WhitePagesService");
     }
-    
+
     protected void setNodeURI(URI ref) {
         this.ref = ref;
     }
-    
+
     protected boolean isServantAlive() {
         return ref != null;
     }
@@ -240,7 +249,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         return link;
     }
-    
+
     // Just for testing -- an example of supplying a service from a
     // LinkProtocol.
 
@@ -256,9 +265,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         }
     }
 
-    public void releaseService(ServiceBroker sb,
-                               Object requestor,
-                               Class serviceClass,
+    public void releaseService(ServiceBroker sb, Object requestor, Class serviceClass,
                                Object service) {
 
         if (serviceClass == Service.class) {
@@ -273,7 +280,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
             this.link = link;
         }
 
-        private long extractIncarnation(Map<String,AddressEntry> entries) {
+        private long extractIncarnation(Map<String, AddressEntry> entries) {
             // parse "(.. type=version uri=version:///1234/blah)"
             if (entries == null)
                 return 0;
@@ -297,7 +304,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         public void execute(Response response) {
             Response.GetAll rg = (Response.GetAll) response;
-            Map<String,AddressEntry> entries = rg.getAddressEntries();
+            Map<String, AddressEntry> entries = rg.getAddressEntries();
             AddressEntry entry = null;
             long incn = 0;
             if (entries != null) {
@@ -335,10 +342,10 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         abstract protected MessageAttributes forwardByProtocol(Object remote,
                                                                AttributedMessage message) 
-        throws NameLookupException,
-        UnregisteredNameException,
-        CommFailureException,
-        MisdeliveredMessageException;
+                throws NameLookupException,
+                UnregisteredNameException,
+                CommFailureException,
+                MisdeliveredMessageException;
 
         // WP callback
         private void handleWPCallback(AddressEntry entry, long incn) {
@@ -507,11 +514,8 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         public void addMessageAttributes(MessageAttributes attrs) {
             attrs.addValue(MessageAttributes.IS_STREAMING_ATTRIBUTE, Boolean.TRUE);
-
             attrs.addValue(MessageAttributes.ENCRYPTED_SOCKET_ATTRIBUTE, usesEncryptedSocket());
-
         }
-
     }
 
 }
