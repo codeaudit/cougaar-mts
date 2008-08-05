@@ -227,7 +227,7 @@ public class RMILinkProtocol
 	} 
     }
 
-    protected void findOrMakeNodeServant() {
+    protected void ensureNodeServant() {
 	if (myProxy != null) return;
 	try {
 	    MessageAddress myAddress = 
@@ -260,7 +260,7 @@ public class RMILinkProtocol
 	    // don't care
 	}
 	myProxy = null;
-	findOrMakeNodeServant();
+	ensureNodeServant();
     }
 
 

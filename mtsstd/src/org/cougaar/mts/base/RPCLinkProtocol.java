@@ -98,9 +98,9 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
     /**
      * Ensure that some abstract form of 'servant' object exists for this
-     * protocol that will allow other Nodes to send messages to his one.
+     * protocol that will allow other Nodes to send messages to this one.
      */
-    abstract protected void findOrMakeNodeServant();
+    abstract protected void ensureNodeServant();
 
     /**
      * Releases all resources associated with this link protocol.
@@ -155,7 +155,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
     public final void registerClient(MessageTransportClient client) {
         synchronized (ipAddrLock) {
-            findOrMakeNodeServant();
+            ensureNodeServant();
             if (isServantAlive()) {
                 try {
                     // Assume node-redirect
@@ -193,7 +193,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
     public final void reregisterClients() {
         synchronized (ipAddrLock) {
-            if (ref != null) {
+            if (isServantAlive()) {
                 String protocolType = getProtocolType();
                 for (int i = 0; i < clients.size(); i++) {
                     MessageTransportClient client = clients.get(i);

@@ -262,7 +262,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
         return servantDestination;
     }
 
-    protected void findOrMakeNodeServant() {
+    protected void ensureNodeServant() {
         if (servantDestination != null)
             return;
         setNodeURI(null);
@@ -464,7 +464,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
         }
         session = null;
         servantDestination = null;
-        findOrMakeNodeServant();
+        ensureNodeServant();
         remakeInProgress = false;
     }
 

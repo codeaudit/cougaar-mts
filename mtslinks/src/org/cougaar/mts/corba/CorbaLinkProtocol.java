@@ -92,7 +92,7 @@ public class CorbaLinkProtocol
     }
 
 
-    protected void findOrMakeNodeServant() {
+    protected void ensureNodeServant() {
 	if (myProxy != null) return;
 	MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
 	MTImpl impl = new MTImpl(myAddress, getDeliverer());
@@ -116,7 +116,7 @@ public class CorbaLinkProtocol
 	    }
 	}
 	myProxy = null;
-	findOrMakeNodeServant();
+	ensureNodeServant();
     }
 
 

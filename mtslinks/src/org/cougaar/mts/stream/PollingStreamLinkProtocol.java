@@ -12,20 +12,17 @@ import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
-import org.cougaar.util.annotations.Cougaar;
 
 /**
  * Send messages via serialization on abstract reliable Streams,
@@ -46,9 +43,6 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
     // Check periodically for incoming data
     private Schedulable poller;
 
-    @Cougaar.ObtainService
-    private ThreadService threadService;
-    
     /**
      * Construct a URI that uniquely identifies this node. 
      * It will be used by other nodes to contact it.
@@ -99,8 +93,8 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
         return new MessageSender<I>(this);
     }
 
-    private MessageReceiver<I> makeMessageReceiver(MessageDeliverer deliverer) {
-        return new MessageReceiver<I>(this, deliverer);
+    private MessageReceiver<I> makeMessageReceiver() {
+        return new MessageReceiver<I>(this, getDeliverer());
     }
 
     /**
@@ -144,7 +138,7 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
     }
 
     
-    protected void findOrMakeNodeServant() {
+    protected void ensureNodeServant() {
         if (servantUri != null) {
             return;
         }
@@ -166,9 +160,7 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
         
         // start polling for input
         if (receiver == null) {
-            ServiceBroker sb = getServiceBroker();
-            MessageDeliverer deliverer = sb.getService(this, MessageDeliverer.class, null);
-            receiver = makeMessageReceiver(deliverer);
+            receiver = makeMessageReceiver();
         }
         
         Runnable task = makePollerTask();
@@ -189,7 +181,7 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
         if (isServantAlive()) {
             releaseNodeServant();
         }
-        findOrMakeNodeServant();
+        ensureNodeServant();
     }
 
     protected Boolean usesEncryptedSocket() {

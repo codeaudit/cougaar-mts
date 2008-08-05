@@ -184,7 +184,7 @@ public class HTTPLinkProtocol extends RPCLinkProtocol
      * available.  This is handled by registerServlet(), which won't
      * be called until the ServiceAvailableEvent says it's time.
      */
-    protected void findOrMakeNodeServant()
+    protected void ensureNodeServant()
     {
 	if (servant_made) return;
 
