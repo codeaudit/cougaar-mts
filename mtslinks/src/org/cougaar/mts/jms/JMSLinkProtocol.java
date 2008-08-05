@@ -505,18 +505,7 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
         }
 
         public boolean isValid() {
-            // Remake our servant if necessary. If that fails, the link is
-            // considered invalid,
-            // since the remote reference must be unreachable.
-            if (!isServantAlive()) {
-                remakeNodeServant();
-                if (!isServantAlive()) {
-                    return false;
-                } else {
-                    reregisterClients();
-                }
-            }
-            return super.isValid();
+            return ensureNodeServantIsAlive() && super.isValid();
         }
 
         protected Object decodeRemoteRef(URI ref) throws Exception {

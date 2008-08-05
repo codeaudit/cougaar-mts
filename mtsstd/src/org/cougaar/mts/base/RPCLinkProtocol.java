@@ -67,6 +67,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
     private URI ref;
     private Object ipAddrLock = new Object();
 
+    private long nextRemakeNodeServantTime = 0;
+    private boolean remakeInProgress;
+    private final Object remakeLock = "Remaking Node Servant";
+    
+    
     // subclass responsibility
 
     /**
@@ -117,8 +122,54 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * Force the protocol to remake its 'servant', typically because the address
      * of the Host on which the Node is running has changed. Some protocol (eg
      * HTTP) can ignore this.
+     * 
+     * The definition of this method is specific to each protocol,
+     * but invocations should only happen in this class, specifically
+     * in {@link #ensureNodeServantIsAlive}.
+     * 
      */
     abstract protected void remakeNodeServant();
+    
+    /**
+     * If the servant is alive do nothing and return true.
+     * Otherwise try to make it, but too often, and
+     * return success or failure.
+     * 
+     * @return whether or not it really is alive
+     */
+    protected boolean ensureNodeServantIsAlive() {
+        synchronized (remakeLock) {
+            if (remakeInProgress) {
+                // another thread is already doing this work
+                return false;
+            } else {
+                remakeInProgress = true;
+            }
+        }
+        try {
+            if (isServantAlive()) {
+                return true;
+            } else {
+                long now = System.currentTimeMillis();
+                if (now < nextRemakeNodeServantTime) {
+                    // too soon to retry
+                    return false;
+                }
+                remakeNodeServant();
+                if (!isServantAlive()) {
+                    // Failed: wait at least three seconds before trying again
+                    nextRemakeNodeServantTime = now + 3000;
+                    return false;
+                } else {
+                    // Success: register clients with new node URL
+                    reregisterClients();
+                    return true;
+                }
+            }
+        } finally {
+            remakeInProgress = false;
+        }
+    }
 
     public boolean addressKnown(MessageAddress address) {
         throw new RuntimeException("The addressKnown method is not supported");
@@ -155,7 +206,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
     public final void registerClient(MessageTransportClient client) {
         synchronized (ipAddrLock) {
-            ensureNodeServant();
+            clients.add(client);
             if (isServantAlive()) {
                 try {
                     // Assume node-redirect
@@ -165,8 +216,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                     if (loggingService.isErrorEnabled())
                         loggingService.error("Error registering client", e);
                 }
+            } else {
+                // FIXME: This call is made in the load thread, which is too early for Node servants
+                // with external servers
+                ensureNodeServantIsAlive();
             }
-            clients.add(client);
         }
     }
 
@@ -193,6 +247,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
     public final void reregisterClients() {
         synchronized (ipAddrLock) {
+            // XXX: Don't have the old ref anymore so can't unregister it
             if (isServantAlive()) {
                 String protocolType = getProtocolType();
                 for (int i = 0; i < clients.size(); i++) {
@@ -226,11 +281,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                 ns.unregisterAgentInNameServer(ref, client.getMessageAddress(), type);
             }
 
-            remakeNodeServant();
-            for (int i = 0; i < clients.size(); i++) {
-                client = clients.get(i);
-                ns.registerAgentInNameServer(ref, client.getMessageAddress(), type);
-            }
+            ensureNodeServantIsAlive();
         }
     }
 
@@ -257,6 +308,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         // protocol-specific methods would go here.
     }
 
+    @SuppressWarnings("unchecked") // until the declaration is fixed
     public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
         if (serviceClass == Service.class) {
             return new ServiceProxy();
@@ -265,6 +317,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         }
     }
 
+    @SuppressWarnings("unchecked") // until the declaration is fixed
     public void releaseService(ServiceBroker sb, Object requestor, Class serviceClass,
                                Object service) {
 
@@ -304,6 +357,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         public void execute(Response response) {
             Response.GetAll rg = (Response.GetAll) response;
+            @SuppressWarnings("unchecked") // until the declaration is fixed
             Map<String, AddressEntry> entries = rg.getAddressEntries();
             AddressEntry entry = null;
             long incn = 0;
