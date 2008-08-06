@@ -64,12 +64,12 @@ public class EnableRmiSenderSideAspect extends StandardAspect {
 	    super(delegatee);
 	}
 
-	public boolean isValid() {
+	public boolean isValid(AttributedMessage message) {
 	    long now = System.currentTimeMillis();
 	    if (now - last_fail_time < failureTimeout) {
 		return false;
 	    } else {
-		return super.isValid();
+		return super.isValid(message);
 	    }
 	}
 

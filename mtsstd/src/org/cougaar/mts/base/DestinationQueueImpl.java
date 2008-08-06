@@ -65,10 +65,12 @@ final class DestinationQueueImpl
     {
 	int position;
 	DestinationLink next;
+	private final AttributedMessage message;
 	
-	LinkIterator()
+	LinkIterator(AttributedMessage message)
 	{
 	    position = 0;
+	    this.message = message;
 	    findNextValidLink();
 	}
 
@@ -76,7 +78,7 @@ final class DestinationQueueImpl
 	{
 	    while (position < destinationLinks.size()) {
 		next = (DestinationLink) destinationLinks.get(position);
-		if (next.isValid()) {
+		if (next.isValid(message)) {
 		    if (loggingService.isDebugEnabled())
 			loggingService.debug("Link " +next.getProtocolClass()+
 					    " [" +position+
@@ -212,7 +214,7 @@ final class DestinationQueueImpl
 		loggingService.debug("Retrying " +message);
 	}
 
-	Iterator links = new LinkIterator();
+	Iterator links = new LinkIterator(message);
 	if (!links.hasNext()) {
 	    if (loggingService.isInfoEnabled())
 		loggingService.info("No valid links to " +destination);

@@ -96,7 +96,7 @@ class FutileSerializingLinkProtocol
 	}
 
 
-	public boolean isValid() {
+	public boolean isValid(AttributedMessage message) {
 	    return true;
 	}
 

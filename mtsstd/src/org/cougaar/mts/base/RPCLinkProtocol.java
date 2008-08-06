@@ -527,7 +527,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
             return true;
         }
 
-        public boolean isValid() {
+        public boolean isValid(AttributedMessage message) {
             try {
                 cacheRemote();
                 // Ordinarily cacheRemote either throws an Exception

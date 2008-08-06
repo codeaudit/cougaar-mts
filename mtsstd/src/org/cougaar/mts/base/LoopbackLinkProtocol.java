@@ -91,7 +91,7 @@ public class LoopbackLinkProtocol
 	}
 	
 
-	public boolean isValid() {
+	public boolean isValid(AttributedMessage message) {
 	    return getRegistry().isLocalClient(address);
 	}
 

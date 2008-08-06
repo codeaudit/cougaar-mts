@@ -504,8 +504,8 @@ public class JMSLinkProtocol extends RPCLinkProtocol implements MessageListener 
             this.sender = makeMessageSender(findOrMakeReplySync());
         }
 
-        public boolean isValid() {
-            return ensureNodeServantIsAlive() && super.isValid();
+        public boolean isValid(AttributedMessage message) {
+            return ensureNodeServantIsAlive() && super.isValid(message);
         }
 
         protected Object decodeRemoteRef(URI ref) throws Exception {

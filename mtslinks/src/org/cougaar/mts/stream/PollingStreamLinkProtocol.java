@@ -197,8 +197,8 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
             this.sender = makeMessageSender();
         }
 
-        public boolean isValid() {
-            return ensureNodeServantIsAlive() && super.isValid();
+        public boolean isValid(AttributedMessage message) {
+            return ensureNodeServantIsAlive() && super.isValid(message);
         }
 
         protected Object decodeRemoteRef(URI ref) throws Exception {

@@ -91,12 +91,18 @@ public interface DestinationLink
      * is true for loopback and would ordinarily be true for remote
      * calls if the stub (or whatever) is accessible.  Aspects can
      * alter this behavior, for example to disable unencrypted rmi.
+     * <p>
      * This method in invoked on every loaded link before the link
      * selection policy is run; the policy will not see invalid links
-     * at all.  As a side-effect, cost() will not always be run (as
+     * at all.  As a side-effect, {@link #cost} will not always be run (as
      * it was before 11_0).
+     * <p>
+     * This method is supposed to be a quick triage.  More complicated calculations
+     * can be done in {@link #cost} as an implicit form of invalidation.
+     * 
+     * @param message The message we're trying to send
      */
-    boolean isValid();
+    boolean isValid(AttributedMessage message);
 
     /**
      * Ask Link whether or not further retries should be attempted.
