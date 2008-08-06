@@ -164,8 +164,11 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
         }
         
         Runnable task = makePollerTask();
-        poller = threadService.getThread(this, task, "Message Poller", ThreadService.WILL_BLOCK_LANE);
-        poller.schedule(0, 1);
+        if (task != null) {
+            int lane = ThreadService.WILL_BLOCK_LANE;
+            poller = threadService.getThread(this, task, "Message Poller", lane);
+            poller.schedule(0, 1);
+        }
     }
 
     protected void releaseNodeServant() {
