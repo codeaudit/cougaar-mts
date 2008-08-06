@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="/jars/lib/jms-1.1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/bootstrap"/>
 	<classpathentry kind="lib" path="/jars/lib/servlet.jar"/>
+	<classpathentry kind="lib" path="/jars/lib/smack.jar"/>
 	<classpathentry kind="output" path="tmp/classes"/>
 </classpath>
