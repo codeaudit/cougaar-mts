@@ -24,8 +24,10 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
+import java.net.Socket;
 import java.rmi.Remote;
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
@@ -36,8 +38,7 @@ import org.cougaar.core.mts.MessageAddress;
  * RMISocketControlAspect.  It's used only by the RMILinkProtocol and
  * by OBJS.
  */
-public interface RMISocketControlService extends Service
-{
+public interface RMISocketControlService extends Service {
     /**
      * The SO Timeout is set for ALL sockets that go to the remote RMI
      * reference The side effect of this is that other agents that are
@@ -49,13 +50,12 @@ public interface RMISocketControlService extends Service
      * The RMILinkProtocol calls this method, Other Aspects should not
      * call this method.
      */
-    void setReferenceAddress(Remote reference, 
-				    MessageAddress addr);
+    void setReferenceAddress(Remote reference, MessageAddress addr);
 
 
     /**
      * Returns a list of all Sockets used for communication between
      * the running Node and the given remoted address.
      */
-    ArrayList getSocket(MessageAddress addr);
+    List<Socket> getSocket(MessageAddress addr);
 }

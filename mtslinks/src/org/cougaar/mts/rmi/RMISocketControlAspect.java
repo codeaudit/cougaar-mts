@@ -29,6 +29,7 @@ import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -45,214 +46,204 @@ import org.cougaar.mts.base.StandardAspect;
  * List of open sockets from a given MessageAddress.  
  */
 public class RMISocketControlAspect
-    extends StandardAspect
-
-{
+    extends StandardAspect {
+    
     private Impl impl;
 
     public RMISocketControlAspect() {
     }
 
     public void load() {
-	super.load();
+        super.load();
 
-	Provider provider = new Provider();
-	impl = new Impl();
-	getServiceBroker().addService(RMISocketControlService.class, 
-				      provider);
+        Provider provider = new Provider();
+        impl = new Impl();
+        getServiceBroker().addService(RMISocketControlService.class, provider);
     }
 
-    public Object getDelegate(Object object, Class type) 
-    {
-	if (type == Socket.class) {
-	    impl.cacheSocket((Socket) object);
-	}
-	return null;
+    public Object getDelegate(Object object, Class type) {
+        if (type == Socket.class) {
+            impl.cacheSocket((Socket) object);
+        }
+        return null;
     }
 
     private class Provider implements ServiceProvider {
-	public Object getService(ServiceBroker sb, 
-				 Object requestor, 
-				 Class serviceClass) 
-	{
-	    if (serviceClass == RMISocketControlService.class) {
-		return impl;
-	    } else {
-		return null;
-	    }
-	}
+        public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+            if (serviceClass == RMISocketControlService.class) {
+                return impl;
+            } else {
+                return null;
+            }
+        }
 
-	public void releaseService(ServiceBroker sb, 
-				   Object requestor, 
-				   Class serviceClass, 
-				   Object service)
-	{
-	}
+        public void releaseService(ServiceBroker sb, Object requestor, Class serviceClass, 
+                                   Object service) {
+        }
     }
 
     private class Impl implements RMISocketControlService {
-	HashMap sockets,      // host:port -> list of sockets
-	    references,       // MessageAddress -> Remote stub 
-	    addresses,        // Remote stub -> MessageAddress
-	    default_timeouts, // MessageAddress -> timeout
-	    referencesByKey;  // host:port -> Remote stub
+        Map<String, List<Socket>> sockets;      // host:port -> list of sockets
+        Map<MessageAddress, Remote> references; 
+        Map<Remote, MessageAddress> addresses;
+        Map<MessageAddress, Integer> default_timeouts;
+        Map<String,Remote> referencesByKey;  // host:port -> Remote stub
 
-	private Impl() {
-	    sockets = new HashMap();
-	    references = new HashMap();
-	    addresses = new HashMap();
-	    default_timeouts = new HashMap();
-	    referencesByKey = new HashMap();
+        private Impl() {
+            sockets = new HashMap<String, List<Socket>>();
+            references = new HashMap<MessageAddress,Remote>();
+            addresses = new HashMap<Remote,MessageAddress>();
+            default_timeouts = new HashMap<MessageAddress, Integer>();
+            referencesByKey = new HashMap<String,Remote>();
 
-	    Runnable reaper = new Runnable() {
-		    public void run() {
-			reapClosedSockets();
-		    }
-		};
-	    ThreadService tsvc = getThreadService();
-	    Schedulable sched = tsvc.getThread(this, reaper, "Socket Reaper");
-	    
-	    sched.schedule(0, 5000);
-	}
+            Runnable reaper = new Runnable() {
+                public void run() {
+                    reapClosedSockets();
+                }
+            };
+            ThreadService tsvc = getThreadService();
+            Schedulable sched = tsvc.getThread(this, reaper, "Socket Reaper");
 
-	private String getKey(String host, int port) {
-	    return getKey(host, Integer.toString(port));
-	}
-	
-	private String getKey(String host, String port) {
-	    // May need to canonicalize the host
-	    return host+ ":" +port;
-	}
+            sched.schedule(0, 5000);
+        }
 
-	private String getKey(Remote ref) {
-	    // Dig out the host and port, then look it up in 'sockets'.
-	    // form is
-	    // classname[RemoteStub [ref: [endpoint:[host:port](local),objID:[0]]]]
-	    String refString = ref.toString();
-	    int host_start = refString.indexOf("[endpoint:[");
-	    if (host_start < 0) return null;
-	    host_start += 11;
-	    int host_end = refString.indexOf(':', host_start);
-	    if (host_end < 0) return null;
-	    String host = refString.substring(host_start, host_end);
-	    int port_start = 1 + host_end;
-	    int port_end = port_start;
-	    int port_end_1 = refString.indexOf(',', host_end);
-	    int port_end_2 = refString.indexOf(']', host_end);
-	    if (port_end_1 < 0 && port_end_2 < 0) return null;
-	    if (port_end_1 < 0) 
-		port_end = port_end_2;
-	    else if (port_end_2 < 0)
-		port_end = port_end_1;
-	    else
-		port_end = Math.min(port_end_1, port_end_2);
-	    String portString = refString.substring(port_start, port_end);
+        private String getKey(String host, int port) {
+            return getKey(host, Integer.toString(port));
+        }
 
-	    String key = getKey(host, portString);
-	    referencesByKey.put(key, ref);
+        private String getKey(String host, String port) {
+            // May need to canonicalize the host
+            return host+ ":" +port;
+        }
 
-	    return key;
-	}
+        private String getKey(Remote ref) {
+            // Dig out the host and port, then look it up in 'sockets'.
+            // form is
+            // classname[RemoteStub [ref: [endpoint:[host:port](local),objID:[0]]]]
+            String refString = ref.toString();
+            int host_start = refString.indexOf("[endpoint:[");
+            if (host_start < 0) return null;
+            host_start += 11;
+            int host_end = refString.indexOf(':', host_start);
+            if (host_end < 0) return null;
+            String host = refString.substring(host_start, host_end);
+            int port_start = 1 + host_end;
+            int port_end = port_start;
+            int port_end_1 = refString.indexOf(',', host_end);
+            int port_end_2 = refString.indexOf(']', host_end);
+            if (port_end_1 < 0 && port_end_2 < 0) return null;
+            if (port_end_1 < 0) 
+                port_end = port_end_2;
+            else if (port_end_2 < 0)
+                port_end = port_end_1;
+            else
+                port_end = Math.min(port_end_1, port_end_2);
+            String portString = refString.substring(port_start, port_end);
 
-	private String getKey(Socket skt) {
-	    String host = skt.getInetAddress().getHostAddress();
-	    int port = skt.getPort();
-	    return getKey(host, port);
-	}
+            String key = getKey(host, portString);
+            referencesByKey.put(key, ref);
 
-	private Integer getDefaultTimeout(String key) {
-	    Object ref = referencesByKey.get(key);
-	    Object addr = addresses.get(ref);
-	    Integer result = (Integer)default_timeouts.get(addr);
-	    return result;
-	}
+            return key;
+        }
 
+        private String getKey(Socket skt) {
+            String host = skt.getInetAddress().getHostAddress();
+            int port = skt.getPort();
+            return getKey(host, port);
+        }
 
-	private void cacheSocket (Socket skt) {
-	    String key = getKey(skt);
-	    Integer timeout = (Integer) getDefaultTimeout(key);
-	    if (timeout != null) {
-		try {
-		    skt.setSoTimeout(timeout.intValue());
-		} catch (java.net.SocketException ex) {
-		    // Don't care
-		}
-	    }
-	    synchronized (this) {
-		ArrayList skt_list = (ArrayList) sockets.get(key);
-		if (skt_list == null) {
-		    skt_list = new ArrayList();
-		    sockets.put(key, skt_list);
-		}
-		skt_list.add(skt);
-	    }
-	}
-
-	synchronized void reapClosedSockets() {
-	    // Prune closed sockets
-	    Map.Entry entry;
-	    Socket socket;
-	    Iterator itr2;
-	    Iterator itr = sockets.entrySet().iterator();
-	    while (itr.hasNext()) {
-		entry = (Map.Entry) itr.next();
-		itr2 = ((ArrayList) entry.getValue()).iterator();
-		while (itr2.hasNext()) {
-		    socket = (Socket) itr2.next();
-		    if (socket.isClosed()) itr2.remove();
-		}
-	    }
-	}
-
-	synchronized boolean setSoTimeout(Remote reference, int timeout)
-	{
-	    String key = getKey(reference);
-	    ArrayList skt_list =  (ArrayList) sockets.get(key);
-	    if (skt_list == null) return false;
-	    boolean success = false;
-	    Iterator itr = skt_list.iterator();
-	    while (itr.hasNext()) {
-		Socket skt = (Socket) itr.next();
-		try { 
-		    skt.setSoTimeout(timeout);
-		    success = true;
-		} catch (java.net.SocketException ex) {
-		    itr.remove();
-		}
-	    }
-	    return success;
-	}
-
-	public boolean setSoTimeout(MessageAddress addr, int timeout) {
-	    // Could use the NameService to lookup the Reference from
-	    // the address.
-	    default_timeouts.put(addr, new Integer(timeout));
-	    Remote reference = (Remote) references.get(addr);
-	    if (reference != null) {
-		return setSoTimeout(reference, timeout);
-	    } else {
-		return false;
-	    }
-	}
-
-	public synchronized void setReferenceAddress(Remote reference, 
-						     MessageAddress addr)
-	{
-	    references.put(addr, reference);
-	    addresses.put(reference, addr);
-	    Integer timeout = (Integer) default_timeouts.get(addr);
-	    if (timeout != null) setSoTimeout(reference, timeout.intValue());
-	}
+        private Integer getDefaultTimeout(String key) {
+            Object ref = referencesByKey.get(key);
+            Object addr = addresses.get(ref);
+            return default_timeouts.get(addr);
+        }
 
 
-	public ArrayList getSocket(MessageAddress addr) {
-	    Remote ref = (Remote)references.get(addr);
-	    if (ref == null) return null;
-	    String key = getKey(ref);
-	    ArrayList skt_list = (ArrayList)sockets.get(key);
-	    return skt_list;
-	}
-	
+        private void cacheSocket (Socket skt) {
+            String key = getKey(skt);
+            Integer timeout = getDefaultTimeout(key);
+            if (timeout != null) {
+                try {
+                    skt.setSoTimeout(timeout.intValue());
+                } catch (java.net.SocketException ex) {
+                    // Don't care
+                }
+            }
+            synchronized (this) {
+                List<Socket> skt_list = sockets.get(key);
+                if (skt_list == null) {
+                    skt_list = new ArrayList<Socket>();
+                    sockets.put(key, skt_list);
+                }
+                skt_list.add(skt);
+            }
+        }
+
+        synchronized void reapClosedSockets() {
+            // Prune closed sockets
+            for (List<Socket> socketList : sockets.values()) {
+                Iterator<Socket> itr = socketList.iterator();
+                while (itr.hasNext()) {
+                    Socket socket = itr.next();
+                    if (socket.isClosed()) {
+                        itr.remove();
+                    }
+                }
+            }
+        }
+
+        synchronized boolean setSoTimeout(Remote reference, int timeout) {
+            String key = getKey(reference);
+            List<Socket> skt_list =  sockets.get(key);
+            if (skt_list == null) {
+                return false;
+            }
+            boolean success = false;
+            Iterator<Socket> itr = skt_list.iterator();
+            while (itr.hasNext()) {
+                Socket skt = itr.next();
+                try { 
+                    skt.setSoTimeout(timeout);
+                    success = true;
+                } catch (java.net.SocketException ex) {
+                    itr.remove();
+                }
+            }
+            return success;
+        }
+
+        public boolean setSoTimeout(MessageAddress addr, int timeout) {
+            // Could use the NameService to lookup the Reference from
+            // the address.
+            default_timeouts.put(addr, timeout);
+            Remote reference = references.get(addr);
+            if (reference != null) {
+                return setSoTimeout(reference, timeout);
+            } else {
+                return false;
+            }
+        }
+
+        public synchronized void setReferenceAddress(Remote reference, 
+                                                     MessageAddress addr) {
+            references.put(addr, reference);
+            addresses.put(reference, addr);
+            Integer timeout = default_timeouts.get(addr);
+            if (timeout != null) {
+                setSoTimeout(reference, timeout.intValue());
+            }
+        }
+
+
+        public List<Socket> getSocket(MessageAddress addr) {
+            Remote ref = references.get(addr);
+            if (ref == null) {
+                return null;
+            }
+            String key = getKey(ref);
+            return sockets.get(key);
+        }
+
     }
 
 
