@@ -107,8 +107,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * <p>
      * Conceptually this is an abstract method but for backward compatibility
      * we have to provide a base implementation that invokes the deprecated
-     * method {@link findOrMakeNodeServant}, which in turn has to be implemented
-     * here as a no-op.
+     * method {@link findOrMakeNodeServant}.
      * <p>
      * NB: ensureNodeServant should <b>only</b> be called from 
      * {@link #remakeNodeServant}!.
@@ -119,11 +118,13 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
     
     /**
      * The old name for {@link #ensureNodeServant}.  Keep it around
-     * awhile as a no-op deprecated method for backward compatibiity.
+     * awhile as a deprecated method for backward compatibiity. If
+     * it's invoked and not overridden, that's an error.
      */
     @Deprecated
     protected void findOrMakeNodeServant() {
-        // no-op
+        String msg = getClass() + " must provide an implementation of ensureNodeServant";
+        throw new IllegalStateException(msg);
     }
 
     /**
