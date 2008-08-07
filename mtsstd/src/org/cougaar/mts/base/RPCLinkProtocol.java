@@ -104,8 +104,27 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
     /**
      * Ensure that some abstract form of 'servant' object exists for this
      * protocol that will allow other Nodes to send messages to this one.
+     * <p>
+     * Conceptually this is an abstract method but for backward compatibility
+     * we have to provide a base implementation that invokes the deprecated
+     * method {@link findOrMakeNodeServant}, which in turn has to be implemented
+     * here as a no-op.
+     * <p>
+     * NB: ensureNodeServant should <b>only</b> be called from 
+     * {@link #remakeNodeServant}!.
      */
-    abstract protected void ensureNodeServant();
+    protected void ensureNodeServant() {
+        findOrMakeNodeServant();
+    }
+    
+    /**
+     * The old name for {@link #ensureNodeServant}.  Keep it around
+     * awhile as a no-op deprecated method for backward compatibiity.
+     */
+    @Deprecated
+    protected void findOrMakeNodeServant() {
+        // no-op
+    }
 
     /**
      * Releases all resources associated with this link protocol.
@@ -122,7 +141,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * Force the protocol to remake its 'servant', typically because the address
      * of the Host on which the Node is running has changed. Some protocol (eg
      * HTTP) can ignore this.
-     * 
+     * <p>
      * The definition of this method is specific to each protocol,
      * but invocations should only happen in this class, specifically
      * in {@link #ensureNodeServantIsAlive}.
