@@ -21,6 +21,7 @@ import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.mts.stream.PollingStreamLinkProtocol;
 import org.cougaar.util.annotations.Cougaar;
 import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -40,14 +41,17 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
      * Max time in seconds to wait for an ack
      */
     private static final int REPLY_EXPIRATION_SECS = 7;
-
     private XMPPConnection serverConnection;
     
     @Cougaar.Arg(name="server")
     private String serverHost;
     
-    @Cougaar.Arg(name="user")
-    private String username;
+    @Cougaar.Arg(name="jabberId")
+    private String jabberId;
+    
+    @Cougaar.Arg(name="password")
+    private String password;
+
     
     protected String getProtocolType() {
         return "-XMPP";
@@ -78,22 +82,24 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
     }
     
     protected boolean establishConnections(String node) {
-        serverConnection = new XMPPConnection(serverHost);
+        String[] userinfo = jabberId.split("@");
+        ConnectionConfiguration config = new ConnectionConfiguration(serverHost, 5222, userinfo[1]);
+        serverConnection = new XMPPConnection(config);
         try {
             serverConnection.connect();
-            serverConnection.login(username, username);
+            serverConnection.login(userinfo[0], password);
             serverConnection.addPacketListener(new Listener(), null);
             return true;
         } catch (XMPPException e) {
             loggingService.warn("Couldn't connect to jabber server " + serverHost
-                                + "as " +username+ ": " + e.getMessage());
+                                + " as " +jabberId+ ": " + e.getMessage());
             releaseNodeServant();
             return false;
         }
     }
     
     protected URI makeURI(String myServantId) throws URISyntaxException {
-        String input = "xmpp://" + serverHost+ "/" + username;
+        String input = "xmpp://" + jabberId;
         return new URI(input);
     }
     
@@ -123,9 +129,7 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
         
         String base64msg = Base64.encode(payload);
         
-        String path = destination.getPath();
-        // ignore the initial slash in the path
-        String userJID = path.substring(1)+"@"+destination.getHost();
+        String userJID = destination.getAuthority();
         
         // A given connection should not be accessed by more than one thread
         synchronized (destination) {
