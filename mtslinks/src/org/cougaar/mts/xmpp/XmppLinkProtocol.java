@@ -9,11 +9,14 @@ package org.cougaar.mts.xmpp;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Properties;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.thread.SchedulableStatus;
@@ -49,9 +52,36 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
     @Cougaar.Arg(name="jabberId")
     private String jabberId;
     
-    @Cougaar.Arg(name="password")
+    /**
+     * Jabber password for the given user.  Can be omitted if
+     * {@link #passwordsUri} has that information.
+     */
+    @Cougaar.Arg(name="password", defaultValue=Cougaar.NULL_VALUE)
     private String password;
+    
+    /**
+     * Optional reference to a file or web page that contains
+     * jabber username/password pairs in Java property file
+     * format.  This is used if {@link #password} is not 
+     * provided.
+     *
+     * <p>
+     * Sample format:
+     * <pre>
+         someNode@gmail.com=somepassword
+         someOtherNode@gmail.com=someotherpassword
+     * </pre>
+     */
+    @Cougaar.Arg(name="passwordsUri", defaultValue=Cougaar.NULL_VALUE)
+    private URI passwordsUri;
 
+    private final Properties passwords = new Properties();
+    
+    
+    public void load() {
+        super.load();
+        loadPasswordFile();
+    }
     
     protected String getProtocolType() {
         return "-XMPP";
@@ -83,11 +113,20 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
     
     protected boolean establishConnections(String node) {
         String[] userinfo = jabberId.split("@");
-        ConnectionConfiguration config = new ConnectionConfiguration(serverHost, 5222, userinfo[1]);
+        String user = userinfo[0];
+        String service = userinfo[1];
+        ConnectionConfiguration config = new ConnectionConfiguration(serverHost, 5222, service);
         serverConnection = new XMPPConnection(config);
+        if (password == null) {
+            password = passwords.getProperty(jabberId);
+            if (password == null) {
+               loggingService.error("No password is available for " + jabberId);
+               return false;
+            }
+        }
         try {
             serverConnection.connect();
-            serverConnection.login(userinfo[0], password);
+            serverConnection.login(user, password);
             serverConnection.addPacketListener(new Listener(), null);
             return true;
         } catch (XMPPException e) {
@@ -150,6 +189,29 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
         }
     }
     
+    private void loadPasswordFile() {
+        if (passwordsUri == null) {
+            return;
+        }
+        InputStream stream = null;
+        try {
+            URL url = passwordsUri.toURL();
+            stream = url.openStream();
+            passwords.load(stream);
+        } catch (FileNotFoundException e) {
+            loggingService.warn("Couldn't read passwords from " +passwordsUri+ ": " + e.getMessage());
+        } catch (IOException e) {
+            loggingService.warn("Couldn't read passwords from " +passwordsUri+ ": " + e.getMessage());
+        } finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    // don't care
+                }
+            }
+        }
+    }
     
     private class Listener implements PacketListener {
         public void processPacket(Packet pkt) {
