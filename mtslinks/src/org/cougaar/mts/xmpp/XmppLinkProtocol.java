@@ -128,6 +128,13 @@ public class XmppLinkProtocol extends PollingStreamLinkProtocol<Chat> {
             serverConnection.connect();
             serverConnection.login(user, password);
             serverConnection.addPacketListener(new Listener(), null);
+            if (loggingService.isInfoEnabled()) {
+                if (serverConnection.isSecureConnection()) {
+                    loggingService.info("Jabber connection is secure");
+                } else {
+                    loggingService.info("Jabber connection is not secure");
+                }
+            }
             return true;
         } catch (XMPPException e) {
             loggingService.warn("Couldn't connect to jabber server " + serverHost
