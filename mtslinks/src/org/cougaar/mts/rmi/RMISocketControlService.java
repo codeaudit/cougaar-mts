@@ -25,6 +25,7 @@
  */
 package org.cougaar.mts.rmi;
 
+import java.net.InetAddress;
 import java.net.Socket;
 import java.rmi.Remote;
 import java.util.List;
@@ -35,12 +36,11 @@ import org.cougaar.core.mts.MessageAddress;
 /**
  * This is an MTS-internal service used for simple socket
  * manipulation in RMI communication.  The implementation is in
- * RMISocketControlAspect.  It's used only by the RMILinkProtocol and
- * by OBJS.
+ * {@link RMISocketControlAspect}. 
  */
 public interface RMISocketControlService extends Service {
     /**
-     * The SO Timeout is set for ALL sockets that go to the remote RMI
+     * The SO Timeout is set for ALL client sockets that go to the remote RMI
      * reference The side effect of this is that other agents that are
      * on the same node will also have their time out changed.
      */
@@ -54,8 +54,20 @@ public interface RMISocketControlService extends Service {
 
 
     /**
-     * Returns a list of all Sockets used for communication between
-     * the running Node and the given remoted address.
+     * Returns a list of all client Sockets used for communication between
+     * the running Node and the given remote address.
      */
     List<Socket> getSocket(MessageAddress addr);
+    
+    
+    /**
+     * Add the given source to the blacklist of hosts we don't allow to connect to us.
+     * Close any existing sockets connected from that source.
+     */
+    void rejectSocketsFrom(InetAddress source);
+    
+    /**
+     * Remove the given source to the blacklist of hosts we don't allow to connect to us.
+     */
+    void acceptSocketsFrom(InetAddress source);
 }

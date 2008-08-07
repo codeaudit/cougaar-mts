@@ -23,18 +23,27 @@
  *  
  * </copyright>
  */
+
 package org.cougaar.mts.rmi;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.StandardAspect;
@@ -58,7 +67,13 @@ public class RMISocketControlAspect
 
         Provider provider = new Provider();
         impl = new Impl();
-        getServiceBroker().addService(RMISocketControlService.class, provider);
+        SocketManager.getSocketManager().addListener(impl);
+        
+        ServiceBroker sb = getServiceBroker();
+        NodeControlService ncs = sb.getService(this, NodeControlService.class, null);
+        ServiceBroker rootSB = ncs.getRootServiceBroker();
+        rootSB.addService(SocketManagementService.class, provider);
+        rootSB.addService(RMISocketControlService.class, provider);
     }
 
     public Object getDelegate(Object object, Class type) {
@@ -72,6 +87,8 @@ public class RMISocketControlAspect
         public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
             if (serviceClass == RMISocketControlService.class) {
                 return impl;
+            } else if (serviceClass == SocketManagementService.class) {
+                return SocketManager.getSocketManager();
             } else {
                 return null;
             }
@@ -82,20 +99,26 @@ public class RMISocketControlAspect
         }
     }
 
-    private class Impl implements RMISocketControlService {
-        Map<String, List<Socket>> sockets;      // host:port -> list of sockets
-        Map<MessageAddress, Remote> references; 
-        Map<Remote, MessageAddress> addresses;
-        Map<MessageAddress, Integer> default_timeouts;
-        Map<String,Remote> referencesByKey;  // host:port -> Remote stub
+    private class Impl 
+            implements RMISocketControlService, SocketManagementListener {
+        final Map<String, List<Socket>> clientSockets;      // host:port key -> list of sockets
+        final Map<MessageAddress, Remote> references; 
+        final Map<Remote, MessageAddress> addresses;
+        final Map<MessageAddress, Integer> default_timeouts;
+        final Map<String,Remote> referencesByKey;  // host:port -> Remote stub
+        
+        final Set<InetAddress> blacklist;
+        final Map<InetAddress,List<Socket>> remoteSockets = 
+            new HashMap<InetAddress,List<Socket>>();
+        
 
-        private Impl() {
-            sockets = new HashMap<String, List<Socket>>();
+        Impl() {
+            clientSockets = new HashMap<String, List<Socket>>();
             references = new HashMap<MessageAddress,Remote>();
             addresses = new HashMap<Remote,MessageAddress>();
             default_timeouts = new HashMap<MessageAddress, Integer>();
             referencesByKey = new HashMap<String,Remote>();
-
+            blacklist = new HashSet<InetAddress>();
             Runnable reaper = new Runnable() {
                 public void run() {
                     reapClosedSockets();
@@ -103,10 +126,92 @@ public class RMISocketControlAspect
             };
             ThreadService tsvc = getThreadService();
             Schedulable sched = tsvc.getThread(this, reaper, "Socket Reaper");
-
             sched.schedule(0, 5000);
         }
+        
+        public boolean setSoTimeout(MessageAddress addr, int timeout) {
+            // Could use the NameService to lookup the Reference from
+            // the address.
+            default_timeouts.put(addr, timeout);
+            Remote reference = references.get(addr);
+            if (reference != null) {
+                return setSoTimeout(reference, timeout);
+            } else {
+                return false;
+            }
+        }
 
+        public synchronized void setReferenceAddress(Remote reference, MessageAddress addr) {
+            references.put(addr, reference);
+            addresses.put(reference, addr);
+            Integer timeout = default_timeouts.get(addr);
+            if (timeout != null) {
+                setSoTimeout(reference, timeout.intValue());
+            }
+        }
+
+        public List<Socket> getSocket(MessageAddress addr) {
+            Remote ref = references.get(addr);
+            if (ref == null) {
+                return null;
+            }
+            String key = getKey(ref);
+            return clientSockets.get(key);
+        }
+
+        // Blacklist management starts here
+        public void socketAdded(Socket socket, boolean is_ssl) {
+            SocketAddress remoteSocketAddress = socket.getRemoteSocketAddress();
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Remote socket added from " + remoteSocketAddress);
+            }
+            InetAddress addr = ((InetSocketAddress) remoteSocketAddress).getAddress();
+            if (blacklist.contains(addr)) {
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Closing blacklisted socket from " + remoteSocketAddress);
+                }
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    // best-effort close
+                }
+                return;
+            } else {
+                synchronized (remoteSockets) {
+                    List<Socket> sockets = remoteSockets.get(addr);
+                    if (sockets == null) {
+                        sockets = new ArrayList<Socket>();
+                        sockets.add(socket);
+                        remoteSockets.put(addr, sockets);
+                    } else {
+                        sockets.add(socket);
+                    }
+                }
+            }
+        }
+
+        public void socketRemoved(Socket socket) {
+            InetAddress addr = socket.getInetAddress();
+            synchronized (remoteSockets) {
+                List<Socket> sockets = remoteSockets.get(addr);
+                if (sockets != null) {
+                    sockets.remove(socket);
+                }
+            }
+        }
+        
+        // We assume that at this point we've already blocked new
+        // requests.  So no new sockets from the given address will be
+        // created.
+        public void acceptSocketsFrom(InetAddress source_address) {
+            updateBlacklist(source_address, false);
+        }
+        
+        public void rejectSocketsFrom(InetAddress address) {
+            updateBlacklist(address, true);
+            killActiveSockets(address);
+        }
+        
         private String getKey(String host, int port) {
             return getKey(host, Integer.toString(port));
         }
@@ -170,10 +275,10 @@ public class RMISocketControlAspect
                 }
             }
             synchronized (this) {
-                List<Socket> skt_list = sockets.get(key);
+                List<Socket> skt_list = clientSockets.get(key);
                 if (skt_list == null) {
                     skt_list = new ArrayList<Socket>();
-                    sockets.put(key, skt_list);
+                    clientSockets.put(key, skt_list);
                 }
                 skt_list.add(skt);
             }
@@ -181,7 +286,7 @@ public class RMISocketControlAspect
 
         synchronized void reapClosedSockets() {
             // Prune closed sockets
-            for (List<Socket> socketList : sockets.values()) {
+            for (List<Socket> socketList : clientSockets.values()) {
                 Iterator<Socket> itr = socketList.iterator();
                 while (itr.hasNext()) {
                     Socket socket = itr.next();
@@ -194,7 +299,7 @@ public class RMISocketControlAspect
 
         synchronized boolean setSoTimeout(Remote reference, int timeout) {
             String key = getKey(reference);
-            List<Socket> skt_list =  sockets.get(key);
+            List<Socket> skt_list =  clientSockets.get(key);
             if (skt_list == null) {
                 return false;
             }
@@ -212,39 +317,48 @@ public class RMISocketControlAspect
             return success;
         }
 
-        public boolean setSoTimeout(MessageAddress addr, int timeout) {
-            // Could use the NameService to lookup the Reference from
-            // the address.
-            default_timeouts.put(addr, timeout);
-            Remote reference = references.get(addr);
-            if (reference != null) {
-                return setSoTimeout(reference, timeout);
-            } else {
-                return false;
+        private void updateBlacklist(InetAddress source_address, boolean black) {
+            InetAddress key = source_address;
+            if (loggingService.isInfoEnabled()) {
+                if (black) {
+                    loggingService.info("Add " +source_address+ " to blacklist");
+                } else {
+                    loggingService.info("Remove " +source_address+" from blacklist");
+                }
+            }
+            synchronized (blacklist) {
+                if (black) {
+                    blacklist.add(key);
+                } else {
+                    blacklist.remove(key);
+                }
             }
         }
 
-        public synchronized void setReferenceAddress(Remote reference, 
-                                                     MessageAddress addr) {
-            references.put(addr, reference);
-            addresses.put(reference, addr);
-            Integer timeout = default_timeouts.get(addr);
-            if (timeout != null) {
-                setSoTimeout(reference, timeout.intValue());
+        private void killActiveSockets(InetAddress source_address) {
+            List<Socket> sockets_to_close;
+            Socket skt;
+            Object source = source_address;
+            synchronized (remoteSockets) {
+                sockets_to_close = remoteSockets.get(source);
+                if (sockets_to_close != null) {
+                    // clone the list to avoid synchronization issues
+                    sockets_to_close = new ArrayList<Socket>(sockets_to_close);
+                }
+            }
+            if (sockets_to_close != null) {
+                for (int i=0; i<sockets_to_close.size(); i++) {
+                    skt = sockets_to_close.get(i);
+                    try { 
+                        skt.close();
+                    } catch (java.io.IOException ex) {
+                        // don't care 
+                    }
+                }
             }
         }
-
-
-        public List<Socket> getSocket(MessageAddress addr) {
-            Remote ref = references.get(addr);
-            if (ref == null) {
-                return null;
-            }
-            String key = getKey(ref);
-            return sockets.get(key);
-        }
-
     }
 
+    
 
 }
