@@ -126,6 +126,10 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
                                 + e.getMessage());
             return;
         }
+        processIncomingMessage(rawObject);
+    }
+    
+    protected void processIncomingMessage(Object rawObject) {
         if (rawObject instanceof MessageAttributes) {
             receiver.handleIncomingMessage((MessageAttributes) rawObject);
         } else {
