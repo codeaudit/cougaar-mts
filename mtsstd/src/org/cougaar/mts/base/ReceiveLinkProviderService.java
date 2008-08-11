@@ -25,19 +25,19 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageTransportClient;
 
 /**
  * This is the factory service for getting a ReceiveLink for a given
- * destination.  It's both and implemented and provided by
+ * destination. It's both and implemented and provided by
  * {@link ReceiveLinkFactory} and is accessible only to MTS components.
  */
-public interface ReceiveLinkProviderService extends Service
-{
+public interface ReceiveLinkProviderService
+        extends Service {
     /**
-     * Find or make the (unique) ReceiveLink for the given
-     * recipient. 
+     * Find or make the (unique) ReceiveLink for the given recipient.
      */
     ReceiveLink getReceiveLink(MessageTransportClient client);
 }

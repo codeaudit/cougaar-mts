@@ -46,7 +46,7 @@ class MessageReceiver<I> {
         this.protocol = protocol;
         this.deliverer = deliverer;
         this.log = Logging.getLogger(getClass().getName());
-       
+
     }
 
     void handleIncomingMessage(MessageAttributes attrs) {
@@ -54,12 +54,12 @@ class MessageReceiver<I> {
         if (sync.isReply(attrs)) {
             // it's an ack -- Work is done in isReply
             return;
-        } 
+        }
         if (attrs instanceof AttributedMessage) {
             AttributedMessage message = (AttributedMessage) attrs;
             if (log.isInfoEnabled()) {
-                log.info("Delivering " + message+ " from " +message.getOriginator() 
-                         + " to " + message.getTarget());
+                log.info("Delivering " + message + " from " + message.getOriginator() + " to "
+                        + message.getTarget());
             }
             try {
                 MessageAttributes reply = deliverer.deliverMessage(message, message.getTarget());
@@ -73,5 +73,4 @@ class MessageReceiver<I> {
         }
     }
 
-    
 }

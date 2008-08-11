@@ -25,25 +25,23 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.io.IOException;
 import java.io.Serializable;
 
 /**
  * Parent class of COUGAAR-specific {@link IOException}s.
  */
-abstract public class  CougaarIOException 
-    extends IOException
-    implements Serializable
-{
-    
-    public CougaarIOException() 
-    {
-	super();
+abstract public class CougaarIOException
+        extends IOException
+        implements Serializable {
+
+    public CougaarIOException() {
+        super();
     }
 
-    public CougaarIOException(String message) 
-    {
-	super(message);
+    public CougaarIOException(String message) {
+        super(message);
     }
 
 }

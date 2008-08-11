@@ -25,52 +25,49 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.mts.base.DestinationQueue;
 import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This example Aspect shows a simple use of the {@link StepService}.
- * It pauses each {@link DestinationQueue} after the second message.
- * Since this Aspect needs the {@link StepService}, it should be
- * loaded after that service is provided by the {@link StepperAspect}.
-*/
+ * This example Aspect shows a simple use of the {@link StepService}. It pauses
+ * each {@link DestinationQueue} after the second message. Since this Aspect
+ * needs the {@link StepService}, it should be loaded after that service is
+ * provided by the {@link StepperAspect}.
+ */
 public class StepperControlExampleAspect
-    extends StandardAspect
-{
-    public Object getDelegate(Object delegatee, Class type) 
-    {
-	if (type == DestinationQueue.class) {
-	    return new DestinationQueueDelegate((DestinationQueue) delegatee);
-	} else {
-	    return null;
-	}
+        extends StandardAspect {
+    public Object getDelegate(Object delegatee, Class type) {
+        if (type == DestinationQueue.class) {
+            return new DestinationQueueDelegate((DestinationQueue) delegatee);
+        } else {
+            return null;
+        }
     }
 
-
     private class DestinationQueueDelegate
-	extends DestinationQueueDelegateImplBase
-    {
-	int count = 0;
+            extends DestinationQueueDelegateImplBase {
+        int count = 0;
 
-	public DestinationQueueDelegate (DestinationQueue delegatee) {
-	    super(delegatee);
-	}
+        public DestinationQueueDelegate(DestinationQueue delegatee) {
+            super(delegatee);
+        }
 
-	public void dispatchNextMessage(AttributedMessage msg) {
-	    super.dispatchNextMessage(msg);
-	    if (++count == 2) {
-		// Seccond message to this destination has just gone
-		// through.  Tell the stepper to pause this queue.
-		ServiceBroker sb = getServiceBroker();
-		StepService svc =
-		    (StepService) sb.getService(this, StepService.class, null);
-		if (svc != null)
-		    svc.pause(getDestination());
-		else if (loggingService.isErrorEnabled())
-		    loggingService.error("StepperAspect not loaded?");
-	    }
-	}
+        public void dispatchNextMessage(AttributedMessage msg) {
+            super.dispatchNextMessage(msg);
+            if (++count == 2) {
+                // Seccond message to this destination has just gone
+                // through. Tell the stepper to pause this queue.
+                ServiceBroker sb = getServiceBroker();
+                StepService svc = sb.getService(this, StepService.class, null);
+                if (svc != null) {
+                    svc.pause(getDestination());
+                } else if (loggingService.isErrorEnabled()) {
+                    loggingService.error("StepperAspect not loaded?");
+                }
+            }
+        }
     }
 }

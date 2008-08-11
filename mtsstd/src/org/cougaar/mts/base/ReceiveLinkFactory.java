@@ -25,49 +25,44 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AspectFactory;
 
 /**
- * This {@link ServiceProvider} both provides and implements the {@link
- * ReceiveLinkProviderService}.  It makes new links as needed,
- * atttaching Aspect delegates for every instantiation.
+ * This {@link ServiceProvider} both provides and implements the
+ * {@link ReceiveLinkProviderService}. It makes new links as needed, atttaching
+ * Aspect delegates for every instantiation.
  */
-public class ReceiveLinkFactory 
-    extends AspectFactory
-    implements ReceiveLinkProviderService, ServiceProvider
-{
+public class ReceiveLinkFactory
+        extends AspectFactory
+        implements ReceiveLinkProviderService, ServiceProvider {
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Could restrict this request to the registry
-	if (serviceClass == ReceiveLinkProviderService.class) {
-	    if (requestor instanceof MessageTransportRegistry.ServiceImpl) 
-		return this;
-	} 
-	return null;
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        // Could restrict this request to the registry
+        if (serviceClass == ReceiveLinkProviderService.class) {
+            if (requestor instanceof MessageTransportRegistry.ServiceImpl) {
+                return this;
+            }
+        }
+        return null;
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
-
-
 
     /**
-     * Make a new ReceiveLinkImpl and attach all relevant aspects.
-     * The final object returned is the outermost aspect delegate, or
-     * the ReceiveLinkImpl itself if there are no aspects.  */
+     * Make a new ReceiveLinkImpl and attach all relevant aspects. The final
+     * object returned is the outermost aspect delegate, or the ReceiveLinkImpl
+     * itself if there are no aspects.
+     */
     public ReceiveLink getReceiveLink(MessageTransportClient client) {
-	ReceiveLink link = new ReceiveLinkImpl(client, getServiceBroker());
-	return (ReceiveLink) attachAspects(link, ReceiveLink.class);
+        ReceiveLink link = new ReceiveLinkImpl(client, getServiceBroker());
+        return (ReceiveLink) attachAspects(link, ReceiveLink.class);
     }
 }
-

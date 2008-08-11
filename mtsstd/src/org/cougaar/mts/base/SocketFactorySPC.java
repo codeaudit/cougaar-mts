@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.rmi.server.RMISocketFactory;
 import java.util.Map;
 
@@ -38,92 +39,91 @@ import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.service.SocketFactoryService;
 
 /**
- * Provide SocketFactoryService via the std (aspected) MTS for the rest of the world.
+ * Provide SocketFactoryService via the std (aspected) MTS for the rest of the
+ * world.
  */
 
 public final class SocketFactorySPC
-  extends ComponentSupport
-{
-  private SFSP _sfsp;
-  private SFS _sfs;
-  private ServiceBroker rootsb;
+        extends ComponentSupport {
+    private SFSP _sfsp;
+    private SFS _sfs;
+    private ServiceBroker rootsb;
 
-  public void load() {
-    super.load();
-    // get root service broker
-    ServiceBroker sb = getServiceBroker();
-    NodeControlService ncs = (NodeControlService)
-      sb.getService(this, NodeControlService.class, null);
-    if (ncs == null) {
-      throw new RuntimeException(
-          "Unable to obtain NodeControlService");
+    public void load() {
+        super.load();
+        // get root service broker
+        ServiceBroker sb = getServiceBroker();
+        NodeControlService ncs = sb.getService(this, NodeControlService.class, null);
+        if (ncs == null) {
+            throw new RuntimeException("Unable to obtain NodeControlService");
+        }
+        rootsb = ncs.getRootServiceBroker();
+        sb.releaseService(this, NodeControlService.class, ncs);
+        // advertise service
+        _sfsp = new SFSP();
+        _sfs = new SFS();
+        rootsb.addService(SocketFactoryService.class, _sfsp);
     }
-    rootsb = ncs.getRootServiceBroker();
-    sb.releaseService(this,  NodeControlService.class, ncs);
-    // advertise service
-    _sfsp = new SFSP();
-    _sfs = new SFS();
-    rootsb.addService(SocketFactoryService.class, _sfsp);
-  }
 
-  public void unload() {
-    if (rootsb != null) {
-      rootsb.revokeService(SocketFactoryService.class, _sfsp);
+    public void unload() {
+        if (rootsb != null) {
+            rootsb.revokeService(SocketFactoryService.class, _sfsp);
+        }
+        _sfsp = null;
+        _sfs = null;
+        super.unload();
     }
-    _sfsp = null;
-    _sfs = null;
-    super.unload();
-  }
 
+    private class SFSP
+            implements ServiceProvider {
+        public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+            if (serviceClass == SocketFactoryService.class) {
+                return _sfs;
+            }
+            return null;
+        }
 
-  private class SFSP implements ServiceProvider {
-    public Object getService(ServiceBroker sb, 
-                             Object requestor,
-                             Class serviceClass) {
-      if (serviceClass == SocketFactoryService.class) {
-        return _sfs;
-      }
-      return null;
+        public void releaseService(ServiceBroker sb,
+                                   Object requestor,
+                                   Class serviceClass,
+                                   Object service) {
+            // no need to do anything
+        }
     }
-    
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service) {
-      // no need to do anything
-    }
-  }
 
-  private class SFS implements SocketFactoryService {
-    /** Get an appropriate SocketFactory instance.
-     * the return value is typed Object because RMISocketFactory and SSLSocketFactory
-     * do not otherwise share a superclass.
-     * Implementations will generally support SSLSocketFactory, SSLServerSocketFactory, and RMISocketFactory.
-     * RMISocketFactory may be parameterized (via the second argument) with "ssl"=Boolean (default FALSE) and
-     * "aspects"=Boolean (default FALSE).
-     * <p>
-     * Example:<br>
-     * <code>
-     * Map params = new HashMap(); params.put("ssl", Boolean.TRUE);<br>
-     * RMISocketFactory rsf = (RMISocketFactory) socketFactoryService.getSocketFactory(RMISocketFactory.class, params);<br>
+    private class SFS
+            implements SocketFactoryService {
+        /**
+         * Get an appropriate SocketFactory instance. the return value is typed
+         * Object because RMISocketFactory and SSLSocketFactory do not otherwise
+         * share a superclass. Implementations will generally support
+         * SSLSocketFactory, SSLServerSocketFactory, and RMISocketFactory.
+         * RMISocketFactory may be parameterized (via the second argument) with
+         * "ssl"=Boolean (default FALSE) and "aspects"=Boolean (default FALSE).
+         * <p>
+         * Example:<br>
+         * <code>
+         * Map params = new HashMap(); params.put("ssl", Boolean.TRUE);<br>
+         * RMISocketFactory rsf = (RMISocketFactory) socketFactoryService.getSocketFactory(RMISocketFactory.class, params);<br>
      * </code>
-     * @param clazz Specifies the class required.  If the class cannot be supported by
-     * the service, it will return null.
-     * @param m Allows arbitrary preferences and parameters to be specified.
-     * @return an object which is instanceof the requested class or null.
-     **/
-    public Object getSocketFactory(Class clazz, Map m) {
-      if (clazz == SSLSocketFactory.class) {
-        return SocketFactory.getSSLSocketFactory();
-      } else if (clazz == SSLServerSocketFactory.class) {
-        return SocketFactory.getSSLServerSocketFactory();
-      } else if (clazz == RMISocketFactory.class) {
-        boolean sslp = (m.get("ssl") == Boolean.TRUE);
-        boolean aspects = (m.get("aspects") == Boolean.TRUE);
-        return new SocketFactory(sslp, aspects);
-      } else {
-        return null;
-      }
+         * 
+         * @param clazz Specifies the class required. If the class cannot be
+         *        supported by the service, it will return null.
+         * @param m Allows arbitrary preferences and parameters to be specified.
+         * @return an object which is instanceof the requested class or null.
+         **/
+        public Object getSocketFactory(Class clazz, Map m) {
+            if (clazz == SSLSocketFactory.class) {
+                return SocketFactory.getSSLSocketFactory();
+            } else if (clazz == SSLServerSocketFactory.class) {
+                return SocketFactory.getSSLServerSocketFactory();
+            } else if (clazz == RMISocketFactory.class) {
+                boolean sslp = m.get("ssl") == Boolean.TRUE;
+                boolean aspects = m.get("aspects") == Boolean.TRUE;
+                return new SocketFactory(sslp, aspects);
+            } else {
+                return null;
+            }
+        }
     }
-  }
 }

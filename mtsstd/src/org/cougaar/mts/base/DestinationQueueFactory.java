@@ -38,122 +38,102 @@ import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
 
 /**
- * This Component implements the {@link
- * DestinationQueueProviderService}, which makes DestinationQueues on
- * demand, and the {@link DestinationQueueMonitorService}, which
- * allows clients to be notified of queue events.  It also acts the
- * {@link ServiceProvider} for those services.
- *
- * For instantiation of DestinationQueues, it uses the standard
- * find-or-make approach, where a target address is used for finding.
- * Since this Component is a subclass of @{link AspectFactory}, aspect
- * delegates will be attached to {@link DestinationQueue}s when
- * they're instantiated.
+ * This Component implements the {@link DestinationQueueProviderService}, which
+ * makes DestinationQueues on demand, and the
+ * {@link DestinationQueueMonitorService}, which allows clients to be notified
+ * of queue events. It also acts the {@link ServiceProvider} for those services.
+ * 
+ * For instantiation of DestinationQueues, it uses the standard find-or-make
+ * approach, where a target address is used for finding. Since this Component is
+ * a subclass of @{link AspectFactory}, aspect delegates will be attached to
+ * {@link DestinationQueue}s when they're instantiated.
  * 
  */
-public class DestinationQueueFactory 
-    extends  QueueFactory
-    implements DestinationQueueProviderService, 
-	       DestinationQueueMonitorService,
-	       ServiceProvider
-{
-    private HashMap queues;
-    private ArrayList impls;
-    private Container container;
+public class DestinationQueueFactory
+        extends QueueFactory
+        implements DestinationQueueProviderService, DestinationQueueMonitorService, ServiceProvider {
+    private final HashMap queues;
+    private final ArrayList impls;
+    private final Container container;
 
-    DestinationQueueFactory(Container container) 
-    {
-	this.container = container;
-	queues = new HashMap();
-	impls = new ArrayList();
+    DestinationQueueFactory(Container container) {
+        this.container = container;
+        queues = new HashMap();
+        impls = new ArrayList();
     }
 
     /**
-     * Find a DestinationQueue for the given address, or make a new
-     * one of type DestinationQueueImpl if there isn't one yet.  In
-     * the latter case, attach all relevant aspects as part of the
-     * process of creating the queue.  The final object returned is
-     * the outermost aspect delegate, or the DestinationQueueImpl itself if
-     * there are no aspects.  */
-    public DestinationQueue getDestinationQueue(MessageAddress destination) 
-    {
-	MessageAddress dest = destination.getPrimary();
-	DestinationQueue q = null;
-	DestinationQueueImpl qimpl = null;
-	synchronized (queues) {
-	    q = (DestinationQueue) queues.get(dest);
-	    if (q == null) {
-		qimpl = new DestinationQueueImpl(dest, container);
-		q = (DestinationQueue) attachAspects(qimpl, 
-						     DestinationQueue.class);
-		qimpl.setDelegate(q);
-		queues.put(dest, q);
-		synchronized (impls) {
-		    impls.add(qimpl);
-		}
-	    }
-	}
-	return q;
+     * Find a DestinationQueue for the given address, or make a new one of type
+     * DestinationQueueImpl if there isn't one yet. In the latter case, attach
+     * all relevant aspects as part of the process of creating the queue. The
+     * final object returned is the outermost aspect delegate, or the
+     * DestinationQueueImpl itself if there are no aspects.
+     */
+    public DestinationQueue getDestinationQueue(MessageAddress destination) {
+        MessageAddress dest = destination.getPrimary();
+        DestinationQueue q = null;
+        DestinationQueueImpl qimpl = null;
+        synchronized (queues) {
+            q = (DestinationQueue) queues.get(dest);
+            if (q == null) {
+                qimpl = new DestinationQueueImpl(dest, container);
+                q = (DestinationQueue) attachAspects(qimpl, DestinationQueue.class);
+                qimpl.setDelegate(q);
+                queues.put(dest, q);
+                synchronized (impls) {
+                    impls.add(qimpl);
+                }
+            }
+        }
+        return q;
     }
-
-
 
     // NB: This does _not_ prevent another thread from adding new
     // messages while the remove operation is in progress.
-    public void removeMessages(UnaryPredicate pred, ArrayList removed) 
-    {
-	ArrayList copy;
-	synchronized (impls) {
-	    copy = new ArrayList(impls);
-	}
-	Iterator itr = copy.iterator();
-	while (itr.hasNext()) {
-	    MessageQueue queue = (MessageQueue) itr.next();
-	    queue.removeMessages(pred, removed);
-	}
-	notifyListeners(removed);
+    public void removeMessages(UnaryPredicate pred, ArrayList removed) {
+        ArrayList copy;
+        synchronized (impls) {
+            copy = new ArrayList(impls);
+        }
+        Iterator itr = copy.iterator();
+        while (itr.hasNext()) {
+            MessageQueue queue = (MessageQueue) itr.next();
+            queue.removeMessages(pred, removed);
+        }
+        notifyListeners(removed);
     }
 
-    public MessageAddress[] getDestinations()
-    {
-	synchronized (queues) {
-	    MessageAddress[] ret = new MessageAddress[queues.size()];
-	    queues.keySet().toArray(ret);
-	    return ret;
-	}
-    }
- 
-     public AttributedMessage[] snapshotQueue(MessageAddress destination)
-     {
-	 DestinationQueue q = null;
-	 MessageAddress dest = destination.getPrimary();
-	 synchronized (queues) {
-	     q = (DestinationQueue) queues.get(dest);
-	 }
-	 return (q == null ? null : q.snapshot());
-     }
- 
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Restrict this service
-	if (serviceClass == DestinationQueueProviderService.class) {
-	    return this;
-	} else if (serviceClass == DestinationQueueMonitorService.class) {
-	    return this;
-	}
-	return null;
+    public MessageAddress[] getDestinations() {
+        synchronized (queues) {
+            MessageAddress[] ret = new MessageAddress[queues.size()];
+            queues.keySet().toArray(ret);
+            return ret;
+        }
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public AttributedMessage[] snapshotQueue(MessageAddress destination) {
+        DestinationQueue q = null;
+        MessageAddress dest = destination.getPrimary();
+        synchronized (queues) {
+            q = (DestinationQueue) queues.get(dest);
+        }
+        return q == null ? null : q.snapshot();
     }
 
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        // Restrict this service
+        if (serviceClass == DestinationQueueProviderService.class) {
+            return this;
+        } else if (serviceClass == DestinationQueueMonitorService.class) {
+            return this;
+        }
+        return null;
+    }
+
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
+    }
 
 }
-

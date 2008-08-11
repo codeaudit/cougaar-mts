@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,313 +42,271 @@ import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
 
 /**
- * The MessageTransportRegistry {@link ServiceProvider} singleton is a
- * utility instance that helps certain pieces of the message transport
- * subsystem to find one another.  It provides the {@link
- * MessageTransportRegistryService}.  An inner class implements that
- * service.
+ * The MessageTransportRegistry {@link ServiceProvider} singleton is a utility
+ * instance that helps certain pieces of the message transport subsystem to find
+ * one another. It provides the {@link MessageTransportRegistryService}. An
+ * inner class implements that service.
  */
-public final class MessageTransportRegistry 
-    implements ServiceProvider
-{
+public final class MessageTransportRegistry
+        implements ServiceProvider {
 
     public ServiceImpl service;
 
-    public MessageTransportRegistry(String name, ServiceBroker sb) 
-    {
-	service = new ServiceImpl(name, sb);
+    public MessageTransportRegistry(String name, ServiceBroker sb) {
+        service = new ServiceImpl(name, sb);
     }
 
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == MessageTransportRegistryService.class) {
-	    return service;
-	} else {
-	    return null;
-	}
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == MessageTransportRegistryService.class) {
+            return service;
+        } else {
+            return null;
+        }
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
-
-
-
 
     static final class ServiceImpl
-	implements MessageTransportRegistryService, IncarnationService.Callback
-    {
-    
-	private String name;
-	private HashMap receiveLinks = new HashMap(89);
-	private HashMap agentStates = new HashMap();
-	private HashMap localClients = new HashMap();
-	private ArrayList linkProtocols = new ArrayList();
-	private ReceiveLinkProviderService receiveLinkProvider;
-	private NameSupport nameSupport;
-	private ServiceBroker sb;
-	private LoggingService loggingService;
-	private IncarnationService incarnationService;
+            implements MessageTransportRegistryService, IncarnationService.Callback {
 
-	private ServiceImpl(String name, ServiceBroker sb) {
-	    this.name = name;
-	    this.sb = sb;
-	    loggingService = (LoggingService) 
-		sb.getService(this, LoggingService.class, null);
+        private final String name;
+        private final HashMap receiveLinks = new HashMap(89);
+        private final HashMap agentStates = new HashMap();
+        private final HashMap localClients = new HashMap();
+        private final ArrayList linkProtocols = new ArrayList();
+        private ReceiveLinkProviderService receiveLinkProvider;
+        private NameSupport nameSupport;
+        private final ServiceBroker sb;
+        private final LoggingService loggingService;
+        private final IncarnationService incarnationService;
 
-	    incarnationService = (IncarnationService)
-		sb.getService(this, IncarnationService.class, null);
-	    if (incarnationService == null && loggingService.isWarnEnabled())
-		loggingService.warn("Couldn't load IncarnationService");
-	}
+        private ServiceImpl(String name, ServiceBroker sb) {
+            this.name = name;
+            this.sb = sb;
+            loggingService = sb.getService(this, LoggingService.class, null);
 
-	private NameSupport nameSupport() {
-	    if (nameSupport == null) 
-		nameSupport = (NameSupport) 
-		    sb.getService(this, NameSupport.class, null);
-	    return nameSupport;
-	}
+            incarnationService = sb.getService(this, IncarnationService.class, null);
+            if (incarnationService == null && loggingService.isWarnEnabled()) {
+                loggingService.warn("Couldn't load IncarnationService");
+            }
+        }
 
+        private NameSupport nameSupport() {
+            if (nameSupport == null) {
+                nameSupport = sb.getService(this, NameSupport.class, null);
+            }
+            return nameSupport;
+        }
 
+        private ReceiveLink makeReceiveLink(MessageTransportClient client) {
+            if (receiveLinkProvider == null) {
+                receiveLinkProvider = sb.getService(this, ReceiveLinkProviderService.class, null);
+            }
+            ReceiveLink link = receiveLinkProvider.getReceiveLink(client);
+            receiveLinks.put(client.getMessageAddress(), link);
+            return link;
+        }
 
-	private ReceiveLink makeReceiveLink(MessageTransportClient client) {
-	    if (receiveLinkProvider == null) {
-		receiveLinkProvider = (ReceiveLinkProviderService) 
-		    sb.getService(this, 
-				  ReceiveLinkProviderService.class,
-				  null);
-	    }
-	    ReceiveLink link = receiveLinkProvider.getReceiveLink(client);
-	    receiveLinks.put(client.getMessageAddress(), link);
-	    return link;
-	}
+        private void registerClientWithSociety(MessageTransportClient client) {
+            // register with each component transport
+            synchronized (linkProtocols) {
+                Iterator protocols = linkProtocols.iterator();
+                while (protocols.hasNext()) {
+                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                    protocol.registerClient(client);
+                }
+            }
+        }
 
+        private void unregisterClientWithSociety(MessageTransportClient client) {
+            // register with each component transport
+            synchronized (linkProtocols) {
+                Iterator protocols = linkProtocols.iterator();
+                while (protocols.hasNext()) {
+                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                    protocol.unregisterClient(client);
+                }
+            }
+        }
 
-	private void registerClientWithSociety(MessageTransportClient client) {
-	    // register with each component transport
-	    synchronized (linkProtocols) {
-		Iterator protocols = linkProtocols.iterator();
-		while (protocols.hasNext()) {
-		    LinkProtocol protocol = (LinkProtocol) protocols.next();
-		    protocol.registerClient(client);
-		}
-	    }
-	}
+        public synchronized void incarnationChanged(MessageAddress address, long incarnation) {
+            MessageAddress key = address.getPrimary();
+            MessageTransportClient client = null;
+            client = (MessageTransportClient) localClients.get(key);
+            if (client != null && client.getIncarnationNumber() < incarnation) {
+                agentStates.remove(key);
+                receiveLinks.remove(key);
+                localClients.remove(key);
+            }
+        }
 
+        private synchronized void addLocalClient(MessageTransportClient client) {
+            MessageAddress key = client.getMessageAddress();
+            localClients.put(key.getPrimary(), client);
 
-	private void unregisterClientWithSociety(MessageTransportClient client)
-	{
-	    // register with each component transport
-	    synchronized (linkProtocols) {
-		Iterator protocols = linkProtocols.iterator();
-		while (protocols.hasNext()) {
-		    LinkProtocol protocol = (LinkProtocol) protocols.next();
-		    protocol.unregisterClient(client);
-		}
-	    }
-	}
+            if (incarnationService != null) {
+                incarnationService.subscribe(key, this);
+            }
 
+            try {
+                ReceiveLink link = findLocalReceiveLink(key);
+                if (link == null) {
+                    link = makeReceiveLink(client);
+                }
+            } catch (Exception e) {
+                if (loggingService.isErrorEnabled()) {
+                    loggingService.error(e.toString());
+                }
+            }
+        }
 
-	public synchronized void incarnationChanged(MessageAddress address,
-						    long incarnation)
-	{
-	    MessageAddress key = address.getPrimary();
-	    MessageTransportClient client = null;
-	    client = (MessageTransportClient) localClients.get(key);
-	    if (client != null && client.getIncarnationNumber() < incarnation) {
-		agentStates.remove(key);
-		receiveLinks.remove(key);
-		localClients.remove(key);
-	    }
-	}
+        private synchronized void removeLocalClient(MessageTransportClient client) {
+            MessageAddress key = client.getMessageAddress();
+            try {
+                receiveLinks.remove(key);
+                localClients.remove(key.getPrimary());
+            } catch (Exception e) {
+            }
+        }
 
+        public boolean hasLinkProtocols() {
+            synchronized (linkProtocols) {
+                return linkProtocols.size() > 0;
+            }
+        }
 
-	private synchronized void addLocalClient(MessageTransportClient client)
-	{
-	    MessageAddress key = client.getMessageAddress();
-	    localClients.put(key.getPrimary(), client);
+        public void addLinkProtocol(LinkProtocol lp) {
+            synchronized (linkProtocols) {
+                linkProtocols.add(lp);
+            }
+        }
 
-	    if (incarnationService != null) {
-		incarnationService.subscribe(key, this);
-	    }
+        public String getIdentifier() {
+            return name;
+        }
 
-	    try {
-		ReceiveLink link = findLocalReceiveLink(key);
-		if (link == null) {
-		    link = makeReceiveLink(client);
-		}
-	    } catch (Exception e) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error(e.toString());
-	    }
-	}
+        public synchronized AgentState getAgentState(MessageAddress id) {
+            MessageAddress canonical_id = id.getPrimary();
+            Object raw = agentStates.get(canonical_id);
+            if (raw == null) {
+                AgentState state = new SimpleMessageAttributes();
+                agentStates.put(canonical_id, state);
+                return state;
+            } else if (raw instanceof AgentState) {
+                return (AgentState) raw;
+            } else {
+                throw new RuntimeException("Cached state for " + id + "=" + raw
+                        + " which is not an AgentState instance");
+            }
+        }
 
-	private synchronized void removeLocalClient(MessageTransportClient client) {
-	    MessageAddress key = client.getMessageAddress();
-	    try {
-		receiveLinks.remove(key);
-		localClients.remove(key.getPrimary());
-	    } catch (Exception e) {}
-	}
+        public synchronized void removeAgentState(MessageAddress id) {
+            agentStates.remove(id.getPrimary());
+        }
 
+        public boolean isLocalClient(MessageAddress id) {
+            synchronized (this) {
+                return receiveLinks.get(id.getPrimary()) != null
+                        || id.equals(MessageAddress.MULTICAST_LOCAL);
+            }
+        }
 
-	public boolean hasLinkProtocols() {
-	    synchronized (linkProtocols) {
-		return linkProtocols.size() > 0;
-	    }
-	}
+        public ReceiveLink findLocalReceiveLink(MessageAddress id) {
+            return (ReceiveLink) receiveLinks.get(id.getPrimary());
+        }
 
-	public void addLinkProtocol(LinkProtocol lp) {
-	    synchronized (linkProtocols) {
-		linkProtocols.add(lp);
-	    }
-	}
+        // this is a slow implementation, as it conses a new set each time.
+        // Better alternatives surely exist.
+        public Iterator findLocalMulticastReceivers(MulticastMessageAddress addr) {
+            if (addr.hasReceiverClass()) {
+                ArrayList result = new ArrayList();
+                Class mclass = addr.getReceiverClass();
+                if (mclass != null) {
+                    Iterator itr = receiveLinks.entrySet().iterator();
+                    while (itr.hasNext()) {
+                        Map.Entry entry = (Map.Entry) itr.next();
+                        ReceiveLink link = (ReceiveLink) entry.getValue();
+                        MessageTransportClient client = link.getClient();
+                        if (mclass.isAssignableFrom(client.getClass())) {
+                            result.add(entry.getKey());
+                            if (loggingService.isDebugEnabled()) {
+                                loggingService.debug("Client " + client + " matches " + mclass
+                                        + ", added " + entry.getKey());
+                            }
+                        } else {
+                            if (loggingService.isDebugEnabled()) {
+                                loggingService.debug("Client " + client + " doesn't match "
+                                        + mclass);
+                            }
+                        }
+                    }
+                }
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("result=" + result);
+                }
+                return result.iterator();
 
+            } else {
+                return new ArrayList(receiveLinks.keySet()).iterator();
+            }
+        }
 
-	public String getIdentifier() {
-	    return name;
-	}
+        public Iterator findRemoteMulticastTransports(MulticastMessageAddress addr) {
+            return nameSupport().lookupMulticast(addr);
+        }
 
+        public void registerClient(MessageTransportClient client) {
+            registerClientWithSociety(client);
+            addLocalClient(client);
+        }
 
-	public synchronized AgentState getAgentState(MessageAddress id) {
-	    MessageAddress canonical_id = id.getPrimary();
-	    Object raw =  agentStates.get(canonical_id);
-	    if (raw == null) {
-		AgentState state = new SimpleMessageAttributes();
-		agentStates.put(canonical_id, state);
-		return state;
-	    } else if (raw instanceof AgentState) {
-		return (AgentState) raw;
-	    } else {
-		throw new RuntimeException("Cached state for " +id+
-					   "="  +raw+ 
-					   " which is not an AgentState instance");
-	    }
-	}
+        public void unregisterClient(MessageTransportClient client) {
+            removeLocalClient(client);
+            unregisterClientWithSociety(client);
+        }
 
-	public synchronized void removeAgentState(MessageAddress id) {
-	    agentStates.remove(id.getPrimary());
-	}
+        public void ipAddressChanged() {
+            // inform each protocol
+            synchronized (linkProtocols) {
+                Iterator protocols = linkProtocols.iterator();
+                while (protocols.hasNext()) {
+                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                    protocol.ipAddressChanged();
+                }
+            }
+        }
 
-	public boolean isLocalClient(MessageAddress id) {
-	    synchronized (this) {
-		return receiveLinks.get(id.getPrimary()) != null ||
- 		    id.equals(MessageAddress.MULTICAST_LOCAL);
-	    }
-	}
+        public boolean addressKnown(MessageAddress address) {
+            synchronized (linkProtocols) {
+                Iterator protocols = linkProtocols.iterator();
+                while (protocols.hasNext()) {
+                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                    if (protocol.addressKnown(address)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
-
-	public  ReceiveLink findLocalReceiveLink(MessageAddress id) {
-	    return (ReceiveLink) receiveLinks.get(id.getPrimary());
-	}
-
-
-	// this is a slow implementation, as it conses a new set each time.
-	// Better alternatives surely exist.
-	public Iterator findLocalMulticastReceivers(MulticastMessageAddress addr)
-	{
-	    if (addr.hasReceiverClass()) {
-		ArrayList result = new ArrayList();
-		Class mclass = addr.getReceiverClass();
-		if (mclass != null) {
-		    Iterator itr = receiveLinks.entrySet().iterator();
-		    while (itr.hasNext()) {
-			Map.Entry entry = (Map.Entry) itr.next();
-			ReceiveLink link = (ReceiveLink) entry.getValue();
-			MessageTransportClient client = link.getClient();
-			if (mclass.isAssignableFrom(client.getClass())) {
-			    result.add(entry.getKey());
-			    if (loggingService.isDebugEnabled())
-				loggingService.debug("Client " +
-							  client + 
-							  " matches " +
-							  mclass + ", added " +
-							  entry.getKey());
-			} else {
-			    if (loggingService.isDebugEnabled()) 
-				loggingService.debug("Client " +
-							  client +
-							  " doesn't match " +
-							  mclass);
-			}
-		    }
-		}
-		if (loggingService.isDebugEnabled()) 
-		    loggingService.debug("result=" + result);
-		return result.iterator();
-
-	    } else {
-		return new ArrayList(receiveLinks.keySet()).iterator();
-	    }
-	}
-
-
-
-
-
-
-	public Iterator findRemoteMulticastTransports(MulticastMessageAddress addr)
-	{
-	    return nameSupport().lookupMulticast(addr);
-	}
-
-
-	public void registerClient(MessageTransportClient client) {
-	    registerClientWithSociety(client);
-	    addLocalClient(client);
-	}
-
-
-	public void unregisterClient(MessageTransportClient client) {
-	    removeLocalClient(client);
-	    unregisterClientWithSociety(client);
-	}
-
-
-	public void ipAddressChanged() {
-	    // inform each protocol
-	    synchronized (linkProtocols) {
-		Iterator protocols = linkProtocols.iterator();
-		while (protocols.hasNext()) {
-		    LinkProtocol protocol = (LinkProtocol) protocols.next();
-		    protocol.ipAddressChanged();
-		}
-	    }
-	}
-
-	public boolean addressKnown(MessageAddress address) {
-	    synchronized (linkProtocols) {
-		Iterator protocols = linkProtocols.iterator();
-		while (protocols.hasNext()) {
-		    LinkProtocol protocol = (LinkProtocol) protocols.next();
-		    if (protocol.addressKnown(address)) return true;
-		}
-	    }
-	    return false;
-	}
-
-	public ArrayList getDestinationLinks(MessageAddress destination) 
-	{
-	    ArrayList destinationLinks = new ArrayList();
-	    synchronized (linkProtocols) {
-		Iterator itr = linkProtocols.iterator();
-		DestinationLink link;
-		while (itr.hasNext()) {
-		    LinkProtocol lp = (LinkProtocol) itr.next();
-		    // Class lp_class = lp.getClass();
-		    link = lp.getDestinationLink(destination);
-		    destinationLinks.add(link);
-		}
-	    }
-	    return destinationLinks;
-	}
-
+        public ArrayList getDestinationLinks(MessageAddress destination) {
+            ArrayList destinationLinks = new ArrayList();
+            synchronized (linkProtocols) {
+                Iterator itr = linkProtocols.iterator();
+                DestinationLink link;
+                while (itr.hasNext()) {
+                    LinkProtocol lp = (LinkProtocol) itr.next();
+                    // Class lp_class = lp.getClass();
+                    link = lp.getDestinationLink(destination);
+                    destinationLinks.add(link);
+                }
+            }
+            return destinationLinks;
+        }
 
     }
 

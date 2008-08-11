@@ -20,10 +20,10 @@ import org.cougaar.core.service.ServletService;
 /**
  *
  */
-public class RmiAccessControlPlugin extends ComponentPlugin {
+public class RmiAccessControlPlugin
+        extends ComponentPlugin {
     ServletService servletService;
     RMISocketControlService rmiAccess;
-
 
     protected void setupSubscriptions() {
 
@@ -38,16 +38,12 @@ public class RmiAccessControlPlugin extends ComponentPlugin {
 
     }
 
-
     protected void execute() {
 
     }
 
-
-
     protected void doit(HttpServletRequest req, HttpServletResponse res)
-    throws IOException 
-    {
+            throws IOException {
 
         String ipAddr = req.getParameter("ipAddr");
         String yes_or_no = req.getParameter("blacklist");
@@ -56,7 +52,7 @@ public class RmiAccessControlPlugin extends ComponentPlugin {
         PrintWriter out = res.getWriter();
         out.println("<html><head></head><body>");
 
-        if (rmiAccess==null) {
+        if (rmiAccess == null) {
             out.println("RmiSocketControlServce is null, can't change value");
         } else if (ipAddr != null) {
             try {
@@ -71,36 +67,34 @@ public class RmiAccessControlPlugin extends ComponentPlugin {
             }
         }
 
-
         out.println("<FORM METHOD=\"GET\" ACTION=\"rmiAccessControl\">");
         out.println("<table>");
-        out.println(
-                    "<tr><td>IP address </td><td><input type=\"text\" name=\"ipAddr\" size=15 value=\""
-                    + ipAddr
-                    + "\"> </td></tr>");
-        out.println(
-                    "<tr><td>Blacklist </td><td><input type=\"text\" name=\"blacklist\" size=10 value=\""
-                    + yes_or_no
-                    + "\"> </td></tr>");
+        out.println("<tr><td>IP address </td><td><input type=\"text\" name=\"ipAddr\" size=15 value=\""
+                + ipAddr + "\"> </td></tr>");
+        out.println("<tr><td>Blacklist </td><td><input type=\"text\" name=\"blacklist\" size=10 value=\""
+                + yes_or_no + "\"> </td></tr>");
         out.println("</table>");
         out.println("<INPUT TYPE=\"submit\" Value=\"Submit\">");
         out.println("</FORM>");
         out.println("</body>");
     }
 
-    private class MyServlet extends HttpServlet {
+    private class MyServlet
+            extends HttpServlet {
         public void doGet(HttpServletRequest req, HttpServletResponse res)
-        throws IOException {
+                throws IOException {
             doit(req, res);
         }
+
         public void doPost(HttpServletRequest req, HttpServletResponse res)
-        throws IOException {
+                throws IOException {
             doit(req, res);
         }
     }
 
     /**
      * Returns the servletService.
+     * 
      * @return ServletService
      */
     public ServletService getServletService() {
@@ -109,6 +103,7 @@ public class RmiAccessControlPlugin extends ComponentPlugin {
 
     /**
      * Sets the servletService.
+     * 
      * @param servletService The servletService to set
      */
     public void setServletService(ServletService servletService) {

@@ -13,5 +13,6 @@ import java.net.Socket;
  */
 public interface SocketManagementListener {
     void socketAdded(Socket socket, boolean is_ssl);
+
     void socketRemoved(Socket socket);
 }

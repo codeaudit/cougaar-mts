@@ -25,48 +25,47 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.MessageAddress;
 
 /**
  * This Servlet displays the local MTS statistics, as returned by the
- * {@link AgentStatusService}. for the Agent in which it's loaded.
- * It's created by the {@link StatisticsPlugin}. 
+ * {@link AgentStatusService}. for the Agent in which it's loaded. It's created
+ * by the {@link StatisticsPlugin}.
  * 
  * @see AgentRemoteStatusServlet
  */
-public class AgentLocalStatusServlet extends AgentStatusServlet
-{
+public class AgentLocalStatusServlet
+        extends AgentStatusServlet {
 
     public AgentLocalStatusServlet(ServiceBroker sb) {
-	super(sb);
+        super(sb);
     }
 
     public String getPath() {
-	return "/message/between-Any-agent-and-Local-Agent";
+        return "/message/between-Any-agent-and-Local-Agent";
     }
 
     public String getDescription(MessageAddress agent) {
-	return "Message Transport statistics between local agent "+
-	    agent + " and any other agent";
+        return "Message Transport statistics between local agent " + agent + " and any other agent";
     }
 
     public String getTitle() {
-	return "Message Transport statistics for agents on node "+ 
-	    getNodeID();
+        return "Message Transport statistics for agents on node " + getNodeID();
     }
 
     protected boolean isRemote() {
-	return(false);
+        return false;
     }
 
-   protected AgentStatusService.AgentState getState(MessageAddress agent){
-       	AgentStatusService.AgentState state = null;
-	
-	if (agentStatusService!=null) {
-	    state = agentStatusService.getLocalAgentState(agent);
-	}
-	return state;
+    protected AgentStatusService.AgentState getState(MessageAddress agent) {
+        AgentStatusService.AgentState state = null;
+
+        if (agentStatusService != null) {
+            state = agentStatusService.getLocalAgentState(agent);
+        }
+        return state;
     }
 }

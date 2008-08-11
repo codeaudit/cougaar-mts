@@ -21,42 +21,47 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  
  * </copyright> 
- */ 
+ */
 package org.cougaar.mts.http;
 
-import org.cougaar.core.service.ServletService; // javadoc only
-import org.cougaar.mts.base.LinkProtocol; // javadoc only
+import org.cougaar.core.service.ServletService;
+import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This {@link LinkProtocol} uses the Cougaar's {@link ServletService}
- * (Tomcat) for communication via https (ssl).
+ * This {@link LinkProtocol} uses the Cougaar's {@link ServletService} (Tomcat)
+ * for communication via https (ssl).
  */
-public class HTTPSLinkProtocol extends HTTPLinkProtocol {
-  public HTTPSLinkProtocol() {
-    super();
-  }
-  public String getProtocolType() {
-    return "-HTTPS"; 
-  }
-  public String getProtocol() {
-    return "https";
-  }
-  /**
-   * Returns TRUE
-   */
-  protected Boolean usesEncryptedSocket() {
-	  return Boolean.TRUE;
-  }
-  
-   // hard-code value. higher than RMI but lower than SSLRMI
-  protected int computeCost(AttributedMessage message) {
-	  return super.computeCost(message) * 3;
-  }
-  // cost of DestinationLink is hard-coded to 500
+public class HTTPSLinkProtocol
+        extends HTTPLinkProtocol {
+    public HTTPSLinkProtocol() {
+        super();
+    }
 
-  public Class getProtocolClass() {
-    return HTTPSLinkProtocol.class;
-  } //getProtocolClass()
+    public String getProtocolType() {
+        return "-HTTPS";
+    }
+
+    public String getProtocol() {
+        return "https";
+    }
+
+    /**
+     * Returns TRUE
+     */
+    protected Boolean usesEncryptedSocket() {
+        return Boolean.TRUE;
+    }
+
+    // hard-code value. higher than RMI but lower than SSLRMI
+    protected int computeCost(AttributedMessage message) {
+        return super.computeCost(message) * 3;
+    }
+
+    // cost of DestinationLink is hard-coded to 500
+
+    public Class getProtocolClass() {
+        return HTTPSLinkProtocol.class;
+    } // getProtocolClass()
 
 }

@@ -29,12 +29,10 @@ package org.cougaar.mts.base;
 import java.util.List;
 
 /**
- * This interface describes the queue events for which listeners can
- * be notifified via callback.  At the moment there's only one such
- * event, the removal of messages from queues (via
- * {@link QueueProviderService}). 
+ * This interface describes the queue events for which listeners can be
+ * notifified via callback. At the moment there's only one such event, the
+ * removal of messages from queues (via {@link QueueProviderService}).
  */
-public interface QueueListener
-{
+public interface QueueListener {
     void messagesRemoved(List messages);
 }

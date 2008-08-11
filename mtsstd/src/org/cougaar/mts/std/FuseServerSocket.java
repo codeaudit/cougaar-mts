@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
@@ -33,95 +34,89 @@ import org.cougaar.mts.base.ServerSocketWrapper;
 import org.cougaar.mts.base.SocketDelegateImplBase;
 
 /**
- * This test entity can be used as a wrapper for RMI ServerSockets.
- * If too many outstanding connections are open from any one client
- * host, it will not allow any more.
+ * This test entity can be used as a wrapper for RMI ServerSockets. If too many
+ * outstanding connections are open from any one client host, it will not allow
+ * any more.
  */
-public class FuseServerSocket extends ServerSocketWrapper
-{
+public class FuseServerSocket
+        extends ServerSocketWrapper {
     private static final int MAX_CONNECTIONS = 10;
 
-    private class FuseSocket extends SocketDelegateImplBase {
-	FuseSocket(Socket delegatee) {
-	    super(delegatee);
-	}
+    private class FuseSocket
+            extends SocketDelegateImplBase {
+        FuseSocket(Socket delegatee) {
+            super(delegatee);
+        }
 
-	public void close() 
-	    throws java.io.IOException
-	{
-	    InetAddress client = getInetAddress();
-	    boolean alreadyClosed = isClosed();
-	    super.close();
-	    if (!alreadyClosed) {
-		ConnectionStats record = getRecord(client);
-		record.decrementCount();
-		System.err.println(this + " closed");
-	    }
-	}
+        public void close()
+                throws java.io.IOException {
+            InetAddress client = getInetAddress();
+            boolean alreadyClosed = isClosed();
+            super.close();
+            if (!alreadyClosed) {
+                ConnectionStats record = getRecord(client);
+                record.decrementCount();
+                System.err.println(this + " closed");
+            }
+        }
     }
-
-
 
     private static class ConnectionStats {
-	String client;
-	int count;
+        String client;
+        int count;
 
-	ConnectionStats(String client) {
-	    this.client = client;
-	    count = 0;
-	}
+        ConnectionStats(String client) {
+            this.client = client;
+            count = 0;
+        }
 
-	synchronized int incrementCount() {
-	    System.err.println(client +" inc= "+ count);
-	    return ++count;
-	}
+        synchronized int incrementCount() {
+            System.err.println(client + " inc= " + count);
+            return ++count;
+        }
 
-	synchronized int decrementCount() {
-	    System.err.println(client +" dec= "+ count);
-	    return --count;
-	}
+        synchronized int decrementCount() {
+            System.err.println(client + " dec= " + count);
+            return --count;
+        }
     }
-	
 
-    private HashMap stats;
+    private final HashMap stats;
 
     public FuseServerSocket()
-	throws java.io.IOException
-    {
-	super();
-	stats = new HashMap();
+            throws java.io.IOException {
+        super();
+        stats = new HashMap();
     }
 
     private ConnectionStats getRecord(InetAddress address) {
-	String client = address.getCanonicalHostName();
-	ConnectionStats stat = null;
-	synchronized (stats) {
-	    stat = (ConnectionStats) stats.get(client);
-	    if (stat == null) {
-		stat = new ConnectionStats(client);
-		stats.put(client, stat);
-	    }
-	}
-	return stat;
+        String client = address.getCanonicalHostName();
+        ConnectionStats stat = null;
+        synchronized (stats) {
+            stat = (ConnectionStats) stats.get(client);
+            if (stat == null) {
+                stat = new ConnectionStats(client);
+                stats.put(client, stat);
+            }
+        }
+        return stat;
     }
 
+    public Socket accept()
+            throws java.io.IOException {
+        Socket socket = super.accept();
+        socket = new FuseSocket(socket);
+        InetAddress source = socket.getInetAddress();
+        ConnectionStats record = getRecord(source);
+        int count = record.incrementCount();
+        if (count > MAX_CONNECTIONS) {
+            try {
+                socket.close();
+            } catch (java.io.IOException io_ex) {
+            }
+        }
 
-
-    public Socket accept() 
-	throws java.io.IOException
-    {
-	Socket socket = super.accept();
-	socket = new FuseSocket(socket);
-	InetAddress source = socket.getInetAddress();
-	ConnectionStats record = getRecord(source);
-	int count = record.incrementCount();
-	if (count > MAX_CONNECTIONS) {
-	    try { socket.close(); }
-	    catch (java.io.IOException io_ex) { }
-	} 
-	    
-	return socket;
+        return socket;
     }
-
 
 }

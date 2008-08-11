@@ -27,17 +27,16 @@
 package org.cougaar.mts.base;
 
 import java.rmi.RemoteException;
+
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- *   This Exception is thrown when the message is delivered to a Node
- *   that does not contain the target Agent, probably because the
- *   agent has moved.
+ * This Exception is thrown when the message is delivered to a Node that does
+ * not contain the target Agent, probably because the agent has moved.
  **/
-public class MisdeliveredMessageException extends RemoteException 
-{
+public class MisdeliveredMessageException
+        extends RemoteException {
     public MisdeliveredMessageException(AttributedMessage message) {
-	super(message + " misdelivered");
+        super(message + " misdelivered");
     }
 }
-

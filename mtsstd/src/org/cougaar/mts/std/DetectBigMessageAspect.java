@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.InputStream;
@@ -48,11 +49,11 @@ import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
  * This Aspect logs large messages, where large is defined by the
- * <code>MaxMsgLen</code> parameter as a threshold number of bytes.
- * The default "large" threshold is 100MB.
+ * <code>MaxMsgLen</code> parameter as a threshold number of bytes. The default
+ * "large" threshold is 100MB.
  */
-public class DetectBigMessageAspect extends StandardAspect 
-{
+public class DetectBigMessageAspect
+        extends StandardAspect {
 
     private static final int MAX_DEFAULT = 100000000; // 100MB, sort of
     private int threshold = MAX_DEFAULT;
@@ -60,206 +61,180 @@ public class DetectBigMessageAspect extends StandardAspect
     // Return delegates for MessageReader, MessageWriter and
     // DestinationLink.
     public Object getDelegate(Object delegatee, Class type) {
-	if (type == MessageWriter.class) {
-	    MessageWriter wtr = (MessageWriter) delegatee;
-	    return new CountingMessageWriter(wtr);
-	} else if (type == MessageReader.class) {
-	    MessageReader rdr = (MessageReader) delegatee;
-	    return new CountingMessageReader(rdr);
-	} else if (type == DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) delegatee;
-	    // Only RPC is relevant here
-	    Class cls = link.getProtocolClass();
-	    if (RPCLinkProtocol.class.isAssignableFrom(cls))
-		return new AddHookDestinationLink(link);
-	}
-	 
-	return null;
+        if (type == MessageWriter.class) {
+            MessageWriter wtr = (MessageWriter) delegatee;
+            return new CountingMessageWriter(wtr);
+        } else if (type == MessageReader.class) {
+            MessageReader rdr = (MessageReader) delegatee;
+            return new CountingMessageReader(rdr);
+        } else if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) delegatee;
+            // Only RPC is relevant here
+            Class cls = link.getProtocolClass();
+            if (RPCLinkProtocol.class.isAssignableFrom(cls)) {
+                return new AddHookDestinationLink(link);
+            }
+        }
+
+        return null;
     }
 
-    public void load()
-    {
-	super.load();
-	threshold = (int) getParameter("MaxMsgLen", MAX_DEFAULT);
-	if (loggingService.isWarnEnabled()) {
-	    loggingService.warn("Loaded DetectBigMessageAspect");
-	}
+    public void load() {
+        super.load();
+        threshold = (int) getParameter("MaxMsgLen", MAX_DEFAULT);
+        if (loggingService.isWarnEnabled()) {
+            loggingService.warn("Loaded DetectBigMessageAspect");
+        }
     }
 
     public static class MessageTooBigException
-	extends java.io.IOException
-    {
+            extends java.io.IOException {
     }
 
-
-    private void checkCount(int count, 
-			    String context,
-			    AttributedMessage msg)
-	throws java.io.IOException
-    {
-	if (count >= threshold) {
-	    loggingService.error("Message " + context +
-				 ": bytes = "
-				 + count +
-				 " for message " + msg+
-				 " exceeds max = " + threshold);
-	    throw new MessageTooBigException();
-	}
+    private void checkCount(int count, String context, AttributedMessage msg)
+            throws java.io.IOException {
+        if (count >= threshold) {
+            loggingService.error("Message " + context + ": bytes = " + count + " for message "
+                    + msg + " exceeds max = " + threshold);
+            throw new MessageTooBigException();
+        }
     }
 
     // The DestinationLink delegate
-    private class AddHookDestinationLink 
-	extends DestinationLinkDelegateImplBase
-    {
-	AddHookDestinationLink(DestinationLink delegatee) {
-	    super(delegatee);
-	}
+    private class AddHookDestinationLink
+            extends DestinationLinkDelegateImplBase {
+        AddHookDestinationLink(DestinationLink delegatee) {
+            super(delegatee);
+        }
 
-
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws NameLookupException, 
-		   UnregisteredNameException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
-	{
-	    // Register Aspect as a Message Streaming filter
- 	    message.addFilter(DetectBigMessageAspect.this);
-	    return super.forwardMessage(message);
-	}
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
+                MisdeliveredMessageException {
+            // Register Aspect as a Message Streaming filter
+            message.addFilter(DetectBigMessageAspect.this);
+            return super.forwardMessage(message);
+        }
     }
 
-
-    // The MessageWriter delegate.  This will do the byte-counting by
+    // The MessageWriter delegate. This will do the byte-counting by
     // creating a simple FilterOutputStream that watches all the bytes
     // go past,
     private class CountingMessageWriter
-	extends MessageWriterDelegateImplBase
-    {
+            extends MessageWriterDelegateImplBase {
 
-	private AttributedMessage msg;
-	private int count = 0;
+        private AttributedMessage msg;
+        private int count = 0;
 
-	private class CountingOutputStream extends FilterOutputStream {
+        private class CountingOutputStream
+                extends FilterOutputStream {
 
-	    private CountingOutputStream(OutputStream wrapped) {
-		super(wrapped);
-	    }
+            private CountingOutputStream(OutputStream wrapped) {
+                super(wrapped);
+            }
 
+            // Count the bytes, whichever method is used to write
+            // them. Pass the byte or bytes to 'out' rather than
+            // using super, since the default FilterOutputStream
+            // methods aren't very efficient.
 
-	    // Count the bytes, whichever method is used to write
-	    // them.  Pass the byte or bytes to 'out' rather than
-	    // using super, since the default FilterOutputStream
-	    // methods aren't very efficient.
+            public void write(int b)
+                    throws java.io.IOException {
+                out.write(b);
+                ++count;
+                checkCount(count, "write", msg);
+            }
 
- 	    public void write(int b) throws java.io.IOException {
- 		out.write(b);
- 		++count;
-		checkCount(count, "write", msg);
- 	    }
+            public void write(byte[] b, int off, int len)
+                    throws java.io.IOException {
+                out.write(b, off, len);
+                count += len;
+                checkCount(count, "write", msg);
+            }
 
- 	    public void write(byte[] b, int off, int len)
-		throws java.io.IOException 
-	    {
- 		out.write(b, off, len);
- 		count += len;
-		checkCount(count, "write", msg);
- 	    }
+            public void write(byte[] b)
+                    throws java.io.IOException {
+                out.write(b);
+                count += b.length;
+                checkCount(count, "write", msg);
+            }
 
+        }
 
- 	    public void write(byte[] b)
-		throws java.io.IOException 
-	    {
- 		out.write(b);
- 		count += b.length;
- 		checkCount(count, "write", msg);
-	    }
+        CountingMessageWriter(MessageWriter delegatee) {
+            super(delegatee);
+        }
 
-	}
+        // Create and return the byte-counting FilterOutputStream
+        public OutputStream getObjectOutputStream(ObjectOutput out)
+                throws java.io.IOException {
+            OutputStream raw_os = super.getObjectOutputStream(out);
+            return new CountingOutputStream(raw_os);
+        }
 
-	CountingMessageWriter(MessageWriter delegatee) {
-	    super(delegatee);
-	}
-
-
-
-	// Create and return the byte-counting FilterOutputStream
-	public OutputStream getObjectOutputStream(ObjectOutput out)
-	    throws java.io.IOException
-	{
-	    OutputStream raw_os = super.getObjectOutputStream(out);
-	    return new CountingOutputStream(raw_os);
-	}
-
-
-	// Save the message, since we'll need it later (in
-	// postProcess).
-	public void finalizeAttributes(AttributedMessage msg) {
-	    super.finalizeAttributes(msg);
-	    this.msg = msg;
-	}
-
+        // Save the message, since we'll need it later (in
+        // postProcess).
+        public void finalizeAttributes(AttributedMessage msg) {
+            super.finalizeAttributes(msg);
+            this.msg = msg;
+        }
 
     }
 
-
-
-    // MessageReader delegate.  In this case it does nothing.
+    // MessageReader delegate. In this case it does nothing.
     // Nonetheless it has to be here, since for reasons we don't yet
     // understand, the filtered streams have to match exactly on the
     // reader and writer.
     private class CountingMessageReader
-	extends MessageReaderDelegateImplBase
-    {
-	private AttributedMessage msg;
+            extends MessageReaderDelegateImplBase {
+        private AttributedMessage msg;
 
-	// Does absolutely nothing but has to be here.
-	private class CountingInputStream extends FilterInputStream {
-	    private int count = 0;
+        // Does absolutely nothing but has to be here.
+        private class CountingInputStream
+                extends FilterInputStream {
+            private int count = 0;
 
-	    private CountingInputStream(InputStream wrapped) {
-		super(wrapped);
-	    }
+            private CountingInputStream(InputStream wrapped) {
+                super(wrapped);
+            }
 
-	    public int read() throws java.io.IOException {
-		++count;
-		checkCount(count, "read", msg);
-		return in.read();
-	    }
+            public int read()
+                    throws java.io.IOException {
+                ++count;
+                checkCount(count, "read", msg);
+                return in.read();
+            }
 
-	    public int read(byte[] b, int off, int len) 
-		throws java.io.IOException
-	    {
-		int inc = in.read(b, off, len);
-		count += inc;
-		checkCount(count, "read", msg);
-		return inc;
-	    }
+            public int read(byte[] b, int off, int len)
+                    throws java.io.IOException {
+                int inc = in.read(b, off, len);
+                count += inc;
+                checkCount(count, "read", msg);
+                return inc;
+            }
 
-	    public int read(byte[] b) 
-		throws java.io.IOException
-	    {
-		int inc = in.read(b);
-		count += inc;
-		checkCount(count, "read", msg);
-		return inc;
-	    }
-	}
+            public int read(byte[] b)
+                    throws java.io.IOException {
+                int inc = in.read(b);
+                count += inc;
+                checkCount(count, "read", msg);
+                return inc;
+            }
+        }
 
-	CountingMessageReader(MessageReader delegatee) {
-	    super(delegatee);
-	}
+        CountingMessageReader(MessageReader delegatee) {
+            super(delegatee);
+        }
 
-	public InputStream getObjectInputStream(ObjectInput in)
-	    throws java.io.IOException, ClassNotFoundException
-	{
-	    InputStream raw_is = super.getObjectInputStream(in);
-	    return new CountingInputStream(raw_is);
-	}
+        public InputStream getObjectInputStream(ObjectInput in)
+                throws java.io.IOException, ClassNotFoundException {
+            InputStream raw_is = super.getObjectInputStream(in);
+            return new CountingInputStream(raw_is);
+        }
 
-	public void finalizeAttributes(AttributedMessage msg) {
-	    super.finalizeAttributes(msg);
-	    this.msg = msg;
-	}
+        public void finalizeAttributes(AttributedMessage msg) {
+            super.finalizeAttributes(msg);
+            this.msg = msg;
+        }
 
     }
 }

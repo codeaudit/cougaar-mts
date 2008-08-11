@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.net.URI;
 import java.util.Iterator;
 
@@ -33,66 +34,46 @@ import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.wp.Callback;
 
 /**
- * Convenience class for aspects which define {@link NameSupport}
- * delegate classes.  It implements all methods of by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link NameSupport} delegate
+ * classes. It implements all methods of by delegating to another instance,
+ * given in the constructor. Aspect inner classes which extend this need only
+ * implement specific methods that are relevant to that aspect,
  * 
  */
-abstract public class NameSupportDelegateImplBase implements NameSupport 
-{
-    private NameSupport nameSupport;
+abstract public class NameSupportDelegateImplBase
+        implements NameSupport {
+    private final NameSupport nameSupport;
 
-    protected NameSupportDelegateImplBase (NameSupport nameSupport) {
-	this.nameSupport = nameSupport;
+    protected NameSupportDelegateImplBase(NameSupport nameSupport) {
+        this.nameSupport = nameSupport;
     }
-
 
     public MessageAddress getNodeMessageAddress() {
-	return nameSupport.getNodeMessageAddress();
+        return nameSupport.getNodeMessageAddress();
     }
 
-    public void registerAgentInNameServer(URI reference, 
-					  MessageAddress address, 
-					  String protocol)
-    {
-	nameSupport.registerAgentInNameServer(reference, address, protocol);
+    public void registerAgentInNameServer(URI reference, MessageAddress address, String protocol) {
+        nameSupport.registerAgentInNameServer(reference, address, protocol);
     }
 
-    public void unregisterAgentInNameServer(URI reference, 
-					    MessageAddress address, 
-					    String protocol)
-    {
-	nameSupport.unregisterAgentInNameServer(reference, address, protocol);
+    public void unregisterAgentInNameServer(URI reference, MessageAddress address, String protocol) {
+        nameSupport.unregisterAgentInNameServer(reference, address, protocol);
     }
 
-
-    public void lookupAddressInNameServer(MessageAddress address, 
-					  String protocol,
-					  Callback callback)
-    {
-	nameSupport.lookupAddressInNameServer(address, protocol, callback);
+    public void lookupAddressInNameServer(MessageAddress address, String protocol, Callback callback) {
+        nameSupport.lookupAddressInNameServer(address, protocol, callback);
     }
 
-    public URI lookupAddressInNameServer(MessageAddress address, 
-					 String protocol)
-    {
-	return nameSupport.lookupAddressInNameServer(address, protocol);
+    public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
+        return nameSupport.lookupAddressInNameServer(address, protocol);
     }
 
-    public URI lookupAddressInNameServer(MessageAddress address, 
-					 String protocol,
-					 long timeout)
-    {
-	return nameSupport.lookupAddressInNameServer(address, protocol,
-						     timeout);
+    public URI lookupAddressInNameServer(MessageAddress address, String protocol, long timeout) {
+        return nameSupport.lookupAddressInNameServer(address, protocol, timeout);
     }
-
 
     public Iterator lookupMulticast(MulticastMessageAddress address) {
-	return nameSupport.lookupMulticast(address);
+        return nameSupport.lookupMulticast(address);
     }
-
 
 }

@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.net.URI;
 import java.util.Iterator;
 
@@ -34,32 +35,22 @@ import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.service.wp.Callback;
 
 /**
- * This utility service hides the grimy details of dealing with
- * NameServers and White Pages from the rest of the message transport
- * subsystem.  
+ * This utility service hides the grimy details of dealing with NameServers and
+ * White Pages from the rest of the message transport subsystem.
  */
-public interface NameSupport extends Service
-{
-    MessageAddress  getNodeMessageAddress();
+public interface NameSupport
+        extends Service {
+    MessageAddress getNodeMessageAddress();
 
-    void registerAgentInNameServer(URI reference, 
-				   MessageAddress address, 
-				   String protocol);
+    void registerAgentInNameServer(URI reference, MessageAddress address, String protocol);
 
-    void unregisterAgentInNameServer(URI reference, 
-				     MessageAddress address, 
-				     String protocol);
+    void unregisterAgentInNameServer(URI reference, MessageAddress address, String protocol);
 
-    URI lookupAddressInNameServer(MessageAddress address, 
-				  String protocol);
+    URI lookupAddressInNameServer(MessageAddress address, String protocol);
 
-    URI lookupAddressInNameServer(MessageAddress address, 
-				  String protocol,
-				  long timeout);
+    URI lookupAddressInNameServer(MessageAddress address, String protocol, long timeout);
 
-    void lookupAddressInNameServer(MessageAddress address, 
-				   String protocol,
-				   Callback callback);
+    void lookupAddressInNameServer(MessageAddress address, String protocol, Callback callback);
 
     Iterator lookupMulticast(MulticastMessageAddress address);
 

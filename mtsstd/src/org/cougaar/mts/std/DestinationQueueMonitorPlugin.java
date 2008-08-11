@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.Component;
 import org.cougaar.core.component.ServiceAvailableEvent;
 import org.cougaar.core.component.ServiceAvailableListener;
@@ -36,39 +37,37 @@ import org.cougaar.util.GenericStateModelAdapter;
  * This Component loads the {@link DestinationQueueMonitorServlet}.
  */
 public class DestinationQueueMonitorPlugin
-extends GenericStateModelAdapter
-implements Component
-{
-  private ServiceBroker sb;
+        extends GenericStateModelAdapter
+        implements Component {
+    private ServiceBroker sb;
 
-  public void setServiceBroker(ServiceBroker sb) {
-    this.sb = sb;
-  }
-
-  public void load() {
-    super.load();
-
-    // we want the servlet service, but it's loaded after the MTS.
-    // Also, we want the agent's proxy to the node-level
-    // ServletService.  The blackboard is loaded late enough, so we
-    // wait 'til then...
-    if (sb.hasService(BlackboardService.class)) {
-      registerServlet();
-    } else {
-      ServiceAvailableListener sal =
-        new ServiceAvailableListener() {
-          public void serviceAvailable(ServiceAvailableEvent ae) {
-            Class cl = ae.getService();
-            if (BlackboardService.class.isAssignableFrom(cl)) {
-              registerServlet();
-            }
-          }
-        };
-      sb.addServiceListener(sal);
+    public void setServiceBroker(ServiceBroker sb) {
+        this.sb = sb;
     }
-  }
 
-  private void registerServlet() {
-    new DestinationQueueMonitorServlet(sb);
-  }
+    public void load() {
+        super.load();
+
+        // we want the servlet service, but it's loaded after the MTS.
+        // Also, we want the agent's proxy to the node-level
+        // ServletService. The blackboard is loaded late enough, so we
+        // wait 'til then...
+        if (sb.hasService(BlackboardService.class)) {
+            registerServlet();
+        } else {
+            ServiceAvailableListener sal = new ServiceAvailableListener() {
+                public void serviceAvailable(ServiceAvailableEvent ae) {
+                    Class cl = ae.getService();
+                    if (BlackboardService.class.isAssignableFrom(cl)) {
+                        registerServlet();
+                    }
+                }
+            };
+            sb.addServiceListener(sal);
+        }
+    }
+
+    private void registerServlet() {
+        new DestinationQueueMonitorServlet(sb);
+    }
 }

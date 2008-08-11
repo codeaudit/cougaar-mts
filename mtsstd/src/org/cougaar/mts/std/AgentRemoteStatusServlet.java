@@ -25,48 +25,46 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.MessageAddress;
 
 /**
  * This Servlet displays the remote MTS statistics, as returned by the
- * {@link AgentStatusService}, for the Agent in which it's loaded.
- * It's created by the {@link StatisticsPlugin}.
- *
+ * {@link AgentStatusService}, for the Agent in which it's loaded. It's created
+ * by the {@link StatisticsPlugin}.
+ * 
  * @see AgentLocalStatusServlet
  */
-public class AgentRemoteStatusServlet extends AgentStatusServlet
-{
+public class AgentRemoteStatusServlet
+        extends AgentStatusServlet {
     public AgentRemoteStatusServlet(ServiceBroker sb) {
-	super(sb);
+        super(sb);
     }
 
     public String getPath() {
-	return "/message/between-Node-and-Agent";
+        return "/message/between-Node-and-Agent";
     }
 
     public String getDescription(MessageAddress agent) {
-	return "Message Transport statistics between all agents on node "+
-	    getNodeID()+ " and agent " +agent ;
+        return "Message Transport statistics between all agents on node " + getNodeID()
+                + " and agent " + agent;
     }
 
     public String getTitle() {
-	return "Message Transport statistics for agents communicating with node "+ 
-	    getNodeID();
+        return "Message Transport statistics for agents communicating with node " + getNodeID();
     }
 
     protected boolean isRemote() {
-	return(true);
+        return true;
     }
 
-
-
-    protected  AgentStatusService.AgentState getState(MessageAddress agent){
-       	AgentStatusService.AgentState state = null;
-	if (agentStatusService!=null) {
-	    state = agentStatusService.getRemoteAgentState(agent);
-	}
-	return state;
+    protected AgentStatusService.AgentState getState(MessageAddress agent) {
+        AgentStatusService.AgentState state = null;
+        if (agentStatusService != null) {
+            state = agentStatusService.getRemoteAgentState(agent);
+        }
+        return state;
     }
 }

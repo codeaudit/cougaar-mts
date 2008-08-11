@@ -13,23 +13,24 @@ import java.util.List;
  * Strict singleton that binds together WrappedSockets and
  * SocketManagementListeners.
  */
-final class SocketManager implements SocketManagementService {
-    
+final class SocketManager
+        implements SocketManagementService {
+
     private static final SocketManager singleton = new SocketManager();
-    
+
     static SocketManager getSocketManager() {
         return singleton;
     }
-    
-    
-    private List<SocketManagementListener> listeners = new ArrayList<SocketManagementListener>();
-    
-    private List<ManagedServerSocket.ManagedSocket> sockets = 
-        new ArrayList<ManagedServerSocket.ManagedSocket>();
+
+    private final List<SocketManagementListener> listeners =
+            new ArrayList<SocketManagementListener>();
+
+    private final List<ManagedServerSocket.ManagedSocket> sockets =
+            new ArrayList<ManagedServerSocket.ManagedSocket>();
 
     private SocketManager() {
     }
-    
+
     public synchronized void addListener(SocketManagementListener listener) {
         // Before adding to the list, inform the new listener of all
         // currently open sockets.
@@ -57,5 +58,4 @@ final class SocketManager implements SocketManagementService {
         sockets.remove(socket);
     }
 
-   
 }

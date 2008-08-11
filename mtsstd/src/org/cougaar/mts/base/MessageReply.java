@@ -29,26 +29,23 @@ package org.cougaar.mts.base;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This simple extension of {@link AttributedMessage} should be used
- * only for replies. Only its attributes will be serialized, not its
- * body.
+ * This simple extension of {@link AttributedMessage} should be used only for
+ * replies. Only its attributes will be serialized, not its body.
  */
-public class MessageReply extends AttributedMessage
-{
+public class MessageReply
+        extends AttributedMessage {
 
     // For RMI
     public MessageReply() {
-	super();
+        super();
     }
 
-
     public MessageReply(AttributedMessage source) {
-	super(source, MessageReply.class);
+        super(source, MessageReply.class);
     }
 
     protected boolean replyOnly() {
-	return true;
+        return true;
     }
 
 }
-

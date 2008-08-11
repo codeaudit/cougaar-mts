@@ -26,24 +26,22 @@
 
 package org.cougaar.mts.base;
 
-
 /**
- *   This Exception indicates a {@link DestinationLink} general
- *   communications failure.  The cause is a more {@link
- *   LinkProtocol}-specific exception.
+ * This Exception indicates a {@link DestinationLink} general communications
+ * failure. The cause is a more {@link LinkProtocol}-specific exception.
  **/
-public class CommFailureException extends Exception 
-{
+public class CommFailureException
+        extends Exception {
     public CommFailureException(Exception nested) {
-	super(nested);
+        super(nested);
     }
 
     /**
      * @deprecated Use getCause()
      */
+    @Deprecated
     public Exception getException() {
-	return (Exception) getCause();
+        return (Exception) getCause();
     }
 
 }
-

@@ -25,27 +25,26 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 
 /**
- * An abstract base implementation of {@link SocketControlPolicy}
- * which handles the registration through the {@link
- * SocketControlProvisionService}.  Concrete implementations should
- * extend this and invoke super.load().
- *  
-*/
-abstract public class AbstractSocketControlPolicy 
-    extends BoundComponent
-    implements SocketControlPolicy
-{
+ * An abstract base implementation of {@link SocketControlPolicy} which handles
+ * the registration through the {@link SocketControlProvisionService}. Concrete
+ * implementations should extend this and invoke super.load().
+ * 
+ */
+abstract public class AbstractSocketControlPolicy
+        extends BoundComponent
+        implements SocketControlPolicy {
 
     public void load() {
-	super.load();
+        super.load();
 
-	ServiceBroker sb = getServiceBroker();
-	SocketControlProvisionService scps = (SocketControlProvisionService)
-	    sb.getService(this, SocketControlProvisionService.class, null);
-	scps.setPolicy(this);
+        ServiceBroker sb = getServiceBroker();
+        SocketControlProvisionService scps =
+                sb.getService(this, SocketControlProvisionService.class, null);
+        scps.setPolicy(this);
     }
-	
+
 }

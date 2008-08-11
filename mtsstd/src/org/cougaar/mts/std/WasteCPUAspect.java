@@ -25,94 +25,94 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * This debugging Aspect deliberately delays message processing by
- * wasting CPU for pseudo-random durations. 
+ * This debugging Aspect deliberately delays message processing by wasting CPU
+ * for pseudo-random durations.
  */
-public class WasteCPUAspect extends StandardAspect
-{
-   //This was taken from TrafficGenerator should be a math utils
-    private static class ExpRandom extends java.util.Random {
-	
-	ExpRandom() {
-	    //super is uniform distribution
-	    super();
-	}
-	// period is the average period, 
-	// the range can go from zero to ten times the period
-	public int nextInt(int period) {
-	    double raw = - (period * Math.log(super.nextDouble()));
-	    // clip upper tail
-	    if (raw > 10 * period) {
-		return 10 * period;
-	    }
-	    else return (int) Math.round(raw);
-	}
+public class WasteCPUAspect
+        extends StandardAspect {
+    // This was taken from TrafficGenerator should be a math utils
+    private static class ExpRandom
+            extends java.util.Random {
+
+        ExpRandom() {
+            // super is uniform distribution
+            super();
+        }
+
+        // period is the average period,
+        // the range can go from zero to ten times the period
+        public int nextInt(int period) {
+            double raw = -(period * Math.log(super.nextDouble()));
+            // clip upper tail
+            if (raw > 10 * period) {
+                return 10 * period;
+            } else {
+                return (int) Math.round(raw);
+            }
+        }
     }
 
-    public Object getDelegate(Object object, Class type) 
-    {
-	if (type == DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) object;
-	    return new WasteCPUDestinationLink(link);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object object, Class type) {
+        if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) object;
+            return new WasteCPUDestinationLink(link);
+        } else {
+            return null;
+        }
     }
-    
+
     ExpRandom expRandom = new ExpRandom();
 
-    private class WasteCPUDestinationLink 
-	extends DestinationLinkDelegateImplBase
+    private class WasteCPUDestinationLink
+            extends DestinationLinkDelegateImplBase
 
     {
-	
-	WasteCPUDestinationLink(DestinationLink link) {
-	    super(link);
-	}
 
+        WasteCPUDestinationLink(DestinationLink link) {
+            super(link);
+        }
 
-	public synchronized MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
+        public synchronized MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException
 
-	{
-	    // Serialize into the stream rather than pushing on the
-	    // queue.
-	    long count = 0;
-	    long startTime = System.currentTimeMillis();
-	    int wasteTime= expRandom.nextInt(166);
-	    while (System.currentTimeMillis() - startTime < wasteTime) {
-		count++;
-	    }
+        {
+            // Serialize into the stream rather than pushing on the
+            // queue.
+            long count = 0;
+            long startTime = System.currentTimeMillis();
+            int wasteTime = expRandom.nextInt(166);
+            while (System.currentTimeMillis() - startTime < wasteTime) {
+                count++;
+            }
 
-	    // CougaarThread.yield();
+            // CougaarThread.yield();
 
-	    startTime = System.currentTimeMillis();
-	    while (System.currentTimeMillis() - startTime < wasteTime) {
-		count++;
-	    }
+            startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTime < wasteTime) {
+                count++;
+            }
 
-	    // CougaarThread.yield();
+            // CougaarThread.yield();
 
-	    startTime = System.currentTimeMillis();
-	    while (System.currentTimeMillis() - startTime < wasteTime) {
-		count++;
-	    }
+            startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTime < wasteTime) {
+                count++;
+            }
 
-	    return super.forwardMessage(message);
+            return super.forwardMessage(message);
 
-	}
+        }
     }
 }

@@ -35,61 +35,50 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
 /**
- * This {@link ServiceProvider} provides and implements the {@link
- * SendQueueProviderService}.  Its jobs is to find or make a {@link
- * SendQueue} for a given address.  For now all addresses use a
- * singleton queue, in order to enforce ordering across senders.
+ * This {@link ServiceProvider} provides and implements the
+ * {@link SendQueueProviderService}. Its jobs is to find or make a
+ * {@link SendQueue} for a given address. For now all addresses use a singleton
+ * queue, in order to enforce ordering across senders.
  */
-public class SendQueueFactory 
-    extends QueueFactory
-    implements ServiceProvider, SendQueueProviderService
-{
+public class SendQueueFactory
+        extends QueueFactory
+        implements ServiceProvider, SendQueueProviderService {
     private SendQueue queue; // singleton
     private SendQueueImpl impl;
-    private Container container;
-    private String id;
+    private final Container container;
+    private final String id;
 
-    SendQueueFactory(Container container, String id)
-    {
-	this.container = container;
-	this.id = id;
+    SendQueueFactory(Container container, String id) {
+        this.container = container;
+        this.id = id;
     }
 
     public void load() {
-	super.load();
-	impl = new SendQueueImpl(id+"/OutQ", container);
-	queue = (SendQueue) attachAspects(impl, SendQueue.class);
+        super.load();
+        impl = new SendQueueImpl(id + "/OutQ", container);
+        queue = (SendQueue) attachAspects(impl, SendQueue.class);
     }
 
-
-    public SendQueue getSendQueue(MessageAddress sender)
-    {
-	return queue;
+    public SendQueue getSendQueue(MessageAddress sender) {
+        return queue;
     }
 
-    public void removeMessages(UnaryPredicate pred, ArrayList removed) 
-    {
-	impl.removeMessages(pred, removed);
-	notifyListeners(removed);
+    public void removeMessages(UnaryPredicate pred, ArrayList removed) {
+        impl.removeMessages(pred, removed);
+        notifyListeners(removed);
     }
 
-   public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == SendQueueProviderService.class) {
-	    return this;
-	}
-	return null;
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == SendQueueProviderService.class) {
+            return this;
+        }
+        return null;
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
-
-
 
 }

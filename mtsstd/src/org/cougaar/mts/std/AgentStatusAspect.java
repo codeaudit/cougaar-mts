@@ -61,199 +61,188 @@ import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
  * This Aspect implements the {@link AgentStatusService}.
- *
+ * 
  * In the <a
- * href="../../../../../OnlineManual/MetricsService/sensors.html">Sensor
- * Data Flow</a> pattern this class plays the role of <b>Sensor</b>
- * for message counts and size among Agents and Nodes.
- *
+ * href="../../../../../OnlineManual/MetricsService/sensors.html">Sensor Data
+ * Flow</a> pattern this class plays the role of <b>Sensor</b> for message
+ * counts and size among Agents and Nodes.
+ * 
  * @see org.cougaar.core.qos.metrics.AgentStatusRatePlugin
  * @see org.cougaar.core.qos.metrics.AgentLoadServlet
- *
+ * 
  */
-public class AgentStatusAspect 
-    extends StandardAspect
-    implements AgentStatusService, QueueListener, Constants, AttributeConstants
-{
+public class AgentStatusAspect
+        extends StandardAspect
+        implements AgentStatusService, QueueListener, Constants, AttributeConstants {
 
-    private static final double SEND_CREDIBILITY = 
-	Constants.SECOND_MEAS_CREDIBILITY;
+    private static final double SEND_CREDIBILITY = Constants.SECOND_MEAS_CREDIBILITY;
 
-
-    private HashMap remoteStates;
-    private HashMap localStates;
-    private AgentState nodeState;
+    private final HashMap remoteStates;
+    private final HashMap localStates;
+    private final AgentState nodeState;
     private MetricsUpdateService metricsUpdateService;
-    
+
     public AgentStatusAspect() {
-	remoteStates = new HashMap();
-	localStates = new HashMap();
-	nodeState = newAgentState();
+        remoteStates = new HashMap();
+        localStates = new HashMap();
+        nodeState = newAgentState();
     }
 
     public void load() {
-	super.load();
+        super.load();
 
-	ServiceBroker sb = getServiceBroker();
-	metricsUpdateService = (MetricsUpdateService)
-	    sb.getService(this, MetricsUpdateService.class, null);
+        ServiceBroker sb = getServiceBroker();
+        metricsUpdateService = sb.getService(this, MetricsUpdateService.class, null);
     }
-
 
     public void start() {
-	super.start();
+        super.start();
 
-	ServiceBroker sb = getServiceBroker();
+        ServiceBroker sb = getServiceBroker();
 
-	SendQueueProviderService sendq_fact = (SendQueueProviderService)
-	    sb.getService(this, SendQueueProviderService.class, null);
+        SendQueueProviderService sendq_fact =
+                sb.getService(this, SendQueueProviderService.class, null);
 
-	DestinationQueueProviderService destq_fact = (DestinationQueueProviderService)
-	    sb.getService(this, DestinationQueueProviderService.class, null);
+        DestinationQueueProviderService destq_fact =
+                sb.getService(this, DestinationQueueProviderService.class, null);
 
-	LoggingService lsvc = getLoggingService();
+        LoggingService lsvc = getLoggingService();
 
-	if (sendq_fact != null) {
-	    sendq_fact.addListener(this);
-	    sb.releaseService(this, SendQueueProviderService.class, sendq_fact);
-	} else if (lsvc.isInfoEnabled()) {
-	    lsvc.info("Couldn't get SendQueueProviderService");
-	}
+        if (sendq_fact != null) {
+            sendq_fact.addListener(this);
+            sb.releaseService(this, SendQueueProviderService.class, sendq_fact);
+        } else if (lsvc.isInfoEnabled()) {
+            lsvc.info("Couldn't get SendQueueProviderService");
+        }
 
-
-	if (destq_fact != null) {
-	    destq_fact.addListener(this);
-	    sb.releaseService(this, DestinationQueueProviderService.class, destq_fact);
-	} else if (lsvc.isInfoEnabled()) {
-	    lsvc.info("Couldn't get DestinationQueueProviderService");
-	}
+        if (destq_fact != null) {
+            destq_fact.addListener(this);
+            sb.releaseService(this, DestinationQueueProviderService.class, destq_fact);
+        } else if (lsvc.isInfoEnabled()) {
+            lsvc.info("Couldn't get DestinationQueueProviderService");
+        }
     }
 
-    
-    public void messagesRemoved(List messages)
-    {
-	LoggingService lsvc = getLoggingService();
-	synchronized (messages) {
-	    Iterator itr = messages.iterator();
-	    AttributedMessage message;
-	    while (itr.hasNext()) {
-		message = (AttributedMessage) itr.next();
-		// handle removed message
-		MessageAddress remoteAddr = message.getTarget().getPrimary();
-		AgentState remoteState = ensureRemoteState(remoteAddr);
-		if (lsvc.isInfoEnabled())
-		    lsvc.info("Messages removed from queue " +remoteAddr);
-		synchronized (remoteState) {
-		    remoteState.queueLength--;
-		}
-	    }
-	}
+    public void messagesRemoved(List messages) {
+        LoggingService lsvc = getLoggingService();
+        synchronized (messages) {
+            Iterator itr = messages.iterator();
+            AttributedMessage message;
+            while (itr.hasNext()) {
+                message = (AttributedMessage) itr.next();
+                // handle removed message
+                MessageAddress remoteAddr = message.getTarget().getPrimary();
+                AgentState remoteState = ensureRemoteState(remoteAddr);
+                if (lsvc.isInfoEnabled()) {
+                    lsvc.info("Messages removed from queue " + remoteAddr);
+                }
+                synchronized (remoteState) {
+                    remoteState.queueLength--;
+                }
+            }
+        }
     }
 
     private AgentState ensureRemoteState(MessageAddress address) {
-	AgentState state = null;
-	synchronized(remoteStates){
-	    state = (AgentState) remoteStates.get(address);
-	    if (state == null) {
-		state = newAgentState();
-		remoteStates.put(address, state);
-	    }
-	}
-	return state;
+        AgentState state = null;
+        synchronized (remoteStates) {
+            state = (AgentState) remoteStates.get(address);
+            if (state == null) {
+                state = newAgentState();
+                remoteStates.put(address, state);
+            }
+        }
+        return state;
     }
 
-    private  AgentState getRemoteState(MessageAddress address){
-	AgentState state = null;
-	synchronized(remoteStates){
-	    state = (AgentState) remoteStates.get(address);
-	}
-	return state;
+    private AgentState getRemoteState(MessageAddress address) {
+        AgentState state = null;
+        synchronized (remoteStates) {
+            state = (AgentState) remoteStates.get(address);
+        }
+        return state;
     }
 
     private AgentState ensureLocalState(MessageAddress address) {
-	AgentState state = null;
-	synchronized(localStates){
-	    state = (AgentState) localStates.get(address);
-	    if (state == null) {
-		state = newAgentState();
-		localStates.put(address, state);
-	    }
-	}
-	return state;
+        AgentState state = null;
+        synchronized (localStates) {
+            state = (AgentState) localStates.get(address);
+            if (state == null) {
+                state = newAgentState();
+                localStates.put(address, state);
+            }
+        }
+        return state;
     }
 
-    private  AgentState getLocalState(MessageAddress address){
-	AgentState state = null;
-	synchronized(localStates){
-	    state = (AgentState) localStates.get(address);
-	}
-	return state;
+    private AgentState getLocalState(MessageAddress address) {
+        AgentState state = null;
+        synchronized (localStates) {
+            state = (AgentState) localStates.get(address);
+        }
+        return state;
     }
 
     private AgentState newAgentState() {
-	AgentState state = new AgentState();
-	// JAZ must be a better way to initialize an object
-	state.timestamp = System.currentTimeMillis();
-	state.status = UNREGISTERED;
-	state.queueLength=0;
-	state.receivedCount=0;
-	state.receivedBytes=0;
-	state.lastReceivedBytes=0;
-	state.sendCount = 0;
-	state.deliveredCount = 0;
-	state.deliveredBytes=0;
-	state.lastDeliveredBytes=0;
-	state.deliveredLatencySum = 0;
-	state.lastDeliveredLatency = 0;
-	state.averageDeliveredLatency = 0;
-	state.unregisteredNameCount = 0;
-	state.nameLookupFailureCount = 0;
-	state.commFailureCount = 0;
-	state.misdeliveredMessageCount = 0;	
-	state.lastLinkProtocolTried = null;
-	state.lastLinkProtocolSuccess=null;
-	state.lastHeardFrom = 0;
-	state.lastSentTo = 0;
-	state.lastFailedSend = 0;
-	return state;
+        AgentState state = new AgentState();
+        // JAZ must be a better way to initialize an object
+        state.timestamp = System.currentTimeMillis();
+        state.status = UNREGISTERED;
+        state.queueLength = 0;
+        state.receivedCount = 0;
+        state.receivedBytes = 0;
+        state.lastReceivedBytes = 0;
+        state.sendCount = 0;
+        state.deliveredCount = 0;
+        state.deliveredBytes = 0;
+        state.lastDeliveredBytes = 0;
+        state.deliveredLatencySum = 0;
+        state.lastDeliveredLatency = 0;
+        state.averageDeliveredLatency = 0;
+        state.unregisteredNameCount = 0;
+        state.nameLookupFailureCount = 0;
+        state.commFailureCount = 0;
+        state.misdeliveredMessageCount = 0;
+        state.lastLinkProtocolTried = null;
+        state.lastLinkProtocolSuccess = null;
+        state.lastHeardFrom = 0;
+        state.lastSentTo = 0;
+        state.lastFailedSend = 0;
+        return state;
     }
-
 
     // JAZ must be a better way to clone an object
     private AgentState snapshotState(AgentState state) {
-	AgentState result = new AgentState();
-	synchronized (state) {
-	    result.timestamp = state.timestamp;
-	    result.status = state.status;
-	    result.queueLength = state.queueLength;
-	    result.receivedCount=state.receivedCount;
-	    result.receivedBytes=state.receivedBytes;
-	    result.lastReceivedBytes=state.lastReceivedBytes;
-	    result.sendCount =state.sendCount ;
-	    result.deliveredCount =state.deliveredCount ;
-	    result.deliveredBytes=state.deliveredBytes;
-	    result.lastDeliveredBytes=state.lastDeliveredBytes;
-	    result.deliveredLatencySum = state.deliveredLatencySum ;
-	    result.lastDeliveredLatency =state.lastDeliveredLatency ;
-	    result.averageDeliveredLatency =state.averageDeliveredLatency ;
-	    result.unregisteredNameCount =state.unregisteredNameCount ;
-	    result.nameLookupFailureCount =state.nameLookupFailureCount ;
-	    result.commFailureCount =state.commFailureCount ;
-	    result.misdeliveredMessageCount =state.misdeliveredMessageCount ;
-	    result.lastLinkProtocolTried =state.lastLinkProtocolTried ;
-	    result.lastLinkProtocolSuccess=state.lastLinkProtocolSuccess;
-	    result.lastHeardFrom=state.lastHeardFrom;
-	    result.lastSentTo=state.lastSentTo;
-	    result.lastFailedSend = state.lastFailedSend;
-	}
-	return result;
+        AgentState result = new AgentState();
+        synchronized (state) {
+            result.timestamp = state.timestamp;
+            result.status = state.status;
+            result.queueLength = state.queueLength;
+            result.receivedCount = state.receivedCount;
+            result.receivedBytes = state.receivedBytes;
+            result.lastReceivedBytes = state.lastReceivedBytes;
+            result.sendCount = state.sendCount;
+            result.deliveredCount = state.deliveredCount;
+            result.deliveredBytes = state.deliveredBytes;
+            result.lastDeliveredBytes = state.lastDeliveredBytes;
+            result.deliveredLatencySum = state.deliveredLatencySum;
+            result.lastDeliveredLatency = state.lastDeliveredLatency;
+            result.averageDeliveredLatency = state.averageDeliveredLatency;
+            result.unregisteredNameCount = state.unregisteredNameCount;
+            result.nameLookupFailureCount = state.nameLookupFailureCount;
+            result.commFailureCount = state.commFailureCount;
+            result.misdeliveredMessageCount = state.misdeliveredMessageCount;
+            result.lastLinkProtocolTried = state.lastLinkProtocolTried;
+            result.lastLinkProtocolSuccess = state.lastLinkProtocolSuccess;
+            result.lastHeardFrom = state.lastHeardFrom;
+            result.lastSentTo = state.lastSentTo;
+            result.lastFailedSend = state.lastFailedSend;
+        }
+        return result;
     }
- 
+
     private Metric longMetric(long value) {
-	return new MetricImpl(new Long(value),
-			      SEND_CREDIBILITY,
-			      "",
-			      "AgentStatusAspect");
+        return new MetricImpl(new Long(value), SEND_CREDIBILITY, "", "AgentStatusAspect");
     }
 
     //
@@ -261,47 +250,48 @@ public class AgentStatusAspect
 
     // Deprecated: For backwards compatibility
     public AgentState getAgentState(MessageAddress address) {
-	return getRemoteAgentState(address);
+        return getRemoteAgentState(address);
     }
 
-    public AgentState getNodeState()
-    {
-	return snapshotState(nodeState);
+    public AgentState getNodeState() {
+        return snapshotState(nodeState);
     }
-
 
     public AgentState getLocalAgentState(MessageAddress address) {
-	AgentState state = getLocalState(address);
-	// must snapshot state or caller will get a dynamic value.
-	if (state != null) return snapshotState(state);
-	else return null;
+        AgentState state = getLocalState(address);
+        // must snapshot state or caller will get a dynamic value.
+        if (state != null) {
+            return snapshotState(state);
+        } else {
+            return null;
+        }
     }
 
-  public AgentState getRemoteAgentState(MessageAddress address) {
-	AgentState state = getRemoteState(address);
-	// must snapshot state or caller will get a dynamic value.
-	if (state != null) return snapshotState(state);
-	else return null;
+    public AgentState getRemoteAgentState(MessageAddress address) {
+        AgentState state = getRemoteState(address);
+        // must snapshot state or caller will get a dynamic value.
+        if (state != null) {
+            return snapshotState(state);
+        } else {
+            return null;
+        }
     }
-
 
     public Set getLocalAgents() {
-	Set result = new  java.util.HashSet();
-	synchronized (localStates) {
-	    result.addAll(localStates.keySet());
-	}
-	return result;
+        Set result = new java.util.HashSet();
+        synchronized (localStates) {
+            result.addAll(localStates.keySet());
+        }
+        return result;
     }
 
-
-    public Set getRemoteAgents() {	
-	Set result = new java.util.HashSet();
-	synchronized (remoteStates) {
-	    result.addAll(remoteStates.keySet());
-	}
-	return result;
+    public Set getRemoteAgents() {
+        Set result = new java.util.HashSet();
+        synchronized (remoteStates) {
+            result.addAll(remoteStates.keySet());
+        }
+        return result;
     }
-
 
     // 
     // Aspect Code to implement Sensors
@@ -310,309 +300,281 @@ public class AgentStatusAspect
     // delegates need to run very late on the SendQueue (so as to
     // count any internal messages added to the queue by other aspect
     // delegates) but very early on the DestinationLink (because the
-    // delegate on that side is processing the return).  The aspect
-    // mechanism doesn't provide for station-specific ordering.  But
+    // delegate on that side is processing the return). The aspect
+    // mechanism doesn't provide for station-specific ordering. But
     // it does provide an implicit early-vs-late switch, since
-    // reverse delegates always run early.  Use that here.
+    // reverse delegates always run early. Use that here.
     public Object getDelegate(Object object, Class type) {
-	if (type == SendQueue.class) {
-	    return new SendQueueDelegate((SendQueue) object);
-	} else 	if (type == SendLink.class) {
-	    return new SendLinkDelegate((SendLink) object);
-	} else 	if (type == MessageDeliverer.class) {
-	    return new MessageDelivererDelegate((MessageDeliverer) object);
-	} else {
-	    return null;
-	}
+        if (type == SendQueue.class) {
+            return new SendQueueDelegate((SendQueue) object);
+        } else if (type == SendLink.class) {
+            return new SendLinkDelegate((SendLink) object);
+        } else if (type == MessageDeliverer.class) {
+            return new MessageDelivererDelegate((MessageDeliverer) object);
+        } else {
+            return null;
+        }
     }
 
     public Object getReverseDelegate(Object object, Class type) {
-	if (type == DestinationLink.class) {
-	    return new DestinationLinkDelegate((DestinationLink) object);
-	} else {
-	    return null;
-	}
+        if (type == DestinationLink.class) {
+            return new DestinationLinkDelegate((DestinationLink) object);
+        } else {
+            return null;
+        }
     }
 
- 
     private class SendLinkDelegate
-	extends SendLinkDelegateImplBase
-    {
-	SendLinkDelegate(SendLink link) {
-	    super(link);
-	}
+            extends SendLinkDelegateImplBase {
+        SendLinkDelegate(SendLink link) {
+            super(link);
+        }
 
-	public void release() {
-	    MessageAddress addr = getAddress().getPrimary();
-	    synchronized (localStates) {
-		localStates.remove(addr);
-	    }
-	}
+        public void release() {
+            MessageAddress addr = getAddress().getPrimary();
+            synchronized (localStates) {
+                localStates.remove(addr);
+            }
+        }
 
-
-	public void registerClient(MessageTransportClient client)
-	{
-	    super.registerClient(client);
-	    ensureLocalState(getAddress().getPrimary());
-	}
+        public void registerClient(MessageTransportClient client) {
+            super.registerClient(client);
+            ensureLocalState(getAddress().getPrimary());
+        }
 
     }
 
     private class DestinationLinkDelegate
-	extends DestinationLinkDelegateImplBase
-    {
-	private String spoke_key, heard_key,error_key;
+            extends DestinationLinkDelegateImplBase {
+        private final String spoke_key, heard_key, error_key;
 
-	public DestinationLinkDelegate(DestinationLink link)
-	{
-	    super(link);
-	    String remoteAgent = link.getDestination().getAddress();
-	    spoke_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ "SpokeTime";
-	    heard_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ "HeardTime";
-	    error_key = "Agent" +KEY_SEPR+ remoteAgent +KEY_SEPR+ 
-		"SpokeErrorTime";
-	}
-	
-	boolean delivered(MessageAttributes attributes) {
-	    return 
-		attributes != null &
-		attributes.getAttribute(DELIVERY_ATTRIBUTE).equals(DELIVERY_STATUS_DELIVERED);
-	}
+        public DestinationLinkDelegate(DestinationLink link) {
+            super(link);
+            String remoteAgent = link.getDestination().getAddress();
+            spoke_key = "Agent" + KEY_SEPR + remoteAgent + KEY_SEPR + "SpokeTime";
+            heard_key = "Agent" + KEY_SEPR + remoteAgent + KEY_SEPR + "HeardTime";
+            error_key = "Agent" + KEY_SEPR + remoteAgent + KEY_SEPR + "SpokeErrorTime";
+        }
 
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
+        boolean delivered(MessageAttributes attributes) {
+            return attributes != null
+                    & attributes.getAttribute(DELIVERY_ATTRIBUTE).equals(DELIVERY_STATUS_DELIVERED);
+        }
 
-	{
-	    MessageAddress remoteAddr = message.getTarget().getPrimary();
-	    AgentState remoteState = ensureRemoteState(remoteAddr);
-	    MessageAddress localAddr = message.getOriginator().getPrimary();
-	    AgentState localState = getLocalState(localAddr);
-	    
-	    if (localState == null) {
-		// Leftover message from an unregistered agent
-		LoggingService lsvc = getLoggingService();
-		if (lsvc.isErrorEnabled())
-		    lsvc.error("Forwarding leftover message from unregistered agent " 
-			       +localAddr);
-		return super.forwardMessage(message);
-	    }
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException
 
-	    try {
-		long startTime = System.currentTimeMillis();
-		synchronized (remoteState) {
-		    remoteState.lastLinkProtocolTried=
-			getProtocolClass().getName();
-		}
-		// Attempt to Deliver message
-		MessageAttributes meta = super.forwardMessage(message);
+        {
+            MessageAddress remoteAddr = message.getTarget().getPrimary();
+            AgentState remoteState = ensureRemoteState(remoteAddr);
+            MessageAddress localAddr = message.getOriginator().getPrimary();
+            AgentState localState = getLocalState(localAddr);
 
-		//successful Delivery
-		long endTime = System.currentTimeMillis();
-		boolean success = delivered(meta);
-		if (success) {
-		    metricsUpdateService.updateValue(heard_key, 
-						     longMetric(endTime));
-		    metricsUpdateService.updateValue(spoke_key, 
-						 longMetric(endTime));
-		}
+            if (localState == null) {
+                // Leftover message from an unregistered agent
+                LoggingService lsvc = getLoggingService();
+                if (lsvc.isErrorEnabled()) {
+                    lsvc.error("Forwarding leftover message from unregistered agent " + localAddr);
+                }
+                return super.forwardMessage(message);
+            }
 
-		int msgBytes=0;
-		Object attr= message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
-		if (attr!=null && (attr instanceof Number) )
-		    msgBytes=((Number) attr).intValue();
+            try {
+                long startTime = System.currentTimeMillis();
+                synchronized (remoteState) {
+                    remoteState.lastLinkProtocolTried = getProtocolClass().getName();
+                }
+                // Attempt to Deliver message
+                MessageAttributes meta = super.forwardMessage(message);
 
-		long latency = endTime - startTime;
-		double alpha = 0.20;
-		synchronized (remoteState) {
-		    if (success) {
-			remoteState.lastHeardFrom = endTime;
-			remoteState.lastSentTo = endTime;
-		    }
-		    remoteState.status =  AgentStatusService.ACTIVE;
-		    remoteState.timestamp = System.currentTimeMillis();
-		    remoteState.deliveredCount++;
-		    remoteState.deliveredBytes+=msgBytes;
-		    remoteState.lastDeliveredBytes=msgBytes;
-		    remoteState.queueLength--;
-		    remoteState.lastDeliveredLatency = (int) latency;
-		    remoteState.deliveredLatencySum +=  latency;
-		    remoteState.averageDeliveredLatency = (alpha * latency) +
-			((1-alpha) * remoteState.averageDeliveredLatency);
-		    remoteState.lastLinkProtocolSuccess=
-			getProtocolClass().getName();
-		}
-		synchronized (localState) {
-		    localState.status =  AgentStatusService.ACTIVE;
-		    localState.timestamp = System.currentTimeMillis();
-		    localState.deliveredCount++;
-		    localState.deliveredBytes+=msgBytes;
-		    localState.lastDeliveredBytes=msgBytes;
-		}
-		synchronized(nodeState) {
-		    nodeState.timestamp = System.currentTimeMillis();
-		    nodeState.deliveredCount++;
-		    nodeState.deliveredBytes+=msgBytes;
-		}
+                // successful Delivery
+                long endTime = System.currentTimeMillis();
+                boolean success = delivered(meta);
+                if (success) {
+                    metricsUpdateService.updateValue(heard_key, longMetric(endTime));
+                    metricsUpdateService.updateValue(spoke_key, longMetric(endTime));
+                }
 
+                int msgBytes = 0;
+                Object attr = message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
+                if (attr != null && attr instanceof Number) {
+                    msgBytes = ((Number) attr).intValue();
+                }
 
-		return meta;
+                long latency = endTime - startTime;
+                double alpha = 0.20;
+                synchronized (remoteState) {
+                    if (success) {
+                        remoteState.lastHeardFrom = endTime;
+                        remoteState.lastSentTo = endTime;
+                    }
+                    remoteState.status = AgentStatusService.ACTIVE;
+                    remoteState.timestamp = System.currentTimeMillis();
+                    remoteState.deliveredCount++;
+                    remoteState.deliveredBytes += msgBytes;
+                    remoteState.lastDeliveredBytes = msgBytes;
+                    remoteState.queueLength--;
+                    remoteState.lastDeliveredLatency = (int) latency;
+                    remoteState.deliveredLatencySum += latency;
+                    remoteState.averageDeliveredLatency =
+                            alpha * latency + (1 - alpha) * remoteState.averageDeliveredLatency;
+                    remoteState.lastLinkProtocolSuccess = getProtocolClass().getName();
+                }
+                synchronized (localState) {
+                    localState.status = AgentStatusService.ACTIVE;
+                    localState.timestamp = System.currentTimeMillis();
+                    localState.deliveredCount++;
+                    localState.deliveredBytes += msgBytes;
+                    localState.lastDeliveredBytes = msgBytes;
+                }
+                synchronized (nodeState) {
+                    nodeState.timestamp = System.currentTimeMillis();
+                    nodeState.deliveredCount++;
+                    nodeState.deliveredBytes += msgBytes;
+                }
 
-	    } catch (UnregisteredNameException unreg) {
-		long now=System.currentTimeMillis();
-		synchronized (remoteState) {
-		    remoteState.status = UNREGISTERED;
-		    remoteState.timestamp = now;
-		    remoteState.unregisteredNameCount++;
-		    remoteState.lastFailedSend = now;
-		}
-		metricsUpdateService.updateValue(error_key, 
-						 longMetric(now));
-		throw unreg;
-	    } catch (NameLookupException namex) {
-		long now=System.currentTimeMillis();
-		synchronized (remoteState) {
-		    remoteState.status =UNKNOWN;
-		    remoteState.timestamp = now;
-		    remoteState.nameLookupFailureCount++;
-		    remoteState.lastFailedSend = now;
-		}
-		metricsUpdateService.updateValue(error_key, 
-						 longMetric(now));
-		throw namex;
-	    } catch (CommFailureException commex) {
-		long now=System.currentTimeMillis();
-		synchronized (remoteState) {
-		    remoteState.status =UNREACHABLE;
-		    remoteState.timestamp = now;
-		    remoteState.commFailureCount++;
-		    remoteState.lastFailedSend = now;
-		}
-		metricsUpdateService.updateValue(error_key, 
-						 longMetric(now));
-		throw commex;
-	    } catch (MisdeliveredMessageException misd) {
-		long now=System.currentTimeMillis();
-		synchronized (remoteState) {
-		    remoteState.status =UNREGISTERED;
-		    remoteState.timestamp = now;
-		    remoteState.misdeliveredMessageCount++;
-		    remoteState.lastFailedSend = now;
-		}	
-		metricsUpdateService.updateValue(error_key, 
-						 longMetric(now));
-		throw misd;
-	    }
-	}
-	
-    }
+                return meta;
 
-    private class  MessageDelivererDelegate 
-	extends MessageDelivererDelegateImplBase 
-    {
-
-	MessageDelivererDelegate(MessageDeliverer delegatee) {
-	    super(delegatee);
-	}
-
-	public MessageAttributes deliverMessage(AttributedMessage message,
-						MessageAddress dest)
-	    throws MisdeliveredMessageException
-	{  
-	    String remoteAgent= message.getOriginator().getAddress();
-	    String heard_key = "Agent" +KEY_SEPR+ remoteAgent 
-		+KEY_SEPR+ "HeardTime";
-	    long receiveTime = System.currentTimeMillis();
-	    metricsUpdateService.updateValue(heard_key, 
-					     longMetric(receiveTime));
-
-	    int msgBytes=0;
-	    Object attr= message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
-	    if (attr!=null && (attr instanceof Number) )
-		msgBytes=((Number) attr).intValue();
-
-	    AgentState remoteState = 
-		ensureRemoteState(message.getOriginator().getPrimary());
-	    synchronized (remoteState) {
-		remoteState.receivedCount++;
-		remoteState.receivedBytes+=msgBytes;
-		remoteState.lastHeardFrom = receiveTime;
-	    }
-		    
-	    AgentState localState = 
-		getLocalState(message.getTarget().getPrimary());
-	    if (localState != null) {
-		synchronized (localState) {
-		    localState.receivedCount++;
-		    localState.receivedBytes+=msgBytes;
-		}
-	    }else {
-		LoggingService lsvc = getLoggingService();
-		if (lsvc.isInfoEnabled())
-		    lsvc.info("Received message for non-local agent "
-			       +message.getTarget());
-	    }
-
-	    synchronized (nodeState) {
-		nodeState.receivedCount++;
-		nodeState.receivedBytes+=msgBytes;
-	    }
-
-	    return super.deliverMessage(message, dest);
-	}
+            } catch (UnregisteredNameException unreg) {
+                long now = System.currentTimeMillis();
+                synchronized (remoteState) {
+                    remoteState.status = UNREGISTERED;
+                    remoteState.timestamp = now;
+                    remoteState.unregisteredNameCount++;
+                    remoteState.lastFailedSend = now;
+                }
+                metricsUpdateService.updateValue(error_key, longMetric(now));
+                throw unreg;
+            } catch (NameLookupException namex) {
+                long now = System.currentTimeMillis();
+                synchronized (remoteState) {
+                    remoteState.status = UNKNOWN;
+                    remoteState.timestamp = now;
+                    remoteState.nameLookupFailureCount++;
+                    remoteState.lastFailedSend = now;
+                }
+                metricsUpdateService.updateValue(error_key, longMetric(now));
+                throw namex;
+            } catch (CommFailureException commex) {
+                long now = System.currentTimeMillis();
+                synchronized (remoteState) {
+                    remoteState.status = UNREACHABLE;
+                    remoteState.timestamp = now;
+                    remoteState.commFailureCount++;
+                    remoteState.lastFailedSend = now;
+                }
+                metricsUpdateService.updateValue(error_key, longMetric(now));
+                throw commex;
+            } catch (MisdeliveredMessageException misd) {
+                long now = System.currentTimeMillis();
+                synchronized (remoteState) {
+                    remoteState.status = UNREGISTERED;
+                    remoteState.timestamp = now;
+                    remoteState.misdeliveredMessageCount++;
+                    remoteState.lastFailedSend = now;
+                }
+                metricsUpdateService.updateValue(error_key, longMetric(now));
+                throw misd;
+            }
+        }
 
     }
 
+    private class MessageDelivererDelegate
+            extends MessageDelivererDelegateImplBase {
 
-    private class SendQueueDelegate 
-	extends SendQueueDelegateImplBase
-    {
-	public SendQueueDelegate (SendQueue queue) {
+        MessageDelivererDelegate(MessageDeliverer delegatee) {
+            super(delegatee);
+        }
 
-	    super(queue);
-	}
-	
-	public void sendMessage(AttributedMessage message) {
-	    MessageAddress remoteAddr = message.getTarget().getPrimary();
-	    AgentState remoteState = ensureRemoteState(remoteAddr);
-	    MessageAddress localAddr = message.getOriginator().getPrimary();
-	    AgentState localState = getLocalState(localAddr);
+        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+                throws MisdeliveredMessageException {
+            String remoteAgent = message.getOriginator().getAddress();
+            String heard_key = "Agent" + KEY_SEPR + remoteAgent + KEY_SEPR + "HeardTime";
+            long receiveTime = System.currentTimeMillis();
+            metricsUpdateService.updateValue(heard_key, longMetric(receiveTime));
 
-	    synchronized (remoteState) {
-		remoteState.sendCount++;
-		remoteState.queueLength++;
-	    }	
+            int msgBytes = 0;
+            Object attr = message.getAttribute(MESSAGE_BYTES_ATTRIBUTE);
+            if (attr != null && attr instanceof Number) {
+                msgBytes = ((Number) attr).intValue();
+            }
 
-	    long receiveTime = System.currentTimeMillis();
+            AgentState remoteState = ensureRemoteState(message.getOriginator().getPrimary());
+            synchronized (remoteState) {
+                remoteState.receivedCount++;
+                remoteState.receivedBytes += msgBytes;
+                remoteState.lastHeardFrom = receiveTime;
+            }
 
-	    if (localState != null) {
-		synchronized (localState) {
-		    localState.sendCount++;
-		    localState.lastHeardFrom = receiveTime;
-		}	
+            AgentState localState = getLocalState(message.getTarget().getPrimary());
+            if (localState != null) {
+                synchronized (localState) {
+                    localState.receivedCount++;
+                    localState.receivedBytes += msgBytes;
+                }
+            } else {
+                LoggingService lsvc = getLoggingService();
+                if (lsvc.isInfoEnabled()) {
+                    lsvc.info("Received message for non-local agent " + message.getTarget());
+                }
+            }
 
-		//Local agent sending message means that the MTS has
-		//"heard from" the local agent
-		String localAgent = localAddr.getAddress();
-		String heard_key = "Agent" +KEY_SEPR+ localAgent 
-		    +KEY_SEPR+ "HeardTime";
-		metricsUpdateService.updateValue(heard_key, 
-						 longMetric(receiveTime));
-	    } else {
-		LoggingService lsvc = getLoggingService();
-		if (lsvc.isErrorEnabled())
-		    lsvc.error("SendQueue sending leftover message from " 
-			       +localAddr);
-	    }
+            synchronized (nodeState) {
+                nodeState.receivedCount++;
+                nodeState.receivedBytes += msgBytes;
+            }
 
-	    synchronized (nodeState) {
-		nodeState.sendCount++;
-		nodeState.lastHeardFrom = receiveTime; // ???
-	    }
+            return super.deliverMessage(message, dest);
+        }
 
-	    super.sendMessage(message);
-	}
+    }
+
+    private class SendQueueDelegate
+            extends SendQueueDelegateImplBase {
+        public SendQueueDelegate(SendQueue queue) {
+
+            super(queue);
+        }
+
+        public void sendMessage(AttributedMessage message) {
+            MessageAddress remoteAddr = message.getTarget().getPrimary();
+            AgentState remoteState = ensureRemoteState(remoteAddr);
+            MessageAddress localAddr = message.getOriginator().getPrimary();
+            AgentState localState = getLocalState(localAddr);
+
+            synchronized (remoteState) {
+                remoteState.sendCount++;
+                remoteState.queueLength++;
+            }
+
+            long receiveTime = System.currentTimeMillis();
+
+            if (localState != null) {
+                synchronized (localState) {
+                    localState.sendCount++;
+                    localState.lastHeardFrom = receiveTime;
+                }
+
+                // Local agent sending message means that the MTS has
+                // "heard from" the local agent
+                String localAgent = localAddr.getAddress();
+                String heard_key = "Agent" + KEY_SEPR + localAgent + KEY_SEPR + "HeardTime";
+                metricsUpdateService.updateValue(heard_key, longMetric(receiveTime));
+            } else {
+                LoggingService lsvc = getLoggingService();
+                if (lsvc.isErrorEnabled()) {
+                    lsvc.error("SendQueue sending leftover message from " + localAddr);
+                }
+            }
+
+            synchronized (nodeState) {
+                nodeState.sendCount++;
+                nodeState.lastHeardFrom = receiveTime; // ???
+            }
+
+            super.sendMessage(message);
+        }
     }
 }

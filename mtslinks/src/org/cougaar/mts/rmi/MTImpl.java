@@ -24,6 +24,7 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
@@ -36,55 +37,48 @@ import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.std.AttributedMessage;
 
-/** 
- * RMI remote object providing the implementation of {@link MT}.  Note
- * that this class extends {@link RemoteObject}, not {@link
- * UnicastRemoteObject}, and will therefore not be exported in tne
- * super constructor.  The export has to happen later, and is handled
- * by {@link RMILinkProtocol}.
+/**
+ * RMI remote object providing the implementation of {@link MT}. Note that this
+ * class extends {@link RemoteObject}, not {@link UnicastRemoteObject}, and will
+ * therefore not be exported in tne super constructor. The export has to happen
+ * later, and is handled by {@link RMILinkProtocol}.
  * 
- * <p>The transient tags shouldn't really be necessary since this
- * object should always be serialized as an RMI stub.  But leave them
- * in anyway, for documentation if nothing else.
+ * <p>
+ * The transient tags shouldn't really be necessary since this object should
+ * always be serialized as an RMI stub. But leave them in anyway, for
+ * documentation if nothing else.
  **/
-public class MTImpl extends RemoteObject implements MT 
-{
-    private MessageAddress address;
+public class MTImpl
+        extends RemoteObject
+        implements MT {
+    private final MessageAddress address;
 
-    private transient ServiceBroker sb;
-    private transient MessageDeliverer deliverer;
-    private transient SocketFactory socfac;
+    private transient final MessageDeliverer deliverer;
+    private transient final SocketFactory socfac;
 
-    public MTImpl(MessageAddress addr,  
-		  ServiceBroker sb,
-		  SocketFactory socfac) 
-	throws RemoteException 
-    {
-	// super(0, socfac, socfac);
-	super();
-	this.socfac = socfac;
-	this.sb = sb;
-	this.address = addr;
-	this.deliverer = (MessageDeliverer) 
-	    sb.getService(this,  MessageDeliverer.class, null);
+    public MTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac)
+            throws RemoteException {
+        // super(0, socfac, socfac);
+        super();
+        this.socfac = socfac;
+        this.address = addr;
+        this.deliverer = sb.getService(this, MessageDeliverer.class, null);
     }
 
     public SocketFactory getSocketFactory() {
-	return socfac;
+        return socfac;
     }
 
-
-    public MessageAttributes rerouteMessage(AttributedMessage message) 
-	throws MisdeliveredMessageException
-    {
-	return deliverer.deliverMessage(message, message.getTarget());
+    public MessageAttributes rerouteMessage(AttributedMessage message)
+            throws MisdeliveredMessageException {
+        return deliverer.deliverMessage(message, message.getTarget());
     }
 
     public MessageAddress getMessageAddress() {
-	return address;
+        return address;
     }
 
     public String toString() {
-      return "MT for "+getMessageAddress();
+        return "MT for " + getMessageAddress();
     }
 }

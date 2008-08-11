@@ -24,40 +24,38 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This {@link LinkProtocol} supports rmi over ssl.  It's implemented
- * as a simple extension of {@link RMILinkProtocol}.
+ * This {@link LinkProtocol} supports rmi over ssl. It's implemented as a simple
+ * extension of {@link RMILinkProtocol}.
  */
-public class SSLRMILinkProtocol extends RMILinkProtocol
-{
+public class SSLRMILinkProtocol
+        extends RMILinkProtocol {
 
     public SSLRMILinkProtocol() {
-	super();
+        super();
     }
 
-
     protected String getProtocolType() {
-	return "-SSLRMI";
+        return "-SSLRMI";
     }
 
     protected SocketFactory getSocketFactory() {
-	return new SocketFactory(true, true);
+        return new SocketFactory(true, true);
     }
 
     // If this is called, we've already found the remote reference.
     // Later this will be based on the destination, rss, etc.
     protected int computeCost(AttributedMessage message) {
-	return super.computeCost(message) * 2;
+        return super.computeCost(message) * 2;
     }
-
 
     protected Boolean usesEncryptedSocket() {
-	return Boolean.TRUE;
+        return Boolean.TRUE;
     }
-
 
 }

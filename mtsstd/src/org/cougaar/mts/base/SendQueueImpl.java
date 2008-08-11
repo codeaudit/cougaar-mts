@@ -31,54 +31,54 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * The default, and for now only, implementation of {@link SendQueue}.
- * The implementation of <strong>sendMessage</strong> simply adds the
- * message to the queue.  This kind of queue includes its own thread,
- * which invokes <strong>dispatch</strong> as each message is popped
- * off the queue.  This, in turn, requests the {@link Router} to route
- * the message to the appropriate {@link DestinationQueue}.
- *
+ * The default, and for now only, implementation of {@link SendQueue}. The
+ * implementation of <strong>sendMessage</strong> simply adds the message to the
+ * queue. This kind of queue includes its own thread, which invokes
+ * <strong>dispatch</strong> as each message is popped off the queue. This, in
+ * turn, requests the {@link Router} to route the message to the appropriate
+ * {@link DestinationQueue}.
+ * 
  */
-public final class SendQueueImpl extends MessageQueue implements SendQueue
-{
+public final class SendQueueImpl
+        extends MessageQueue
+        implements SendQueue {
     private Router router;
 
-    public SendQueueImpl(String name, Container container) 
-    {
-	super(name, container);
-	container.add(this);
+    public SendQueueImpl(String name, Container container) {
+        super(name, container);
+        container.add(this);
     }
 
     public void load() {
-	super.load();
-	ServiceBroker sb = getServiceBroker();
-	router = (Router)
-	    sb.getService(this, Router.class, null);
+        super.load();
+        ServiceBroker sb = getServiceBroker();
+        router = sb.getService(this, Router.class, null);
     }
 
-
     /**
-     * This is the callback from the internal thread.  */
+     * This is the callback from the internal thread.
+     */
     boolean dispatch(AttributedMessage message) {
-	router.routeMessage(message);
-	return true;
+        router.routeMessage(message);
+        return true;
     }
 
-
     /**
-     * The implementation of this SendQueue method simply adds the
-     * message to the internal queue (a CircularQueue).  */
+     * The implementation of this SendQueue method simply adds the message to
+     * the internal queue (a CircularQueue).
+     */
     public void sendMessage(AttributedMessage message) {
-	add(message);
+        add(message);
     }
 
     /**
-     * In a system with more than one SendQueue, each would have a
-     * unique name. If the SendQueueFactory is ever asked to make a
-     * queue with a name that's alreayd in use, it will instead find
-     * the existing queue by means of this method.  */
+     * In a system with more than one SendQueue, each would have a unique name.
+     * If the SendQueueFactory is ever asked to make a queue with a name that's
+     * alreayd in use, it will instead find the existing queue by means of this
+     * method.
+     */
     public boolean matches(String name) {
-	return name.equals(getName());
+        return name.equals(getName());
     }
 
 }

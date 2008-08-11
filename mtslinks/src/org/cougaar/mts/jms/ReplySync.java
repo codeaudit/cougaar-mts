@@ -85,12 +85,8 @@ public class ReplySync {
         message.setBooleanProperty(IS_MTS_REPLY_PROP, false);
     }
 
-    public MessageAttributes sendMessage(Message message,
-                                         URI uri,
-                                         Destination destination)
-            throws JMSException,
-                CommFailureException,
-                MisdeliveredMessageException {
+    public MessageAttributes sendMessage(Message message, URI uri, Destination destination)
+            throws JMSException, CommFailureException, MisdeliveredMessageException {
         message.setJMSReplyTo(lp.getServant());
         message.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
         Integer id = new Integer(++ID);
@@ -105,7 +101,7 @@ public class ReplySync {
             while (true) {
                 try {
                     lock.wait(timeout); // TODO: timeout should be set
-                                        // dynamically
+                    // dynamically
                     break;
                 } catch (InterruptedException ex) {
 
@@ -125,8 +121,7 @@ public class ReplySync {
             throw new CommFailureException(new RuntimeException("Timeout waiting for reply = "
                     + sendTime));
         } else {
-            throw new CommFailureException(new RuntimeException("Weird Reply"
-                    + result));
+            throw new CommFailureException(new RuntimeException("Weird Reply" + result));
         }
     }
 
@@ -146,7 +141,8 @@ public class ReplySync {
 
     public void replyToMessage(ObjectMessage omsg, Object replyData)
             throws JMSException {
-        ObjectMessage replyMsg = getLinkProtocolSession().createObjectMessage((Serializable) replyData);
+        ObjectMessage replyMsg =
+                getLinkProtocolSession().createObjectMessage((Serializable) replyData);
         replyMsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
         setReplyProperties(omsg, replyMsg);
         Destination dest = omsg.getJMSReplyTo();
@@ -157,8 +153,7 @@ public class ReplySync {
         try {
             boolean isReply = msg.getBooleanProperty(IS_MTS_REPLY_PROP);
             if (log.isDebugEnabled()) {
-                log.debug("Value of " + IS_MTS_REPLY_PROP + " property is "
-                        + isReply);
+                log.debug("Value of " + IS_MTS_REPLY_PROP + " property is " + isReply);
             }
             if (!isReply) {
                 return false;
@@ -175,8 +170,7 @@ public class ReplySync {
                 }
             } else {
                 if (log.isWarnEnabled()) {
-                    log.warn("Got reply for message we timed out, id=" + id
-                            + " msg=" + msg);
+                    log.warn("Got reply for message we timed out, id=" + id + " msg=" + msg);
                 }
             }
             return true;

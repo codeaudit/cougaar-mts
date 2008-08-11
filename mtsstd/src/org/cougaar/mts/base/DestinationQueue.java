@@ -25,32 +25,29 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * The fourth station for an outgoing message is a DestinationQueue. In
- * this implementation, the DestinationQueueFactory instantiates one
- * DestinationQueue per destination address and is accessible to
- * certain impl classes as the MTS-internal service
- * DestinationQueueProviderService. 
+ * The fourth station for an outgoing message is a DestinationQueue. In this
+ * implementation, the DestinationQueueFactory instantiates one DestinationQueue
+ * per destination address and is accessible to certain impl classes as the
+ * MTS-internal service DestinationQueueProviderService.
  * <p>
- * The dispatching thread associated with this queue will send
- * dequeued messages on to the 'best' DestinationLink, handling
- * retries if an exception occurs.
+ * The dispatching thread associated with this queue will send dequeued messages
+ * on to the 'best' DestinationLink, handling retries if an exception occurs.
  * <p>
- * The <strong>holdMessage</strong> method is used to queue messages
- * in preparation for passing them onto the next stop, a
- * transport-specific DestinationLink.  Ordinarily this would only be
- * called from a Router.
+ * The <strong>holdMessage</strong> method is used to queue messages in
+ * preparation for passing them onto the next stop, a transport-specific
+ * DestinationLink. Ordinarily this would only be called from a Router.
  * <p>
- * The <strong>matches</strong> method is used by the
- * DestinationQueueFactory to avoid making more than one queue for a
- * given destinationAddress.  
+ * The <strong>matches</strong> method is used by the DestinationQueueFactory to
+ * avoid making more than one queue for a given destinationAddress.
  * <p>
  * The previous station is Router. The next station is DestinationLink.
- *
+ * 
  * @see DestinationQueueFactory
  * @see SendLink
  * @see SendQueue
@@ -59,25 +56,21 @@ import org.cougaar.mts.std.AttributedMessage;
  * @see MessageWriter
  * @see MessageReader
  * @see MessageDeliverer
- * @see ReceiveLink
- * 
- * Javadoc contributions by George Mount.
+ * @see ReceiveLink Javadoc contributions by George Mount.
  */
 
-public interface DestinationQueue 
-{
+public interface DestinationQueue {
     /**
-     * Adds the message to the queue.  Since the queue runs its own
-     * thread, this call is typically the last element in the Router
-     * thread's call sequence. */
+     * Adds the message to the queue. Since the queue runs its own thread, this
+     * call is typically the last element in the Router thread's call sequence.
+     */
     void holdMessage(AttributedMessage message);
 
     /**
-     * Handles the next message popped off the queue. Finds the
-     * most appropriate DestinationLink based on the LinkSelectionPolicy
-     * and calls its <tt>addMessageAttributes</tt> before
-     * <tt>forwardMessage</tt> to dispatch.
-     *
+     * Handles the next message popped off the queue. Finds the most appropriate
+     * DestinationLink based on the LinkSelectionPolicy and calls its
+     * <tt>addMessageAttributes</tt> before <tt>forwardMessage</tt> to dispatch.
+     * 
      * @see LinkSelectionPolicy
      * @see Router#routeMessage(AttributedMessage)
      * @see DestinationLink#addMessageAttributes(MessageAttributes)
@@ -86,8 +79,9 @@ public interface DestinationQueue
     void dispatchNextMessage(AttributedMessage message);
 
     /**
-     * Returns true iff this queue was created for the given
-     * destination.  Used by the DestinationQueueFactory. */
+     * Returns true iff this queue was created for the given destination. Used
+     * by the DestinationQueueFactory.
+     */
     boolean matches(MessageAddress address);
 
     /**

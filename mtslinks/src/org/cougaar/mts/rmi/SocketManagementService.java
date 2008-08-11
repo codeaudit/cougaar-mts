@@ -11,7 +11,9 @@ import org.cougaar.core.component.Service;
 /**
  * API for adding and removing {@link SocketManagementListener}s
  */
-public interface SocketManagementService extends Service {
+public interface SocketManagementService
+        extends Service {
     void addListener(SocketManagementListener listener);
+
     void removeListener(SocketManagementListener listener);
 }

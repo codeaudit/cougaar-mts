@@ -24,18 +24,20 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import java.rmi.RemoteException;
 
 import org.cougaar.mts.base.CougaarIOException;
 
-/** 
- * Extension of the standard RMI interface that uses preserialized
- * byte arrays instead of AttributedMessages.
+/**
+ * Extension of the standard RMI interface that uses preserialized byte arrays
+ * instead of AttributedMessages.
  **/
 
-public interface SerializedMT extends MT {
-  /** receive a message **/
-  byte[] rerouteMessage(byte[] messageBytes)
-      throws RemoteException, CougaarIOException;
+public interface SerializedMT
+        extends MT {
+    /** receive a message **/
+    byte[] rerouteMessage(byte[] messageBytes)
+            throws RemoteException, CougaarIOException;
 
 }

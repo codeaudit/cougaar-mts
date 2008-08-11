@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -42,109 +43,92 @@ import org.cougaar.mts.base.SendQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This Aspect is used in conjunction with {@link
- * MessageWatcherServiceImpl}, the implementaion of the {@link
- * MessageWatcherService}. Both are instantiated by the {@link
- * MessageTransportServiceProvider}, which is also the provider of the
- * {@link MessageWatcherService}.  The actual "watching" happens in
- * this Aspect.  The service is a core front-end.
+ * This Aspect is used in conjunction with {@link MessageWatcherServiceImpl},
+ * the implementaion of the {@link MessageWatcherService}. Both are instantiated
+ * by the {@link MessageTransportServiceProvider}, which is also the provider of
+ * the {@link MessageWatcherService}. The actual "watching" happens in this
+ * Aspect. The service is a core front-end.
  */
-public class WatcherAspect 
-    extends StandardAspect
-{
-    private ArrayList watchers;
+public class WatcherAspect
+        extends StandardAspect {
+    private final ArrayList watchers;
 
     public WatcherAspect() {
-	this.watchers = new ArrayList();
+        this.watchers = new ArrayList();
     }
 
-
-    public Object getDelegate(Object delegate, Class type) 
-    {
-	if (type == SendQueue.class) {
-	    return new SendQueueDelegate((SendQueue) delegate);
-	} else if (type == MessageDeliverer.class) {
-	    return new MessageDelivererDelegate((MessageDeliverer) delegate);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegate, Class type) {
+        if (type == SendQueue.class) {
+            return new SendQueueDelegate((SendQueue) delegate);
+        } else if (type == MessageDeliverer.class) {
+            return new MessageDelivererDelegate((MessageDeliverer) delegate);
+        } else {
+            return null;
+        }
     }
-
 
     synchronized void addWatcher(MessageTransportWatcher watcher) {
-	watchers.add(watcher);
+        watchers.add(watcher);
     }
-
 
     synchronized void removeWatcher(MessageTransportWatcher watcher) {
-	watchers.remove(watcher);
+        watchers.remove(watcher);
     }
-
 
     // Should the watchers see the AttributedMessage or its contents?
     private void notifyWatchersOfSend(AttributedMessage message) {
-	Message rawMessage = message.getRawMessage();
-	Iterator itr = watchers.iterator();
-	synchronized (this) {
-	    while (itr.hasNext()) {
-		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
-		if (loggingService.isDebugEnabled()) {
-		    loggingService.debug("Notifying " + w + " of send");
-		}
-		w.messageSent(rawMessage);
-	    }
-	}
+        Message rawMessage = message.getRawMessage();
+        Iterator itr = watchers.iterator();
+        synchronized (this) {
+            while (itr.hasNext()) {
+                MessageTransportWatcher w = (MessageTransportWatcher) itr.next();
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("Notifying " + w + " of send");
+                }
+                w.messageSent(rawMessage);
+            }
+        }
     }
 
     private void notifyWatchersOfReceive(AttributedMessage message) {
-	Message rawMessage = message.getRawMessage();
-	Iterator itr = watchers.iterator();
-	synchronized (this) {
-	    while ( itr.hasNext() ) {
-		MessageTransportWatcher w =(MessageTransportWatcher)itr.next();
-		if (loggingService.isDebugEnabled()) {
-		    loggingService.debug("Notifying " + w + 
-					      " of receive");
-		}
-		w.messageReceived(rawMessage);
-	    }
-	}
+        Message rawMessage = message.getRawMessage();
+        Iterator itr = watchers.iterator();
+        synchronized (this) {
+            while (itr.hasNext()) {
+                MessageTransportWatcher w = (MessageTransportWatcher) itr.next();
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("Notifying " + w + " of receive");
+                }
+                w.messageReceived(rawMessage);
+            }
+        }
     }
 
+    public class SendQueueDelegate
+            extends SendQueueDelegateImplBase {
+        public SendQueueDelegate(SendQueue queue) {
+            super(queue);
+        }
 
-    public class SendQueueDelegate extends SendQueueDelegateImplBase
-    {
-	public SendQueueDelegate (SendQueue queue) {
-	    super(queue);
-	}
-	
-	public void sendMessage(AttributedMessage message) {
-	    super.sendMessage(message);
-	    notifyWatchersOfSend(message);
-	}
-	
+        public void sendMessage(AttributedMessage message) {
+            super.sendMessage(message);
+            notifyWatchersOfSend(message);
+        }
+
     }
 
+    public class MessageDelivererDelegate
+            extends MessageDelivererDelegateImplBase {
+        public MessageDelivererDelegate(MessageDeliverer deliverer) {
+            super(deliverer);
+        }
 
-    public class MessageDelivererDelegate 
-	extends MessageDelivererDelegateImplBase
-    {
-	public MessageDelivererDelegate (MessageDeliverer deliverer) {
-	    super(deliverer);
-	}
-	
-	public MessageAttributes deliverMessage(AttributedMessage message, 
-						MessageAddress dest) 
-	    throws MisdeliveredMessageException
-	{
-	    MessageAttributes result = super.deliverMessage(message, dest);
-	    notifyWatchersOfReceive(message);
-	    return result;
-	}
-	
+        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+                throws MisdeliveredMessageException {
+            MessageAttributes result = super.deliverMessage(message, dest);
+            notifyWatchersOfReceive(message);
+            return result;
+        }
 
     }
 }
-
-
-    

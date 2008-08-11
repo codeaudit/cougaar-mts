@@ -25,53 +25,46 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
 /**
- * This {@link ServiceProvider} provides the
- * SocketControlProvisionService, the implementation of which is an
- * inner class.
+ * This {@link ServiceProvider} provides the SocketControlProvisionService, the
+ * implementation of which is an inner class.
  */
-class SocketControlProvision implements ServiceProvider
-{
-    private SocketControlProvisionImpl impl;
+class SocketControlProvision
+        implements ServiceProvider {
+    private final SocketControlProvisionImpl impl;
 
     SocketControlProvision() {
-	impl = new SocketControlProvisionImpl();
-    }
-    
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == SocketControlProvisionService.class) return impl;
-	return null;
+        impl = new SocketControlProvisionImpl();
     }
 
-
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == SocketControlProvisionService.class) {
+            return impl;
+        }
+        return null;
     }
 
-
-
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
+    }
 
     private static class SocketControlProvisionImpl
-	implements SocketControlProvisionService
-    {
-	SocketControlPolicy policy;
-	public void setPolicy(SocketControlPolicy policy) {
-	    this.policy = policy;
-	}
-	
-	public SocketControlPolicy getPolicy() {
-	    return policy;
-	}
+            implements SocketControlProvisionService {
+        SocketControlPolicy policy;
+
+        public void setPolicy(SocketControlPolicy policy) {
+            this.policy = policy;
+        }
+
+        public SocketControlPolicy getPolicy() {
+            return policy;
+        }
     }
 
 }

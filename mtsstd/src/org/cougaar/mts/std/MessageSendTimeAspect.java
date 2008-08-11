@@ -25,44 +25,40 @@
  */
 
 package org.cougaar.mts.std;
-import org.cougaar.core.mts.AttributeConstants;
 
+import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
-
 /**
- * Aspect that tags all messages with a "send time" attribute when
- * they enter the MTS SendLink.
+ * Aspect that tags all messages with a "send time" attribute when they enter
+ * the MTS SendLink.
  */
-public class MessageSendTimeAspect 
-    extends StandardAspect
-    implements AttributeConstants
-{ 
+public class MessageSendTimeAspect
+        extends StandardAspect
+        implements AttributeConstants {
     public MessageSendTimeAspect() {
     }
-  
+
     public Object getDelegate(Object object, Class type) {
-	if (type == SendLink.class) {
-	    return new SendLinkDelegate((SendLink) object);
-	} else {
-	    return null;
-	}
+        if (type == SendLink.class) {
+            return new SendLinkDelegate((SendLink) object);
+        } else {
+            return null;
+        }
     }
-  
+
     private class SendLinkDelegate
-	extends SendLinkDelegateImplBase
-    {    
-	SendLinkDelegate(SendLink link) {
-	    super(link);
-	}
-    
-	public void sendMessage(AttributedMessage message)
-	{ 
-	    long now = System.currentTimeMillis();
+            extends SendLinkDelegateImplBase {
+        SendLinkDelegate(SendLink link) {
+            super(link);
+        }
+
+        public void sendMessage(AttributedMessage message) {
+            long now = System.currentTimeMillis();
             message.setAttribute(MESSAGE_SEND_TIME_ATTRIBUTE, new Long(now));
-	    super.sendMessage(message);
-	}
+            super.sendMessage(message);
+        }
     }
-} 
+}

@@ -25,45 +25,40 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.mts.std.AspectFactory;
 
 /**
- * This {@link ServiceProvider} provides the {@link Router} service.
- * The implementation of that service is the singletin RouterImpl.
+ * This {@link ServiceProvider} provides the {@link Router} service. The
+ * implementation of that service is the singletin RouterImpl.
  */
-public class RouterFactory 
-    extends AspectFactory
-    implements ServiceProvider
-{
+public class RouterFactory
+        extends AspectFactory
+        implements ServiceProvider {
     private Router router;
 
-
     public void load() {
-	super.load();
-	router = new RouterImpl(getServiceBroker());
-	router = (Router) attachAspects(router, Router.class);
+        super.load();
+        router = new RouterImpl(getServiceBroker());
+        router = (Router) attachAspects(router, Router.class);
     }
 
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Could restrict this request to the Router
-	if (serviceClass == Router.class) {
-	    if (requestor instanceof SendQueueImpl) return router;
-	} 
-	return null;
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        // Could restrict this request to the Router
+        if (serviceClass == Router.class) {
+            if (requestor instanceof SendQueueImpl) {
+                return router;
+            }
+        }
+        return null;
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
-
 
 }

@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.HashMap;
 
 import org.cougaar.core.mts.MessageAddress;
@@ -36,98 +37,86 @@ import org.cougaar.mts.std.AttributedMessage;
  * This protocol Component handles intra-node message traffic.
  * 
  */
-public class LoopbackLinkProtocol 
-    extends LinkProtocol
-{
+public class LoopbackLinkProtocol
+        extends LinkProtocol {
 
-    private HashMap links;
+    private final HashMap links;
 
     public LoopbackLinkProtocol() {
-	super();
-	links = new HashMap();
+        super();
+        links = new HashMap();
     }
 
     public synchronized DestinationLink getDestinationLink(MessageAddress address) {
-	DestinationLink link = (DestinationLink) links.get(address);
-	if (link == null) {
-	    link = new Link(address);
-	    link = (DestinationLink) attachAspects(link,DestinationLink.class);
-	    links.put(address, link);
-	}
-	return link;
+        DestinationLink link = (DestinationLink) links.get(address);
+        if (link == null) {
+            link = new Link(address);
+            link = attachAspects(link, DestinationLink.class);
+            links.put(address, link);
+        }
+        return link;
     }
 
     public void registerClient(MessageTransportClient client) {
-	// Does nothing because the Database of local clients is held
-	// by MessageTransportServerImpl
+        // Does nothing because the Database of local clients is held
+        // by MessageTransportServerImpl
     }
 
     public void unregisterClient(MessageTransportClient client) {
-	// Does nothing because the Database of local clients is held
-	// by MessageTransportServerImpl
+        // Does nothing because the Database of local clients is held
+        // by MessageTransportServerImpl
     }
 
     public boolean addressKnown(MessageAddress address) {
-	// true iff the address is local
-	return getRegistry().isLocalClient(address);
+        // true iff the address is local
+        return getRegistry().isLocalClient(address);
     }
 
+    private class Link
+            implements DestinationLink {
+        MessageAddress address;
 
+        Link(MessageAddress address) {
+            this.address = address;
+        }
 
-    private class Link implements DestinationLink {
-	MessageAddress address;
+        public int cost(AttributedMessage msg) {
+            MessageAddress addr = msg.getTarget();
+            if (getRegistry().isLocalClient(addr)) {
+                return 0;
+            } else {
+                return Integer.MAX_VALUE;
+            }
+        }
 
-	Link(MessageAddress address) {
-	    this.address = address;
-	}
+        public boolean isValid(AttributedMessage message) {
+            return getRegistry().isLocalClient(address);
+        }
 
-	public int cost(AttributedMessage msg) {
-	    MessageAddress addr = msg.getTarget();
-	    if (getRegistry().isLocalClient(addr)) {
-		return 0;
-	    } else {
-		return Integer.MAX_VALUE;
-	    }
-	}
-	
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws MisdeliveredMessageException {
+            return getDeliverer().deliverMessage(message, message.getTarget());
+        }
 
-	public boolean isValid(AttributedMessage message) {
-	    return getRegistry().isLocalClient(address);
-	}
+        public boolean retryFailedMessage(AttributedMessage message, int retryCount) {
+            return true;
+        }
 
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws MisdeliveredMessageException
-	{
-	    return getDeliverer().deliverMessage(message, message.getTarget());
-	}
+        public Class getProtocolClass() {
+            return LoopbackLinkProtocol.class;
+        }
 
-	public boolean retryFailedMessage(AttributedMessage message,
-					  int retryCount) 
-	{
-	    return true;
-	}
+        public MessageAddress getDestination() {
+            return address;
+        }
 
-    
-	public Class getProtocolClass() {
-	    return LoopbackLinkProtocol.class;
-	}
+        public Object getRemoteReference() {
+            return null;
+        }
 
+        public void addMessageAttributes(MessageAttributes attrs) {
 
-	public MessageAddress getDestination() {
-	    return address;
-	}
-
-
-
-	public Object getRemoteReference() {
-	    return null;
-	}
-
-	public void addMessageAttributes(MessageAttributes attrs) {
-	    
-	}
-
-	
+        }
 
     }
 

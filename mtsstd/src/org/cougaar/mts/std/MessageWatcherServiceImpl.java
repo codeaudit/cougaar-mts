@@ -25,54 +25,53 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.cougaar.core.mts.MessageTransportWatcher;
 import org.cougaar.core.service.MessageWatcherService;
-import org.cougaar.mts.base.MessageTransportServiceProvider; // javadoc
+import org.cougaar.mts.base.MessageTransportServiceProvider;
 
 /**
- * This entity implements the {@link MessageWatcherService}.  It's
- * used in conjunction with the {@link WatcherAspect}.  Both are
- * instantiated by the {@link MessageTransportServiceProvider}, which
- * is the provider of the {@link MessageWatcherService}.  The actual
- * "watching" happens in the Aspect.  This service is a core front-end.
+ * This entity implements the {@link MessageWatcherService}. It's used in
+ * conjunction with the {@link WatcherAspect}. Both are instantiated by the
+ * {@link MessageTransportServiceProvider}, which is the provider of the
+ * {@link MessageWatcherService}. The actual "watching" happens in the Aspect.
+ * This service is a core front-end.
  */
 public class MessageWatcherServiceImpl
-    implements MessageWatcherService
-{
+        implements MessageWatcherService {
     private WatcherAspect aspect;
     private ArrayList watchers;
 
     public MessageWatcherServiceImpl(WatcherAspect aspect) {
-	this.aspect = aspect;
-	this.watchers = new ArrayList();
+        this.aspect = aspect;
+        this.watchers = new ArrayList();
     }
 
     public synchronized void release() {
-	Iterator itr = watchers.iterator();
-	while (itr.hasNext()) {
-	    MessageTransportWatcher watcher =
-		(MessageTransportWatcher) itr.next();
-	    aspect.removeWatcher(watcher);
-	}
-	watchers = null;
-	aspect = null;
+        Iterator itr = watchers.iterator();
+        while (itr.hasNext()) {
+            MessageTransportWatcher watcher = (MessageTransportWatcher) itr.next();
+            aspect.removeWatcher(watcher);
+        }
+        watchers = null;
+        aspect = null;
     }
 
     public void addMessageTransportWatcher(MessageTransportWatcher watcher) {
-	aspect.addWatcher(watcher);
-	synchronized (this) {
-	    watchers.add(watcher);
-	}
+        aspect.addWatcher(watcher);
+        synchronized (this) {
+            watchers.add(watcher);
+        }
     }
 
-    public void removeMessageTransportWatcher(MessageTransportWatcher watcher){
-	aspect.removeWatcher(watcher);
-	synchronized (this) {
-	    watchers.remove(watcher);
-	}
+    public void removeMessageTransportWatcher(MessageTransportWatcher watcher) {
+        aspect.removeWatcher(watcher);
+        synchronized (this) {
+            watchers.remove(watcher);
+        }
     }
 
 }

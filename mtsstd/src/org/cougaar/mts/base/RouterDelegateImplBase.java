@@ -29,22 +29,21 @@ package org.cougaar.mts.base;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Convenience class for aspects which define {@link Router}
- * delegate classes.  It implements all methods by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link Router} delegate classes.
+ * It implements all methods by delegating to another instance, given in the
+ * constructor. Aspect inner classes which extend this need only implement
+ * specific methods that are relevant to that aspect,
  * 
  */
-abstract public class RouterDelegateImplBase implements Router
-{
-    private Router router;
+abstract public class RouterDelegateImplBase
+        implements Router {
+    private final Router router;
 
     protected RouterDelegateImplBase(Router router) {
-	this.router = router;
+        this.router = router;
     }
 
     public void routeMessage(AttributedMessage message) {
-	router.routeMessage(message);
+        router.routeMessage(message);
     }
 }

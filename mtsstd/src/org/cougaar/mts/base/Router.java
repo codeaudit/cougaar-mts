@@ -26,26 +26,23 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.core.component.Service;
+import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * The third station for an outgoing message.  In theory a
- * given Message Transport subsystem can have multiple Routers.
- * For this release we only make one, instantiated as a RouterImpl.
- * Either way, the Routers are instantiated by a RouterFactory,
- * accesible to SendQueueImpls as the internal MTS service
+ * The third station for an outgoing message. In theory a given Message
+ * Transport subsystem can have multiple Routers. For this release we only make
+ * one, instantiated as a RouterImpl. Either way, the Routers are instantiated
+ * by a RouterFactory, accesible to SendQueueImpls as the internal MTS service
  * <ff>Router</ff>.
  * <p>
- * The <strong>routeMessage</strong> method is used to requesting
- * routing for a given message, which would ordinarily mean passing
- * the message on to a DestinationQueue for the message's destination.
- * Ordinarily this method would only be called from a SendQueue
- * implementation.
+ * The <strong>routeMessage</strong> method is used to requesting routing for a
+ * given message, which would ordinarily mean passing the message on to a
+ * DestinationQueue for the message's destination. Ordinarily this method would
+ * only be called from a SendQueue implementation.
  * <p>
- * The previous station is SendQueue. The next station is
- * DestinationQueue.
- *
+ * The previous station is SendQueue. The next station is DestinationQueue.
+ * 
  * @see RouterFactory
  * @see SendLink
  * @see SendQueue
@@ -54,18 +51,16 @@ import org.cougaar.core.component.Service;
  * @see MessageWriter
  * @see MessageReader
  * @see MessageDeliverer
- * @see ReceiveLink
- *
- * Javadoc contributions from George Mount.
+ * @see ReceiveLink Javadoc contributions from George Mount.
  */
-public interface Router extends Service
-{
+public interface Router
+        extends Service {
 
-    /** 
-     * Used by SendQueue implementations to route an outgoing
-     * message, ordinarily to the DestinatonQueue corresponding to the
-     * message's destintion.
-     *
+    /**
+     * Used by SendQueue implementations to route an outgoing message,
+     * ordinarily to the DestinatonQueue corresponding to the message's
+     * destintion.
+     * 
      * @see DestinationQueue#holdMessage(AttributedMessage)
      */
     void routeMessage(AttributedMessage message);

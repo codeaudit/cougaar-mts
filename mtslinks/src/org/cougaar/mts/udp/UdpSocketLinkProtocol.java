@@ -40,20 +40,20 @@ import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.annotations.Cougaar;
 
-
 /**
- * Simple best-effort UDP link protocol: send messages and hope for the best.  No acks.
+ * Simple best-effort UDP link protocol: send messages and hope for the best. No
+ * acks.
  */
-public class UdpSocketLinkProtocol extends RPCLinkProtocol {
+public class UdpSocketLinkProtocol
+        extends RPCLinkProtocol {
     private static final int MAX_PAYLOAD_SIZE = 64 * 1024; // notional, 64K
-    
+
     private DatagramSocket inputConnection;
     private URI servantUri;
     private Schedulable poller;
-    private final Map<URI, DatagramSocket> outputSockets =
-        new HashMap<URI, DatagramSocket>();
-    
-    @Cougaar.Arg(name="port", defaultValue="0")
+    private final Map<URI, DatagramSocket> outputSockets = new HashMap<URI, DatagramSocket>();
+
+    @Cougaar.Arg(name = "port", defaultValue = "0")
     private int port;
 
     protected int computeCost(AttributedMessage message) {
@@ -74,7 +74,7 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
             releaseNodeServant();
             return;
         }
-        
+
         try {
             servantUri = makeURI(node);
             setNodeURI(servantUri);
@@ -83,14 +83,16 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
             releaseNodeServant();
             return;
         }
-        
+
         Runnable task = new InputSocketPoller();
-        poller = threadService.getThread(this, task, "Message Poller", ThreadService.WILL_BLOCK_LANE);
+        poller =
+                threadService.getThread(this, task, "Message Poller", ThreadService.WILL_BLOCK_LANE);
         // FIXME: Workaround for name-server bootstrapping problem
-        // Delay reading incoming packets to give the Name Server agent time to initialize
+        // Delay reading incoming packets to give the Name Server agent time to
+        // initialize
         poller.schedule(5000, 1);
     }
-    
+
     protected void releaseNodeServant() {
         if (poller != null) {
             poller.cancelTimer();
@@ -103,21 +105,21 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
         servantUri = null;
         // XXX: Do we need to close the sockets in outputSockets?
     }
-    
+
     protected void remakeNodeServant() {
         if (isServantAlive()) {
             releaseNodeServant();
         }
         ensureNodeServant();
     }
-    
+
     /**
      * We must have an open UDP socket and a non-null servant
      */
     protected boolean isServantAlive() {
-        return inputConnection != null && servantUri != null && super.isServantAlive(); 
+        return inputConnection != null && servantUri != null && super.isServantAlive();
     }
-    
+
     protected String getProtocolType() {
         return "-UDP";
     }
@@ -125,18 +127,19 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
     protected Boolean usesEncryptedSocket() {
         return false;
     }
-    
+
     private boolean openInputSocket(String node) {
         try {
             inputConnection = port != 0 ? new DatagramSocket(port) : new DatagramSocket();
             return true;
         } catch (SocketException e) {
             loggingService.warn("Couldn't create UDP socket: " + e.getMessage());
-           return false;
+            return false;
         }
     }
-    
-    private URI makeURI(String myServantId) throws URISyntaxException {
+
+    private URI makeURI(String myServantId)
+            throws URISyntaxException {
         int localPort = inputConnection.getLocalPort();
         String input = null;
         InetAddress localHost = null;
@@ -144,18 +147,18 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
             localHost = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             throw new URISyntaxException("xxx", e.getMessage());
-            
+
         }
         String hostname = localHost.getCanonicalHostName();
-        input = "udp://" +hostname+ ":" + localPort+"/";
+        input = "udp://" + hostname + ":" + localPort + "/";
         return new URI(input);
     }
-    
+
     /**
-     * Send a datagram to the destination. 
+     * Send a datagram to the destination.
      */
-    protected MessageAttributes processOutgoingMessage(DatagramSocket destination, 
-                                                       AttributedMessage message) 
+    protected MessageAttributes processOutgoingMessage(DatagramSocket destination,
+                                                       AttributedMessage message)
             throws IOException {
         if (!isServantAlive()) {
             if (loggingService.isDebugEnabled()) {
@@ -163,14 +166,14 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
             }
             throw new IOException("UDP connection is not available");
         }
-        
+
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         oos.writeObject(message);
         oos.flush();
         bos.close();
         byte[] payload = bos.toByteArray();
-        
+
         Object deadline = message.getAttribute(AttributeConstants.MESSAGE_SEND_DEADLINE_ATTRIBUTE);
         int ttl;
         if (deadline instanceof Long) {
@@ -178,33 +181,32 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
             if (ttl < 0) {
                 loggingService.warn("Message already expired");
                 MessageAttributes metadata = new MessageReply(message);
-                metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-                                      MessageAttributes.DELIVERY_STATUS_DROPPED);
+                metadata.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,
+                                      AttributeConstants.DELIVERY_STATUS_DROPPED);
                 return metadata;
             }
         }
-        
-        
+
         if (loggingService.isInfoEnabled()) {
-            loggingService.info("Sending from " +message.getOriginator() 
-                     + " to " + message.getTarget() + "\n" + message);
+            loggingService.info("Sending from " + message.getOriginator() + " to "
+                    + message.getTarget() + "\n" + message);
         }
-        
+
         // A given connection should not be accessed by more than one thread
         synchronized (destination) {
             try {
                 SchedulableStatus.beginNetIO("UDP Send packet");
                 SocketAddress remoteSocketAddress = destination.getRemoteSocketAddress();
-                DatagramPacket packet = new DatagramPacket(payload, 0, payload.length, remoteSocketAddress);
+                DatagramPacket packet =
+                        new DatagramPacket(payload, 0, payload.length, remoteSocketAddress);
                 destination.send(packet);
                 if (loggingService.isInfoEnabled()) {
                     loggingService.info("Sent packet of " + payload.length + " bytes from "
-                            + servantUri + " to "
-                            + remoteSocketAddress);
+                            + servantUri + " to " + remoteSocketAddress);
                 }
                 MessageAttributes metadata = new MessageReply(message);
-                metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-                                      MessageAttributes.DELIVERY_STATUS_BEST_EFFORT);
+                metadata.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,
+                                      AttributeConstants.DELIVERY_STATUS_BEST_EFFORT);
                 return metadata;
             } catch (IOException e) {
                 throw e;
@@ -216,62 +218,59 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
             }
         }
     }
-    
-    
+
     /**
      * Read and dispatch an incoming message on a stream.
      * 
-     * This is protected so that it can be invoked by
-     * a subclass, not (typically) to be overridden.
+     * This is protected so that it can be invoked by a subclass, not
+     * (typically) to be overridden.
      */
     private void processingIncomingMessage(InputStream stream) {
         Object rawObject = null;
-        ObjectInputStream ois  = null;
-        
+        ObjectInputStream ois = null;
+
         try {
             ois = new ObjectInputStream(stream);
         } catch (IOException e) {
-            loggingService.warn("Processing Incoming message, stream error :" 
-                                + e.getMessage());
+            loggingService.warn("Processing Incoming message, stream error :" + e.getMessage());
             return;
         }
-        
+
         try {
             rawObject = ois.readObject();
         } catch (ClassNotFoundException e) {
             loggingService.warn("Processing Incoming message, unknown object type :"
-                                + e.getMessage());
+                    + e.getMessage());
             return;
         } catch (IOException e) {
-            loggingService.warn("Processing Incoming message, deserializing error :" 
-                                + e.getMessage());
+            loggingService.warn("Processing Incoming message, deserializing error :"
+                    + e.getMessage());
             return;
         }
         if (rawObject instanceof MessageAttributes) {
             AttributedMessage message = (AttributedMessage) rawObject;
             if (loggingService.isInfoEnabled()) {
-                loggingService.info("Delivering from " +message.getOriginator() 
-                         + " to " + message.getTarget()
-                         + "\n"  + message);
+                loggingService.info("Delivering from " + message.getOriginator() + " to "
+                        + message.getTarget() + "\n" + message);
             }
             try {
                 getDeliverer().deliverMessage(message, message.getTarget());
                 // no further use for the return value
             } catch (MisdeliveredMessageException e) {
                 if (loggingService.isWarnEnabled()) {
-                    loggingService.warn("Misdelivered from " +message.getOriginator() 
-                                        + " to " + message.getTarget() + ": " + e.getMessage()
-                                        + "\n"  + message);
+                    loggingService.warn("Misdelivered from " + message.getOriginator() + " to "
+                            + message.getTarget() + ": " + e.getMessage() + "\n" + message);
                 }
             }
         } else {
             loggingService.warn("Processing Incoming message is not MessageAttributes");
         }
     }
-    
-    private class UdpLink extends Link {
+
+    private class UdpLink
+            extends Link {
         private DatagramSocket outputConnection;
-        
+
         private UdpLink(MessageAddress destination) {
             super(destination);
         }
@@ -279,10 +278,11 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
         public boolean isValid(AttributedMessage message) {
             return ensureNodeServantIsAlive() && super.isValid(message);
         }
-        
-        protected Object decodeRemoteRef(URI ref) throws Exception {
+
+        protected Object decodeRemoteRef(URI ref)
+                throws Exception {
             if (loggingService.isInfoEnabled()) {
-                loggingService.info("Remote URI for " +getDestination()+ " is " + ref);
+                loggingService.info("Remote URI for " + getDestination() + " is " + ref);
             }
             synchronized (outputSockets) {
                 outputConnection = outputSockets.get(ref);
@@ -296,14 +296,12 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
                     outputSockets.put(ref, outputConnection);
                 }
             }
-            
+
             return ref;
         }
 
-        protected MessageAttributes forwardByProtocol(Object remote, AttributedMessage message) 
-                throws NameLookupException,
-                UnregisteredNameException,
-                CommFailureException,
+        protected MessageAttributes forwardByProtocol(Object remote, AttributedMessage message)
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
                 return processOutgoingMessage(outputConnection, message);
@@ -315,20 +313,21 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
         public Class<?> getProtocolClass() {
             return UdpSocketLinkProtocol.this.getClass();
         }
-        
+
     }
-    
+
     /**
      * Periodically check the BPA for messages to us.
      */
-    private class InputSocketPoller implements Runnable {
+    private class InputSocketPoller
+            implements Runnable {
         private final DatagramPacket incoming;
-        
+
         public InputSocketPoller() {
             byte[] data = new byte[MAX_PAYLOAD_SIZE];
             incoming = new DatagramPacket(data, MAX_PAYLOAD_SIZE);
         }
-        
+
         public void run() {
             if (!isServantAlive()) {
                 // too early
@@ -340,8 +339,8 @@ public class UdpSocketLinkProtocol extends RPCLinkProtocol {
                 int length = incoming.getLength();
                 byte[] payload = incoming.getData();
                 if (loggingService.isInfoEnabled()) {
-                    loggingService.info("Received datagram packet of size " + length
-                                        + " from " + inputConnection.getInetAddress());
+                    loggingService.info("Received datagram packet of size " + length + " from "
+                            + inputConnection.getInetAddress());
                 }
                 InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
                 processingIncomingMessage(byteStream);

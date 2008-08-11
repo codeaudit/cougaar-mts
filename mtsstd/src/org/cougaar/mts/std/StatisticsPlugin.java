@@ -25,34 +25,35 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.plugin.ComponentPlugin;
 
 /**
- * This Plugin loads three servlets: {@link StatisticsServlet}, {@link
- * AgentRemoteStatusServlet} and {@link AgentLocalStatusServlet}.
+ * This Plugin loads three servlets: {@link StatisticsServlet},
+ * {@link AgentRemoteStatusServlet} and {@link AgentLocalStatusServlet}.
  */
-public class StatisticsPlugin extends ComponentPlugin
-{
+public class StatisticsPlugin
+        extends ComponentPlugin {
     public StatisticsPlugin() {
-	super();
+        super();
     }
 
     public void load() {
-	super.load();
+        super.load();
 
-	ServiceBroker sb = getServiceBroker();
-	new StatisticsServlet(sb);
-	new AgentRemoteStatusServlet(sb);
-	new AgentLocalStatusServlet(sb);
-	// new GossipServlet(sb);
+        ServiceBroker sb = getServiceBroker();
+        new StatisticsServlet(sb);
+        new AgentRemoteStatusServlet(sb);
+        new AgentLocalStatusServlet(sb);
+        // new GossipServlet(sb);
     }
 
     protected void setupSubscriptions() {
     }
-  
+
     protected void execute() {
-	//System.out.println("Executed StatisticPlugin");
+        // System.out.println("Executed StatisticPlugin");
     }
 
 }

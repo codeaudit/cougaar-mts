@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -42,100 +43,83 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- *  This test Aspect is an example of using a {@link
- *  LinkProtocol}-specific service.
+ * This test Aspect is an example of using a {@link LinkProtocol}-specific
+ * service.
  */
-public class ServiceTestAspect extends StandardAspect
-{
+public class ServiceTestAspect
+        extends StandardAspect {
     private LinkProtocolService svc;
 
     public ServiceTestAspect() {
     }
 
     private void test(String text, MessageAddress addr) {
-	synchronized (this) {
-	    if (svc == null) {
-		ServiceBroker sb = getServiceBroker();
-		Object raw = sb.getService(this,
-					   RPCLinkProtocol.Service.class, 
-					   null);
-		svc = (LinkProtocolService) raw;
-	    }
-	}
+        synchronized (this) {
+            if (svc == null) {
+                ServiceBroker sb = getServiceBroker();
+                Object raw = sb.getService(this, RPCLinkProtocol.Service.class, null);
+                svc = (LinkProtocolService) raw;
+            }
+        }
 
-	if (svc != null && loggingService.isInfoEnabled()) {
-	    loggingService.info("LinkProtocol Service " + text + ":" + 
-				     addr + "->" + svc.addressKnown(addr));
-	}
-			       
+        if (svc != null && loggingService.isInfoEnabled()) {
+            loggingService.info("LinkProtocol Service " + text + ":" + addr + "->"
+                    + svc.addressKnown(addr));
+        }
+
     }
 
     private AttributedMessage send(AttributedMessage message) {
-	test("send", message.getTarget());
-	return message;
+        test("send", message.getTarget());
+        return message;
     }
 
     private AttributedMessage receive(AttributedMessage message) {
-	test("receive", message.getOriginator());
-	return message;
+        test("receive", message.getOriginator());
+        return message;
     }
 
-
-
-    public Object getDelegate(Object delegate, Class type) 
-    {
-	if (type ==  DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) delegate;
-	    return new TestDestinationLink(link);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegate, Class type) {
+        if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) delegate;
+            return new TestDestinationLink(link);
+        } else {
+            return null;
+        }
     }
 
-
-    public Object getReverseDelegate(Object delegate, Class type) 
-    {
-	if (type == MessageDeliverer.class) {
-	    return new TestDeliverer((MessageDeliverer) delegate);
-	} else {
-	    return null;
-	}
+    public Object getReverseDelegate(Object delegate, Class type) {
+        if (type == MessageDeliverer.class) {
+            return new TestDeliverer((MessageDeliverer) delegate);
+        } else {
+            return null;
+        }
     }
-    
 
+    private class TestDestinationLink
+            extends DestinationLinkDelegateImplBase {
+        private TestDestinationLink(DestinationLink link) {
+            super(link);
+        }
 
-    private class TestDestinationLink 
-	extends DestinationLinkDelegateImplBase 
-    {
-	private TestDestinationLink(DestinationLink link) {
-	    super(link);
-	}
-
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
-	{
-	    return super.forwardMessage(send(message));
-	}
-
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException {
+            return super.forwardMessage(send(message));
+        }
 
     }
 
+    private class TestDeliverer
+            extends MessageDelivererDelegateImplBase {
+        private TestDeliverer(MessageDeliverer deliverer) {
+            super(deliverer);
+        }
 
-
-    private class TestDeliverer extends MessageDelivererDelegateImplBase {
-	private TestDeliverer(MessageDeliverer deliverer) {
-	    super(deliverer);
-	}
-
-	public MessageAttributes deliverMessage(AttributedMessage m, 
-						MessageAddress dest) 
-	    throws MisdeliveredMessageException
-	{
-	    return super.deliverMessage(receive(m), dest);
-	}
+        public MessageAttributes deliverMessage(AttributedMessage m, MessageAddress dest)
+                throws MisdeliveredMessageException {
+            return super.deliverMessage(receive(m), dest);
+        }
 
     }
 }

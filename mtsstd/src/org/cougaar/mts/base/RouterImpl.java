@@ -25,31 +25,33 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * The default, and for now only, implementation of Router.  The
- * <strong>routeMesageMethod</strong> finds the DestinationQueue for
- * each message's target, and enqueues the outgoing message there.  */
-final class RouterImpl implements Router
-{
-    private DestinationQueueProviderService destQService;
+ * The default, and for now only, implementation of Router. The
+ * <strong>routeMesageMethod</strong> finds the DestinationQueue for each
+ * message's target, and enqueues the outgoing message there.
+ */
+final class RouterImpl
+        implements Router {
+    private final DestinationQueueProviderService destQService;
 
-    RouterImpl(ServiceBroker sb)
-    {
-	destQService = (DestinationQueueProviderService)
-	    sb.getService(this, DestinationQueueProviderService.class, null);
+    RouterImpl(ServiceBroker sb) {
+        destQService = sb.getService(this, DestinationQueueProviderService.class, null);
     }
 
-    /** Find or make a DestinationQueue for this message, then add the
-     message to that queue.  The factory has a fairly efficient cache,
-     so we do not have to cache here.  */
+    /**
+     * Find or make a DestinationQueue for this message, then add the message to
+     * that queue. The factory has a fairly efficient cache, so we do not have
+     * to cache here.
+     */
     public void routeMessage(AttributedMessage message) {
-	MessageAddress destination = message.getTarget();
-	DestinationQueue queue = destQService.getDestinationQueue(destination);
-	queue.holdMessage(message);
+        MessageAddress destination = message.getTarget();
+        DestinationQueue queue = destQService.getDestinationQueue(destination);
+        queue.holdMessage(message);
     }
 
 }

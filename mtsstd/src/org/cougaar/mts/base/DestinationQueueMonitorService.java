@@ -25,27 +25,25 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * This is an MTS-internal service, accessible only to child
- * components of the MTS, that allows those components to examine the
- * state of any given DestinationQueue.  Implemented and provided by
- * DestinationQueueFactory.
+ * This is an MTS-internal service, accessible only to child components of the
+ * MTS, that allows those components to examine the state of any given
+ * DestinationQueue. Implemented and provided by DestinationQueueFactory.
  */
 
-public interface DestinationQueueMonitorService extends Service
-{
+public interface DestinationQueueMonitorService
+        extends Service {
     /**
-     * Returns the current contents of a queue, as an array.  The
-     * in-progress message, if any, is included even though it's no
-     * longer "on" the queue, strictlt speaking. 
-    */
+     * Returns the current contents of a queue, as an array. The in-progress
+     * message, if any, is included even though it's no longer "on" the queue,
+     * strictlt speaking.
+     */
     AttributedMessage[] snapshotQueue(MessageAddress destination);
-
 
     /**
      * Returns the currently known destinations, as an array.

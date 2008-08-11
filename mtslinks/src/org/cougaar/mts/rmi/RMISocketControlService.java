@@ -34,40 +34,39 @@ import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 
 /**
- * This is an MTS-internal service used for simple socket
- * manipulation in RMI communication.  The implementation is in
- * {@link RMISocketControlAspect}. 
+ * This is an MTS-internal service used for simple socket manipulation in RMI
+ * communication. The implementation is in {@link RMISocketControlAspect}.
  */
-public interface RMISocketControlService extends Service {
+public interface RMISocketControlService
+        extends Service {
     /**
      * The SO Timeout is set for ALL client sockets that go to the remote RMI
-     * reference The side effect of this is that other agents that are
-     * on the same node will also have their time out changed.
+     * reference The side effect of this is that other agents that are on the
+     * same node will also have their time out changed.
      */
     boolean setSoTimeout(MessageAddress addr, int timeout);
 
-    /** 
-     * The RMILinkProtocol calls this method, Other Aspects should not
-     * call this method.
+    /**
+     * The RMILinkProtocol calls this method, Other Aspects should not call this
+     * method.
      */
     void setReferenceAddress(Remote reference, MessageAddress addr);
 
-
     /**
-     * Returns a list of all client Sockets used for communication between
-     * the running Node and the given remote address.
+     * Returns a list of all client Sockets used for communication between the
+     * running Node and the given remote address.
      */
     List<Socket> getSocket(MessageAddress addr);
-    
-    
+
     /**
-     * Add the given source to the blacklist of hosts we don't allow to connect to us.
-     * Close any existing sockets connected from that source.
+     * Add the given source to the blacklist of hosts we don't allow to connect
+     * to us. Close any existing sockets connected from that source.
      */
     void rejectSocketsFrom(InetAddress source);
-    
+
     /**
-     * Remove the given source to the blacklist of hosts we don't allow to connect to us.
+     * Remove the given source to the blacklist of hosts we don't allow to
+     * connect to us.
      */
     void acceptSocketsFrom(InetAddress source);
 }

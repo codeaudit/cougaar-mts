@@ -25,41 +25,34 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.mts.std.AspectSupport;
 
 /**
- * Default base Aspect class.  It handles the registration of the
- * Aspect with the {@link AspectSupport} service.
+ * Default base Aspect class. It handles the registration of the Aspect with the
+ * {@link AspectSupport} service.
  */
-abstract public class StandardAspect 
-    extends BoundComponent
-    implements MessageTransportAspect
-{
+abstract public class StandardAspect
+        extends BoundComponent
+        implements MessageTransportAspect {
 
     public void load() {
-	super.load();
-	
-	ServiceBroker sb = getServiceBroker();
-	AspectSupport aspectSupport = (AspectSupport)
-	    sb.getService(this, AspectSupport.class, null);
-	if (aspectSupport != null) {
-	    aspectSupport.addAspect(this);
-	}
-    }
-	
+        super.load();
 
-
-    public Object getDelegate(Object delegate, Class type) 
-    {
-	return null;
+        ServiceBroker sb = getServiceBroker();
+        AspectSupport aspectSupport = sb.getService(this, AspectSupport.class, null);
+        if (aspectSupport != null) {
+            aspectSupport.addAspect(this);
+        }
     }
 
-
-    public Object getReverseDelegate(Object delegate, Class type) 
-    {
-	return null;
+    public Object getDelegate(Object delegate, Class type) {
+        return null;
     }
-	
+
+    public Object getReverseDelegate(Object delegate, Class type) {
+        return null;
+    }
 
 }

@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -33,118 +34,102 @@ import java.net.SocketException;
 import java.nio.channels.ServerSocketChannel;
 
 /**
- * This class is a delegating {@link ServerSocket} that simply passes
- * all methods to another socket.  It's handy as a base class for
- * whatever wrapper class, if any, the {@link SocketFactory} is using.
+ * This class is a delegating {@link ServerSocket} that simply passes all
+ * methods to another socket. It's handy as a base class for whatever wrapper
+ * class, if any, the {@link SocketFactory} is using.
  */
-public abstract class ServerSocketWrapper extends ServerSocket
-{
+public abstract class ServerSocketWrapper
+        extends ServerSocket {
     private ServerSocket delegate;
 
-    public ServerSocketWrapper () 
-	throws java.io.IOException
-    {
+    public ServerSocketWrapper()
+            throws java.io.IOException {
     }
 
     public void setDelegate(ServerSocket delegate) {
-	this.delegate = delegate;
+        this.delegate = delegate;
     }
 
     protected ServerSocket getDelegate() {
-	return delegate;
+        return delegate;
     }
 
     public InetAddress getInetAddress() {
-	return delegate.getInetAddress();
+        return delegate.getInetAddress();
     }
 
     public int getLocalPort() {
-	return delegate.getLocalPort();
+        return delegate.getLocalPort();
     }
 
-    public int getSoTimeout() 
-	throws java.io.IOException
-    {
-	return delegate.getSoTimeout();
+    public int getSoTimeout()
+            throws java.io.IOException {
+        return delegate.getSoTimeout();
     }
 
-    public void setInetAddress(int to) 
-	throws java.net.SocketException
-    {
-	delegate.setSoTimeout(to);
+    public void setInetAddress(int to)
+            throws java.net.SocketException {
+        delegate.setSoTimeout(to);
     }
 
-    public Socket accept() 
-	throws java.io.IOException
-    {
-	return delegate.accept();
+    public Socket accept()
+            throws java.io.IOException {
+        return delegate.accept();
     }
 
-    public void close() 
-	throws java.io.IOException
-    {
-	delegate.close();
+    public void close()
+            throws java.io.IOException {
+        delegate.close();
     }
 
     public String toString() {
-	return delegate.toString();
+        return delegate.toString();
     }
 
-    public void bind(SocketAddress endpoint) 
-	throws java.io.IOException
-    {
-	delegate.bind(endpoint);
+    public void bind(SocketAddress endpoint)
+            throws java.io.IOException {
+        delegate.bind(endpoint);
     }
 
-    public void bind(SocketAddress endpoint, int backlog) 
-	throws java.io.IOException
-    {
-	delegate.bind(endpoint, backlog);
+    public void bind(SocketAddress endpoint, int backlog)
+            throws java.io.IOException {
+        delegate.bind(endpoint, backlog);
     }
 
-
-    public ServerSocketChannel getChannel() 
-    {
-	return delegate.getChannel();
+    public ServerSocketChannel getChannel() {
+        return delegate.getChannel();
     }
 
-    public SocketAddress getLocalSocketAddress() 
-    {
-	return delegate.getLocalSocketAddress();
+    public SocketAddress getLocalSocketAddress() {
+        return delegate.getLocalSocketAddress();
     }
 
-    public int getReceiveBufferSize() 
-	throws SocketException
-    {
-	return delegate.getReceiveBufferSize();
+    public int getReceiveBufferSize()
+            throws SocketException {
+        return delegate.getReceiveBufferSize();
     }
 
-    public boolean getReuseAddress() 
-	throws SocketException
-    {
-	return delegate.getReuseAddress();
+    public boolean getReuseAddress()
+            throws SocketException {
+        return delegate.getReuseAddress();
     }
 
     public boolean isBound() {
-	return delegate.isBound();
+        return delegate.isBound();
     }
 
     public boolean isClosed() {
-	return delegate.isClosed();
+        return delegate.isClosed();
     }
 
-    public void setReceiveBufferSize(int size) 
-	throws SocketException
-    {
-	delegate.setReceiveBufferSize(size);
+    public void setReceiveBufferSize(int size)
+            throws SocketException {
+        delegate.setReceiveBufferSize(size);
     }
 
-    public void setReuseAddress (boolean on) 
-	throws SocketException
-    {
-	delegate.setReuseAddress(on);
+    public void setReuseAddress(boolean on)
+            throws SocketException {
+        delegate.setReuseAddress(on);
     }
 
 }
-
-

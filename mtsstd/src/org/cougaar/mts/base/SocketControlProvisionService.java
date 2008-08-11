@@ -25,15 +25,17 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.Service;
 
 /**
  * This MTS-internal service can be used to get and set the current
- * {@link SocketControlPolicy}.  It's provided by
- * SocketControlProvision and implemented by an inner class.
+ * {@link SocketControlPolicy}. It's provided by SocketControlProvision and
+ * implemented by an inner class.
  */
-public interface SocketControlProvisionService extends Service
-{
+public interface SocketControlProvisionService
+        extends Service {
     void setPolicy(SocketControlPolicy policy);
+
     SocketControlPolicy getPolicy();
 }

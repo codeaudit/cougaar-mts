@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -50,164 +51,141 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
-   This Aspect puts the {@link MessageProtectionService} streams in
-   place.  It also instantiates a default implementation for that
-   service if no other one is loaded.
+ * This Aspect puts the {@link MessageProtectionService} streams in place. It
+ * also instantiates a default implementation for that service if no other one
+ * is loaded.
  */
-public class MessageProtectionAspect extends StandardAspect 
-{
+public class MessageProtectionAspect
+        extends StandardAspect {
 
     private static MessageProtectionService svc;
 
     static MessageProtectionService getMessageProtectionService() {
-	return svc;
+        return svc;
     }
 
     public void load() {
-	super.load();
-	svc = (MessageProtectionService)
-	    getServiceBroker().getService(this, MessageProtectionService.class,
-					  null);
-	// System.err.println("Got " +svc+ " from service broker");
-	// Temporary, until NAI's service is available
-	if (svc == null)  svc = new MessageProtectionServiceImpl();
+        super.load();
+        svc = getServiceBroker().getService(this, MessageProtectionService.class, null);
+        // System.err.println("Got " +svc+ " from service broker");
+        // Temporary, until NAI's service is available
+        if (svc == null) {
+            svc = new MessageProtectionServiceImpl();
+        }
     }
-
-
 
     public Object getDelegate(Object delegatee, Class type) {
-	if (type == MessageWriter.class) {
-	    MessageWriter wtr = (MessageWriter) delegatee;
-	    return new ProtectedMessageWriter(wtr);
-	} else if (type == MessageReader.class) {
-	    MessageReader rdr = (MessageReader) delegatee;
-	    return new ProtectedMessageReader(rdr);
-	} else if (type == DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) delegatee;
-	    return new ProtectedDestinationLink(link);
-	} else if (type == MessageDeliverer.class) {
-	    MessageDeliverer deliverer = (MessageDeliverer) delegatee;
-	    return new ProtectedDeliverer(deliverer);
-	} else {
-	    return null;
-	}
+        if (type == MessageWriter.class) {
+            MessageWriter wtr = (MessageWriter) delegatee;
+            return new ProtectedMessageWriter(wtr);
+        } else if (type == MessageReader.class) {
+            MessageReader rdr = (MessageReader) delegatee;
+            return new ProtectedMessageReader(rdr);
+        } else if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) delegatee;
+            return new ProtectedDestinationLink(link);
+        } else if (type == MessageDeliverer.class) {
+            MessageDeliverer deliverer = (MessageDeliverer) delegatee;
+            return new ProtectedDeliverer(deliverer);
+        } else {
+            return null;
+        }
     }
 
+    private class ProtectedMessageWriter
+            extends MessageWriterDelegateImplBase {
+        AttributedMessage msg;
+        ProtectedOutputStream stream;
 
-    private class ProtectedMessageWriter 
-	extends	MessageWriterDelegateImplBase
-    {
-	AttributedMessage msg;
-	ProtectedOutputStream stream;
-	ProtectedMessageWriter(MessageWriter delegatee) {
-	    super(delegatee);
-	}
+        ProtectedMessageWriter(MessageWriter delegatee) {
+            super(delegatee);
+        }
 
-	public void finalizeAttributes(AttributedMessage msg) {
-	    this.msg = msg;
-	    super.finalizeAttributes(msg);
-	}
+        public void finalizeAttributes(AttributedMessage msg) {
+            this.msg = msg;
+            super.finalizeAttributes(msg);
+        }
 
-	public OutputStream getObjectOutputStream(ObjectOutput oo) 
-	    throws java.io.IOException
-	{
-	    OutputStream os = super.getObjectOutputStream(oo);
-	    stream = svc.getOutputStream(os, 
-					 msg.getOriginator(),
-					 msg.getTarget(),
-					 msg);
-	    // System.err.println("Got " +stream+ " from " +svc);
-	    return stream;
-	}
+        public OutputStream getObjectOutputStream(ObjectOutput oo)
+                throws java.io.IOException {
+            OutputStream os = super.getObjectOutputStream(oo);
+            stream = svc.getOutputStream(os, msg.getOriginator(), msg.getTarget(), msg);
+            // System.err.println("Got " +stream+ " from " +svc);
+            return stream;
+        }
 
-	public void finishOutput()
-	    throws java.io.IOException
-	{
-	    stream.finishOutput(msg);
-	    super.finishOutput();
-	}
+        public void finishOutput()
+                throws java.io.IOException {
+            stream.finishOutput(msg);
+            super.finishOutput();
+        }
     }
-
 
     private class ProtectedMessageReader
-	extends	MessageReaderDelegateImplBase
-    {
-	AttributedMessage msg;
-	ProtectedInputStream stream;
-	ProtectedMessageReader(MessageReader delegatee) {
-	    super(delegatee);
-	}
+            extends MessageReaderDelegateImplBase {
+        AttributedMessage msg;
+        ProtectedInputStream stream;
 
-	public void finalizeAttributes(AttributedMessage msg) {
-	    this.msg = msg;
-	    super.finalizeAttributes(msg);
-	}
+        ProtectedMessageReader(MessageReader delegatee) {
+            super(delegatee);
+        }
 
-	public InputStream getObjectInputStream(ObjectInput oi) 
-	    throws java.io.IOException, ClassNotFoundException
-	{
-	    InputStream is = super.getObjectInputStream(oi);
-	    stream = svc.getInputStream(is, 
-					msg.getOriginator(),
-					msg.getTarget(),
-					msg);
-	    // System.err.println("Got " +stream+ " from " +svc);
-	    return stream;
-	}
+        public void finalizeAttributes(AttributedMessage msg) {
+            this.msg = msg;
+            super.finalizeAttributes(msg);
+        }
 
-	public void finishInput()
-	    throws java.io.IOException
-	{
-	    stream.finishInput(msg);
-	    super.finishInput();
-	}
+        public InputStream getObjectInputStream(ObjectInput oi)
+                throws java.io.IOException, ClassNotFoundException {
+            InputStream is = super.getObjectInputStream(oi);
+            stream = svc.getInputStream(is, msg.getOriginator(), msg.getTarget(), msg);
+            // System.err.println("Got " +stream+ " from " +svc);
+            return stream;
+        }
+
+        public void finishInput()
+                throws java.io.IOException {
+            stream.finishInput(msg);
+            super.finishInput();
+        }
 
     }
 
-    private class ProtectedDeliverer extends MessageDelivererDelegateImplBase {
-	ProtectedDeliverer(MessageDeliverer delegatee) {
-	    super(delegatee);
-	}
+    private class ProtectedDeliverer
+            extends MessageDelivererDelegateImplBase {
+        ProtectedDeliverer(MessageDeliverer delegatee) {
+            super(delegatee);
+        }
 
-	// Only for debugging
-// 	public MessageAttributes deliverMessage(AttributedMessage message,
-// 						MessageAddress dest)
-// 	    throws MisdeliveredMessageException
-// 	{
-// 	    System.out.println(" #### is streaming = " +
-// 			       message.getAttribute(MessageAttributes.IS_STREAMING_ATTRIBUTE) +
-// 			       " is encrypted = " +
-// 			       message.getAttribute(MessageAttributes.ENCRYPTED_SOCKET_ATTRIBUTE));
-// 	    return super.deliverMessage(message, dest);
-// 	}
+        // Only for debugging
+        // public MessageAttributes deliverMessage(AttributedMessage message,
+        // MessageAddress dest)
+        // throws MisdeliveredMessageException
+        // {
+        // System.out.println(" #### is streaming = " +
+        // message.getAttribute(MessageAttributes.IS_STREAMING_ATTRIBUTE) +
+        // " is encrypted = " +
+        // message.getAttribute(MessageAttributes.ENCRYPTED_SOCKET_ATTRIBUTE));
+        // return super.deliverMessage(message, dest);
+        // }
 
     }
-
 
     private class ProtectedDestinationLink
-	extends DestinationLinkDelegateImplBase 
-    {
-	ProtectedDestinationLink(DestinationLink delegatee) {
-	    super(delegatee);
-	}
-	
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
-	{
-	    // Register Aspect as a Message Streaming filter
-	    message.addFilter(MessageProtectionAspect.this);
+            extends DestinationLinkDelegateImplBase {
+        ProtectedDestinationLink(DestinationLink delegatee) {
+            super(delegatee);
+        }
 
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException {
+            // Register Aspect as a Message Streaming filter
+            message.addFilter(MessageProtectionAspect.this);
 
-	    return super.forwardMessage(message);
-	}
+            return super.forwardMessage(message);
+        }
 
     }
-
-
-
-
 
 }

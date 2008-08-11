@@ -25,27 +25,26 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 
 /**
- * An abstract base implementation of {@link LinkSelectionPolicy}
- * which handles the registration through the {@link
- * LinkSelectionProvisionService}.  Concrete implementations should
- * extend this and invoke super.load().
- *  
+ * An abstract base implementation of {@link LinkSelectionPolicy} which handles
+ * the registration through the {@link LinkSelectionProvisionService}. Concrete
+ * implementations should extend this and invoke super.load().
+ * 
  */
-abstract public class AbstractLinkSelectionPolicy 
-    extends BoundComponent
-    implements LinkSelectionPolicy
-{
+abstract public class AbstractLinkSelectionPolicy
+        extends BoundComponent
+        implements LinkSelectionPolicy {
 
     public void load() {
-	super.load();
+        super.load();
 
-	ServiceBroker sb = getServiceBroker();
-	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
-	    sb.getService(this, LinkSelectionProvisionService.class, null);
-	lsp.setPolicy(this);
+        ServiceBroker sb = getServiceBroker();
+        LinkSelectionProvisionService lsp =
+                sb.getService(this, LinkSelectionProvisionService.class, null);
+        lsp.setPolicy(this);
     }
-	
+
 }

@@ -27,20 +27,15 @@
 package org.cougaar.mts.base;
 
 /**
- * This class of Exceptions is thrown if a message fails to be
- * delivered for serialization reasons and if the send should
- * therefore not be retried.
+ * This class of Exceptions is thrown if a message fails to be delivered for
+ * serialization reasons and if the send should therefore not be retried.
  */
-public class MessageSerializationException 
-    extends DontRetryException
-    implements java.io.Serializable
-{
-    
+public class MessageSerializationException
+        extends DontRetryException
+        implements java.io.Serializable {
 
-    public MessageSerializationException(Exception cause) 
-    {
-	super(cause);
+    public MessageSerializationException(Exception cause) {
+        super(cause);
     }
-
 
 }

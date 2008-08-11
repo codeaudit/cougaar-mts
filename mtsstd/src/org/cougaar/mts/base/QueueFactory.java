@@ -26,61 +26,60 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.std.AspectFactory;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.mts.std.AspectFactory;
+
 /**
- * This abstraction provides 'listener' support to inform interested
- * parties when objects are removed from message queues.
+ * This abstraction provides 'listener' support to inform interested parties
+ * when objects are removed from message queues.
  */
 abstract class QueueFactory
-    extends  AspectFactory
-{
-    private HashSet listeners = new HashSet();
+        extends AspectFactory {
+    private final HashSet listeners = new HashSet();
 
-    public void addListener(QueueListener listener)
-    {
-	synchronized (listeners) {
-	    listeners.add(listener);
-	}
-	LoggingService lsvc = getLoggingService();
-	if (lsvc.isInfoEnabled())
-	    lsvc.info("Add listener " + listener);
+    public void addListener(QueueListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+        LoggingService lsvc = getLoggingService();
+        if (lsvc.isInfoEnabled()) {
+            lsvc.info("Add listener " + listener);
+        }
     }
 
-    public void removeListener(QueueListener listener)
-    {
-	synchronized (listeners) {
-	    listeners.remove(listener);
-	}
-	LoggingService lsvc = getLoggingService();
-	if (lsvc.isInfoEnabled())
-	    lsvc.info("Remove listener " + listener);
+    public void removeListener(QueueListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+        LoggingService lsvc = getLoggingService();
+        if (lsvc.isInfoEnabled()) {
+            lsvc.info("Remove listener " + listener);
+        }
     }
 
-    protected void notifyListeners(List messages)
-    {
-	if (messages.isEmpty()) return;
-	LoggingService lsvc = getLoggingService();
-	if (lsvc.isInfoEnabled())
-	    lsvc.info("Notify listeners");
-	synchronized (listeners) {
-	    Iterator itr = listeners.iterator();
-	    QueueListener listener;
-	    while (itr.hasNext()) {
-		listener = (QueueListener) itr.next();
-		if (lsvc.isInfoEnabled())
-		    lsvc.info("Notify listener " + listener);
-		listener.messagesRemoved(messages);
-	    }
-	}
+    protected void notifyListeners(List messages) {
+        if (messages.isEmpty()) {
+            return;
+        }
+        LoggingService lsvc = getLoggingService();
+        if (lsvc.isInfoEnabled()) {
+            lsvc.info("Notify listeners");
+        }
+        synchronized (listeners) {
+            Iterator itr = listeners.iterator();
+            QueueListener listener;
+            while (itr.hasNext()) {
+                listener = (QueueListener) itr.next();
+                if (lsvc.isInfoEnabled()) {
+                    lsvc.info("Notify listener " + listener);
+                }
+                listener.messagesRemoved(messages);
+            }
+        }
     }
 
 }
-
-
-    

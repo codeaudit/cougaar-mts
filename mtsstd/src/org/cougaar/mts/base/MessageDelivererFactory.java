@@ -25,53 +25,44 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.mts.std.AspectFactory;
 
 /**
- * This {@link ServiceProvider} provides the {@link MessageDeliverer}
- * service, which is implemented by a singleton MessageDelivererImpl.
+ * This {@link ServiceProvider} provides the {@link MessageDeliverer} service,
+ * which is implemented by a singleton MessageDelivererImpl.
  */
-public class MessageDelivererFactory 
-    extends AspectFactory
-    implements ServiceProvider
-{
+public class MessageDelivererFactory
+        extends AspectFactory
+        implements ServiceProvider {
     public MessageDeliverer deliverer;
     public String id;
 
-    MessageDelivererFactory(String id)
-    {
-	this.id = id;
+    MessageDelivererFactory(String id) {
+        this.id = id;
     }
 
     public void load() {
-	super.load();
-	String name = id+"/Deliverer";
-	MessageDeliverer d = new MessageDelivererImpl(name, getRegistry());
-	deliverer = 
-	    (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
+        super.load();
+        String name = id + "/Deliverer";
+        MessageDeliverer d = new MessageDelivererImpl(name, getRegistry());
+        deliverer = (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
     }
 
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	// Could restrict this request to LinkProtocols
-	if (serviceClass == MessageDeliverer.class) {
-	    return deliverer;
-	} 
-	return null;
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        // Could restrict this request to LinkProtocols
+        if (serviceClass == MessageDeliverer.class) {
+            return deliverer;
+        }
+        return null;
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
-
-
 
 }

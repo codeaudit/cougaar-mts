@@ -25,65 +25,56 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import org.cougaar.mts.std.AttributedMessage;
 
+import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Default implementatiom of {@link MessageWriter} that uses a trivial
- * {@link ObjectOutputStream} extension to delegate calls to the
- * original {@link ObjectOutput}.
+ * {@link ObjectOutputStream} extension to delegate calls to the original
+ * {@link ObjectOutput}.
  */
-public  class MessageWriterImpl
-    implements MessageWriter 
-{
+public class MessageWriterImpl
+        implements MessageWriter {
 
+    static class SimpleObjectOutputStream
+            extends ObjectOutputStream {
+        private final ObjectOutput out;
 
-    static class SimpleObjectOutputStream extends ObjectOutputStream {
-	private ObjectOutput out;
+        SimpleObjectOutputStream(ObjectOutput out)
+                throws java.io.IOException {
+            this.out = out;
+        }
 
-	SimpleObjectOutputStream(ObjectOutput out) 
-	    throws java.io.IOException
-	{
-	    this.out = out;
-	}
+        public void close()
+                throws java.io.IOException {
+            out.close();
+        }
 
-	public void close()
-	    throws java.io.IOException
-	{
-	    out.close();
-	}
+        public void flush()
+                throws java.io.IOException {
+            out.flush();
+        }
 
+        public void write(int b)
+                throws java.io.IOException {
+            out.write(b);
+        }
 
-	public void flush() 
-	    throws java.io.IOException
-	{
-	    out.flush();
-	}
+        public void write(byte[] b)
+                throws java.io.IOException {
+            out.write(b);
+        }
 
-	public void write(int b)
-	    throws java.io.IOException
-	{
-	    out.write(b);
-	}
-
-	public void write(byte[] b)
-	    throws java.io.IOException
-	{
-	    out.write(b);
-	}
-
-	public void write(byte[] b, int off, int len)
-	    throws java.io.IOException
-	{
-	    out.write(b, off, len);
-	}
-
+        public void write(byte[] b, int off, int len)
+                throws java.io.IOException {
+            out.write(b, off, len);
+        }
 
     }
-
 
     public void finalizeAttributes(AttributedMessage msg) {
     }
@@ -91,15 +82,13 @@ public  class MessageWriterImpl
     public void preProcess() {
     }
 
-
     public OutputStream getObjectOutputStream(ObjectOutput out)
-	throws java.io.IOException
-    {
-	if (out instanceof ObjectOutputStream) {
-	    return (OutputStream) out;
-	} else {
-	    return new SimpleObjectOutputStream(out);
-	}
+            throws java.io.IOException {
+        if (out instanceof ObjectOutputStream) {
+            return (OutputStream) out;
+        } else {
+            return new SimpleObjectOutputStream(out);
+        }
     }
 
     public void finishOutput() {
@@ -108,6 +97,4 @@ public  class MessageWriterImpl
     public void postProcess() {
     }
 
-
 }
-

@@ -25,40 +25,39 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.net.URI;
 
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.base.ReceiveLink;
-import org.cougaar.mts.base.ReceiveLinkDelegateImplBase;
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
-import org.cougaar.mts.base.MessageDeliverer;
-import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.DestinationQueue;
 import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
-import org.cougaar.mts.base.SendQueue;
-import org.cougaar.mts.base.SendQueueDelegateImplBase;
+import org.cougaar.mts.base.MessageDeliverer;
+import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.NameSupport;
 import org.cougaar.mts.base.NameSupportDelegateImplBase;
+import org.cougaar.mts.base.ReceiveLink;
+import org.cougaar.mts.base.ReceiveLinkDelegateImplBase;
 import org.cougaar.mts.base.Router;
 import org.cougaar.mts.base.RouterDelegateImplBase;
+import org.cougaar.mts.base.SendQueue;
+import org.cougaar.mts.base.SendQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * This demonstration Aspect provides a simple trace of a message as
- * it passes through the various stages of the message transport
- * subsystem.
+ * This demonstration Aspect provides a simple trace of a message as it passes
+ * through the various stages of the message transport subsystem.
  */
-public class TraceAspect 
-    extends StandardAspect
-{
+public class TraceAspect
+        extends StandardAspect {
 
     // logging support
     private PrintWriter logStream = null;
@@ -66,192 +65,160 @@ public class TraceAspect
     public TraceAspect() {
     }
 
-
     private PrintWriter getLog() {
-	if (logStream == null) {
-	    try {
-		String id = getRegistry().getIdentifier();
-		logStream = new PrintWriter(new FileWriter(id+".cml"), true);
-	    } catch (Exception e) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error("Logging required but not possible - exiting", e);
-		System.exit(1);
-	    }
-	}
-	return logStream;
+        if (logStream == null) {
+            try {
+                String id = getRegistry().getIdentifier();
+                logStream = new PrintWriter(new FileWriter(id + ".cml"), true);
+            } catch (Exception e) {
+                if (loggingService.isErrorEnabled()) {
+                    loggingService.error("Logging required but not possible - exiting", e);
+                }
+                System.exit(1);
+            }
+        }
+        return logStream;
     }
-
 
     protected void log(String key, String info) {
-	String id = getRegistry().getIdentifier();
-	String cleanInfo = info.replace('\n', '_');
-	getLog().println(id+"\t"+System.currentTimeMillis()+"\t"+key+"\t"+cleanInfo);
+        String id = getRegistry().getIdentifier();
+        String cleanInfo = info.replace('\n', '_');
+        getLog().println(id + "\t" + System.currentTimeMillis() + "\t" + key + "\t" + cleanInfo);
     }
 
-    public Object getDelegate(Object delegate,  Class type) 
-    {
-	if (type == SendQueue.class) {
-	    return new SendQueueDelegate((SendQueue) delegate);
-	} else if (type == Router.class) {
-	    return new RouterDelegate((Router) delegate);
-	} else if (type == DestinationQueue.class) {
-	    return new DestinationQueueDelegate((DestinationQueue) delegate);
-	} else if (type == DestinationLink.class) {
-	    return new DestinationLinkDelegate((DestinationLink) delegate);
-	} else if (type == MessageDeliverer.class) {
-	    return new MessageDelivererDelegate((MessageDeliverer) delegate);
-	} else if (type == ReceiveLink.class) {
-	    return new ReceiveLinkDelegate((ReceiveLink) delegate);
-	} else if (type == NameSupport.class) {
-	    return new NameSupportDelegate((NameSupport) delegate);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegate, Class type) {
+        if (type == SendQueue.class) {
+            return new SendQueueDelegate((SendQueue) delegate);
+        } else if (type == Router.class) {
+            return new RouterDelegate((Router) delegate);
+        } else if (type == DestinationQueue.class) {
+            return new DestinationQueueDelegate((DestinationQueue) delegate);
+        } else if (type == DestinationLink.class) {
+            return new DestinationLinkDelegate((DestinationLink) delegate);
+        } else if (type == MessageDeliverer.class) {
+            return new MessageDelivererDelegate((MessageDeliverer) delegate);
+        } else if (type == ReceiveLink.class) {
+            return new ReceiveLinkDelegate((ReceiveLink) delegate);
+        } else if (type == NameSupport.class) {
+            return new NameSupportDelegate((NameSupport) delegate);
+        } else {
+            return null;
+        }
     }
 
-    public class NameSupportDelegate extends NameSupportDelegateImplBase {
-	
-	public NameSupportDelegate (NameSupport nameSupport) {
-	    super(nameSupport);
-	}
+    public class NameSupportDelegate
+            extends NameSupportDelegateImplBase {
 
-	public MessageAddress  getNodeMessageAddress() {
-	    return super.getNodeMessageAddress();
-	}
+        public NameSupportDelegate(NameSupport nameSupport) {
+            super(nameSupport);
+        }
 
-	public void registerAgentInNameServer(URI reference, 
-					      MessageAddress addr, 
-					      String protocol)
-	{
-	    log("NameSupport", "Register Agent " + addr + " " + reference);
-	    super.registerAgentInNameServer(reference, addr, protocol);
-	}
+        public MessageAddress getNodeMessageAddress() {
+            return super.getNodeMessageAddress();
+        }
 
-	public void unregisterAgentInNameServer(URI reference, 
-						MessageAddress addr, 
-						String protocol) 
-	{
-	    log("NameSupport", "Unregister Agent " + addr + " " + reference);
-	    super.unregisterAgentInNameServer(reference, addr, protocol);
-	}
+        public void registerAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
+            log("NameSupport", "Register Agent " + addr + " " + reference);
+            super.registerAgentInNameServer(reference, addr, protocol);
+        }
 
-	public URI lookupAddressInNameServer(MessageAddress address, 
-					     String protocol)
-	{
-	    URI res = super.lookupAddressInNameServer(address, protocol);
-	    log("NameSupport", "Lookup of " + address + " returned " + res);
-	    return res;
-	}
+        public void unregisterAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
+            log("NameSupport", "Unregister Agent " + addr + " " + reference);
+            super.unregisterAgentInNameServer(reference, addr, protocol);
+        }
+
+        public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
+            URI res = super.lookupAddressInNameServer(address, protocol);
+            log("NameSupport", "Lookup of " + address + " returned " + res);
+            return res;
+        }
 
     }
 
+    public class SendQueueDelegate
+            extends SendQueueDelegateImplBase {
+        public SendQueueDelegate(SendQueue queue) {
+            super(queue);
+        }
 
-
-    public class SendQueueDelegate 
-	extends SendQueueDelegateImplBase
-    {
-	public SendQueueDelegate (SendQueue queue) {
-	    super(queue);
-	}
-	
-	public void sendMessage(AttributedMessage message) {
-	    log("SendQueue", message.toString()+" ("+this.size()+")");
-	    super.sendMessage(message);
-	}
+        public void sendMessage(AttributedMessage message) {
+            log("SendQueue", message.toString() + " (" + this.size() + ")");
+            super.sendMessage(message);
+        }
     }
 
+    public class RouterDelegate
+            extends RouterDelegateImplBase {
+        public RouterDelegate(Router router) {
+            super(router);
+        }
 
-
-    public class RouterDelegate extends RouterDelegateImplBase
-    {
-	public RouterDelegate (Router router) {
-	    super(router);
-	}
-	
-	public void routeMessage(AttributedMessage message) {
-	    log("Router", message.getTarget().toString());
-	    super.routeMessage(message);
-	}
+        public void routeMessage(AttributedMessage message) {
+            log("Router", message.getTarget().toString());
+            super.routeMessage(message);
+        }
 
     }
 
+    public class DestinationQueueDelegate
+            extends DestinationQueueDelegateImplBase {
+        public DestinationQueueDelegate(DestinationQueue queue) {
+            super(queue);
+        }
 
+        public void holdMessage(AttributedMessage message) {
+            log("DestinationQueue", message.toString());
+            super.holdMessage(message);
+        }
 
-    public class DestinationQueueDelegate 
-	extends DestinationQueueDelegateImplBase
-    {
-	public DestinationQueueDelegate (DestinationQueue queue) {
-	    super(queue);
-	}
-	
+        public void dispatchNextMessage(AttributedMessage message) {
+            log("DestinationQueue dispatch", message.toString());
+            super.dispatchNextMessage(message);
+        }
 
-	public void holdMessage(AttributedMessage message) {
-	    log("DestinationQueue", message.toString());
-	    super.holdMessage(message);
-	}
-
-	public void dispatchNextMessage(AttributedMessage message) {
-	    log("DestinationQueue dispatch", message.toString());
-	    super.dispatchNextMessage(message);
-	}
-	
     }
 
+    public class DestinationLinkDelegate
+            extends DestinationLinkDelegateImplBase {
+        public DestinationLinkDelegate(DestinationLink link) {
+            super(link);
+        }
 
-    public class DestinationLinkDelegate 
-	extends DestinationLinkDelegateImplBase
-    {
-	public DestinationLinkDelegate (DestinationLink link)
-	{
-	    super(link);
-	}
-	
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException
 
-	{
-	    log("DestinationLink", message.toString());
-	    return super.forwardMessage(message);
-	}
-	
+        {
+            log("DestinationLink", message.toString());
+            return super.forwardMessage(message);
+        }
+
     }
 
+    public class MessageDelivererDelegate
+            extends MessageDelivererDelegateImplBase {
+        public MessageDelivererDelegate(MessageDeliverer deliverer) {
+            super(deliverer);
+        }
 
-    public class MessageDelivererDelegate 
-	extends MessageDelivererDelegateImplBase
-    {
-	public MessageDelivererDelegate (MessageDeliverer deliverer) {
-	    super(deliverer);
-	}
-	
-	public MessageAttributes deliverMessage(AttributedMessage message, 
-						MessageAddress dest) 
-	    throws MisdeliveredMessageException
-	{
-	    log("MessageDeliverer", message.toString());
-	    return super.deliverMessage(message, dest);
-	}
-	
+        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+                throws MisdeliveredMessageException {
+            log("MessageDeliverer", message.toString());
+            return super.deliverMessage(message, dest);
+        }
+
     }
 
-    public class ReceiveLinkDelegate 
-	extends ReceiveLinkDelegateImplBase
-    {
-	public ReceiveLinkDelegate (ReceiveLink link) {
-	    super(link);
-	}
-	
-	public MessageAttributes deliverMessage(AttributedMessage message) {
-	    log("ReceiveLink", message.toString());
-	    return super.deliverMessage(message);
-	}
+    public class ReceiveLinkDelegate
+            extends ReceiveLinkDelegateImplBase {
+        public ReceiveLinkDelegate(ReceiveLink link) {
+            super(link);
+        }
+
+        public MessageAttributes deliverMessage(AttributedMessage message) {
+            log("ReceiveLink", message.toString());
+            return super.deliverMessage(message);
+        }
 
     }
 }
-
-
-
-    

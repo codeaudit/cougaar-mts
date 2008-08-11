@@ -27,26 +27,23 @@
 package org.cougaar.mts.std;
 
 import org.cougaar.mts.base.AbstractSocketControlPolicy;
-import org.cougaar.mts.base.SocketControlPolicy; // javadoc 
+import org.cougaar.mts.base.SocketControlPolicy;
 import org.cougaar.mts.base.SocketFactory;
 
 /**
- * This Component is an example of {@link SocketControlPolicy}.  It does
- * nothing other than log requests.
+ * This Component is an example of {@link SocketControlPolicy}. It does nothing
+ * other than log requests.
  */
-public class SampleSocketControlPolicy extends AbstractSocketControlPolicy 
-{
+public class SampleSocketControlPolicy
+        extends AbstractSocketControlPolicy {
 
-    public int getConnectTimeout(SocketFactory factory, String host, int port) 
-    {
-	if (loggingService.isDebugEnabled()) {
-	    loggingService.debug("getConnectTimeout for " +host+
-				 ':' +port+
-				 " mts=" +factory.isMTS()+
-				 " ssl=" +factory.usesSSL());
-	}
+    public int getConnectTimeout(SocketFactory factory, String host, int port) {
+        if (loggingService.isDebugEnabled()) {
+            loggingService.debug("getConnectTimeout for " + host + ':' + port + " mts="
+                    + factory.isMTS() + " ssl=" + factory.usesSSL());
+        }
 
-	return 0;
+        return 0;
     }
 
 }

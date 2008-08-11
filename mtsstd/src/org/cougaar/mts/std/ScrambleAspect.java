@@ -25,119 +25,110 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This test Aspect scrambles the order of messages.  Its main purpose
- * is to test the effectiveness of the {@link SequenceAspect}.
+ * This test Aspect scrambles the order of messages. Its main purpose is to test
+ * the effectiveness of the {@link SequenceAspect}.
  * 
  */
-public class ScrambleAspect extends StandardAspect
-{
+public class ScrambleAspect
+        extends StandardAspect {
     public ScrambleAspect() {
     }
 
-    public Object getDelegate(Object delegate, Class type) 
-    {
-	if (type ==  SendLink.class) {
-	    return new ScrambledSendLink((SendLink) delegate);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegate, Class type) {
+        if (type == SendLink.class) {
+            return new ScrambledSendLink((SendLink) delegate);
+        } else {
+            return null;
+        }
     }
 
+    private class ScrambledSendLink
+            extends SendLinkDelegateImplBase {
 
-    private class ScrambledSendLink 
-	extends SendLinkDelegateImplBase 
-    {
-	
-	Schedulable sender;
-	AttributedMessage heldMessage;
-	
-	int heldMessageCount;
-	int flippedMessageCount;
-	int forcedMessageCount;
-	int messageCount; 
-	
-	private ScrambledSendLink(SendLink link) {
-	    super(link);
-	    //long  timeStarted = System.currentTimeMillis();
-	}
-	
+        Schedulable sender;
+        AttributedMessage heldMessage;
 
-	
-	private class MessageSender implements Runnable {
-	    public void run() {
-		forcedHeldMessage();
-	    }
-	}
-    
+        int heldMessageCount;
+        int flippedMessageCount;
+        int forcedMessageCount;
+        int messageCount;
 
+        private ScrambledSendLink(SendLink link) {
+            super(link);
+            // long timeStarted = System.currentTimeMillis();
+        }
 
+        private class MessageSender
+                implements Runnable {
+            public void run() {
+                forcedHeldMessage();
+            }
+        }
 
+        public synchronized void sendMessage(AttributedMessage message) {
+            messageCount++;
+            if (heldMessage == null) {
+                holdMessage(message);
+            } else {
+                flipMessage(message);
+            }
+        }
 
-	public synchronized void sendMessage(AttributedMessage message) {
-	    messageCount++;
-	    if (heldMessage == null)
-		holdMessage(message);
-	    else
-		flipMessage(message);
-	}
+        // ================util methods
+        private void holdMessage(AttributedMessage message) {
+            heldMessage = message;
+            MessageSender sender_body = new MessageSender();
+            sender = threadService.getThread(this, sender_body, "Scramble");
+            sender.schedule(300);
+            heldMessageCount++;
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Holding message #" + printString() + "  " + heldMessageCount);
+            }
+        }
 
-	
-	//================util methods
-	private void holdMessage(AttributedMessage message){
-	    heldMessage = message;
-	    MessageSender sender_body = new MessageSender();
-	    sender = threadService.getThread(this, sender_body, "Scramble");
-	    sender.schedule(300);
-	    heldMessageCount++;
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("Holding message #" +printString()  
-				   + "  " +  heldMessageCount );
-	}
+        private void flipMessage(AttributedMessage message) {
+            sender.cancel();
+            // Cancelling the task doesn't guarantee that it won't
+            // run. But the only purpose of this aspect is to test
+            // weird cases (messages out of order) so it might as well
+            // test duplicates sometimes too...
 
-	private void flipMessage(AttributedMessage message)
-	{
-	    sender.cancel();
-	    // Cancelling the task doesn't guarantee that it won't
-	    // run.  But the only purpose of this aspect is to test
-	    // weird cases (messages out of order) so it might as well
-	    // test duplicates sometimes too...
+            super.sendMessage(message);
+            super.sendMessage(heldMessage);
+            heldMessage = null;
+            flippedMessageCount++;
+            int previousCount = messageCount - 1;
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Flipping messages #" + previousCount + " and #"
+                        + printString() + " and " + message.getTarget() + "  "
+                        + flippedMessageCount);
+            }
+        }
 
-	    super.sendMessage(message);
-	    super.sendMessage(heldMessage);
-	    heldMessage = null;
-	    flippedMessageCount++;
-	    int previousCount = messageCount - 1;
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("Flipping messages #" + previousCount +
-				   " and #" + printString() +  
-				   " and " + message.getTarget() + "  "
-				   +  flippedMessageCount );
-	}
+        private synchronized void forcedHeldMessage() {
+            if (heldMessage != null) {
+                super.sendMessage(heldMessage);
+                forcedMessageCount++;
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("Forcing message #" + printString() + "  "
+                            + forcedMessageCount);
+                }
+                heldMessage = null;
+            }
+        }
 
-	private synchronized void forcedHeldMessage() {
-	    if (heldMessage != null){
-		super.sendMessage(heldMessage);
-		forcedMessageCount++;
-		if (loggingService.isDebugEnabled())
-		    loggingService.debug("Forcing message #" + printString() +
-				       "  " + forcedMessageCount);
-		heldMessage = null;
-	    }
-	}
-	
-	private String printString() {
-	    return messageCount +  " from "+  
-		heldMessage.getOriginator()+ " to " + heldMessage.getTarget() ;
-	}
-	//===========================
+        private String printString() {
+            return messageCount + " from " + heldMessage.getOriginator() + " to "
+                    + heldMessage.getTarget();
+        }
+        // ===========================
     }
-
 
 }
-

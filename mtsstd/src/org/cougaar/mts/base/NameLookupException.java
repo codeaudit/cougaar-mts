@@ -26,21 +26,13 @@
 
 package org.cougaar.mts.base;
 
-
 /**
- *   This Exception generally indicates a failed call to the White
- *   Pages from within the MTS.
+ * This Exception generally indicates a failed call to the White Pages from
+ * within the MTS.
  **/
-public class NameLookupException extends Exception 
-{
-    private Exception nested_exception;
-
+public class NameLookupException
+        extends Exception {
     public NameLookupException(Exception nested) {
-	super(nested.toString());
-	this.nested_exception = nested;
+        super(nested.toString());
     }
 }
-
-
-
-

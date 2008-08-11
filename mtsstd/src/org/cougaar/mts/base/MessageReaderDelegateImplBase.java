@@ -25,56 +25,47 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.io.InputStream;
 import java.io.ObjectInput;
 
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Convenience class for aspects which define {@link MessageReader}
- * delegate classes.  It implements all methods by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link MessageReader} delegate
+ * classes. It implements all methods by delegating to another instance, given
+ * in the constructor. Aspect inner classes which extend this need only
+ * implement specific methods that are relevant to that aspect,
  * 
  */
-public  class MessageReaderDelegateImplBase
-    implements MessageReader 
-{
-    private MessageReader delegate;
+public class MessageReaderDelegateImplBase
+        implements MessageReader {
+    private final MessageReader delegate;
 
     public MessageReaderDelegateImplBase(MessageReader delegate) {
-	this.delegate = delegate;
+        this.delegate = delegate;
     }
 
     public void finalizeAttributes(AttributedMessage msg) {
-	delegate.finalizeAttributes(msg);
+        delegate.finalizeAttributes(msg);
     }
 
-    public void preProcess() 
-    {
-	delegate.preProcess();
+    public void preProcess() {
+        delegate.preProcess();
     }
 
-
-    public InputStream getObjectInputStream(ObjectInput in) 
-	throws java.io.IOException, ClassNotFoundException
-    {
-	return delegate.getObjectInputStream(in);
+    public InputStream getObjectInputStream(ObjectInput in)
+            throws java.io.IOException, ClassNotFoundException {
+        return delegate.getObjectInputStream(in);
     }
-
 
     public void finishInput()
-	throws java.io.IOException
-    {
-	delegate.finishInput();
+            throws java.io.IOException {
+        delegate.finishInput();
     }
 
-    public void postProcess() 
-    {
-	delegate.postProcess();
+    public void postProcess() {
+        delegate.postProcess();
     }
-
 
 }
-

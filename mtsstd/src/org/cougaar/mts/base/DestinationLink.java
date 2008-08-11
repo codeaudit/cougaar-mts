@@ -25,21 +25,20 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * The fifth station for outgoing messages. Each LinkProtocol has its
- * own DestinationLink implementation class.  DestinationLinks are
- * made by the protocols, acting as factories.
+ * The fifth station for outgoing messages. Each LinkProtocol has its own
+ * DestinationLink implementation class. DestinationLinks are made by the
+ * protocols, acting as factories.
  * <p>
- * The previous station is DestinationQueue. If the protocol uses
- * Java serialization, the next station is MessageWriter. 
- * If there is no serialization, MessageDeliverer on the receiving
- * side is the next stop. 
- *
+ * The previous station is DestinationQueue. If the protocol uses Java
+ * serialization, the next station is MessageWriter. If there is no
+ * serialization, MessageDeliverer on the receiving side is the next stop.
+ * 
  * @see LinkProtocol
  * @see SendLink
  * @see SendQueue
@@ -48,57 +47,51 @@ import org.cougaar.mts.std.AttributedMessage;
  * @see MessageWriter
  * @see MessageReader
  * @see MessageDeliverer
- * @see ReceiveLink
- *
- * Javadoc contributions from George Mount.
+ * @see ReceiveLink Javadoc contributions from George Mount.
  */
-public interface DestinationLink
-{
+public interface DestinationLink {
 
     /**
-     * This method is used to request the associated transport to do
-     * its thing with the given message.  Only called during
-     * processing of messages in DestinationQueueImpl.  
-     *
+     * This method is used to request the associated transport to do its thing
+     * with the given message. Only called during processing of messages in
+     * DestinationQueueImpl.
+     * 
      * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
      */
-    MessageAttributes forwardMessage(AttributedMessage message) 
-	throws UnregisteredNameException, 
-	NameLookupException, 
-	CommFailureException,
-	MisdeliveredMessageException;
+    MessageAttributes forwardMessage(AttributedMessage message)
+            throws UnregisteredNameException, NameLookupException, CommFailureException,
+            MisdeliveredMessageException;
 
     /**
-     * This method returns a simple measure of the cost of sending the
-     * given message via the associated transport. Only called during
-     * processing of messages in DestinationQueueImpl. 
-     *
+     * This method returns a simple measure of the cost of sending the given
+     * message via the associated transport. Only called during processing of
+     * messages in DestinationQueueImpl.
+     * 
      * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
      * @see LinkSelectionPolicy
      * @see MinCostLinkSelectionPolicy
      */
     int cost(AttributedMessage message);
 
-    
     /**
      * @return the class of corresponding LinkProtocol.
      */
     Class getProtocolClass();
 
-
     /**
-     * Is this link currently legitimate and functional?  The default
-     * is true for loopback and would ordinarily be true for remote
-     * calls if the stub (or whatever) is accessible.  Aspects can
-     * alter this behavior, for example to disable unencrypted rmi.
+     * Is this link currently legitimate and functional? The default is true for
+     * loopback and would ordinarily be true for remote calls if the stub (or
+     * whatever) is accessible. Aspects can alter this behavior, for example to
+     * disable unencrypted rmi.
      * <p>
-     * This method in invoked on every loaded link before the link
-     * selection policy is run; the policy will not see invalid links
-     * at all.  As a side-effect, {@link #cost} will not always be run (as
-     * it was before 11_0).
+     * This method in invoked on every loaded link before the link selection
+     * policy is run; the policy will not see invalid links at all. As a
+     * side-effect, {@link #cost} will not always be run (as it was before
+     * 11_0).
      * <p>
-     * This method is supposed to be a quick triage.  More complicated calculations
-     * can be done in {@link #cost} as an implicit form of invalidation.
+     * This method is supposed to be a quick triage. More complicated
+     * calculations can be done in {@link #cost} as an implicit form of
+     * invalidation.
      * 
      * @param message The message we're trying to send
      */
@@ -109,24 +102,23 @@ public interface DestinationLink
      */
     boolean retryFailedMessage(AttributedMessage message, int retryCount);
 
-
     /**
-     * Return the target/destination of this link. 
+     * Return the target/destination of this link.
      */
     MessageAddress getDestination();
 
-
     /**
-     * Return some form of remote reference for the destination, if it
-     * has one (rmi server stub, smtp url, CORBA ior, etc) */
+     * Return some form of remote reference for the destination, if it has one
+     * (rmi server stub, smtp url, CORBA ior, etc)
+     */
     Object getRemoteReference();
 
-  /**
-   * Allows the DestinationLink to add attributes before forwarding 
-   * the message.
-   *
-   * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
-   */
+    /**
+     * Allows the DestinationLink to add attributes before forwarding the
+     * message.
+     * 
+     * @see DestinationQueue#dispatchNextMessage(AttributedMessage)
+     */
     void addMessageAttributes(MessageAttributes attrs);
 
 }

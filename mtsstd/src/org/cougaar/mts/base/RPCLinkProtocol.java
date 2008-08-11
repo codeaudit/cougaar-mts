@@ -35,6 +35,7 @@ import java.util.Map;
 
 import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
@@ -51,13 +52,14 @@ import org.cougaar.mts.std.AttributedMessage;
  * implementations for a small set of abstract methods, covering protocol
  * specifics.
  */
-abstract public class RPCLinkProtocol extends LinkProtocol {
+abstract public class RPCLinkProtocol
+        extends LinkProtocol {
 
     private IncarnationService incarnationService;
     private WhitePagesService wpService;
-    private Map<MessageAddress, DestinationLink> links =
+    private final Map<MessageAddress, DestinationLink> links =
             new HashMap<MessageAddress, DestinationLink>();
-    private List<MessageTransportClient> clients = new ArrayList<MessageTransportClient>();
+    private final List<MessageTransportClient> clients = new ArrayList<MessageTransportClient>();
 
     /**
      * Reference for this node in the White Pages. The assumption is that rpc
@@ -65,13 +67,12 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * dispatch to the agent.
      */
     private URI ref;
-    private Object ipAddrLock = new Object();
+    private final Object ipAddrLock = new Object();
 
     private long nextRemakeNodeServantTime = 0;
     private boolean remakeInProgress;
     private final Object remakeLock = "Remaking Node Servant";
-    
-    
+
     // subclass responsibility
 
     /**
@@ -88,9 +89,9 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
     /**
      * @return the cost of transmitting the message over this protocol.
      * 
-     * This is invoked from the Link inner class and is defined here because the
-     * cost mathematics is typically not specific to a given link and is
-     * therefore easier to implement at the protocol level.
+     *         This is invoked from the Link inner class and is defined here
+     *         because the cost mathematics is typically not specific to a given
+     *         link and is therefore easier to implement at the protocol level.
      */
     abstract protected int computeCost(AttributedMessage message);
 
@@ -105,21 +106,21 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * Ensure that some abstract form of 'servant' object exists for this
      * protocol that will allow other Nodes to send messages to this one.
      * <p>
-     * Conceptually this is an abstract method but for backward compatibility
-     * we have to provide a base implementation that invokes the deprecated
-     * method {@link findOrMakeNodeServant}.
+     * Conceptually this is an abstract method but for backward compatibility we
+     * have to provide a base implementation that invokes the deprecated method
+     * {@link findOrMakeNodeServant}.
      * <p>
-     * NB: ensureNodeServant should <b>only</b> be called from 
+     * NB: ensureNodeServant should <b>only</b> be called from
      * {@link #remakeNodeServant}!.
      */
     protected void ensureNodeServant() {
         findOrMakeNodeServant();
     }
-    
+
     /**
-     * The old name for {@link #ensureNodeServant}.  Keep it around
-     * awhile as a deprecated method for backward compatibiity. If
-     * it's invoked and not overridden, that's an error.
+     * The old name for {@link #ensureNodeServant}. Keep it around awhile as a
+     * deprecated method for backward compatibiity. If it's invoked and not
+     * overridden, that's an error.
      */
     @Deprecated
     protected void findOrMakeNodeServant() {
@@ -143,17 +144,16 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
      * of the Host on which the Node is running has changed. Some protocol (eg
      * HTTP) can ignore this.
      * <p>
-     * The definition of this method is specific to each protocol,
-     * but invocations should only happen in this class, specifically
-     * in {@link #ensureNodeServantIsAlive}.
+     * The definition of this method is specific to each protocol, but
+     * invocations should only happen in this class, specifically in
+     * {@link #ensureNodeServantIsAlive}.
      * 
      */
     abstract protected void remakeNodeServant();
-    
+
     /**
-     * If the servant is alive do nothing and return true.
-     * Otherwise try to make it, but too often, and
-     * return success or failure.
+     * If the servant is alive do nothing and return true. Otherwise try to make
+     * it, but too often, and return success or failure.
      * 
      * @return whether or not it really is alive
      */
@@ -208,12 +208,14 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         sb.addService(Service.class, this);
 
         incarnationService = sb.getService(this, IncarnationService.class, null);
-        if (incarnationService == null && loggingService.isWarnEnabled())
+        if (incarnationService == null && loggingService.isWarnEnabled()) {
             loggingService.warn("Couldn't load IncarnationService");
+        }
 
         wpService = sb.getService(this, WhitePagesService.class, null);
-        if (wpService == null && loggingService.isWarnEnabled())
+        if (wpService == null && loggingService.isWarnEnabled()) {
             loggingService.warn("Couldn't load WhitePagesService");
+        }
     }
 
     protected void setNodeURI(URI ref) {
@@ -233,11 +235,13 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                     MessageAddress addr = client.getMessageAddress();
                     getNameSupport().registerAgentInNameServer(ref, addr, getProtocolType());
                 } catch (Exception e) {
-                    if (loggingService.isErrorEnabled())
+                    if (loggingService.isErrorEnabled()) {
                         loggingService.error("Error registering client", e);
+                    }
                 }
             } else {
-                // FIXME: This call is made in the load thread, which is too early for Node servants
+                // FIXME: This call is made in the load thread, which is too
+                // early for Node servants
                 // with external servers
                 ensureNodeServantIsAlive();
             }
@@ -259,8 +263,9 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                 }
 
             } catch (Exception e) {
-                if (loggingService.isErrorEnabled())
+                if (loggingService.isErrorEnabled()) {
                     loggingService.error("Error unregistering client", e);
+                }
             }
         }
     }
@@ -290,8 +295,9 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                 SystemProperties.setProperty("java.rmi.server.hostname", hostaddr);
             } catch (java.net.UnknownHostException ex) {
                 // log something
-                if (loggingService.isWarnEnabled())
+                if (loggingService.isWarnEnabled()) {
                     loggingService.warn("Couldn't get localhost: " + ex.getMessage());
+                }
             }
             NameSupport ns = getNameSupport();
             String type = getProtocolType();
@@ -324,11 +330,13 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
     // Just for testing -- an example of supplying a service from a
     // LinkProtocol.
 
-    public interface Service extends LinkProtocolService {
+    public interface Service
+            extends LinkProtocolService {
         // protocol-specific methods would go here.
     }
 
-    @SuppressWarnings("unchecked") // until the declaration is fixed
+    @SuppressWarnings("unchecked")
+    // until the declaration is fixed
     public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
         if (serviceClass == Service.class) {
             return new ServiceProxy();
@@ -337,8 +345,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         }
     }
 
-    @SuppressWarnings("unchecked") // until the declaration is fixed
-    public void releaseService(ServiceBroker sb, Object requestor, Class serviceClass,
+    @SuppressWarnings("unchecked")
+    // until the declaration is fixed
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
                                Object service) {
 
         if (serviceClass == Service.class) {
@@ -346,7 +357,8 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         }
     }
 
-    private class WPCallback implements Callback {
+    private class WPCallback
+            implements Callback {
         Link link;
 
         WPCallback(Link link) {
@@ -355,12 +367,14 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         private long extractIncarnation(Map<String, AddressEntry> entries) {
             // parse "(.. type=version uri=version:///1234/blah)"
-            if (entries == null)
+            if (entries == null) {
                 return 0;
+            }
 
             AddressEntry ae = entries.get("version");
-            if (ae == null)
+            if (ae == null) {
                 return 0;
+            }
 
             try {
                 String path = ae.getURI().getPath();
@@ -377,7 +391,8 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         public void execute(Response response) {
             Response.GetAll rg = (Response.GetAll) response;
-            @SuppressWarnings("unchecked") // until the declaration is fixed
+            @SuppressWarnings("unchecked")
+            // until the declaration is fixed
             Map<String, AddressEntry> entries = rg.getAddressEntries();
             AddressEntry entry = null;
             long incn = 0;
@@ -385,22 +400,24 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                 entry = entries.get(getProtocolType());
                 incn = extractIncarnation(entries);
             }
-            if (loggingService.isDebugEnabled())
+            if (loggingService.isDebugEnabled()) {
                 loggingService.debug("Brand spanking new WP callback: " + entry + " incarnation = "
                         + incn);
+            }
             link.handleWPCallback(entry, incn);
         }
     }
 
-    abstract protected class Link implements DestinationLink, IncarnationService.Callback {
+    abstract protected class Link
+            implements DestinationLink, IncarnationService.Callback {
 
-        private MessageAddress target;
+        private final MessageAddress target;
         private boolean lookup_pending = false;
         private AddressEntry lookup_result = null;
-        private Object lookup_lock = new Object();
+        private final Object lookup_lock = new Object();
         private long incarnation;
-        private Callback lookup_cb = new WPCallback(this);
-        private Object remote_lock = new Object();
+        private final Callback lookup_cb = new WPCallback(this);
+        private final Object remote_lock = new Object();
         private Object remote_ref; // URI, URL etc
 
         protected Link(MessageAddress destination) {
@@ -412,13 +429,12 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
             }
         }
 
-        abstract protected Object decodeRemoteRef(URI ref) throws Exception;
+        abstract protected Object decodeRemoteRef(URI ref)
+                throws Exception;
 
         abstract protected MessageAttributes forwardByProtocol(Object remote,
-                                                               AttributedMessage message) 
-                throws NameLookupException,
-                UnregisteredNameException,
-                CommFailureException,
+                                                               AttributedMessage message)
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException;
 
         // WP callback
@@ -434,7 +450,7 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                     // don't tell incarnation service, it will ignore 0;
                     incarnation = 0;
                 }
-                lookup_result = (entry != null && incn == incarnation) ? entry : null;
+                lookup_result = entry != null && incn == incarnation ? entry : null;
             }
         }
 
@@ -443,8 +459,9 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                 remote_ref = null;
             }
             synchronized (lookup_lock) {
-                if (!lookup_pending)
+                if (!lookup_pending) {
                     lookup_result = null;
+                }
             }
         }
 
@@ -477,16 +494,18 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                     decache();
                 } else if (incn == 0) {
                     // incarnation number reset for nameserver bootstrap
-                    if (loggingService.isWarnEnabled())
+                    if (loggingService.isWarnEnabled()) {
                         loggingService.warn("Incarnation service callback has zero incarnation number for "
                                 + addr);
+                    }
                     incarnation = 0;
                     decache();
                 } else if (incn < incarnation) {
                     // out-of-date info
-                    if (loggingService.isWarnEnabled())
+                    if (loggingService.isWarnEnabled()) {
                         loggingService.warn("Incarnation service callback has out of date incarnation number "
                                 + incn + " for " + addr);
+                    }
                 }
             }
         }
@@ -496,7 +515,8 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         // case scenario: normal return (no exception) but 'remote' has
         // been reset to null in the meantime. The two callers
         // (isValid and forwardMessage) deal with this case.
-        protected void cacheRemote() throws NameLookupException, UnregisteredNameException {
+        protected void cacheRemote()
+                throws NameLookupException, UnregisteredNameException {
             if (remote_ref == null) {
                 try {
                     URI ref = getRemoteURI();
@@ -505,16 +525,15 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
                     throw new NameLookupException(lookup_failure);
                 }
 
-                if (remote_ref == null)
+                if (remote_ref == null) {
                     throw new UnregisteredNameException(target);
+                }
 
             }
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message) 
-                throws NameLookupException,
-                UnregisteredNameException,
-                CommFailureException,
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             cacheRemote();
             // Ordinarily cacheRemote either throws an Exception or
@@ -571,10 +590,11 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
 
         public int cost(AttributedMessage message) {
             synchronized (remote_lock) {
-                if (remote_ref == null)
+                if (remote_ref == null) {
                     return Integer.MAX_VALUE;
-                else
+                } else {
                     return computeCost(message);
+                }
             }
         }
 
@@ -587,8 +607,8 @@ abstract public class RPCLinkProtocol extends LinkProtocol {
         }
 
         public void addMessageAttributes(MessageAttributes attrs) {
-            attrs.addValue(MessageAttributes.IS_STREAMING_ATTRIBUTE, Boolean.TRUE);
-            attrs.addValue(MessageAttributes.ENCRYPTED_SOCKET_ATTRIBUTE, usesEncryptedSocket());
+            attrs.addValue(AttributeConstants.IS_STREAMING_ATTRIBUTE, Boolean.TRUE);
+            attrs.addValue(AttributeConstants.ENCRYPTED_SOCKET_ATTRIBUTE, usesEncryptedSocket());
         }
     }
 

@@ -24,6 +24,7 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -31,15 +32,18 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-/** 
+/**
  * The RMI remote interface for inter-Node message passing.
- *
+ * 
  */
 
-public interface MT extends Remote {
-  /** receive a message **/
-  MessageAttributes rerouteMessage(AttributedMessage m) throws RemoteException;
+public interface MT
+        extends Remote {
+    /** receive a message **/
+    MessageAttributes rerouteMessage(AttributedMessage m)
+            throws RemoteException;
 
-  /** @return the message address of this client **/
-  MessageAddress getMessageAddress() throws RemoteException;
+    /** @return the message address of this client **/
+    MessageAddress getMessageAddress()
+            throws RemoteException;
 }

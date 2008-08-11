@@ -37,108 +37,91 @@ import org.cougaar.mts.base.DestinationQueueMonitorService;
 import org.cougaar.util.log.Logger;
 
 /**
- * This class and its related service have a very specialized role.
- * They exist solely to allow one external class, the StateDumpService
- * implementation, to dump the current message queues.  No other
- * clients can use it.  The StateDumpService impl itself can't easily
- * live in mts for security reasons.
+ * This class and its related service have a very specialized role. They exist
+ * solely to allow one external class, the StateDumpService implementation, to
+ * dump the current message queues. No other clients can use it. The
+ * StateDumpService impl itself can't easily live in mts for security reasons.
  */
 public final class MessageQueueDumpServiceComponent
-    extends ParameterizedComponent
-    implements ServiceProvider
-{
+        extends ParameterizedComponent
+        implements ServiceProvider {
     private ServiceBroker sb, rootsb;
     private Impl impl;
 
-    public MessageQueueDumpServiceComponent()
-    {
+    public MessageQueueDumpServiceComponent() {
     }
 
-
-    public void setNodeControlService(NodeControlService ncs) 
-    { 
-	rootsb = (ncs == null)?null:ncs.getRootServiceBroker();
+    public void setNodeControlService(NodeControlService ncs) {
+        rootsb = ncs == null ? null : ncs.getRootServiceBroker();
     }
 
-    public void load()
-    {
-	super.load();
-	impl = new Impl(sb);
-	rootsb.addService(MessageQueueDumpService.class, this);
+    public void load() {
+        super.load();
+        impl = new Impl(sb);
+        rootsb.addService(MessageQueueDumpService.class, this);
     }
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor,
-			     Class serviceClass)
-    {
-	if (serviceClass == MessageQueueDumpService.class &&
-	    requestor instanceof StateDumpServiceComponent)
-	    return impl;
-	else
-	    return null;
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == MessageQueueDumpService.class
+                && requestor instanceof StateDumpServiceComponent) {
+            return impl;
+        } else {
+            return null;
+        }
     }
 
-
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
 
-
-    public final void setServiceBroker(ServiceBroker sb) 
-    {
-	this.sb = sb;
+    public final void setServiceBroker(ServiceBroker sb) {
+        this.sb = sb;
     }
-
 
     private class Impl
-	implements MessageQueueDumpService
-    {
-	DestinationQueueMonitorService dqms;
-	ServiceBroker sb;
+            implements MessageQueueDumpService {
+        DestinationQueueMonitorService dqms;
+        ServiceBroker sb;
 
-	Impl(ServiceBroker sb)
-	{
-	    this.sb = sb;
-	}
+        Impl(ServiceBroker sb) {
+            this.sb = sb;
+        }
 
+        private void dumpMessage(AttributedMessage msg, int i, Logger logger) {
+            logger.warn(i + " " + msg.getOriginator() + " " + msg.getTarget() + " "
+                    + msg.getAttributesAsString() + " " + msg.getRawMessage()/*
+                                                                              * .getClass
+                                                                              * (
+                                                                              * )
+                                                                              * .
+                                                                              * getName
+                                                                              * (
+                                                                              * )
+                                                                              */);
+        }
 
-	private void dumpMessage(AttributedMessage msg, int i, Logger logger)
-	{
-	    logger.warn(i + 
-			" " + msg.getOriginator()+
-			" " + msg.getTarget()+
-			" " + msg.getAttributesAsString()+
-			" " + msg.getRawMessage()/*.getClass().getName()*/);
-	}
+        public int dumpQueues(Logger logger) {
+            if (dqms == null) {
+                dqms = sb.getService(this, DestinationQueueMonitorService.class, null);
+                if (dqms == null) {
+                    logger.warn("Couldn't get DestinationQueueMonitorService");
+                    return 0;
+                }
+            }
 
-	public int dumpQueues(Logger logger)
-	{
-	    if (dqms == null) {
-		dqms = (DestinationQueueMonitorService)
-		    sb.getService(this, DestinationQueueMonitorService.class, null);
-		if (dqms == null) {
-		    logger.warn("Couldn't get DestinationQueueMonitorService");
-		    return 0;
-		}
-	    }
-
-	    int count=0;
-	    MessageAddress[] addresses = dqms.getDestinations();
-	    for (int i=0; i<addresses.length; i++) {
-		MessageAddress address = addresses[i];
-		AttributedMessage[] msgs = dqms.snapshotQueue(address);
-		for (int j=0; j<msgs.length; j++) {
-		    count ++;
-		    AttributedMessage msg = msgs[j];
-		    dumpMessage(msg, count, logger);
-		}
-	    }
-	    return count;
-	}
+            int count = 0;
+            MessageAddress[] addresses = dqms.getDestinations();
+            for (MessageAddress address : addresses) {
+                AttributedMessage[] msgs = dqms.snapshotQueue(address);
+                for (AttributedMessage msg : msgs) {
+                    count++;
+                    dumpMessage(msg, count, logger);
+                }
+            }
+            return count;
+        }
 
     }
 }
-

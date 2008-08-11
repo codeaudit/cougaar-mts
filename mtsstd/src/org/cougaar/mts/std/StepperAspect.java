@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -55,416 +56,389 @@ import org.cougaar.mts.base.DestinationQueue;
 import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
-
 /**
- * This Aspect includes the ServiceProvider for and implementation of
- * the {@link StepService}, as well as a use of that service in a
- * Swing gui.
+ * This Aspect includes the ServiceProvider for and implementation of the
+ * {@link StepService}, as well as a use of that service in a Swing gui.
  */
-public final class StepperAspect 
-    extends StandardAspect
-{
+public final class StepperAspect
+        extends StandardAspect {
 
     private StepFrame frame;
     private HashMap controllers;
     private ThreadService threadService;
     private StepService service;
 
-
     private ThreadService threadService() {
-	if (threadService != null) return threadService;
-	ServiceBroker sb = getServiceBroker();
-	threadService = 
-	    (ThreadService) sb.getService(this, ThreadService.class, null);
-	return threadService;
+        if (threadService != null) {
+            return threadService;
+        }
+        ServiceBroker sb = getServiceBroker();
+        threadService = sb.getService(this, ThreadService.class, null);
+        return threadService;
     }
 
-    public Object getDelegate(Object delegatee, Class type) 
-    {
-	if (type == DestinationQueue.class) {
-	    return new DestinationQueueDelegate((DestinationQueue) delegatee);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegatee, Class type) {
+        if (type == DestinationQueue.class) {
+            return new DestinationQueueDelegate((DestinationQueue) delegatee);
+        } else {
+            return null;
+        }
     }
 
     private StepFrame ensureFrame() {
-	synchronized (this) {
-	    if (frame == null) {
-		frame = new StepFrame(getRegistry().getIdentifier());
-		if (controllers == null) {
-		    controllers = new HashMap();
-		} else {
-		    Iterator i = controllers.values().iterator();
-		    while(i.hasNext()) {
-			StepController controller = (StepController) i.next();
-			frame.addControllerWidget(controller);
-		    }
-		}
-	    }
-	}
-	if (!frame.isVisible()) frame.setVisible(true);
-	return frame;
+        synchronized (this) {
+            if (frame == null) {
+                frame = new StepFrame(getRegistry().getIdentifier());
+                if (controllers == null) {
+                    controllers = new HashMap();
+                } else {
+                    Iterator i = controllers.values().iterator();
+                    while (i.hasNext()) {
+                        StepController controller = (StepController) i.next();
+                        frame.addControllerWidget(controller);
+                    }
+                }
+            }
+        }
+        if (!frame.isVisible()) {
+            frame.setVisible(true);
+        }
+        return frame;
     }
 
-
     public void load() {
-	super.load();
-	service = new ServiceImpl();
-	ServiceBroker sb = getServiceBroker();
-	sb.addService(StepService.class, new StepServiceProvider());
+        super.load();
+        service = new ServiceImpl();
+        ServiceBroker sb = getServiceBroker();
+        sb.addService(StepService.class, new StepServiceProvider());
     }
 
     private synchronized void frameClosing() {
-	service.stepAll();
-	frame.dispose();
-	frame = null;
+        service.stepAll();
+        frame.dispose();
+        frame = null;
     }
 
-    private synchronized void addController(StepController controller,
-					    MessageAddress address) 
-    {
-	controllers.put(address, controller);
+    private synchronized void addController(StepController controller, MessageAddress address) {
+        controllers.put(address, controller);
     }
 
-    
+    private class ServiceImpl
+            implements StepService {
+        public void pause(MessageAddress destination) {
+            StepController controller = (StepController) controllers.get(destination);
+            if (controller != null) {
+                controller.pause();
+            }
+        }
 
+        public void resume(MessageAddress destination) {
+            StepController controller = (StepController) controllers.get(destination);
+            if (controller != null) {
+                controller.resume();
+            }
+        }
 
-    private class ServiceImpl implements StepService {
-	public void pause(MessageAddress destination) {
-	    StepController controller = 
-		(StepController) controllers.get(destination);
-	    if (controller != null) controller.pause();
-	}
+        public void step(MessageAddress destination) {
+            StepController controller = (StepController) controllers.get(destination);
+            if (controller != null) {
+                controller.step();
+            }
+        }
 
-	public void resume(MessageAddress destination) {
-	    StepController controller = 
-		(StepController) controllers.get(destination);
-	    if (controller != null) controller.resume();
-	}
+        public synchronized void pauseAll() {
+            Iterator i = controllers.values().iterator();
+            while (i.hasNext()) {
+                StepController controller = (StepController) i.next();
+                controller.pause();
+            }
+        }
 
-	public void step(MessageAddress destination) {
-	    StepController controller = 
-		(StepController) controllers.get(destination);
-	    if (controller != null) controller.step();
-	}
+        public synchronized void resumeAll() {
+            Iterator i = controllers.values().iterator();
+            while (i.hasNext()) {
+                StepController controller = (StepController) i.next();
+                controller.resume();
+            }
+        }
 
-
-
-	public synchronized void pauseAll() {
-	    Iterator i = controllers.values().iterator();
-	    while(i.hasNext()) {
-		StepController controller = (StepController) i.next();
-		controller.pause();
-	    }
-	}
-
-
-	public synchronized void resumeAll() {
-	    Iterator i = controllers.values().iterator();
-	    while(i.hasNext()) {
-		StepController controller = (StepController) i.next();
-		controller.resume();
-	    }
-	}
-
-
-	public synchronized void stepAll() {
-	    Iterator i = controllers.values().iterator();
-	    while(i.hasNext()) {
-		StepController controller = (StepController) i.next();
-		controller.step();
-	    }
-	}
+        public synchronized void stepAll() {
+            Iterator i = controllers.values().iterator();
+            while (i.hasNext()) {
+                StepController controller = (StepController) i.next();
+                controller.step();
+            }
+        }
     }
 
-    private class StepServiceProvider implements ServiceProvider {
-	public Object getService(ServiceBroker sb,
-				 Object client,
-				 Class serviceClass)
-	{
-	    if (serviceClass == StepService.class) {
-		return service;
-	    } else {
-		return null;
-	    }
-	}
+    private class StepServiceProvider
+            implements ServiceProvider {
+        public Object getService(ServiceBroker sb, Object client, Class serviceClass) {
+            if (serviceClass == StepService.class) {
+                return service;
+            } else {
+                return null;
+            }
+        }
 
-	public void releaseService(ServiceBroker sb,
-				   Object client,
-				   Class serviceClass,
-				   Object service)
-	{
-	}
+        public void releaseService(ServiceBroker sb,
+                                   Object client,
+                                   Class serviceClass,
+                                   Object service) {
+        }
 
     }
 
+    private class StepFrame
+            extends JFrame
+            implements ScrollPaneConstants {
+        private final JComponent contents;
+        private JComponent controllers, scroller;
 
+        private StepFrame(String id) {
+            super("Outgoing messages from " + id);
 
-    private  class StepFrame extends JFrame 
-	implements ScrollPaneConstants 
-    {
-	private JComponent contents, controllers, scroller;
+            JPanel buttons = new JPanel();
+            buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
 
-	private StepFrame(String id) 
-	{
-	    super("Outgoing messages from " +id);
+            JButton pauseAll = new JButton("Pause All");
+            pauseAll.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    service.pauseAll();
+                }
+            });
+            buttons.add(pauseAll);
 
-	    JPanel buttons = new JPanel();
-	    buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
+            JButton resumeAll = new JButton("Resume All");
+            resumeAll.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    service.resumeAll();
+                }
+            });
+            buttons.add(resumeAll);
 
-	    JButton pauseAll = new JButton("Pause All");
-	    pauseAll.addActionListener(new ActionListener() {
-		    public void actionPerformed(ActionEvent e) {
-			service.pauseAll();
-		    }});
-	    buttons.add(pauseAll);
+            JButton stepAll = new JButton("Step All");
+            stepAll.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    service.stepAll();
+                }
+            });
+            buttons.add(stepAll);
 
-	    JButton resumeAll = new JButton("Resume All");
-	    resumeAll.addActionListener(new ActionListener() {
-		    public void actionPerformed(ActionEvent e) {
-			service.resumeAll();
-		    }});
-	    buttons.add(resumeAll);
+            contents = new JPanel();
+            contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
 
-	    JButton stepAll = new JButton("Step All");
-	    stepAll.addActionListener(new ActionListener() {
-		    public void actionPerformed(ActionEvent e) {
-			service.stepAll();
-		    }});
-	    buttons.add(stepAll);
+            Container cp = getContentPane();
+            cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
+            cp.add(buttons);
+            cp.add(contents);
 
+            addWindowListener(new WindowAdapter() {
+                public void windowClosing(WindowEvent e) {
+                    frameClosing();
+                }
+            });
 
-  	    contents = new JPanel();
-  	    contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
+            setSize(350, 480);
+            setLocation(300, 300);
+        }
 
-	    Container cp = getContentPane();
-	    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
-	    cp.add(buttons);
-	    cp.add(contents);
+        private void addWidget(final StepController component, final MessageAddress address) {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    addController(component, address);
+                    addControllerWidget(component);
+                }
+            });
+        }
 
-
-	    addWindowListener(new WindowAdapter() {
-		    public void windowClosing(WindowEvent e) {
-			frameClosing();
-		    }
-		});
-
-
-	    setSize(350, 480);
-	    setLocation(300, 300);
-	}
-
-	private void addWidget(final StepController component,
-			       final MessageAddress address) 
-	{
-	    SwingUtilities.invokeLater (new Runnable() {
-		    public void run() {
-			addController(component, address);
-			addControllerWidget(component);
-		    }
-		});
-	}
-
-	private void addControllerWidget(StepController component) {
-	    if (controllers != null) {
-		controllers =
-		    new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-				   controllers,
-				   component);
-		contents.remove(scroller);
-	    } else {
-		controllers = component;
-	    }
-	    scroller = new JScrollPane(controllers,
-				       VERTICAL_SCROLLBAR_AS_NEEDED,
-				       HORIZONTAL_SCROLLBAR_NEVER);
-	    contents.add(scroller);
-	    contents.revalidate();
-	}
+        private void addControllerWidget(StepController component) {
+            if (controllers != null) {
+                controllers = new JSplitPane(JSplitPane.VERTICAL_SPLIT, controllers, component);
+                contents.remove(scroller);
+            } else {
+                controllers = component;
+            }
+            scroller =
+                    new JScrollPane(controllers,
+                                    VERTICAL_SCROLLBAR_AS_NEEDED,
+                                    HORIZONTAL_SCROLLBAR_NEVER);
+            contents.add(scroller);
+            contents.revalidate();
+        }
 
     }
 
+    private static class StepController
+            extends JPanel
+            implements ScrollPaneConstants {
+        private final DestinationQueueDelegate delegate;
+        private final JButton send;
+        private final JCheckBox pause;
+        private final JTextArea messageWindow;
+        private final MessageAddress destination;
+        private int count;
 
+        private StepController(DestinationQueueDelegate delegate, MessageAddress destination) {
+            count = 0;
+            this.delegate = delegate;
+            this.destination = destination;
 
-    private static class StepController extends JPanel 
-	implements ScrollPaneConstants
-    {
-	private DestinationQueueDelegate delegate;
-	private JButton send;
-	private JCheckBox pause;
-	private JTextArea messageWindow;
-	private MessageAddress destination;
-	private int count;
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-	private StepController(DestinationQueueDelegate delegate,
-			       MessageAddress destination) 
-	{
-	    count = 0;
-	    this.delegate = delegate;
-	    this.destination = destination;
+            JPanel buttons = new JPanel();
+            buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
 
-	    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            pause = new JCheckBox("Pause");
+            pause.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    boolean mode = pause.isSelected();
+                    StepController.this.delegate.setStepping(mode);
+                }
+            });
+            pause.setSelected(delegate.isStepping());
 
-	    JPanel buttons = new JPanel();
-	    buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
+            send = new JButton("Send");
+            send.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    StepController.this.delegate.step();
+                }
+            });
+            send.setEnabled(false);
 
-	    pause = new JCheckBox("Pause");
-	    pause.addActionListener(new ActionListener() {
-		    public void actionPerformed(ActionEvent e) {
-			boolean mode = pause.isSelected();
-			StepController.this.delegate.setStepping(mode);
-		    }
-		});
-	    pause.setSelected(delegate.isStepping());
+            buttons.add(pause);
+            buttons.add(send);
 
+            messageWindow = new JTextArea();
+            messageWindow.setEditable(false);
+            messageWindow.setLineWrap(true);
 
-	    send = new JButton("Send");
-	    send.addActionListener(new ActionListener() {
-		    public void actionPerformed(ActionEvent e) {
-			StepController.this.delegate.step();
-		    }
-		});
-	    send.setEnabled(false);
+            this.add(buttons);
+            this.add(new JScrollPane(messageWindow,
+                                     VERTICAL_SCROLLBAR_ALWAYS,
+                                     HORIZONTAL_SCROLLBAR_NEVER));
 
-	    buttons.add(pause);
-	    buttons.add(send);
+            setBorder(new TitledBorder("Messages to " + destination));
+            Dimension size = new Dimension(300, 100);
+            // setMaximumSize(size);
+            // setMinimumSize(size);
+            setPreferredSize(size);
 
+        }
 
-	    messageWindow = new JTextArea();
-	    messageWindow.setEditable(false);
-	    messageWindow.setLineWrap(true);
-	    
-	    this.add(buttons);
-	    this.add(new JScrollPane(messageWindow,
-				     VERTICAL_SCROLLBAR_ALWAYS,
-				     HORIZONTAL_SCROLLBAR_NEVER));
+        private void pause() {
+            if (!pause.isSelected()) {
+                pause.setSelected(true);
+                delegate.setStepping(true);
+            }
+        }
 
-	    setBorder(new TitledBorder("Messages to " +destination));
-	    Dimension size = new Dimension(300, 100);
-	    // setMaximumSize(size);
-//  	    setMinimumSize(size);
-	    setPreferredSize(size);
+        private void resume() {
+            if (pause.isSelected()) {
+                pause.setSelected(false);
+                delegate.setStepping(false);
+            }
+        }
 
-	}
+        private void step() {
+            delegate.step();
+        }
 
-	private void pause() {
-	    if (!pause.isSelected()) {
-		pause.setSelected(true);
-		delegate.setStepping(true);
-	    }
-	}
+        // Should these use SwingUtilities,invokeLater?
+        private void messageWait(final AttributedMessage msg) {
+            send.setEnabled(true);
+            StringBuffer buf = new StringBuffer();
+            buf.append(msg.logString());
+            buf.append("\nAttributes: ");
+            buf.append(msg.getAttributesAsString());
+            buf.append("\nBody: ");
+            buf.append(msg.getRawMessage().toString());
+            messageWindow.setText(buf.toString());
+        }
 
-	private void resume() {
-	    if (pause.isSelected()) {
-		pause.setSelected(false);
-		delegate.setStepping(false);
-	    }
-	}
+        private void increment() {
+            setBorder(new TitledBorder(Integer.toString(++count) + " messages to " + destination));
+        }
 
-	private void step() {
-	    delegate.step();
-	}
-
-	// Should these use SwingUtilities,invokeLater?
-	private void messageWait(final AttributedMessage msg) {
-	    send.setEnabled(true);
-	    StringBuffer buf = new StringBuffer();
-	    buf.append(msg.logString());
-	    buf.append("\nAttributes: ");
-	    buf.append(msg.getAttributesAsString());
-	    buf.append("\nBody: ");
-	    buf.append(msg.getRawMessage().toString());
-	    messageWindow.setText(buf.toString());
-	}
-
-	private void increment() {
-	    setBorder(new TitledBorder(Integer.toString(++count) 
-				       +" messages to " 
-				       +destination));
-	}
-
-	private void clearMessage() {
-	    send.setEnabled(false);
-	    messageWindow.setText("");
-	}
+        private void clearMessage() {
+            send.setEnabled(false);
+            messageWindow.setText("");
+        }
 
     }
-
 
     private class DestinationQueueDelegate
-	extends DestinationQueueDelegateImplBase 
-    {
-	
-	private StepController widget;
-	private boolean stepping;
-	private Object lock = new Object();
-	private Runnable oneStep;
+            extends DestinationQueueDelegateImplBase {
 
-	private DestinationQueueDelegate (DestinationQueue delegatee) {
-	    super(delegatee);
-	    oneStep = new OneStep();
-	}
-	
+        private StepController widget;
+        private boolean stepping;
+        private final Object lock = new Object();
+        private final Runnable oneStep;
 
-	private boolean isStepping() {
-	    return stepping;
-	}
+        private DestinationQueueDelegate(DestinationQueue delegatee) {
+            super(delegatee);
+            oneStep = new OneStep();
+        }
 
-	private void setStepping(boolean mode) {
-	    stepping = mode;
-	    if (!stepping) step();
-	}
+        private boolean isStepping() {
+            return stepping;
+        }
 
+        private void setStepping(boolean mode) {
+            stepping = mode;
+            if (!stepping) {
+                step();
+            }
+        }
 
-	private class OneStep implements Runnable {
-	    public void run() {
-		lockStep();
-	    }
-	}
+        private class OneStep
+                implements Runnable {
+            public void run() {
+                lockStep();
+            }
+        }
 
-	// Should probably happen in its own Thread so it doesn't
-	// block Swing.
-	private void step() {
-	    // lockStep();
-	    threadService().getThread(this, oneStep).start();
-	}
+        // Should probably happen in its own Thread so it doesn't
+        // block Swing.
+        private void step() {
+            // lockStep();
+            threadService().getThread(this, oneStep).start();
+        }
 
-	private void lockStep() {
-	    synchronized (lock) { lock.notify();  }
-	}
+        private void lockStep() {
+            synchronized (lock) {
+                lock.notify();
+            }
+        }
 
-	private void ensureWidget(MessageAddress address) {
-	    StepFrame frame = ensureFrame();
-	    if (widget == null) {
-		widget = new StepController(this, address);
-		frame.addWidget(widget, address);
-	    }
-	}
+        private void ensureWidget(MessageAddress address) {
+            StepFrame frame = ensureFrame();
+            if (widget == null) {
+                widget = new StepController(this, address);
+                frame.addWidget(widget, address);
+            }
+        }
 
-	public void dispatchNextMessage(AttributedMessage msg) {
-	    ensureWidget(msg.getTarget());
-	    widget.increment();
-	    if (!stepping) {
-		super.dispatchNextMessage(msg);
-	    } else {
-		synchronized (lock) {
-		    widget.messageWait(msg);
-		    // We're now locking up one of the available
-		    // Threads!
-		    try {
-			lock.wait(); 
-		    } catch (InterruptedException ex) {
-		    }
-		}
-		super.dispatchNextMessage(msg);
-		widget.clearMessage();
-	    }
-	}
-
-
+        public void dispatchNextMessage(AttributedMessage msg) {
+            ensureWidget(msg.getTarget());
+            widget.increment();
+            if (!stepping) {
+                super.dispatchNextMessage(msg);
+            } else {
+                synchronized (lock) {
+                    widget.messageWait(msg);
+                    // We're now locking up one of the available
+                    // Threads!
+                    try {
+                        lock.wait();
+                    } catch (InterruptedException ex) {
+                    }
+                }
+                super.dispatchNextMessage(msg);
+                widget.clearMessage();
+            }
+        }
 
     }
-
 
 }

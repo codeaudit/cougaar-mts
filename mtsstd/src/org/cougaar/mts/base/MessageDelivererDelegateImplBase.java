@@ -25,37 +25,33 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * Convenience class for aspects which define {@link MessageDeliverer}
- * delegate classes.  It implements all methods by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link MessageDeliverer} delegate
+ * classes. It implements all methods by delegating to another instance, given
+ * in the constructor. Aspect inner classes which extend this need only
+ * implement specific methods that are relevant to that aspect,
  * 
  */
 abstract public class MessageDelivererDelegateImplBase
-    implements MessageDeliverer
-{
+        implements MessageDeliverer {
     public MessageDeliverer deliverer;
 
     public MessageDelivererDelegateImplBase(MessageDeliverer deliverer) {
-	this.deliverer = deliverer;
+        this.deliverer = deliverer;
     }
 
-    public MessageAttributes deliverMessage(AttributedMessage message, 
-					    MessageAddress dest)
-	throws MisdeliveredMessageException
-    {
-	return deliverer.deliverMessage(message, dest);
+    public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+            throws MisdeliveredMessageException {
+        return deliverer.deliverMessage(message, dest);
     }
 
     public boolean matches(String name) {
-	return deliverer.matches(name);
+        return deliverer.matches(name);
     }
 
 }

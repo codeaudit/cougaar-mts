@@ -24,19 +24,18 @@
  * </copyright>
  */
 // should this be in org.cougaar.core.services?
-
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 
 /**
  * Abstract layer for interacting with a LinkProtocol as a service
- *
+ * 
  **/
-public interface LinkProtocolService extends Service
-{
+public interface LinkProtocolService
+        extends Service {
     // Example
     boolean addressKnown(MessageAddress address);
 
 }
-

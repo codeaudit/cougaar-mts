@@ -25,24 +25,23 @@
  */
 
 package org.cougaar.mts.std;
-import java.util.ArrayList;
+
 import java.util.List;
 
+import org.cougaar.core.component.Service;
 import org.cougaar.mts.base.MessageTransportAspect;
 import org.cougaar.mts.base.StandardAspect;
-import org.cougaar.core.component.Service;
 
 /**
- * This is an MTS-internal utility service which supports the use of
- * aspects.  It's used to add new aspects, typically at load time, and
- * to attach aspect delegates at run time.
+ * This is an MTS-internal utility service which supports the use of aspects.
+ * It's used to add new aspects, typically at load time, and to attach aspect
+ * delegates at run time.
  */
-public interface AspectSupport extends Service
-{
+public interface AspectSupport
+        extends Service {
     /**
-     * Return an aspect object whose class is as given. If there's
-     * more than one, returns the last one added.  If there are none,
-     * return null.
+     * Return an aspect object whose class is as given. If there's more than
+     * one, returns the last one added. If there are none, return null.
      */
     MessageTransportAspect findAspect(String classname);
 
@@ -52,23 +51,23 @@ public interface AspectSupport extends Service
     void addAspect(MessageTransportAspect aspect);
 
     /**
-     * Add an aspect to the global list.  This method is vestigial,
-     * since StandardAspects are also MessageTransportAspects.
+     * Add an aspect to the global list. This method is vestigial, since
+     * StandardAspects are also MessageTransportAspects.
      */
     void addAspect(StandardAspect aspect);
-    
-    /**
-     * Allow each global aspect to attach a delegate to given
-     * object at the cut-point indicated by the given type.
-     * 
-     * The generic parameter T enforces that the object provided
-     * matches the type provided.
-     */
-    <T> T attachAspects(T object,  Class<T> type);
 
     /**
-     * Allow each aspect in the list of candidates to attach a delegate
-     * to given object at the cut-point indicated by the given type.
+     * Allow each global aspect to attach a delegate to given object at the
+     * cut-point indicated by the given type.
+     * 
+     * The generic parameter T enforces that the object provided matches the
+     * type provided.
      */
-    <T> T attachAspects(T delegate,  Class<T> type, List<String> candidates);
+    <T> T attachAspects(T object, Class<T> type);
+
+    /**
+     * Allow each aspect in the list of candidates to attach a delegate to given
+     * object at the cut-point indicated by the given type.
+     */
+    <T> T attachAspects(T delegate, Class<T> type, List<String> candidates);
 }

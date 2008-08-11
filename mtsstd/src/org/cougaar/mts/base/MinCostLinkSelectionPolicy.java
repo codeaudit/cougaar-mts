@@ -25,53 +25,54 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.Iterator;
+
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * A cost-based {@link LinkSelectionPolicy} that chooses the cheapest
- * link.    If no other poliy is loaded, this is the one that will be
- * used. 
+ * A cost-based {@link LinkSelectionPolicy} that chooses the cheapest link. If
+ * no other poliy is loaded, this is the one that will be used.
  */
-public class MinCostLinkSelectionPolicy 
-    extends AbstractLinkSelectionPolicy
-{
-
+public class MinCostLinkSelectionPolicy
+        extends AbstractLinkSelectionPolicy {
 
     // Example of using MTS services in a selection policy
     //
-//     public void load() {
-// 	super.load();
-// 	System.out.println("ID=" +getRegistry().getIdentifier());
-//     }
+    // public void load() {
+    // super.load();
+    // System.out.println("ID=" +getRegistry().getIdentifier());
+    // }
 
+    public DestinationLink selectLink(Iterator links,
+                                      AttributedMessage message,
+                                      AttributedMessage failedMessage,
+                                      int retryCount,
+                                      Exception lastException) {
+        int min_cost = -1;
+        DestinationLink cheapest = null;
+        while (links.hasNext()) {
+            DestinationLink link = (DestinationLink) links.next();
+            int cost = link.cost(message);
 
-    public DestinationLink selectLink (Iterator links, 
-				       AttributedMessage message,
-				       AttributedMessage failedMessage,
-				       int retryCount,
-				       Exception lastException)
-    {
-	int min_cost = -1;
-	DestinationLink cheapest = null;
-	while (links.hasNext()) {
-	    DestinationLink link = (DestinationLink) links.next();
-	    int cost = link.cost(message);
-	    
-	    // If a link reports 0 cost, use it.  With proper
-	    // ordering, this allows us to skip relatively expensive
-	    // cost calculations (eg rmi) that can't be any better
-	    // anyway.
-	    if (cost == 0) return link;
+            // If a link reports 0 cost, use it. With proper
+            // ordering, this allows us to skip relatively expensive
+            // cost calculations (eg rmi) that can't be any better
+            // anyway.
+            if (cost == 0) {
+                return link;
+            }
 
-	    // If a link reports MAX_VALUE, ignore it.
-	    if (cost == Integer.MAX_VALUE) continue;
+            // If a link reports MAX_VALUE, ignore it.
+            if (cost == Integer.MAX_VALUE) {
+                continue;
+            }
 
-	    if (cheapest == null || cost < min_cost) {
-		cheapest = link;
-		min_cost = cost;
-	    }
-	}
-	return cheapest;
+            if (cheapest == null || cost < min_cost) {
+                cheapest = link;
+                min_cost = cost;
+            }
+        }
+        return cheapest;
     }
 }

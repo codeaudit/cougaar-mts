@@ -25,51 +25,45 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 
 /**
  * The {@link ServiceProvider} for the {@link LinkSelectionProvisionService}.
  */
-class LinkSelectionProvision implements ServiceProvider
-{
-    private LinkSelectionProvisionImpl impl;
+class LinkSelectionProvision
+        implements ServiceProvider {
+    private final LinkSelectionProvisionImpl impl;
 
     LinkSelectionProvision() {
-	impl = new LinkSelectionProvisionImpl();
-    }
-    
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == LinkSelectionProvisionService.class) return impl;
-	return null;
+        impl = new LinkSelectionProvisionImpl();
     }
 
-
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == LinkSelectionProvisionService.class) {
+            return impl;
+        }
+        return null;
     }
 
-
-
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
+    }
 
     private static class LinkSelectionProvisionImpl
-	implements LinkSelectionProvisionService
-    {
-	LinkSelectionPolicy policy;
-	public void setPolicy(LinkSelectionPolicy policy) {
-	    this.policy = policy;
-	}
-	
-	public LinkSelectionPolicy getPolicy() {
-	    return policy;
-	}
+            implements LinkSelectionProvisionService {
+        LinkSelectionPolicy policy;
+
+        public void setPolicy(LinkSelectionPolicy policy) {
+            this.policy = policy;
+        }
+
+        public LinkSelectionPolicy getPolicy() {
+            return policy;
+        }
     }
 
 }

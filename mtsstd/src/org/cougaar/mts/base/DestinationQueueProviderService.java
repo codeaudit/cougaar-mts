@@ -29,15 +29,14 @@ package org.cougaar.mts.base;
 import org.cougaar.core.mts.MessageAddress;
 
 /**
- * This is the factory service for getting a queue for a given
- * destination.  It's both and implemented and provided by
- * DestinationQueueFactory and is accessible only to MTS components.
+ * This is the factory service for getting a queue for a given destination. It's
+ * both and implemented and provided by DestinationQueueFactory and is
+ * accessible only to MTS components.
  */
-public interface DestinationQueueProviderService extends QueueProviderService
-{
+public interface DestinationQueueProviderService
+        extends QueueProviderService {
     /**
-     * Find or make the (unique) DestinationQueue for the given
-     * destination. 
+     * Find or make the (unique) DestinationQueue for the given destination.
      */
     DestinationQueue getDestinationQueue(MessageAddress destination);
 }

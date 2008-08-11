@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 
 import org.cougaar.core.mts.AgentState;
@@ -33,65 +34,60 @@ import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Convenience class for aspects which define {@link SendLink}
- * delegate classes.  It implements all methods by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link SendLink} delegate classes.
+ * It implements all methods by delegating to another instance, given in the
+ * constructor. Aspect inner classes which extend this need only implement
+ * specific methods that are relevant to that aspect,
  * 
  */
 abstract public class SendLinkDelegateImplBase
-    implements SendLink
-{
+        implements SendLink {
 
     private SendLink link;
 
     protected SendLinkDelegateImplBase(SendLink link) {
-	this.link = link;
+        this.link = link;
     }
 
     public void sendMessage(AttributedMessage message) {
-	link.sendMessage(message);
+        link.sendMessage(message);
     }
 
     public void flushMessages(ArrayList droppedMessages) {
-	link.flushMessages(droppedMessages);
+        link.flushMessages(droppedMessages);
     }
 
     public MessageAddress getAddress() {
-	return link.getAddress();
+        return link.getAddress();
     }
 
     public void release() {
-	link.release();
-	link = null;
+        link.release();
+        link = null;
     }
 
     public boolean okToSend(AttributedMessage message) {
-	return link.okToSend(message);
+        return link.okToSend(message);
     }
 
-	
     public void registerClient(MessageTransportClient client) {
-	link.registerClient(client);
+        link.registerClient(client);
     }
 
     public void unregisterClient(MessageTransportClient client) {
-	link.unregisterClient(client);
+        link.unregisterClient(client);
     }
 
     public String getIdentifier() {
-	return link.getIdentifier();
+        return link.getIdentifier();
     }
 
     public boolean addressKnown(MessageAddress address) {
-	return link.addressKnown(address);
+        return link.addressKnown(address);
     }
 
-
     public AgentState getAgentState() {
-	return link.getAgentState();
+        return link.getAgentState();
     }
 
 }
-

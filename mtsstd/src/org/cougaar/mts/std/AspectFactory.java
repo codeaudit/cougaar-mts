@@ -25,36 +25,28 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.ArrayList;
 
 import org.cougaar.mts.base.BoundComponent;
 
 /**
- * The root class of all aspect-ready factories.  Such factories have
- * the ability to attach a cascading series of aspect delegates to the
- * instances the factory is making.  The aspects themselves are
- * instantiated once, via reflection, and passed in to the constructor
- * of the factory.  The aspect delegates are made on the fly by each
- * aspect, if it wishes to attach one for a given factory
- * interface. */
-abstract public class AspectFactory 
-    extends BoundComponent
-{
-
+ * The root class of all aspect-ready factories. Such factories have the ability
+ * to attach a cascading series of aspect delegates to the instances the factory
+ * is making. The aspects themselves are instantiated once, via reflection, and
+ * passed in to the constructor of the factory. The aspect delegates are made on
+ * the fly by each aspect, if it wishes to attach one for a given factory
+ * interface.
+ */
+abstract public class AspectFactory
+        extends BoundComponent {
 
     public Object attachAspects(Object delegate, Class type) {
-	return getAspectSupport().attachAspects(delegate, type);
+        return getAspectSupport().attachAspects(delegate, type);
     }
 
-
-    public Object attachAspects(Object delegate, 
-				Class type, 
-				ArrayList aspectNames) 
-    {
-	return getAspectSupport().attachAspects(delegate, type, aspectNames);
+    public Object attachAspects(Object delegate, Class type, ArrayList aspectNames) {
+        return getAspectSupport().attachAspects(delegate, type, aspectNames);
     }
-
-
-
 
 }

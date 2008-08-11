@@ -25,90 +25,88 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SerializationUtils;
-
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
+import org.cougaar.mts.base.CougaarIOException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.LoopbackLinkProtocol;
-import org.cougaar.mts.base.CougaarIOException;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * This is debugging Aspect forces serialization on the {@link
- * LoopbackLinkProtocol}.  This can help check for issues related to
- * serialization that wouldn't arise otherwise.  
+ * This is debugging Aspect forces serialization on the
+ * {@link LoopbackLinkProtocol}. This can help check for issues related to
+ * serialization that wouldn't arise otherwise.
  */
-public class SerializationAspect extends StandardAspect
-{
+public class SerializationAspect
+        extends StandardAspect {
 
     public SerializationAspect() {
     }
-    
-    public Object getDelegate(Object object, Class type) 
-    {
-	if (type == DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) object;
-	    if (link.getProtocolClass() == LoopbackLinkProtocol.class)
-		return new SerializingDestinationLink(link);
-	    else
-		return null;
-	} else {
-	    return null;
-	}
-    }
-    
 
-    private class SerializingDestinationLink 
-	extends DestinationLinkDelegateImplBase
-	
-    {
-	SerializingDestinationLink(DestinationLink link) {
-	    super(link);
-	}
-
-	public synchronized MessageAttributes
-	    forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
-
-	{
-	    byte[] data = null;
-	    AttributedMessage clone = null;
-	    try {
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("Serializing " + message);
-		data = SerializationUtils.toByteArray(message);
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("Serialized " + message);
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("Deserializing");
-		clone = (AttributedMessage) SerializationUtils.fromByteArray(data);
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("Deserialized as " + clone);
-	    } catch (CougaarIOException cougaar_iox) {
-		loggingService.error("SerializationAspect", cougaar_iox);
-		throw new CommFailureException(cougaar_iox);
-	    } catch (java.io.IOException iox) {
-		loggingService.error("SerializationAspect", iox);
-		return null;
-	    } catch (ClassNotFoundException cnf) {
-		loggingService.error("SerializationAspect", cnf);
-		return null;
-	    }
-
-	    return super.forwardMessage(clone);
-
-	}
-
+    public Object getDelegate(Object object, Class type) {
+        if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) object;
+            if (link.getProtocolClass() == LoopbackLinkProtocol.class) {
+                return new SerializingDestinationLink(link);
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
+    private class SerializingDestinationLink
+            extends DestinationLinkDelegateImplBase
 
+    {
+        SerializingDestinationLink(DestinationLink link) {
+            super(link);
+        }
+
+        public synchronized MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException
+
+        {
+            byte[] data = null;
+            AttributedMessage clone = null;
+            try {
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Serializing " + message);
+                }
+                data = SerializationUtils.toByteArray(message);
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Serialized " + message);
+                }
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Deserializing");
+                }
+                clone = (AttributedMessage) SerializationUtils.fromByteArray(data);
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Deserialized as " + clone);
+                }
+            } catch (CougaarIOException cougaar_iox) {
+                loggingService.error("SerializationAspect", cougaar_iox);
+                throw new CommFailureException(cougaar_iox);
+            } catch (java.io.IOException iox) {
+                loggingService.error("SerializationAspect", iox);
+                return null;
+            } catch (ClassNotFoundException cnf) {
+                loggingService.error("SerializationAspect", cnf);
+                return null;
+            }
+
+            return super.forwardMessage(clone);
+
+        }
+
+    }
 
 }

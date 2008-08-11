@@ -36,8 +36,7 @@ import org.cougaar.mts.std.AspectSupport;
  * Root class of Components of the MTS.
  */
 abstract public class BoundComponent
-    extends ParameterizedComponent
-{
+        extends ParameterizedComponent {
 
     private MessageTransportRegistryService registry;
     private NameSupport nameSupport;
@@ -51,80 +50,61 @@ abstract public class BoundComponent
 
     }
 
-
     public void load() {
-	super.load();
-	getLoggingService();
-	getThreadService();
-	getRegistry();
-	getNameSupport();
-	getAspectSupport();
+        super.load();
+        getLoggingService();
+        getThreadService();
+        getRegistry();
+        getNameSupport();
+        getAspectSupport();
     }
 
     protected MessageTransportRegistryService getRegistry() {
-	if (registry == null) {
-	    ServiceBroker sb = getServiceBroker();
-	    registry =
-		(MessageTransportRegistryService)
-		sb.getService(this,
-			      MessageTransportRegistryService.class,
-			      null);
-	}
-	return registry;
+        if (registry == null) {
+            ServiceBroker sb = getServiceBroker();
+            registry = sb.getService(this, MessageTransportRegistryService.class, null);
+        }
+        return registry;
     }
 
-
     protected NameSupport getNameSupport() {
-	if (nameSupport == null) {
-	    ServiceBroker sb = getServiceBroker();
-	    nameSupport =
-		(NameSupport) sb.getService(this, NameSupport.class,  null);
-	}
-	return nameSupport;
+        if (nameSupport == null) {
+            ServiceBroker sb = getServiceBroker();
+            nameSupport = sb.getService(this, NameSupport.class, null);
+        }
+        return nameSupport;
     }
 
     protected AspectSupport getAspectSupport() {
-	if (aspectSupport == null) {
-	    ServiceBroker sb = getServiceBroker();
-	    aspectSupport =
-		(AspectSupport) sb.getService(this, AspectSupport.class,  null);
-	}
-	return aspectSupport;
+        if (aspectSupport == null) {
+            ServiceBroker sb = getServiceBroker();
+            aspectSupport = sb.getService(this, AspectSupport.class, null);
+        }
+        return aspectSupport;
     }
-
 
     protected LoggingService getLoggingService() {
-	if (loggingService == null) {
-	    ServiceBroker sb = getServiceBroker();
-	    loggingService =
-		(LoggingService) sb.getService(this, LoggingService.class,  
-					       null);
-	}
-	return loggingService;
+        if (loggingService == null) {
+            ServiceBroker sb = getServiceBroker();
+            loggingService = sb.getService(this, LoggingService.class, null);
+        }
+        return loggingService;
     }
-
 
     protected ThreadService getThreadService() {
-	if (threadService == null) {
-	    ServiceBroker sb = getServiceBroker();
-	    threadService =
-		(ThreadService) sb.getService(this, ThreadService.class,  
-					       null);
-	}
-	return threadService;
+        if (threadService == null) {
+            ServiceBroker sb = getServiceBroker();
+            threadService = sb.getService(this, ThreadService.class, null);
+        }
+        return threadService;
     }
-
-
-
 
     public final void setServiceBroker(ServiceBroker sb) {
-	this.sb = sb;
+        this.sb = sb;
     }
-
 
     public ServiceBroker getServiceBroker() {
-	return sb;
+        return sb;
     }
-
 
 }

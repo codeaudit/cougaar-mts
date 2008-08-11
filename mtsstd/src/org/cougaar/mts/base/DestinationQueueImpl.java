@@ -25,157 +25,150 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import org.cougaar.mts.std.AttributedMessage;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.PropertyParser;
 
 /**
- * The default, and for now only, implementation of {@link
- * DestinationQueue}.  The dispatcher on this queue selects a {@link
- * DestinationLink} based on the {@link LinkSelectionPolicy} and
- * forwards to that link.  If an exception occurs during the
- * forwarding, it will retry the whole process , including link
- * selection, continuously, gradually increasing the delay between
- * retries. until the message has been successfully forwarded to the
- *
+ * The default, and for now only, implementation of {@link DestinationQueue}.
+ * The dispatcher on this queue selects a {@link DestinationLink} based on the
+ * {@link LinkSelectionPolicy} and forwards to that link. If an exception occurs
+ * during the forwarding, it will retry the whole process , including link
+ * selection, continuously, gradually increasing the delay between retries.
+ * until the message has been successfully forwarded to the
+ * 
  **/
-final class DestinationQueueImpl 
-    extends MessageQueue 
-    implements DestinationQueue
-{
-    private static final int INITIAL_RETRY_TIMEOUT = 
-	PropertyParser.getInt("org.cougaar.core.mts.destq.retry.initialTimeout",
-			      500) ; // 1/2 second
-    private static final int MAX_RETRY_TIMEOUT = 
-	PropertyParser.getInt("org.cougaar.core.mts.destq.retry.maxTimeout",
-			      60 * 1000); // 1 minute
-    private MessageAddress destination;
+final class DestinationQueueImpl
+        extends MessageQueue
+        implements DestinationQueue {
+    private static final int INITIAL_RETRY_TIMEOUT =
+            PropertyParser.getInt("org.cougaar.core.mts.destq.retry.initialTimeout", 500); // 1
+                                                                                           // /
+                                                                                           // 2
+                                                                                           // second
+    private static final int MAX_RETRY_TIMEOUT =
+            PropertyParser.getInt("org.cougaar.core.mts.destq.retry.maxTimeout", 60 * 1000); // 1
+                                                                                             // minute
+    private final MessageAddress destination;
     private LinkSelectionPolicy selectionPolicy;
     private DestinationQueue delegate;
     private ArrayList destinationLinks;
 
-    private class LinkIterator implements Iterator
-    {
-	int position;
-	DestinationLink next;
-	private final AttributedMessage message;
-	
-	LinkIterator(AttributedMessage message)
-	{
-	    position = 0;
-	    this.message = message;
-	    findNextValidLink();
-	}
+    private class LinkIterator
+            implements Iterator {
+        int position;
+        DestinationLink next;
+        private final AttributedMessage message;
 
-	private void findNextValidLink()
-	{
-	    while (position < destinationLinks.size()) {
-		next = (DestinationLink) destinationLinks.get(position);
-		if (next.isValid(message)) {
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("Link " +next.getProtocolClass()+
-					    " [" +position+
-					    "] for " 
-					    +next.getDestination()+
-					    " is valid");
-		    return;
-		}
-		if (loggingService.isDebugEnabled())
-		    loggingService.debug("Link " +next.getProtocolClass()+
-					" [" +position+
-					"] for " 
-					+next.getDestination()+
-					" is not valid");
-		++position;
-	    }
-	    next = null;
-	}
+        LinkIterator(AttributedMessage message) {
+            position = 0;
+            this.message = message;
+            findNextValidLink();
+        }
 
-	public boolean hasNext()
-	{
-	    return next != null;
-	}
+        private void findNextValidLink() {
+            while (position < destinationLinks.size()) {
+                next = (DestinationLink) destinationLinks.get(position);
+                if (next.isValid(message)) {
+                    if (loggingService.isDebugEnabled()) {
+                        loggingService.debug("Link " + next.getProtocolClass() + " [" + position
+                                + "] for " + next.getDestination() + " is valid");
+                    }
+                    return;
+                }
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("Link " + next.getProtocolClass() + " [" + position
+                            + "] for " + next.getDestination() + " is not valid");
+                }
+                ++position;
+            }
+            next = null;
+        }
 
-	public Object next() 
-	{
-	    DestinationLink link = next;
-	    ++position;
-	    findNextValidLink();
-	    return link;
-	}
+        public boolean hasNext() {
+            return next != null;
+        }
 
-	public void remove() 
-	{
-	    throw new RuntimeException ("Cannot remove link");
-	}
+        public Object next() {
+            DestinationLink link = next;
+            ++position;
+            findNextValidLink();
+            return link;
+        }
+
+        public void remove() {
+            throw new RuntimeException("Cannot remove link");
+        }
 
     }
 
-    DestinationQueueImpl(MessageAddress destination, Container container)
-    {
-	super(destination.toString()+"/DestQ", container);
-	this.destination = destination;
-	container.add(this);
+    DestinationQueueImpl(MessageAddress destination, Container container) {
+        super(destination.toString() + "/DestQ", container);
+        this.destination = destination;
+        container.add(this);
     }
 
     // workaround for bug 3723
     private boolean loaded = false;
+
     protected synchronized void transitState(String op, int expectedState, int endState) {
-      if (getModelState() == expectedState) {
-        super.transitState(op, expectedState, endState);
-      }
+        if (getModelState() == expectedState) {
+            super.transitState(op, expectedState, endState);
+        }
     }
+
     public synchronized boolean shouldLoad() {
-      if (loaded) return false;
-      loaded = true;
-      return true;
+        if (loaded) {
+            return false;
+        }
+        loaded = true;
+        return true;
     }
 
     public void load() {
-        if (!shouldLoad()) return;
-	super.load();
-	ServiceBroker sb = getServiceBroker();
-	selectionPolicy = (LinkSelectionPolicy)
-	    sb.getService(this, LinkSelectionPolicy.class, null);
+        if (!shouldLoad()) {
+            return;
+        }
+        super.load();
+        ServiceBroker sb = getServiceBroker();
+        selectionPolicy = sb.getService(this, LinkSelectionPolicy.class, null);
 
-	this.delegate = this;
+        this.delegate = this;
 
-	// cache DestinationLinks, per transport
-	destinationLinks = getRegistry().getDestinationLinks(destination);
+        // cache DestinationLinks, per transport
+        destinationLinks = getRegistry().getDestinationLinks(destination);
 
     }
 
     int getLane() {
-	return ThreadService.WILL_BLOCK_LANE;
-    }
-  
-    public MessageAddress getDestination() {
-	return destination;
+        return ThreadService.WILL_BLOCK_LANE;
     }
 
+    public MessageAddress getDestination() {
+        return destination;
+    }
 
     /**
-     * Enqueues the given message. */
+     * Enqueues the given message.
+     */
     public void holdMessage(AttributedMessage message) {
-	add(message);
+        add(message);
     }
 
     public boolean matches(MessageAddress address) {
-	return destination.equals(address);
+        return destination.equals(address);
     }
-    
+
     void setDelegate(DestinationQueue delegate) {
-	this.delegate = delegate;
+        this.delegate = delegate;
     }
-
-
 
     // Save retry-state as instance variables
 
@@ -185,104 +178,104 @@ final class DestinationQueueImpl
     private AttributedMessage previous = null;
 
     private void resetState() {
-	retryTimeout = INITIAL_RETRY_TIMEOUT;
-	retryCount = 0;
-	lastException = null;
-	previous = null;
+        retryTimeout = INITIAL_RETRY_TIMEOUT;
+        retryCount = 0;
+        lastException = null;
+        previous = null;
     }
 
-
-     /**
-      * Processes the next dequeued message. */
+    /**
+     * Processes the next dequeued message.
+     */
     boolean dispatch(AttributedMessage message) {
-	if (message == null) return true;
-	if (retryCount == 0)
-	    delegate.dispatchNextMessage(message);
-	else
-	    dispatchNextMessage(message);
-	return retryCount == 0;
+        if (message == null) {
+            return true;
+        }
+        if (retryCount == 0) {
+            delegate.dispatchNextMessage(message);
+        } else {
+            dispatchNextMessage(message);
+        }
+        return retryCount == 0;
     }
-
-
 
     public void dispatchNextMessage(AttributedMessage message) {
-	if (retryCount == 0) {
-	    message.snapshotAttributes();
-	    previous = message;
-	} else {
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("Retrying " +message);
-	}
+        if (retryCount == 0) {
+            message.snapshotAttributes();
+            previous = message;
+        } else {
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Retrying " + message);
+            }
+        }
 
-	Iterator links = new LinkIterator(message);
-	if (!links.hasNext()) {
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("No valid links to " +destination);
-	} else {
-	    DestinationLink link = 
-		selectionPolicy.selectLink(links, message, previous,
-					   retryCount, lastException);
-	    if (link != null) {
-		if (loggingService.isInfoEnabled())
-		    loggingService.info("To Agent="+destination+
-					 " Selected Protocol " +
-					 link.getProtocolClass());
-		try {
-		    link.addMessageAttributes(message);
-		    link.forwardMessage(message);
-		    resetState();
-		    return;
-		} catch (UnregisteredNameException no_name) {
-		    lastException = no_name;
-		    // nothing to say here
-		} catch (NameLookupException lookup_error) {
-		    lastException = lookup_error;
-		    if (loggingService.isErrorEnabled()) 
-			loggingService.error(null, lookup_error);
-		} catch (CommFailureException comm_failure) {
-		    Exception cause = (Exception) comm_failure.getCause();	
-		    if (loggingService.isWarnEnabled()) {
-			String msg = "Failure in communication, message " 
-			    +message+
-			    " caused by \n" +cause;
-			loggingService.warn(msg);
-			if (loggingService.isInfoEnabled()) {
-			    loggingService.info("", cause);
-			}
-		    }
-		    if (cause instanceof DontRetryException) {
-			// Act as if the message has gone through.
-			resetState();
-			return;
-		    } else {
-			// This is some other kind of CommFailure, not
-			// related to security.  Retry.
-			lastException = comm_failure;
-		    }
-		} catch (MisdeliveredMessageException misd) {
-		    lastException = misd;
-		    if (loggingService.isDebugEnabled()) 
-			loggingService.debug(misd.toString());
-		}
+        Iterator links = new LinkIterator(message);
+        if (!links.hasNext()) {
+            if (loggingService.isInfoEnabled()) {
+                loggingService.info("No valid links to " + destination);
+            }
+        } else {
+            DestinationLink link =
+                    selectionPolicy.selectLink(links, message, previous, retryCount, lastException);
+            if (link != null) {
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("To Agent=" + destination + " Selected Protocol "
+                            + link.getProtocolClass());
+                }
+                try {
+                    link.addMessageAttributes(message);
+                    link.forwardMessage(message);
+                    resetState();
+                    return;
+                } catch (UnregisteredNameException no_name) {
+                    lastException = no_name;
+                    // nothing to say here
+                } catch (NameLookupException lookup_error) {
+                    lastException = lookup_error;
+                    if (loggingService.isErrorEnabled()) {
+                        loggingService.error(null, lookup_error);
+                    }
+                } catch (CommFailureException comm_failure) {
+                    Exception cause = (Exception) comm_failure.getCause();
+                    if (loggingService.isWarnEnabled()) {
+                        String msg =
+                                "Failure in communication, message " + message + " caused by \n"
+                                        + cause;
+                        loggingService.warn(msg);
+                        if (loggingService.isInfoEnabled()) {
+                            loggingService.info("", cause);
+                        }
+                    }
+                    if (cause instanceof DontRetryException) {
+                        // Act as if the message has gone through.
+                        resetState();
+                        return;
+                    } else {
+                        // This is some other kind of CommFailure, not
+                        // related to security. Retry.
+                        lastException = comm_failure;
+                    }
+                } catch (MisdeliveredMessageException misd) {
+                    lastException = misd;
+                    if (loggingService.isDebugEnabled()) {
+                        loggingService.debug(misd.toString());
+                    }
+                }
 
-		if (!link.retryFailedMessage(message, retryCount)) {
-		    resetState();
-		    return;
-		}
-	    } else if (loggingService.isInfoEnabled()) {
-		loggingService.info("No Protocol selected for Agent" +
-				     message.getTarget());
-	    }
-	}
+                if (!link.retryFailedMessage(message, retryCount)) {
+                    resetState();
+                    return;
+                }
+            } else if (loggingService.isInfoEnabled()) {
+                loggingService.info("No Protocol selected for Agent" + message.getTarget());
+            }
+        }
 
-	retryCount++;
-	previous = new AttributedMessage(message);
-	message.restoreSnapshot();
-	scheduleRestart(retryTimeout);
-	retryTimeout  = Math.min(retryTimeout + retryTimeout,
-				 MAX_RETRY_TIMEOUT);
+        retryCount++;
+        previous = new AttributedMessage(message);
+        message.restoreSnapshot();
+        scheduleRestart(retryTimeout);
+        retryTimeout = Math.min(retryTimeout + retryTimeout, MAX_RETRY_TIMEOUT);
     }
-
-
 
 }

@@ -33,157 +33,138 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageSecurityManager;
 import org.cougaar.core.node.DummyMessageSecurityManager;
 import org.cougaar.core.node.SecureMessage;
-
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.CommFailureException;
-import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
+import org.cougaar.mts.base.MisdeliveredMessageException;
+import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * This Aspect uses the (obsolete?) {@link MessageSecurityManager}
- * interface to secure message traffic in a simple way.
- *
- * @property org.cougaar.message.security specifies the implementation
- * class of the {@link MessageSecurityManager}.  If unspecified the
- * dummy implementation {@link DummyMessageSecurityManager} is used.
+ * This Aspect uses the (obsolete?) {@link MessageSecurityManager} interface to
+ * secure message traffic in a simple way.
+ * 
+ * @property org.cougaar.message.security specifies the implementation class of
+ *           the {@link MessageSecurityManager}. If unspecified the dummy
+ *           implementation {@link DummyMessageSecurityManager} is used.
  */
-public class SecurityAspect extends StandardAspect
-{
-    private static final String SECURITY_CLASS_PROPERTY =
-	"org.cougaar.message.security";
-    private static MessageSecurityManager msm = null; 
+public class SecurityAspect
+        extends StandardAspect {
+    private static final String SECURITY_CLASS_PROPERTY = "org.cougaar.message.security";
+    private static MessageSecurityManager msm = null;
 
     private static synchronized MessageSecurityManager ensure_msm() {
-	if (msm != null) return msm;
+        if (msm != null) {
+            return msm;
+        }
 
-	String name = SystemProperties.getProperty(SECURITY_CLASS_PROPERTY);
-	if (name != null && (!name.equals("")) &&(!name.equals("none"))) {
-	    try {
-		// Object raw = Beans.instantiate(null, name);
-		Object raw = Class.forName(name).newInstance();
-		msm = (MessageSecurityManager) raw;
-	    } catch (Exception ex) {
-	    }
-	} else {
-	    msm = new DummyMessageSecurityManager();
- 	}
-	return msm;
+        String name = SystemProperties.getProperty(SECURITY_CLASS_PROPERTY);
+        if (name != null && !name.equals("") && !name.equals("none")) {
+            try {
+                // Object raw = Beans.instantiate(null, name);
+                Object raw = Class.forName(name).newInstance();
+                msm = (MessageSecurityManager) raw;
+            } catch (Exception ex) {
+            }
+        } else {
+            msm = new DummyMessageSecurityManager();
+        }
+        return msm;
     }
 
-
-
     private boolean enabled = false;
-    
-
 
     public SecurityAspect() {
-	enabled = ensure_msm() != null;
+        enabled = ensure_msm() != null;
     }
 
     public boolean isEnabled() {
-	return enabled;
+        return enabled;
     }
 
     // Temporarily package access, rather than private, until we get
     // rid of MessageTransportClassic
     AttributedMessage secure(AttributedMessage message) {
-	if (msm != null) {
-	    if (loggingService.isDebugEnabled()) 
-		loggingService.debug("Securing message " + message);
-	    Message rawMessage =  message.getRawMessage();
-	    Message secureMsg = msm.secureMessage(rawMessage);
-	    return new AttributedMessage(secureMsg, message);
-	} else {
-	    return message;
-	}
+        if (msm != null) {
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Securing message " + message);
+            }
+            Message rawMessage = message.getRawMessage();
+            Message secureMsg = msm.secureMessage(rawMessage);
+            return new AttributedMessage(secureMsg, message);
+        } else {
+            return message;
+        }
     }
 
     // Temporarily package access, rather than private, until we get
     // rid of MessageTransportClassic
     AttributedMessage unsecure(AttributedMessage message) {
-	if (msm == null) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("MessageTransport "+this+
-					  " received SecureMessage "+message+
-					  " but has no MessageSecurityManager.");
-	    return null;
-	} else {
-	    if (loggingService.isDebugEnabled())
-		loggingService.debug("Unsecuring message " + message);
-	    SecureMessage rawMessage = (SecureMessage) message.getRawMessage();
-	    Message originalMessage = msm.unsecureMessage(rawMessage);
-	    AttributedMessage msg = 
-		new AttributedMessage(originalMessage, message);
-	    if (msg == null && loggingService.isErrorEnabled()) {
-		loggingService.error("MessageTransport "+this+
-					  " received an unverifiable SecureMessage "
-					  +message);
-	    }
-	    return msg;
-	}
+        if (msm == null) {
+            if (loggingService.isErrorEnabled()) {
+                loggingService.error("MessageTransport " + this + " received SecureMessage "
+                        + message + " but has no MessageSecurityManager.");
+            }
+            return null;
+        } else {
+            if (loggingService.isDebugEnabled()) {
+                loggingService.debug("Unsecuring message " + message);
+            }
+            SecureMessage rawMessage = (SecureMessage) message.getRawMessage();
+            Message originalMessage = msm.unsecureMessage(rawMessage);
+            AttributedMessage msg = new AttributedMessage(originalMessage, message);
+            if (msg == null && loggingService.isErrorEnabled()) {
+                loggingService.error("MessageTransport " + this
+                        + " received an unverifiable SecureMessage " + message);
+            }
+            return msg;
+        }
     }
 
-
-
-    public Object getDelegate(Object delegate, Class type) 
-    {
-	if (type ==  DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) delegate;
-	    return new SecureDestinationLink(link);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegate, Class type) {
+        if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) delegate;
+            return new SecureDestinationLink(link);
+        } else {
+            return null;
+        }
     }
 
-
-    public Object getReverseDelegate(Object delegate, Class type) 
-    {
-	if (type == MessageDeliverer.class) {
-	    return new SecureDeliverer((MessageDeliverer) delegate);
-	} else {
-	    return null;
-	}
+    public Object getReverseDelegate(Object delegate, Class type) {
+        if (type == MessageDeliverer.class) {
+            return new SecureDeliverer((MessageDeliverer) delegate);
+        } else {
+            return null;
+        }
     }
-    
 
+    private class SecureDestinationLink
+            extends DestinationLinkDelegateImplBase {
+        private SecureDestinationLink(DestinationLink link) {
+            super(link);
+        }
 
-    private class SecureDestinationLink 
-	extends DestinationLinkDelegateImplBase 
-    {
-	private SecureDestinationLink(DestinationLink link) {
-	    super(link);
-	}
-
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
-	{
-	    return super.forwardMessage(secure(message));
-	}
-
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException {
+            return super.forwardMessage(secure(message));
+        }
 
     }
 
+    private class SecureDeliverer
+            extends MessageDelivererDelegateImplBase {
+        private SecureDeliverer(MessageDeliverer deliverer) {
+            super(deliverer);
+        }
 
-
-    private class SecureDeliverer extends MessageDelivererDelegateImplBase {
-	private SecureDeliverer(MessageDeliverer deliverer) {
-	    super(deliverer);
-	}
-
-	public MessageAttributes deliverMessage(AttributedMessage m, 
-						MessageAddress dest) 
-	    throws MisdeliveredMessageException
-	{
-	    return super.deliverMessage(unsecure(m), dest);
-	}
+        public MessageAttributes deliverMessage(AttributedMessage m, MessageAddress dest)
+                throws MisdeliveredMessageException {
+            return super.deliverMessage(unsecure(m), dest);
+        }
 
     }
 }

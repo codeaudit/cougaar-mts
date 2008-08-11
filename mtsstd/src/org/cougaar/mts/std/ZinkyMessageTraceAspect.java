@@ -26,47 +26,36 @@
 
 package org.cougaar.mts.std;
 
-
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
-public class ZinkyMessageTraceAspect extends StandardAspect
-{
-    public Object getDelegate(Object delegate, Class type) 
-    {
-	if (type == SendLink.class) {
-	    return new SendLinkDelegate((SendLink) delegate);
-	} else {
-	    return null;
-	}
+public class ZinkyMessageTraceAspect
+        extends StandardAspect {
+    public Object getDelegate(Object delegate, Class type) {
+        if (type == SendLink.class) {
+            return new SendLinkDelegate((SendLink) delegate);
+        } else {
+            return null;
+        }
     }
 
-    public class SendLinkDelegate 
-	extends SendLinkDelegateImplBase 
-    {
-	
-	public SendLinkDelegate (SendLink link) {
-	    super(link);
-	}
-	
+    public class SendLinkDelegate
+            extends SendLinkDelegateImplBase {
 
-	public void sendMessage(AttributedMessage msg) 
-	{
-	    LoggingService log = getLoggingService();
-	    if (log.isWarnEnabled())
-		log.warn("Sending " +msg);
-	    super.sendMessage(msg);
-	}
+        public SendLinkDelegate(SendLink link) {
+            super(link);
+        }
+
+        public void sendMessage(AttributedMessage msg) {
+            LoggingService log = getLoggingService();
+            if (log.isWarnEnabled()) {
+                log.warn("Sending " + msg);
+            }
+            super.sendMessage(msg);
+        }
 
     }
-
-
-
 
 }
-
-
-
-    

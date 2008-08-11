@@ -40,8 +40,8 @@ import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * This utility class does the low-level work to force the stream linkprotocol to
- * behave like a synchronous rpc. In particular it blocks the sending thread
+ * This utility class does the low-level work to force the stream linkprotocol
+ * to behave like a synchronous rpc. In particular it blocks the sending thread
  * until a reply for the outgoing message arrives, generates and sends replies
  * for incoming messages, and processes received replies by waking the
  * corresponding thread.
@@ -76,9 +76,8 @@ class ReplySync<I> {
         message.setAttribute(ORIGINATING_URI_PROP, protocol.getServantUri());
     }
 
-    MessageAttributes sendMessage(AttributedMessage message, URI uri) 
-            throws CommFailureException,
-            MisdeliveredMessageException {
+    MessageAttributes sendMessage(AttributedMessage message, URI uri)
+            throws CommFailureException, MisdeliveredMessageException {
         int messageNumber = ++MESSAGE_NUMBER;
         setMessageProperties(message, messageNumber, uri);
 
@@ -97,7 +96,8 @@ class ReplySync<I> {
             }
             while (true) {
                 try {
-                    lock.wait(timeout); // TODO: timeout should be set dynamically
+                    lock.wait(timeout); // TODO: timeout should be set
+                                        // dynamically
                     break;
                 } catch (InterruptedException ex) {
                     // keep waiting
@@ -109,15 +109,14 @@ class ReplySync<I> {
         pending.remove(messageNumber);
         if (result instanceof MessageAttributes) {
             if (log.isDebugEnabled()) {
-                log.debug("Response to message " +messageNumber+ " was " +result);
+                log.debug("Response to message " + messageNumber + " was " + result);
             }
             return (MessageAttributes) result;
         } else if (result instanceof MisdeliveredMessageException) {
             MisdeliveredMessageException ex = (MisdeliveredMessageException) result;
             throw ex;
         } else if (sendTime >= timeout) {
-            throw new CommFailureException(new Exception("Timeout waiting for reply = "
-                    + sendTime));
+            throw new CommFailureException(new Exception("Timeout waiting for reply = " + sendTime));
         } else {
             throw new CommFailureException(new Exception("Weird Reply" + result));
         }
@@ -134,8 +133,8 @@ class ReplySync<I> {
         try {
             protocol.processOutgoingMessage(originatingUri, replyData);
         } catch (IOException e) {
-            log.warn("Unable to reply to delivered message from " +originatingUri + ": "
-                     + e.getMessage());
+            log.warn("Unable to reply to delivered message from " + originatingUri + ": "
+                    + e.getMessage());
         }
     }
 
@@ -147,7 +146,7 @@ class ReplySync<I> {
 
     boolean isReply(MessageAttributes attrs) {
         boolean isReply = (Boolean) attrs.getAttribute(IS_MTS_REPLY_PROP);
-        
+
         Integer id = (Integer) attrs.getAttribute(MESSAGE_NUMBER_PROP);
         if (!isReply) {
             if (log.isDebugEnabled()) {
@@ -155,11 +154,11 @@ class ReplySync<I> {
             }
             return false;
         }
-        
+
         if (log.isDebugEnabled()) {
             log.debug("Handling reply to " + id);
         }
-        
+
         if (id == null) {
             log.error("Ack message has no value for attribute " + MESSAGE_NUMBER_PROP);
             return true;

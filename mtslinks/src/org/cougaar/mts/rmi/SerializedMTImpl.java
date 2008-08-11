@@ -24,6 +24,7 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import java.rmi.RemoteException;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -36,44 +37,39 @@ import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Implementation of the {@link SerializedMT} rmi interface.  It
- * accepts a byte-array that can be deserialized into an
- * AttributedMessage, rather than an actual AttributedMessage.
-*/
-public class SerializedMTImpl extends MTImpl
-    implements SerializedMT 
-{
-    public SerializedMTImpl(MessageAddress addr,  
-			    ServiceBroker sb,
-			    SocketFactory socfac) 
-	throws RemoteException 
-    {
-	super(addr, sb, socfac);
+ * Implementation of the {@link SerializedMT} rmi interface. It accepts a
+ * byte-array that can be deserialized into an AttributedMessage, rather than an
+ * actual AttributedMessage.
+ */
+public class SerializedMTImpl
+        extends MTImpl
+        implements SerializedMT {
+    public SerializedMTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac)
+            throws RemoteException {
+        super(addr, sb, socfac);
     }
 
-    public byte[] rerouteMessage(byte[] messageBytes) 
-	throws MisdeliveredMessageException, CougaarIOException
-    {
-	AttributedMessage message = null;
-	try {
-	    message = (AttributedMessage)
-		SerializationUtils.fromByteArray(messageBytes);
-	} catch (CougaarIOException mex) {
-	    throw mex;
-	} catch (java.io.IOException deser_ex) {
-	} catch (ClassNotFoundException cnf) {
-	}
+    public byte[] rerouteMessage(byte[] messageBytes)
+            throws MisdeliveredMessageException, CougaarIOException {
+        AttributedMessage message = null;
+        try {
+            message = (AttributedMessage) SerializationUtils.fromByteArray(messageBytes);
+        } catch (CougaarIOException mex) {
+            throw mex;
+        } catch (java.io.IOException deser_ex) {
+        } catch (ClassNotFoundException cnf) {
+        }
 
-	MessageAttributes meta = super.rerouteMessage(message);
+        MessageAttributes meta = super.rerouteMessage(message);
 
-	byte[] result = null;
-	try {
-	    result = SerializationUtils.toByteArray(meta);
-	} catch (CougaarIOException mex) {
-	    throw mex;
-	} catch (java.io.IOException ser_ex) {
-	}
-	return result;
+        byte[] result = null;
+        try {
+            result = SerializationUtils.toByteArray(meta);
+        } catch (CougaarIOException mex) {
+            throw mex;
+        } catch (java.io.IOException ser_ex) {
+        }
+        return result;
     }
 
 }

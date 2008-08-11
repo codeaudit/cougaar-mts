@@ -43,116 +43,95 @@ import org.cougaar.core.service.MessageProtectionService;
 
 /**
  * This {@link ServiceProvider} both provides and implements the
- * {@link MessageProtectionService}. It's only created as a default,
- * if no other MessageProtection Service is available.  The service
- * implementation does  nothing useful.
+ * {@link MessageProtectionService}. It's only created as a default, if no other
+ * MessageProtection Service is available. The service implementation does
+ * nothing useful.
  */
-public class MessageProtectionServiceImpl 
-    implements MessageProtectionService, ServiceProvider
-{
-    
+public class MessageProtectionServiceImpl
+        implements MessageProtectionService, ServiceProvider {
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == MessageProtectionService.class) {
-	    return this;
-	} else {
-	    return null;
-	}
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == MessageProtectionService.class) {
+            return this;
+        } else {
+            return null;
+        }
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
 
-    public byte[] protectHeader(MessageAttributes attributes, 
-				MessageAddress source,
-				MessageAddress destination)
-	throws java.security.GeneralSecurityException, java.io.IOException
-    {
-	ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	ObjectOutputStream oos = new ObjectOutputStream(bos);
-	oos.writeObject(attributes);
-	oos.close();
-	byte[] header= bos.toByteArray();
-	return header;
-	// For testing security exception handling
-	// throw new java.security.GeneralSecurityException("protectHeader");
+    public byte[] protectHeader(MessageAttributes attributes,
+                                MessageAddress source,
+                                MessageAddress destination)
+            throws java.security.GeneralSecurityException, java.io.IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(attributes);
+        oos.close();
+        byte[] header = bos.toByteArray();
+        return header;
+        // For testing security exception handling
+        // throw new java.security.GeneralSecurityException("protectHeader");
     }
 
+    public MessageAttributes unprotectHeader(byte[] rawData,
+                                             MessageAddress source,
+                                             MessageAddress destination)
+            throws java.security.GeneralSecurityException, java.io.IOException {
+        MessageAttributes attributes = null;
 
-    public MessageAttributes unprotectHeader(byte[] rawData, 
-					     MessageAddress source,
-					     MessageAddress destination)
-	throws java.security.GeneralSecurityException, java.io.IOException
-    {
-	MessageAttributes attributes = null;
-
-	ByteArrayInputStream bis = new ByteArrayInputStream(rawData);
-	ObjectInputStream ois = new ObjectInputStream(bis);
-	try {
-	    attributes = (MessageAttributes) ois.readObject();
-	} catch (ClassNotFoundException cnf) {
-	    // ???
-	}
-	ois.close();
-	return attributes;
-	// For testing security exception handling
-	// throw new java.security.GeneralSecurityException("unprotectHeader");
+        ByteArrayInputStream bis = new ByteArrayInputStream(rawData);
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        try {
+            attributes = (MessageAttributes) ois.readObject();
+        } catch (ClassNotFoundException cnf) {
+            // ???
+        }
+        ois.close();
+        return attributes;
+        // For testing security exception handling
+        // throw new java.security.GeneralSecurityException("unprotectHeader");
     }
-
 
     public ProtectedOutputStream getOutputStream(OutputStream os,
-						 MessageAddress src,
-						 MessageAddress dst,
-						 MessageAttributes attrs)
-    {
-	return new DummyOutputStream(os);
+                                                 MessageAddress src,
+                                                 MessageAddress dst,
+                                                 MessageAttributes attrs) {
+        return new DummyOutputStream(os);
     }
 
     public ProtectedInputStream getInputStream(InputStream is,
-					       MessageAddress src,
-					       MessageAddress dst,
-					       MessageAttributes attrs)
-    {
-	return new DummyInputStream(is);
+                                               MessageAddress src,
+                                               MessageAddress dst,
+                                               MessageAttributes attrs) {
+        return new DummyInputStream(is);
     }
 
+    private class DummyOutputStream
+            extends ProtectedOutputStream {
+        DummyOutputStream(OutputStream stream) {
+            super(stream);
+        }
 
-
-    private class DummyOutputStream 
-	extends ProtectedOutputStream
-    {
-	DummyOutputStream(OutputStream stream) {
-	    super(stream);
-	}
-
-
-	public void finishOutput(MessageAttributes attr) 
-	    throws java.io.IOException
-	{
-	}
+        public void finishOutput(MessageAttributes attr)
+                throws java.io.IOException {
+        }
     }
 
+    private class DummyInputStream
+            extends ProtectedInputStream {
+        DummyInputStream(InputStream stream) {
+            super(stream);
+        }
 
-    private class DummyInputStream 
-	extends  ProtectedInputStream
-    {
-	DummyInputStream(InputStream stream) {
-	    super(stream);
-	}
-
-	public void finishInput(MessageAttributes attr) 
-	    throws java.io.IOException
-	{
-	}
+        public void finishInput(MessageAttributes attr)
+                throws java.io.IOException {
+        }
 
     }
-
 
 }

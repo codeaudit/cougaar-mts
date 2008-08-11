@@ -25,56 +25,47 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.io.ObjectOutput;
 import java.io.OutputStream;
+
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Convenience class for aspects which define {@link MessageWriter}
- * delegate classes.  It implements all methods by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link MessageWriter} delegate
+ * classes. It implements all methods by delegating to another instance, given
+ * in the constructor. Aspect inner classes which extend this need only
+ * implement specific methods that are relevant to that aspect,
  * 
  */
-public  class MessageWriterDelegateImplBase
-    implements MessageWriter 
-{
-    private MessageWriter delegate;
+public class MessageWriterDelegateImplBase
+        implements MessageWriter {
+    private final MessageWriter delegate;
 
     public MessageWriterDelegateImplBase(MessageWriter delegate) {
-	this.delegate = delegate;
+        this.delegate = delegate;
     }
 
     public void finalizeAttributes(AttributedMessage msg) {
-	delegate.finalizeAttributes(msg);
+        delegate.finalizeAttributes(msg);
     }
 
-    public void preProcess() 
-    {
-	delegate.preProcess();
+    public void preProcess() {
+        delegate.preProcess();
     }
-
 
     public OutputStream getObjectOutputStream(ObjectOutput out)
-	throws java.io.IOException
-    {
-	return delegate.getObjectOutputStream(out);
+            throws java.io.IOException {
+        return delegate.getObjectOutputStream(out);
     }
 
-    public void finishOutput() 
-	throws java.io.IOException
-    {
-	delegate.finishOutput();
+    public void finishOutput()
+            throws java.io.IOException {
+        delegate.finishOutput();
     }
 
-
-
-    public void postProcess() 
-    {
-	delegate.postProcess();
+    public void postProcess() {
+        delegate.postProcess();
     }
-
 
 }
-

@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
@@ -32,142 +33,131 @@ import java.util.HashMap;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
-
-import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.LinkProtocol;
+import org.cougaar.mts.base.MisdeliveredMessageException;
 
 /**
- * This {@link LinkProtocol} is purely a debugging aid.  It fails by
- * design, throwing a MisdeliveredMessageException, after serializing.
+ * This {@link LinkProtocol} is purely a debugging aid. It fails by design,
+ * throwing a MisdeliveredMessageException, after serializing.
  */
-class FutileSerializingLinkProtocol 
-    extends LinkProtocol
-    
+class FutileSerializingLinkProtocol
+        extends LinkProtocol
+
 {
 
-    private HashMap links;
+    private final HashMap links;
 
-    public FutileSerializingLinkProtocol() 
-    {
-	super();
-	links = new HashMap();
+    public FutileSerializingLinkProtocol() {
+        super();
+        links = new HashMap();
     }
 
     public synchronized DestinationLink getDestinationLink(MessageAddress address) {
-	DestinationLink link = (DestinationLink) links.get(address);
-	if (link == null) {
-	    link = new Link(address);
-	    link = (DestinationLink) attachAspects(link,DestinationLink.class);
-	    links.put(address, link);
-	}
-	return link;
+        DestinationLink link = (DestinationLink) links.get(address);
+        if (link == null) {
+            link = new Link(address);
+            link = attachAspects(link, DestinationLink.class);
+            links.put(address, link);
+        }
+        return link;
     }
 
     public void registerClient(MessageTransportClient client) {
-	// Does nothing because the Database of local clients is held
-	// by MessageTransportServerImpl
+        // Does nothing because the Database of local clients is held
+        // by MessageTransportServerImpl
     }
 
     public void unregisterClient(MessageTransportClient client) {
-	// Does nothing because the Database of local clients is held
-	// by MessageTransportServerImpl
+        // Does nothing because the Database of local clients is held
+        // by MessageTransportServerImpl
     }
 
     public boolean addressKnown(MessageAddress address) {
-	// we know everybody
-	return true;
+        // we know everybody
+        return true;
     }
 
+    class Link
+            implements DestinationLink {
+        private AttributedMessage lastMessage;
+        private final MessageAddress address;
+        private int count;
 
+        Link(MessageAddress address) {
+            this.address = address;
+        }
 
+        public MessageAddress getDestination() {
+            return address;
+        }
 
-    class Link implements DestinationLink {
-	private AttributedMessage lastMessage;
-	private MessageAddress address;
-	private int count;
+        public boolean isValid(AttributedMessage message) {
+            return true;
+        }
 
-	Link(MessageAddress address) {
-	    this.address = address;
-	}
+        public int cost(AttributedMessage msg) {
+            if (lastMessage != msg) {
+                lastMessage = msg;
+                count = 1;
+                return 400;
+            } else if (count < 3) {
+                count++;
+                return 400;
+            } else {
+                lastMessage = null;
+                return Integer.MAX_VALUE;
+            }
+        }
 
-	public MessageAddress getDestination() {
-	    return address;
-	}
+        private void serialize(AttributedMessage message) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = null;
 
+            try {
+                oos = new ObjectOutputStream(baos);
+                oos.writeObject(message);
+            } catch (java.io.IOException ioe) {
+                if (loggingService.isErrorEnabled()) {
+                    loggingService.error(null, ioe);
+                }
+                return;
+            }
 
-	public boolean isValid(AttributedMessage message) {
-	    return true;
-	}
+            try {
+                oos.close();
+            } catch (java.io.IOException ioe2) {
+                if (loggingService.isErrorEnabled()) {
+                    loggingService.error(null, ioe2);
+                }
+            }
 
-	public int cost(AttributedMessage msg) {
-	    if (lastMessage != msg) {
-		lastMessage = msg;
-		count = 1;
-		return 400;
-	    } else if (count < 3) {
-		count++;
-		return 400;
-	    }  else {
-		lastMessage = null;
-		return Integer.MAX_VALUE;
-	    }
-	}
-	
+            if (loggingService.isInfoEnabled()) {
+                loggingService.info("Serialized " + message);
+            }
+        }
 
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws MisdeliveredMessageException {
+            serialize(message);
+            throw new MisdeliveredMessageException(message);
+        }
 
-	private void serialize(AttributedMessage message) {
-	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    ObjectOutputStream oos = null;
+        public boolean retryFailedMessage(AttributedMessage message, int retryCount) {
+            return true;
+        }
 
-	    try {
-		oos = new ObjectOutputStream(baos);
-		oos.writeObject(message);
-	    } catch (java.io.IOException ioe) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error(null, ioe);
-		return;
-	    }
+        public Class getProtocolClass() {
+            return FutileSerializingLinkProtocol.class;
+        }
 
-	    try {
-		oos.close();
-	    } catch (java.io.IOException ioe2) {
-		if (loggingService.isErrorEnabled())
-		    loggingService.error(null, ioe2);
-	    }
+        public Object getRemoteReference() {
+            return null;
+        }
 
-	    if (loggingService.isInfoEnabled())
-		loggingService.info("Serialized " + message);
-	}
+        public void addMessageAttributes(MessageAttributes attrs) {
 
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws MisdeliveredMessageException
-	{
-	    serialize(message);
-	    throw new MisdeliveredMessageException(message);
-	}
-
-	public boolean retryFailedMessage(AttributedMessage message, 
-					  int retryCount) 
-	{
-	    return true;
-	}
-
-    
-	public Class getProtocolClass() {
-	    return FutileSerializingLinkProtocol.class;
-	}
-
-
-	public Object getRemoteReference() {
-	    return null;
-	}
-
-	public void addMessageAttributes(MessageAttributes attrs) {
-	    
-	}
-
-	
+        }
 
     }
 

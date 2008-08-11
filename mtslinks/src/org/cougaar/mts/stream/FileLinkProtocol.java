@@ -21,23 +21,23 @@ import org.cougaar.util.annotations.Cougaar;
 /**
  * Send messages via file-sharing.
  */
-public class FileLinkProtocol extends PollingStreamLinkProtocol<File> {
+public class FileLinkProtocol
+        extends PollingStreamLinkProtocol<File> {
     private static final String DATA_SUBDIRECTORY = "msgs";
     private static final String TMP_SUBDIRECTORY = "temp";
 
-    @Cougaar.Arg(name = "rootDirectory", defaultValue="/tmp/cougaar")
+    @Cougaar.Arg(name = "rootDirectory", defaultValue = "/tmp/cougaar")
     private String rootDirectory;
 
-    
     protected int computeCost(AttributedMessage message) {
         // very cheap
         return 0;
     }
-    
+
     protected String getProtocolType() {
         return "-FILE";
     }
-    
+
     private File getDataSubdirectory(URI uri) {
         File rootDirectory = new File(uri.getPath());
         return new File(rootDirectory, DATA_SUBDIRECTORY);
@@ -48,7 +48,8 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol<File> {
         return new File(rootDirectory, TMP_SUBDIRECTORY);
     }
 
-    protected URI makeURI(String myServantId) throws URISyntaxException {
+    protected URI makeURI(String myServantId)
+            throws URISyntaxException {
         File file = new File(rootDirectory, myServantId);
         file.mkdirs();
         if (file.isDirectory() && file.canWrite() && file.canRead()) {
@@ -57,12 +58,12 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol<File> {
             throw new URISyntaxException(file.getAbsolutePath(), "Bogus path '");
         }
     }
-    
+
     protected boolean establishConnections(String node) {
         return true;
     }
-    
-    protected File processOutgoingMessage(URI destination, MessageAttributes message) 
+
+    protected File processOutgoingMessage(URI destination, MessageAttributes message)
             throws IOException {
         // serialize message to a temp file
         File tempDir = getTmpSubdirectory(destination);
@@ -91,21 +92,21 @@ public class FileLinkProtocol extends PollingStreamLinkProtocol<File> {
         }
         return messageFile;
     }
-    
+
     protected Runnable makePollerTask() {
         return new FilePoller();
     }
-    
+
     protected int getReplyTimeoutMillis() {
         return 1000;
     }
-    
 
-    private class FilePoller implements Runnable {
+    private class FilePoller
+            implements Runnable {
         private final File directory;
 
         FilePoller() {
-            directory =  getDataSubdirectory(getServantUri());
+            directory = getDataSubdirectory(getServantUri());
         }
 
         public void run() {

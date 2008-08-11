@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.Observable;
 import java.util.Observer;
 
@@ -34,90 +35,85 @@ import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
 import org.cougaar.core.qos.metrics.MetricsService;
 import org.cougaar.core.qos.metrics.MetricsUpdateService;
-
 import org.cougaar.mts.base.SendQueue;
 import org.cougaar.mts.base.SendQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * This test Aspect queries and updates the metric service on every
- * message send.  The query is as given by @property
- * "org.cougaar.metrics.query.  The update key is as given
- * by @property org.cougaar.metrics.key.  If @property
- * org.cougaar.metrics.callback is supplied it will also subscribe to
- * the specified formula.
+ * This test Aspect queries and updates the metric service on every message
+ * send. The query is as given by @property "org.cougaar.metrics.query. The
+ * update key is as given by @property org.cougaar.metrics.key. If @property
+ * org.cougaar.metrics.callback is supplied it will also subscribe to the
+ * specified formula.
  */
-public class MetricsTestAspect 
-    extends StandardAspect 
-    implements Observer
-{
-    
+public class MetricsTestAspect
+        extends StandardAspect
+        implements Observer {
+
     MetricsUpdateService update;
     MetricsService svc;
-    long lastUpdate =0;
+    long lastUpdate = 0;
 
-    public Object getDelegate(Object delegatee, Class type)  {
-	if (type == SendQueue.class) {
-	    return new DummySendQueue((SendQueue) delegatee);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegatee, Class type) {
+        if (type == SendQueue.class) {
+            return new DummySendQueue((SendQueue) delegatee);
+        } else {
+            return null;
+        }
     }
 
-
     public void load() {
-	super.load();
-	ServiceBroker sb = getServiceBroker();
-	update = (MetricsUpdateService)
-	    sb.getService(this, MetricsUpdateService.class, null);
-	svc = (MetricsService)
-	    sb.getService(this, MetricsService.class, null);
+        super.load();
+        ServiceBroker sb = getServiceBroker();
+        update = sb.getService(this, MetricsUpdateService.class, null);
+        svc = sb.getService(this, MetricsService.class, null);
 
-	String path = SystemProperties.getProperty("org.cougaar.metrics.callback");
-	if (path != null) {
-	    svc.subscribeToValue(path, this);
-	    System.out.println("Subscribed to " +path);
-	}
+        String path = SystemProperties.getProperty("org.cougaar.metrics.callback");
+        if (path != null) {
+            svc.subscribeToValue(path, this);
+            System.out.println("Subscribed to " + path);
+        }
     }
 
     public void update(Observable o, Object arg) {
-	long now = System.currentTimeMillis();
-	long updateDelta = now-lastUpdate;
-//	long value = ((Metric) arg).longValue();
-	    
-	System.out.println("Update Time=" +updateDelta +
-			   " Value =" + arg);
+        long now = System.currentTimeMillis();
+        long updateDelta = now - lastUpdate;
+        // long value = ((Metric) arg).longValue();
+
+        System.out.println("Update Time=" + updateDelta + " Value =" + arg);
     }
 
+    private class DummySendQueue
+            extends SendQueueDelegateImplBase {
+        DummySendQueue(SendQueue delegatee) {
+            super(delegatee);
+        }
 
-    private class DummySendQueue extends SendQueueDelegateImplBase {
-	DummySendQueue(SendQueue delegatee) {
-	    super(delegatee);
-	}
-
-	public void sendMessage(AttributedMessage message) {
-	     runTest();
-	    super.sendMessage(message);
-	}
+        public void sendMessage(AttributedMessage message) {
+            runTest();
+            super.sendMessage(message);
+        }
 
     }
 
     public void runTest() {
-	String path = SystemProperties.getProperty("org.cougaar.metrics.query");
-	if (path != null) {
-	    Metric val = svc.getValue(path);
-	    System.out.println(path+ "=" +val);
-	}
+        String path = SystemProperties.getProperty("org.cougaar.metrics.query");
+        if (path != null) {
+            Metric val = svc.getValue(path);
+            System.out.println(path + "=" + val);
+        }
 
-	String key = SystemProperties.getProperty("org.cougaar.metrics.key");
-	if (key != null) {
-	    Metric m = new MetricImpl(new Long(System.currentTimeMillis()),
-				      0.3,
-				      "", "MetricsTestAspect");
-	    System.out.println("Published " +key+ "=" +m);
-	    update.updateValue(key, m);
-	    lastUpdate=System.currentTimeMillis();
-	}
+        String key = SystemProperties.getProperty("org.cougaar.metrics.key");
+        if (key != null) {
+            Metric m =
+                    new MetricImpl(new Long(System.currentTimeMillis()),
+                                   0.3,
+                                   "",
+                                   "MetricsTestAspect");
+            System.out.println("Published " + key + "=" + m);
+            update.updateValue(key, m);
+            lastUpdate = System.currentTimeMillis();
+        }
 
     }
 

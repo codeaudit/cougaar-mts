@@ -25,66 +25,58 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Convenience class for aspects which define {@link DestinationLink}
- * delegate classes.  It implements all methods by delegating to
- * another instance, given in the constructor.  Aspect inner classes
- * which extend this need only implement specific methods that are
- * relevant to that aspect,
+ * Convenience class for aspects which define {@link DestinationLink} delegate
+ * classes. It implements all methods by delegating to another instance, given
+ * in the constructor. Aspect inner classes which extend this need only
+ * implement specific methods that are relevant to that aspect,
  * 
  */
 abstract public class DestinationLinkDelegateImplBase
-    implements DestinationLink
-{
-    private DestinationLink link;
+        implements DestinationLink {
+    private final DestinationLink link;
 
     protected DestinationLinkDelegateImplBase(DestinationLink link) {
-	this.link = link;
+        this.link = link;
     }
 
-    public MessageAttributes forwardMessage(AttributedMessage message) 
-	throws UnregisteredNameException, 
-	NameLookupException, 
-	CommFailureException,
-	MisdeliveredMessageException
-    {
-	return link.forwardMessage(message);
+    public MessageAttributes forwardMessage(AttributedMessage message)
+            throws UnregisteredNameException, NameLookupException, CommFailureException,
+            MisdeliveredMessageException {
+        return link.forwardMessage(message);
     }
 
     public boolean isValid(AttributedMessage message) {
-	return link.isValid(null);
+        return link.isValid(null);
     }
 
     public int cost(AttributedMessage message) {
-	return link.cost(message);
+        return link.cost(message);
     }
 
     public Class getProtocolClass() {
-	return link.getProtocolClass();
+        return link.getProtocolClass();
     }
 
-    public boolean retryFailedMessage(AttributedMessage message,
-				      int retryCount) 
-    {
-	return true;
+    public boolean retryFailedMessage(AttributedMessage message, int retryCount) {
+        return true;
     }
 
     public MessageAddress getDestination() {
-	return link.getDestination();
+        return link.getDestination();
     }
 
     public Object getRemoteReference() {
-	return link.getRemoteReference();
+        return link.getRemoteReference();
     }
-
 
     public void addMessageAttributes(MessageAttributes attrs) {
-	link.addMessageAttributes(attrs);
+        link.addMessageAttributes(attrs);
     }
-
 
 }

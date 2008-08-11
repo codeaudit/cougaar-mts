@@ -32,51 +32,44 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This test Aspect prefers CORBA over RMI after a delay, by cutting
- * the cost of the former 10 seconds in.
+ * This test Aspect prefers CORBA over RMI after a delay, by cutting the cost of
+ * the former 10 seconds in.
  */
 public class EnableCorbaAspect
-    extends StandardAspect
+        extends StandardAspect
 
 {
     private long cutover_time;
-    private long startup_period = 10000; // make this a parameter
+    private final long startup_period = 10000; // make this a parameter
 
-    public Object getDelegate(Object object, Class type) 
-    {
-	if (type == DestinationLink.class &&
-	    object instanceof CorbaLinkProtocol)
-	    return new Delegate((DestinationLink) object);
-	return null;
+    public Object getDelegate(Object object, Class type) {
+        if (type == DestinationLink.class && object instanceof CorbaLinkProtocol) {
+            return new Delegate((DestinationLink) object);
+        }
+        return null;
     }
 
-
-    public void start() 
-    {
-	cutover_time = System.currentTimeMillis() + startup_period;
-	super.start();
+    public void start() {
+        cutover_time = System.currentTimeMillis() + startup_period;
+        super.start();
     }
 
-    private boolean timeToCutover()
-    {
-	long now = System.currentTimeMillis();
-	return now > cutover_time;
+    private boolean timeToCutover() {
+        long now = System.currentTimeMillis();
+        return now > cutover_time;
     }
 
+    private class Delegate
+            extends DestinationLinkDelegateImplBase {
+        Delegate(DestinationLink link) {
+            super(link);
+        }
 
-    private class Delegate extends DestinationLinkDelegateImplBase {
-	Delegate(DestinationLink link) 
-	{
-	    super(link);
-	}
-
-	public int cost(AttributedMessage message) 
-	{
-	    long now = System.currentTimeMillis();
-	    int cost = super.cost(message);
-	    return timeToCutover() ? cost/10 : cost;
-	}
-	
+        public int cost(AttributedMessage message) {
+            System.currentTimeMillis();
+            int cost = super.cost(message);
+            return timeToCutover() ? cost / 10 : cost;
+        }
 
     }
 

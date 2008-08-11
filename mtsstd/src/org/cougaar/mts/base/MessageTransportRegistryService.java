@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -34,31 +35,41 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.MulticastMessageAddress;
 
-
 /**
- * This is a utility/bookkeeping service for the MTS.  The
- * implementation and ServiceProvider are in {@link
- * MessageTransportRegistry}. 
+ * This is a utility/bookkeeping service for the MTS. The implementation and
+ * ServiceProvider are in {@link MessageTransportRegistry}.
  */
-public interface MessageTransportRegistryService extends Service
-{
-
+public interface MessageTransportRegistryService
+        extends Service {
 
     // public void setNameSupport(NameSupport nameSupport);
     // public void setReceiveLinkFactory(ReceiveLinkFactory receiveLinkFactory);
 
     void addLinkProtocol(LinkProtocol lp);
+
     boolean hasLinkProtocols(); // only useful for the LinkProtocolFactory
+
     String getIdentifier();
+
     boolean isLocalClient(MessageAddress id);
+
     ReceiveLink findLocalReceiveLink(MessageAddress id);
+
     Iterator findLocalMulticastReceivers(MulticastMessageAddress addr);
+
     Iterator findRemoteMulticastTransports(MulticastMessageAddress addr);
+
     void registerClient(MessageTransportClient client);
+
     void unregisterClient(MessageTransportClient client);
+
     boolean addressKnown(MessageAddress address);
+
     ArrayList getDestinationLinks(MessageAddress destination);
+
     AgentState getAgentState(MessageAddress agent);
+
     void removeAgentState(MessageAddress agent);
+
     void ipAddressChanged();
 }

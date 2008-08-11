@@ -25,42 +25,42 @@ import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Send messages via serialization on abstract reliable Streams,
- * polling for input.  Reliability is handled by sending an 
- * ack for each message.
+ * Send messages via serialization on abstract reliable Streams, polling for
+ * input. Reliability is handled by sending an ack for each message.
  * 
  * @param <I> The class of the ID object for each outgoing message
  */
-abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
+abstract public class PollingStreamLinkProtocol<I>
+        extends RPCLinkProtocol {
     // manager for receiving messages
     private MessageReceiver<I> receiver;
-    
+
     // manager for sending messages and waiting for replies
     private ReplySync<I> sync;
 
     private URI servantUri;
-    
+
     // Check periodically for incoming data
     private Schedulable poller;
 
     /**
-     * Construct a URI that uniquely identifies this node. 
-     * It will be used by other nodes to contact it.
+     * Construct a URI that uniquely identifies this node. It will be used by
+     * other nodes to contact it.
      * 
      * @param myServantId the node name
      */
-    abstract protected URI makeURI(String myServantId) 
-        throws URISyntaxException;
+    abstract protected URI makeURI(String myServantId)
+            throws URISyntaxException;
 
     /**
      * Send a message or an ack to the given destination.
      */
     abstract protected I processOutgoingMessage(URI destination, MessageAttributes message)
-        throws IOException;
+            throws IOException;
 
     /**
-     * Make a Runnable that will run periodically to look for new messages
-     * and process one per run if available.
+     * Make a Runnable that will run periodically to look for new messages and
+     * process one per run if available.
      */
     abstract protected Runnable makePollerTask();
 
@@ -68,25 +68,24 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
      * How long we should wait for the ack to any given message.
      */
     abstract protected int getReplyTimeoutMillis();
-    
+
     /**
-     * If the protocol needs to create any external connections of any kind,
-     * do that here.
+     * If the protocol needs to create any external connections of any kind, do
+     * that here.
      * 
      * @return success or failure
      */
     abstract protected boolean establishConnections(String node);
-    
-    
+
     protected URI getServantUri() {
         return servantUri;
     }
-    
+
     ReplySync<I> getReplySync() {
-         if (sync == null) {
-             sync = new ReplySync<I>(this, getReplyTimeoutMillis());
-         }
-         return sync;
+        if (sync == null) {
+            sync = new ReplySync<I>(this, getReplyTimeoutMillis());
+        }
+        return sync;
     }
 
     private MessageSender<I> makeMessageSender() {
@@ -100,35 +99,34 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
     /**
      * Read and dispatch an incoming message on a stream.
      * 
-     * This is protected so that it can be invoked by
-     * a subclass, not (typically) to be overridden.
+     * This is protected so that it can be invoked by a subclass, not
+     * (typically) to be overridden.
      */
     protected void processingIncomingMessage(InputStream stream) {
         Object rawObject = null;
-        ObjectInputStream ois  = null;
-        
+        ObjectInputStream ois = null;
+
         try {
             ois = new ObjectInputStream(stream);
         } catch (IOException e) {
-            loggingService.warn("Processing Incoming message, stream error :" 
-                                + e.getMessage());
+            loggingService.warn("Processing Incoming message, stream error :" + e.getMessage());
             return;
         }
-        
+
         try {
             rawObject = ois.readObject();
         } catch (ClassNotFoundException e) {
             loggingService.warn("Processing Incoming message, unknown object type :"
-                                + e.getMessage());
+                    + e.getMessage());
             return;
         } catch (IOException e) {
-            loggingService.warn("Processing Incoming message, deserializing error :" 
-                                + e.getMessage());
+            loggingService.warn("Processing Incoming message, deserializing error :"
+                    + e.getMessage());
             return;
         }
         processIncomingMessage(rawObject);
     }
-    
+
     protected void processIncomingMessage(Object rawObject) {
         if (rawObject instanceof MessageAttributes) {
             receiver.handleIncomingMessage((MessageAttributes) rawObject);
@@ -141,7 +139,6 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
         return new StreamLink(address);
     }
 
-    
     protected void ensureNodeServant() {
         if (servantUri != null) {
             return;
@@ -152,7 +149,7 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
             releaseNodeServant();
             return;
         }
-        
+
         try {
             servantUri = makeURI(node);
             setNodeURI(servantUri);
@@ -161,12 +158,12 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
             releaseNodeServant();
             return;
         }
-        
+
         // start polling for input
         if (receiver == null) {
             receiver = makeMessageReceiver();
         }
-        
+
         Runnable task = makePollerTask();
         if (task != null) {
             int lane = ThreadService.WILL_BLOCK_LANE;
@@ -183,7 +180,7 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
             poller = null;
         }
     }
-    
+
     protected void remakeNodeServant() {
         if (isServantAlive()) {
             releaseNodeServant();
@@ -195,7 +192,8 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
         return false;
     }
 
-    private class StreamLink extends Link {
+    private class StreamLink
+            extends Link {
         private final MessageSender<I> sender;
         private URI uri;
 
@@ -208,14 +206,13 @@ abstract public class PollingStreamLinkProtocol<I> extends RPCLinkProtocol {
             return ensureNodeServantIsAlive() && super.isValid(message);
         }
 
-        protected Object decodeRemoteRef(URI ref) throws Exception {
+        protected Object decodeRemoteRef(URI ref)
+                throws Exception {
             return uri = ref;
         }
 
         protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
-                throws NameLookupException,
-                UnregisteredNameException,
-                CommFailureException,
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
                 return sender.handleOutgoingMessage(uri, message);

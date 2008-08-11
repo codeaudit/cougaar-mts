@@ -32,54 +32,44 @@ import org.cougaar.mts.std.AspectFactory;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This factory is used to create MessageReaders and MessageWriters
- * with a specific list of Aspects.  It's not a service primarily
- * because the only client is {@link AttributedMessage}, which has no
- * ready access to a ServiceBroker.
+ * This factory is used to create MessageReaders and MessageWriters with a
+ * specific list of Aspects. It's not a service primarily because the only
+ * client is {@link AttributedMessage}, which has no ready access to a
+ * ServiceBroker.
  */
-public final class MessageStreamsFactory 
-    extends  AspectFactory
-{
+public final class MessageStreamsFactory
+        extends AspectFactory {
     private static MessageStreamsFactory factory;
 
     public static synchronized MessageStreamsFactory makeFactory() {
-	factory = new MessageStreamsFactory();
-	return factory;
+        factory = new MessageStreamsFactory();
+        return factory;
     }
-
 
     public static synchronized MessageStreamsFactory getFactory() {
-	return factory;
+        return factory;
     }
 
-    private MessageStreamsFactory() 
-    {
+    private MessageStreamsFactory() {
     }
 
-    public MessageReader getMessageReader(ArrayList aspectNames)  {
-	MessageReader rdr = new MessageReaderImpl();
- 	return (MessageReader) attachAspects(rdr, 
-					     MessageReader.class,
-					     aspectNames);
+    public MessageReader getMessageReader(ArrayList aspectNames) {
+        MessageReader rdr = new MessageReaderImpl();
+        return (MessageReader) attachAspects(rdr, MessageReader.class, aspectNames);
     }
 
-
-    public MessageWriter getMessageWriter(ArrayList aspectNames)  {
-	MessageWriter wtr = new MessageWriterImpl();
- 	return (MessageWriter) attachAspects(wtr, 
-					     MessageWriter.class,
-					     aspectNames);
+    public MessageWriter getMessageWriter(ArrayList aspectNames) {
+        MessageWriter wtr = new MessageWriterImpl();
+        return (MessageWriter) attachAspects(wtr, MessageWriter.class, aspectNames);
     }
-
 
     /**
      * Free resources
      */
     public void releaseFactory() {
-      // Nullify static variable so it can be reclaimed by the garbage
-      // collector.
-      factory = null;
+        // Nullify static variable so it can be reclaimed by the garbage
+        // collector.
+        factory = null;
     }
 
 }
-

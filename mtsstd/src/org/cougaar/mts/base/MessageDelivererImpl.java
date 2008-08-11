@@ -25,52 +25,51 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * The default, and for now only, implementation of {@link
- * MessageDeliverer}.  The implementation of
- * <strong>deliverMessage</strong> forwards each message on to the
- * appropriate DestinationLink. */
-public class MessageDelivererImpl implements MessageDeliverer
-{
+ * The default, and for now only, implementation of {@link MessageDeliverer}.
+ * The implementation of <strong>deliverMessage</strong> forwards each message
+ * on to the appropriate DestinationLink.
+ */
+public class MessageDelivererImpl
+        implements MessageDeliverer {
     public MessageTransportRegistryService registry;
     public String name;
 
-    public MessageDelivererImpl(String name, MessageTransportRegistryService registry)
-    {
-	this.registry = registry;
-	this.name = name;
+    public MessageDelivererImpl(String name, MessageTransportRegistryService registry) {
+        this.registry = registry;
+        this.name = name;
     }
 
     public boolean matches(String name) {
-	return this.name.equals(name);
+        return this.name.equals(name);
     }
 
     /**
-     * Forward the message on to the appropriate ReceiveLink, or links
-     * in the case of a MulticastMessageAddress.  The lookup is
-     * handled by the MessageTransportRegistry. */
-    public MessageAttributes deliverMessage(AttributedMessage message, 
-					    MessageAddress addr) 
-	throws MisdeliveredMessageException
-    {
-	if (message == null) return null;
-	synchronized (registry) {
-	    // This is locked to prevent the receiver from
-	    // unregistering between the lookup and the delivery.
-	    // The corresponding unregister lock is on a private
-	    // method in MesageTransportRegistry, removeLocalClient. 
-	    ReceiveLink link = registry.findLocalReceiveLink(addr);
-	    if (link != null) {
-		return link.deliverMessage(message);
-	    }
-	}
-	throw new MisdeliveredMessageException(message);
+     * Forward the message on to the appropriate ReceiveLink, or links in the
+     * case of a MulticastMessageAddress. The lookup is handled by the
+     * MessageTransportRegistry.
+     */
+    public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress addr)
+            throws MisdeliveredMessageException {
+        if (message == null) {
+            return null;
+        }
+        synchronized (registry) {
+            // This is locked to prevent the receiver from
+            // unregistering between the lookup and the delivery.
+            // The corresponding unregister lock is on a private
+            // method in MesageTransportRegistry, removeLocalClient.
+            ReceiveLink link = registry.findLocalReceiveLink(addr);
+            if (link != null) {
+                return link.deliverMessage(message);
+            }
+        }
+        throw new MisdeliveredMessageException(message);
     }
-
 
 }

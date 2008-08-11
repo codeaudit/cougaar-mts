@@ -26,18 +26,16 @@
 
 package org.cougaar.mts.base;
 
-
 /**
- * Abstract specification of a aspect in the message transport
- * subsystem.  An aspect is only required to perform one job: return
- * an aspect delegate for a given object of a given interface, or null
- * if the aspect prefers not to deal with that interface.
+ * Abstract specification of a aspect in the message transport subsystem. An
+ * aspect is only required to perform one job: return an aspect delegate for a
+ * given object of a given interface, or null if the aspect prefers not to deal
+ * with that interface.
  * 
- * The getReverseDelegate method provides a means to do unwrapping of
- * messages in envelopes in the proper (ie reverse order).
+ * The getReverseDelegate method provides a means to do unwrapping of messages
+ * in envelopes in the proper (ie reverse order).
  */
-public interface MessageTransportAspect 
-{
+public interface MessageTransportAspect {
     Object getDelegate(Object delegate, Class type);
 
     Object getReverseDelegate(Object delegate, Class type);

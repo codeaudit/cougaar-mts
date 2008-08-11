@@ -25,8 +25,10 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.util.Iterator;
 
+import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MulticastMessageAddress;
@@ -41,126 +43,106 @@ import org.cougaar.mts.base.StandardAspect;
 /**
  * This Aspect provides support for multicast messages.
  */
-public class MulticastAspect extends StandardAspect
-{
+public class MulticastAspect
+        extends StandardAspect {
 
-    private static final String MCAST = 
-	"org.cougaar.message.transport.is-multicast";
+    private static final String MCAST = "org.cougaar.message.transport.is-multicast";
 
-    public Object getDelegate(Object delegatee, Class type) 
-    {
-	if (type == SendLink.class) {
-	    return new SendLinkDelegate((SendLink) delegatee);
-	} else {
-	    return null;
-	}
+    public Object getDelegate(Object delegatee, Class type) {
+        if (type == SendLink.class) {
+            return new SendLinkDelegate((SendLink) delegatee);
+        } else {
+            return null;
+        }
     }
 
-
-    public Object getReverseDelegate(Object delegatee, Class type) 
-    {
-	if (type == MessageDeliverer.class) {
-	    return new MessageDelivererDelegate((MessageDeliverer) delegatee);
-	} else {
-	    return null;
-	}
+    public Object getReverseDelegate(Object delegatee, Class type) {
+        if (type == MessageDeliverer.class) {
+            return new MessageDelivererDelegate((MessageDeliverer) delegatee);
+        } else {
+            return null;
+        }
     }
 
+    public class SendLinkDelegate
+            extends SendLinkDelegateImplBase {
 
+        public SendLinkDelegate(SendLink link) {
+            super(link);
+        }
 
-
-    public class SendLinkDelegate extends SendLinkDelegateImplBase {
-	
-	public SendLinkDelegate (SendLink link) {
-	    super(link);
-	}
-	
-
-	public void sendMessage(AttributedMessage msg) {
-	    MessageAddress destination = msg.getTarget();
-	    if (destination instanceof MulticastMessageAddress) {
-		msg.setAttribute(MCAST, destination);
-		AttributedMessage copy;
-		MessageAddress nodeAddr;
- 		if (destination.equals(MessageAddress.MULTICAST_LOCAL)) {
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("MCAST: Local multicast");
-		    nodeAddr = getNameSupport().getNodeMessageAddress();
-		    copy = new AttributedMessage(msg);
-		    copy.setTarget(nodeAddr);
-		    super.sendMessage(copy);
-		} else {
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("MCAST: Remote multicast to "
-						  + destination);
-		    MulticastMessageAddress dst = 
-			(MulticastMessageAddress) destination;
-		    Iterator itr = 
-			getRegistry().findRemoteMulticastTransports(dst);
-		    while (itr.hasNext()) {
-			nodeAddr = (MessageAddress) itr.next();
-			if (loggingService.isDebugEnabled())
-			    loggingService.debug("MCAST: next address = " 
-						      + nodeAddr);
-			copy = new AttributedMessage(msg);
-			copy.setTarget(nodeAddr);
-			super.sendMessage(copy);
-		    }
-		}
-	    } else {
-		super.sendMessage(msg);
-	    }
-	}
+        public void sendMessage(AttributedMessage msg) {
+            MessageAddress destination = msg.getTarget();
+            if (destination instanceof MulticastMessageAddress) {
+                msg.setAttribute(MCAST, destination);
+                AttributedMessage copy;
+                MessageAddress nodeAddr;
+                if (destination.equals(MessageAddress.MULTICAST_LOCAL)) {
+                    if (loggingService.isDebugEnabled()) {
+                        loggingService.debug("MCAST: Local multicast");
+                    }
+                    nodeAddr = getNameSupport().getNodeMessageAddress();
+                    copy = new AttributedMessage(msg);
+                    copy.setTarget(nodeAddr);
+                    super.sendMessage(copy);
+                } else {
+                    if (loggingService.isDebugEnabled()) {
+                        loggingService.debug("MCAST: Remote multicast to " + destination);
+                    }
+                    MulticastMessageAddress dst = (MulticastMessageAddress) destination;
+                    Iterator itr = getRegistry().findRemoteMulticastTransports(dst);
+                    while (itr.hasNext()) {
+                        nodeAddr = (MessageAddress) itr.next();
+                        if (loggingService.isDebugEnabled()) {
+                            loggingService.debug("MCAST: next address = " + nodeAddr);
+                        }
+                        copy = new AttributedMessage(msg);
+                        copy.setTarget(nodeAddr);
+                        super.sendMessage(copy);
+                    }
+                }
+            } else {
+                super.sendMessage(msg);
+            }
+        }
 
     }
-
-
 
     public class MessageDelivererDelegate
-	extends MessageDelivererDelegateImplBase 
-    {
+            extends MessageDelivererDelegateImplBase {
 
-	public MessageDelivererDelegate (MessageDeliverer deliverer) {
-	    super(deliverer);
-	}
-	
-	public MessageAttributes deliverMessage(AttributedMessage msg, 
-						MessageAddress destination) 
-	    throws MisdeliveredMessageException
-	{
-	    MulticastMessageAddress mcastAddr = 
-		(MulticastMessageAddress) msg.getAttribute(MCAST);
-	    
-	    if (mcastAddr != null) {
-		if (loggingService.isDebugEnabled()) 
-		    loggingService.debug("MCAST: Received multicast to "
-					      + mcastAddr);
-		Iterator i = 
-		    getRegistry().findLocalMulticastReceivers(mcastAddr);
-		MessageAddress localDestination = null;
-		AttributedMessage copy = 
-		    new AttributedMessage(msg.getRawMessage(), msg);
-		while (i.hasNext()) {
-		    localDestination = (MessageAddress) i.next();
-		    if (loggingService.isDebugEnabled())
-			loggingService.debug("MCAST: Delivering to "
-						  + localDestination);
-		    super.deliverMessage(copy, localDestination);
-		}
-		// Hmm...
-		MessageAttributes meta = new SimpleMessageAttributes();
-		meta.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-				  MessageAttributes.DELIVERY_STATUS_DELIVERED);
-		return meta;
-	    } else {	
-		return super.deliverMessage(msg, destination);
-	    }
-	}
-	
+        public MessageDelivererDelegate(MessageDeliverer deliverer) {
+            super(deliverer);
+        }
+
+        public MessageAttributes deliverMessage(AttributedMessage msg, MessageAddress destination)
+                throws MisdeliveredMessageException {
+            MulticastMessageAddress mcastAddr = (MulticastMessageAddress) msg.getAttribute(MCAST);
+
+            if (mcastAddr != null) {
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("MCAST: Received multicast to " + mcastAddr);
+                }
+                Iterator i = getRegistry().findLocalMulticastReceivers(mcastAddr);
+                MessageAddress localDestination = null;
+                AttributedMessage copy = new AttributedMessage(msg.getRawMessage(), msg);
+                while (i.hasNext()) {
+                    localDestination = (MessageAddress) i.next();
+                    if (loggingService.isDebugEnabled()) {
+                        loggingService.debug("MCAST: Delivering to " + localDestination);
+                    }
+                    super.deliverMessage(copy, localDestination);
+                }
+                // Hmm...
+                MessageAttributes meta = new SimpleMessageAttributes();
+                meta.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,
+                                  AttributeConstants.DELIVERY_STATUS_DELIVERED);
+                return meta;
+            } else {
+                return super.deliverMessage(msg, destination);
+            }
+        }
+
     }
 
 }
-
-
-
-    

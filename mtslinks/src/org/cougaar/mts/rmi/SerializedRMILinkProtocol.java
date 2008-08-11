@@ -24,6 +24,7 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SerializationUtils;
@@ -34,84 +35,74 @@ import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * This {@link LinkProtocol} is a simple extension of {@link
- * RMILinkProtocol} that uses preserialization to send byte-arrays via
- * the {@link SerializedMT} interface rather than AttributedMessages via the
- * {@link MT} interface.
+ * This {@link LinkProtocol} is a simple extension of {@link RMILinkProtocol}
+ * that uses preserialization to send byte-arrays via the {@link SerializedMT}
+ * interface rather than AttributedMessages via the {@link MT} interface.
  */
-public class SerializedRMILinkProtocol extends RMILinkProtocol
-{
+public class SerializedRMILinkProtocol
+        extends RMILinkProtocol {
 
     public SerializedRMILinkProtocol() {
-	super();
+        super();
     }
 
-
     protected String getProtocolType() {
-	return "-SerializedRMI";
+        return "-SerializedRMI";
     }
 
     // Is this different?
     protected int computeCost(AttributedMessage message) {
-	return super.computeCost(message);
+        return super.computeCost(message);
     }
 
-    protected MTImpl makeMTImpl(MessageAddress myAddress,
-				SocketFactory socfac)
-	throws java.rmi.RemoteException
-    {
-	return new SerializedMTImpl(myAddress, getServiceBroker(), socfac);
+    protected MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac)
+            throws java.rmi.RemoteException {
+        return new SerializedMTImpl(myAddress, getServiceBroker(), socfac);
     }
 
-    protected MessageAttributes doForwarding(MT remote, 
-					     AttributedMessage message) 
-	throws MisdeliveredMessageException, 
-	       java.rmi.RemoteException,
-	       CommFailureException
-    {
-	if (remote instanceof SerializedMT) {
-	    byte[] messageBytes = null;
-	    try {
-		messageBytes = SerializationUtils.toByteArray(message);
-	    } catch (CougaarIOException mex) {
-		throw new CommFailureException(mex);
-	    } catch (java.io.IOException iox) {
-		// What would this mean?
-	    }
+    protected MessageAttributes doForwarding(MT remote, AttributedMessage message)
+            throws MisdeliveredMessageException, java.rmi.RemoteException, CommFailureException {
+        if (remote instanceof SerializedMT) {
+            byte[] messageBytes = null;
+            try {
+                messageBytes = SerializationUtils.toByteArray(message);
+            } catch (CougaarIOException mex) {
+                throw new CommFailureException(mex);
+            } catch (java.io.IOException iox) {
+                // What would this mean?
+            }
 
-	    byte[] res = null;
-	    try {
-		res = ((SerializedMT) remote).rerouteMessage(messageBytes);
-	    } catch (CougaarIOException mex) {
-		throw new CommFailureException(mex);
-	    } catch (java.rmi.RemoteException remote_ex) {
-		Throwable cause = remote_ex.getCause();
-		checkForMisdelivery(cause, message);
-		// Not a misdelivery  - rethrow the remote exception
-		throw remote_ex;
-	    } catch (IllegalArgumentException illegal_arg) {
-		checkForMisdelivery(illegal_arg, message);
-		// Not a misdelivery  - rethrow the exception
-		throw illegal_arg;
-	    }
+            byte[] res = null;
+            try {
+                res = ((SerializedMT) remote).rerouteMessage(messageBytes);
+            } catch (CougaarIOException mex) {
+                throw new CommFailureException(mex);
+            } catch (java.rmi.RemoteException remote_ex) {
+                Throwable cause = remote_ex.getCause();
+                checkForMisdelivery(cause, message);
+                // Not a misdelivery - rethrow the remote exception
+                throw remote_ex;
+            } catch (IllegalArgumentException illegal_arg) {
+                checkForMisdelivery(illegal_arg, message);
+                // Not a misdelivery - rethrow the exception
+                throw illegal_arg;
+            }
 
-	    MessageAttributes attrs = null;
-	    try {
-		attrs = (MessageAttributes) 
-		    SerializationUtils.fromByteArray(res);
-	    } catch (CougaarIOException mex) {
-		throw new CommFailureException(mex);
-	    } catch (java.io.IOException iox) {
-		// What would this mean?
-	    } catch (ClassNotFoundException cnf) {
-		// What would this mean?
-	    }
-	    return attrs;
-	} else {
-	    return super.doForwarding(remote, message);
-	}
+            MessageAttributes attrs = null;
+            try {
+                attrs = (MessageAttributes) SerializationUtils.fromByteArray(res);
+            } catch (CougaarIOException mex) {
+                throw new CommFailureException(mex);
+            } catch (java.io.IOException iox) {
+                // What would this mean?
+            } catch (ClassNotFoundException cnf) {
+                // What would this mean?
+            }
+            return attrs;
+        } else {
+            return super.doForwarding(remote, message);
+        }
     }
 
 }

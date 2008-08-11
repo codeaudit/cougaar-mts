@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.base;
+
 import java.util.ArrayList;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -36,137 +37,128 @@ import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
 
-
 /**
  * The only implementation of {@link SendLink}, instantiated once per
- * MessageTransportClient.  It's main job is simply to place outgoing
- * messages on the (singleton) {@link SendQueue}.
+ * MessageTransportClient. It's main job is simply to place outgoing messages on
+ * the (singleton) {@link SendQueue}.
  */
 final public class SendLinkImpl
-    implements SendLink
-{
+        implements SendLink {
     static final String VERSION = "version";
 
     private SendQueue sendq;
-    private SendQueueProviderService sendq_factory;
-    private DestinationQueueProviderService destq_factory;
-    private MessageAddress addr;
+    private final SendQueueProviderService sendq_factory;
+    private final DestinationQueueProviderService destq_factory;
+    private final MessageAddress addr;
     private MessageTransportRegistryService registry;
-    private LoggingService loggingService;
-    private Long incarnation;
-    private Object flush_lock = new Object();
+    private final LoggingService loggingService;
+    private final Long incarnation;
+    private final Object flush_lock = new Object();
 
-    SendLinkImpl(MessageAddress addr, long incarnation, ServiceBroker sb)
-    {
-	this.addr = addr;
-	this.incarnation = new Long(incarnation);
-	registry = (MessageTransportRegistryService)
-	    sb.getService(this, MessageTransportRegistryService.class, null);
-	sendq_factory = (SendQueueProviderService)
-	    sb.getService(this, SendQueueProviderService.class, null);
-	sendq = sendq_factory.getSendQueue(addr);
-	destq_factory = (DestinationQueueProviderService)
-	    sb.getService(this, 
-			  DestinationQueueProviderService.class, 
-			  null);
-	loggingService = (LoggingService)
-	    sb.getService(this, LoggingService.class, null);
+    SendLinkImpl(MessageAddress addr, long incarnation, ServiceBroker sb) {
+        this.addr = addr;
+        this.incarnation = new Long(incarnation);
+        registry = sb.getService(this, MessageTransportRegistryService.class, null);
+        sendq_factory = sb.getService(this, SendQueueProviderService.class, null);
+        sendq = sendq_factory.getSendQueue(addr);
+        destq_factory = sb.getService(this, DestinationQueueProviderService.class, null);
+        loggingService = sb.getService(this, LoggingService.class, null);
     }
-
 
     // This should be locked vis-a-vis flushMessages
     public void sendMessage(AttributedMessage message) {
-	synchronized (flush_lock) {
-	    MessageAddress orig = message.getOriginator();
-	    if (!addr.equals(orig)) {
-		loggingService.error("SendLink saw a message whose originator (" +orig+ ") didn't match the MessageTransportClient address (" +addr+ ")");
-	    }
-	    message.setAttribute(AttributeConstants.INCARNATION_ATTRIBUTE,
-				 incarnation);
-	    sendq.sendMessage(message);
-	}
+        synchronized (flush_lock) {
+            MessageAddress orig = message.getOriginator();
+            if (!addr.equals(orig)) {
+                loggingService.error("SendLink saw a message whose originator (" + orig
+                        + ") didn't match the MessageTransportClient address (" + addr + ")");
+            }
+            message.setAttribute(AttributeConstants.INCARNATION_ATTRIBUTE, incarnation);
+            sendq.sendMessage(message);
+        }
     }
 
-
     private final UnaryPredicate flushPredicate = new UnaryPredicate() {
-	    public boolean execute(Object m) {
-		AttributedMessage msg = (AttributedMessage) m;
-		MessageAddress primalAddress = addr.getPrimary();
-		MessageAddress src = msg.getOriginator().getPrimary();
-		return src.equals(primalAddress);
-	    }
-	};
-
+        public boolean execute(Object m) {
+            AttributedMessage msg = (AttributedMessage) m;
+            MessageAddress primalAddress = addr.getPrimary();
+            MessageAddress src = msg.getOriginator().getPrimary();
+            return src.equals(primalAddress);
+        }
+    };
 
     public void flushMessages(ArrayList droppedMessages) {
-	synchronized (flush_lock) {
-	    sendq_factory.removeMessages(flushPredicate, droppedMessages);
-	    destq_factory.removeMessages(flushPredicate, droppedMessages);
-	}
+        synchronized (flush_lock) {
+            sendq_factory.removeMessages(flushPredicate, droppedMessages);
+            destq_factory.removeMessages(flushPredicate, droppedMessages);
+        }
     }
 
     public MessageAddress getAddress() {
-	return addr;
+        return addr;
     }
 
     public void release() {
-	registry.removeAgentState(addr);
-	sendq = null;
-	registry = null;
+        registry.removeAgentState(addr);
+        sendq = null;
+        registry = null;
     }
 
     public boolean okToSend(AttributedMessage message) {
-	if (sendq == null) return false; // client has released the service
+        if (sendq == null) {
+            return false; // client has released the service
+        }
 
-	MessageAddress target = message.getTarget();
-	if (target == null || target.toString().equals("")) {
-	    if (loggingService.isErrorEnabled())
-		loggingService.error("Malformed message: "+message);
-	    return false;
-	} else {
-	    return true;
-	}
+        MessageAddress target = message.getTarget();
+        if (target == null || target.toString().equals("")) {
+            if (loggingService.isErrorEnabled()) {
+                loggingService.error("Malformed message: " + message);
+            }
+            return false;
+        } else {
+            return true;
+        }
     }
 
-	
     /**
-     * Redirects the request to the MessageTransportRegistry. */
+     * Redirects the request to the MessageTransportRegistry.
+     */
     public void registerClient(MessageTransportClient client) {
-	// Should throw an exception of client != this.client
-	registry.registerClient(client);
+        // Should throw an exception of client != this.client
+        registry.registerClient(client);
     }
 
-
     /**
-     * Redirects the request to the MessageTransportRegistry. */
+     * Redirects the request to the MessageTransportRegistry.
+     */
     public void unregisterClient(MessageTransportClient client) {
-	// Should throw an exception of client != this.client
+        // Should throw an exception of client != this.client
 
-	registry.unregisterClient(client);
+        registry.unregisterClient(client);
 
-	// NB: The proxy (as opposed to the client) CANNOT be
-	// unregistered here.  If it were, messageDelivered callbacks
-	// wouldn't be delivered and flush could block forever.
-	// Unregistering the proxy can only happen as part of
-	// releasing the service (see release());
+        // NB: The proxy (as opposed to the client) CANNOT be
+        // unregistered here. If it were, messageDelivered callbacks
+        // wouldn't be delivered and flush could block forever.
+        // Unregistering the proxy can only happen as part of
+        // releasing the service (see release());
     }
-    
-   
+
     /**
-     * Redirects the request to the MessageTransportRegistry. */
+     * Redirects the request to the MessageTransportRegistry.
+     */
     public String getIdentifier() {
-	return registry.getIdentifier();
+        return registry.getIdentifier();
     }
 
     /**
-     * Redirects the request to the MessageTransportRegistry. */
+     * Redirects the request to the MessageTransportRegistry.
+     */
     public boolean addressKnown(MessageAddress a) {
-	return registry.addressKnown(a);
+        return registry.addressKnown(a);
     }
 
     public AgentState getAgentState() {
-	return registry.getAgentState(addr);
+        return registry.getAgentState(addr);
     }
 
 }
-

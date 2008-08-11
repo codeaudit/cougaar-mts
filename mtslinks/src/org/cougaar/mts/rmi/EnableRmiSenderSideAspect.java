@@ -24,6 +24,7 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
@@ -35,66 +36,65 @@ import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * Sample Aspect that will disable RMI for 30 seconds (by default) after a failure.
- *
+ * Sample Aspect that will disable RMI for 30 seconds (by default) after a
+ * failure.
+ * 
  */
-public class EnableRmiSenderSideAspect extends StandardAspect {
-    private long failureTimeout; 
-    
+public class EnableRmiSenderSideAspect
+        extends StandardAspect {
+    private long failureTimeout;
+
     public void load() {
-	super.load();
-	failureTimeout = getParameter("failure-timeout", 30000);
-    }
-    
-    public Object getDelegate(Object delegatee, Class type) {
-	if (type == DestinationLink.class) {
-	    DestinationLink link = (DestinationLink) delegatee;
-	    if (link.getProtocolClass() == RMILinkProtocol.class)
-		return new RmiEnableDestinationLink(link);
-	}
-	return null;
+        super.load();
+        failureTimeout = getParameter("failure-timeout", 30000);
     }
 
+    public Object getDelegate(Object delegatee, Class type) {
+        if (type == DestinationLink.class) {
+            DestinationLink link = (DestinationLink) delegatee;
+            if (link.getProtocolClass() == RMILinkProtocol.class) {
+                return new RmiEnableDestinationLink(link);
+            }
+        }
+        return null;
+    }
 
     private class RmiEnableDestinationLink
-    extends DestinationLinkDelegateImplBase {
-	long last_fail_time = 0;
+            extends DestinationLinkDelegateImplBase {
+        long last_fail_time = 0;
 
-	RmiEnableDestinationLink(DestinationLink delegatee) {
-	    super(delegatee);
-	}
+        RmiEnableDestinationLink(DestinationLink delegatee) {
+            super(delegatee);
+        }
 
-	public boolean isValid(AttributedMessage message) {
-	    long now = System.currentTimeMillis();
-	    if (now - last_fail_time < failureTimeout) {
-		return false;
-	    } else {
-		return super.isValid(message);
-	    }
-	}
+        public boolean isValid(AttributedMessage message) {
+            long now = System.currentTimeMillis();
+            if (now - last_fail_time < failureTimeout) {
+                return false;
+            } else {
+                return super.isValid(message);
+            }
+        }
 
-
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	throws NameLookupException, 
-	UnregisteredNameException, 
-	CommFailureException,
-	MisdeliveredMessageException {
-	    long now = System.currentTimeMillis();
-	    try {
-		return super.forwardMessage(message);
-	    } catch (MisdeliveredMessageException ex) {
-		last_fail_time = now;
-		throw ex;
-	    } catch (CommFailureException ex) {
-		last_fail_time = now;
-		throw ex;
-	    } catch (UnregisteredNameException ex) {
-		last_fail_time = now;
-		throw ex;
-	    } catch (NameLookupException ex) {
-		last_fail_time = now;
-		throw ex;
-	    }
-	}
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
+                MisdeliveredMessageException {
+            long now = System.currentTimeMillis();
+            try {
+                return super.forwardMessage(message);
+            } catch (MisdeliveredMessageException ex) {
+                last_fail_time = now;
+                throw ex;
+            } catch (CommFailureException ex) {
+                last_fail_time = now;
+                throw ex;
+            } catch (UnregisteredNameException ex) {
+                last_fail_time = now;
+                throw ex;
+            } catch (NameLookupException ex) {
+                last_fail_time = now;
+                throw ex;
+            }
+        }
     }
 }

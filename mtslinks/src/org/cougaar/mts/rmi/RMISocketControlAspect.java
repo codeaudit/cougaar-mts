@@ -50,13 +50,13 @@ import org.cougaar.mts.base.StandardAspect;
 
 /**
  * This Aspect creates a ServiceProvider for and implementation of the
- * RMISocketControlService.  As currently defined, this  service is
- * mostly for setting socket timeouts.   It can also be used to get a
- * List of open sockets from a given MessageAddress.  
+ * RMISocketControlService. As currently defined, this service is mostly for
+ * setting socket timeouts. It can also be used to get a List of open sockets
+ * from a given MessageAddress.
  */
 public class RMISocketControlAspect
-    extends StandardAspect {
-    
+        extends StandardAspect {
+
     private Impl impl;
 
     public RMISocketControlAspect() {
@@ -68,7 +68,7 @@ public class RMISocketControlAspect
         Provider provider = new Provider();
         impl = new Impl();
         SocketManager.getSocketManager().addListener(impl);
-        
+
         ServiceBroker sb = getServiceBroker();
         NodeControlService ncs = sb.getService(this, NodeControlService.class, null);
         ServiceBroker rootSB = ncs.getRootServiceBroker();
@@ -83,7 +83,8 @@ public class RMISocketControlAspect
         return null;
     }
 
-    private class Provider implements ServiceProvider {
+    private class Provider
+            implements ServiceProvider {
         public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
             if (serviceClass == RMISocketControlService.class) {
                 return impl;
@@ -94,30 +95,32 @@ public class RMISocketControlAspect
             }
         }
 
-        public void releaseService(ServiceBroker sb, Object requestor, Class serviceClass, 
+        public void releaseService(ServiceBroker sb,
+                                   Object requestor,
+                                   Class serviceClass,
                                    Object service) {
         }
     }
 
-    private class Impl 
+    private class Impl
             implements RMISocketControlService, SocketManagementListener {
-        final Map<String, List<Socket>> clientSockets;      // host:port key -> list of sockets
-        final Map<MessageAddress, Remote> references; 
+        final Map<String, List<Socket>> clientSockets; // host:port key -> list
+                                                       // of sockets
+        final Map<MessageAddress, Remote> references;
         final Map<Remote, MessageAddress> addresses;
         final Map<MessageAddress, Integer> default_timeouts;
-        final Map<String,Remote> referencesByKey;  // host:port -> Remote stub
-        
+        final Map<String, Remote> referencesByKey; // host:port -> Remote stub
+
         final Set<InetAddress> blacklist;
-        final Map<InetAddress,List<Socket>> remoteSockets = 
-            new HashMap<InetAddress,List<Socket>>();
-        
+        final Map<InetAddress, List<Socket>> remoteSockets =
+                new HashMap<InetAddress, List<Socket>>();
 
         Impl() {
             clientSockets = new HashMap<String, List<Socket>>();
-            references = new HashMap<MessageAddress,Remote>();
-            addresses = new HashMap<Remote,MessageAddress>();
+            references = new HashMap<MessageAddress, Remote>();
+            addresses = new HashMap<Remote, MessageAddress>();
             default_timeouts = new HashMap<MessageAddress, Integer>();
-            referencesByKey = new HashMap<String,Remote>();
+            referencesByKey = new HashMap<String, Remote>();
             blacklist = new HashSet<InetAddress>();
             Runnable reaper = new Runnable() {
                 public void run() {
@@ -128,7 +131,7 @@ public class RMISocketControlAspect
             Schedulable sched = tsvc.getThread(this, reaper, "Socket Reaper");
             sched.schedule(0, 5000);
         }
-        
+
         public boolean setSoTimeout(MessageAddress addr, int timeout) {
             // Could use the NameService to lookup the Reference from
             // the address.
@@ -199,50 +202,58 @@ public class RMISocketControlAspect
                 }
             }
         }
-        
+
         // We assume that at this point we've already blocked new
-        // requests.  So no new sockets from the given address will be
+        // requests. So no new sockets from the given address will be
         // created.
         public void acceptSocketsFrom(InetAddress source_address) {
             updateBlacklist(source_address, false);
         }
-        
+
         public void rejectSocketsFrom(InetAddress address) {
             updateBlacklist(address, true);
             killActiveSockets(address);
         }
-        
+
         private String getKey(String host, int port) {
             return getKey(host, Integer.toString(port));
         }
 
         private String getKey(String host, String port) {
             // May need to canonicalize the host
-            return host+ ":" +port;
+            return host + ":" + port;
         }
 
         private String getKey(Remote ref) {
             // Dig out the host and port, then look it up in 'sockets'.
             // form is
-            // classname[RemoteStub [ref: [endpoint:[host:port](local),objID:[0]]]]
+            // classname[RemoteStub [ref:
+            // [endpoint:[host:port](local),objID:[0]]]]
             String refString = ref.toString();
             int host_start = refString.indexOf("[endpoint:[");
-            if (host_start < 0) return null;
+            if (host_start < 0) {
+                return null;
+            }
             host_start += 11;
             int host_end = refString.indexOf(':', host_start);
-            if (host_end < 0) return null;
+            if (host_end < 0) {
+                return null;
+            }
             String host = refString.substring(host_start, host_end);
             int port_start = 1 + host_end;
             int port_end = port_start;
             int port_end_1 = refString.indexOf(',', host_end);
             int port_end_2 = refString.indexOf(']', host_end);
-            if (port_end_1 < 0 && port_end_2 < 0) return null;
-            if (port_end_1 < 0) 
+            if (port_end_1 < 0 && port_end_2 < 0) {
+                return null;
+            }
+            if (port_end_1 < 0) {
                 port_end = port_end_2;
-            else if (port_end_2 < 0)
+            } else if (port_end_2 < 0) {
                 port_end = port_end_1;
-            else
+            } else {
                 port_end = Math.min(port_end_1, port_end_2);
+            }
             String portString = refString.substring(port_start, port_end);
 
             String key = getKey(host, portString);
@@ -263,8 +274,7 @@ public class RMISocketControlAspect
             return default_timeouts.get(addr);
         }
 
-
-        private void cacheSocket (Socket skt) {
+        private void cacheSocket(Socket skt) {
             String key = getKey(skt);
             Integer timeout = getDefaultTimeout(key);
             if (timeout != null) {
@@ -299,7 +309,7 @@ public class RMISocketControlAspect
 
         synchronized boolean setSoTimeout(Remote reference, int timeout) {
             String key = getKey(reference);
-            List<Socket> skt_list =  clientSockets.get(key);
+            List<Socket> skt_list = clientSockets.get(key);
             if (skt_list == null) {
                 return false;
             }
@@ -307,7 +317,7 @@ public class RMISocketControlAspect
             Iterator<Socket> itr = skt_list.iterator();
             while (itr.hasNext()) {
                 Socket skt = itr.next();
-                try { 
+                try {
                     skt.setSoTimeout(timeout);
                     success = true;
                 } catch (java.net.SocketException ex) {
@@ -321,9 +331,9 @@ public class RMISocketControlAspect
             InetAddress key = source_address;
             if (loggingService.isInfoEnabled()) {
                 if (black) {
-                    loggingService.info("Add " +source_address+ " to blacklist");
+                    loggingService.info("Add " + source_address + " to blacklist");
                 } else {
-                    loggingService.info("Remove " +source_address+" from blacklist");
+                    loggingService.info("Remove " + source_address + " from blacklist");
                 }
             }
             synchronized (blacklist) {
@@ -347,18 +357,16 @@ public class RMISocketControlAspect
                 }
             }
             if (sockets_to_close != null) {
-                for (int i=0; i<sockets_to_close.size(); i++) {
+                for (int i = 0; i < sockets_to_close.size(); i++) {
                     skt = sockets_to_close.get(i);
-                    try { 
+                    try {
                         skt.close();
                     } catch (java.io.IOException ex) {
-                        // don't care 
+                        // don't care
                     }
                 }
             }
         }
     }
-
-    
 
 }

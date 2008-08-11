@@ -24,6 +24,7 @@
  * </copyright>
  */
 package org.cougaar.mts.rmi;
+
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
@@ -35,51 +36,42 @@ import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
 /**
- * This test Aspect uses the {@link RMISocketControlService} to set
- * socket timeouts.
+ * This test Aspect uses the {@link RMISocketControlService} to set socket
+ * timeouts.
  */
 public class RMITestAspect
-    extends StandardAspect
+        extends StandardAspect
 
 {
     private RMISocketControlService svc;
-    public Object getDelegate(Object object, Class type) 
-    {
-	if (type == DestinationLink.class) {
-	    return new Delegate((DestinationLink) object);
-	} else {
-	    return null;
-	}
-    }
 
+    public Object getDelegate(Object object, Class type) {
+        if (type == DestinationLink.class) {
+            return new Delegate((DestinationLink) object);
+        } else {
+            return null;
+        }
+    }
 
     public void load() {
-	super.load();
+        super.load();
 
-	svc = (RMISocketControlService)
-	    getServiceBroker().getService(this, 
-					  RMISocketControlService.class,
-					  null);
+        svc = getServiceBroker().getService(this, RMISocketControlService.class, null);
 
     }
 
+    private class Delegate
+            extends DestinationLinkDelegateImplBase {
+        Delegate(DestinationLink link) {
+            super(link);
+        }
 
-    private class Delegate extends DestinationLinkDelegateImplBase {
-	Delegate(DestinationLink link) {
-	    super(link);
-	}
-
-	public MessageAttributes forwardMessage(AttributedMessage message) 
-	    throws UnregisteredNameException, 
-		   NameLookupException, 
-		   CommFailureException,
-		   MisdeliveredMessageException
-	{
-	    svc.setSoTimeout(getDestination(), 2000);
-	    return super.forwardMessage(message);
-	}
-
-
+        public MessageAttributes forwardMessage(AttributedMessage message)
+                throws UnregisteredNameException, NameLookupException, CommFailureException,
+                MisdeliveredMessageException {
+            svc.setSoTimeout(getDestination(), 2000);
+            return super.forwardMessage(message);
+        }
 
     }
 

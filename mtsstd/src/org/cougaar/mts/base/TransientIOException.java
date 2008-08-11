@@ -25,45 +25,46 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
 /**
- * Special kind of IOException whose stack trace shouldn't be
- * logged.  See DestinationQueueImpl.
+ * Special kind of IOException whose stack trace shouldn't be logged. See
+ * DestinationQueueImpl.
  */
 
 public class TransientIOException
-    extends CougaarIOException
-    implements java.io.Serializable
-{
-    private transient Logger logger = 
-	Logging.getLogger("org.cougaar.mts.base.TransientIOException");
+        extends CougaarIOException
+        implements java.io.Serializable {
+    private transient final Logger logger =
+            Logging.getLogger("org.cougaar.mts.base.TransientIOException");
 
-    public TransientIOException() 
-    {
-	super();
+    public TransientIOException() {
+        super();
     }
 
-    public TransientIOException(String message) 
-    {
-	super(message);
+    public TransientIOException(String message) {
+        super(message);
     }
-
 
     // Make these very quiet
     public void printStackTrace() {
-	if (logger.isDebugEnabled()) super.printStackTrace();
+        if (logger.isDebugEnabled()) {
+            super.printStackTrace();
+        }
     }
-
 
     public void printStackTrace(java.io.PrintStream s) {
-	if (logger.isDebugEnabled()) super.printStackTrace(s);
+        if (logger.isDebugEnabled()) {
+            super.printStackTrace(s);
+        }
     }
-
 
     public void printStackTrace(java.io.PrintWriter w) {
-	if (logger.isDebugEnabled()) super.printStackTrace(w);
+        if (logger.isDebugEnabled()) {
+            super.printStackTrace(w);
+        }
     }
-    
+
 }

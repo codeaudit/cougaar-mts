@@ -33,12 +33,13 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
  * SendLink is the first station after the MessageTransportService
- * implementation class.  Its primary job is to validate the
- * originator and add the message to the SendQueue, thereby ending the
- * call sequence from the caller's point of view (sendMessage). <p>
+ * implementation class. Its primary job is to validate the originator and add
+ * the message to the SendQueue, thereby ending the call sequence from the
+ * caller's point of view (sendMessage).
+ * <p>
+ * 
  * @see org.cougaar.core.service.MessageTransportService
  * @see SendQueue
  * @see Router
@@ -47,42 +48,36 @@ import org.cougaar.mts.std.AttributedMessage;
  * @see MessageWriter
  * @see MessageReader
  * @see MessageDeliverer
- * @see ReceiveLink
- *
- * Javadoc contribuions from George Mount.
+ * @see ReceiveLink Javadoc contribuions from George Mount.
  */
-public interface SendLink
-{
+public interface SendLink {
     /**
-     * Validates the originator and add the message to the SendQueue,
-     * thereby ending the call sequence from the caller's point of view.
-     * Invoked from the MessageTransportService impl class method of the
-     * same name, which will have already wrapped the original message
-     * in an AttributedMessage, using the original message target
-     * address's attributes.
-     *
+     * Validates the originator and add the message to the SendQueue, thereby
+     * ending the call sequence from the caller's point of view. Invoked from
+     * the MessageTransportService impl class method of the same name, which
+     * will have already wrapped the original message in an AttributedMessage,
+     * using the original message target address's attributes.
+     * 
      * @param message The AttributedMessage to be sent.
      * @see SendQueue#sendMessage(AttributedMessage)
      * @see org.cougaar.core.service.MessageTransportService#sendMessage(Message)
      */
     void sendMessage(AttributedMessage message);
 
-
     /**
-     * Causes any queued or pending messages from the address
-     * associated with the SendLink to be removed from the queues,
-     * The list of flushed messages is returned in the supplied
-     * ArrayList.
-     *
+     * Causes any queued or pending messages from the address associated with
+     * the SendLink to be removed from the queues, The list of flushed messages
+     * is returned in the supplied ArrayList.
+     * 
      * @param messages Dropped messages are added to this list.
      * @see org.cougaar.core.service.MessageTransportService#flushMessages()
      */
     void flushMessages(ArrayList messages);
 
     /**
-     * Releases hooks into the MTS and invalidates the SendLink.
-     * Called when the MessageTransportService is released by the 
-     * MessageTransportClient associated with this SendLink.
+     * Releases hooks into the MTS and invalidates the SendLink. Called when the
+     * MessageTransportService is released by the MessageTransportClient
+     * associated with this SendLink.
      */
     void release();
 
@@ -92,21 +87,21 @@ public interface SendLink
     MessageAddress getAddress();
 
     /**
-     * Returns <tt>true</tt> if it is possible to send message.
-     * SendLinkImpl only checks that the target MessageAddress is properly formed
-     * and release() has not been called.
-     *
+     * Returns <tt>true</tt> if it is possible to send message. SendLinkImpl
+     * only checks that the target MessageAddress is properly formed and
+     * release() has not been called.
+     * 
      * @param message The message to should be checked for validity.
      * @see org.cougaar.core.service.MessageTransportService#sendMessage(Message)
      */
     boolean okToSend(AttributedMessage message);
 
     /**
-     * Calls the MessageTransportRegistry's registerClient, which in turn
-     * calls the registerClient for all LinkProtocols. One and only one client
-     * should be registered with a SendLink. Once registered, a ReceiveLink
-     * is created so that the client can receive messages.
-     *
+     * Calls the MessageTransportRegistry's registerClient, which in turn calls
+     * the registerClient for all LinkProtocols. One and only one client should
+     * be registered with a SendLink. Once registered, a ReceiveLink is created
+     * so that the client can receive messages.
+     * 
      * @param client The MTS client to register.
      * @see org.cougaar.core.service.MessageTransportService#registerClient(MessageTransportClient)
      * @see MessageTransportRegistryService#registerClient(MessageTransportClient)
@@ -114,10 +109,10 @@ public interface SendLink
     void registerClient(MessageTransportClient client);
 
     /**
-     * Unregisters the client from all LinkProtocols. The client should
-     * be the client that was previously passed in registerClient. The client
-     * will no longer be able to receive messages.
-     *
+     * Unregisters the client from all LinkProtocols. The client should be the
+     * client that was previously passed in registerClient. The client will no
+     * longer be able to receive messages.
+     * 
      * @param client The MTS client to unregister.
      * @see org.cougaar.core.service.MessageTransportService#unregisterClient(MessageTransportClient)
      * @see MessageTransportRegistryService#unregisterClient(MessageTransportClient)
@@ -126,19 +121,18 @@ public interface SendLink
 
     /**
      * Returns the internal name of the Node's MTS. In the current
-     * implementation this is just the Node's name, but no assumption
-     * should be made that this wll always be true.  All SendLinks in
-     * a given MTS will always return the same value here.
+     * implementation this is just the Node's name, but no assumption should be
+     * made that this wll always be true. All SendLinks in a given MTS will
+     * always return the same value here.
      */
     String getIdentifier();
 
     /**
-     * Returns <tt>true</tt> iff some LinkProtocol recognizes the
-     * given address.
-     *
+     * Returns <tt>true</tt> iff some LinkProtocol recognizes the given address.
+     * 
      * @param address MessageAddress whose status is to be determined.
-     * @return <tt>true</tt> iff one of the registered LinkProtocols 
-     *         knows address.
+     * @return <tt>true</tt> iff one of the registered LinkProtocols knows
+     *         address.
      */
     boolean addressKnown(MessageAddress address);
 
@@ -149,4 +143,3 @@ public interface SendLink
     AgentState getAgentState();
 
 }
-

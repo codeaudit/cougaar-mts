@@ -25,30 +25,29 @@
  */
 
 package org.cougaar.mts.std;
+
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 
 /**
- * This MTS-internal Service can be used to 'single-step' a message
- * through the stations.  Its only real use so far is through a Swing
- * gui, but in principle it could have other uses (e.g., @{link
- * StepperControlExampleAspect}).  The implementation is in the {@link
- * StepperAspect}.
+ * This MTS-internal Service can be used to 'single-step' a message through the
+ * stations. Its only real use so far is through a Swing gui, but in principle
+ * it could have other uses (e.g., @{link StepperControlExampleAspect}). The
+ * implementation is in the {@link StepperAspect}.
  */
-public interface StepService extends Service
-{
-    /** 
-     * Pause processing to all destinations.  The next message to each
-     * destination will be frozen until a subsequent resume or
-     * step. */
+public interface StepService
+        extends Service {
+    /**
+     * Pause processing to all destinations. The next message to each
+     * destination will be frozen until a subsequent resume or step.
+     */
     void pauseAll();
 
-    /** 
-     * Pause processing to the given destination.  The next message to
-     * that destination will be frozen until a subsequent resume or
-     * step. */
+    /**
+     * Pause processing to the given destination. The next message to that
+     * destination will be frozen until a subsequent resume or step.
+     */
     void pause(MessageAddress destination);
-
 
     /** Resume processing to all destinations. */
     void resumeAll();
@@ -56,12 +55,13 @@ public interface StepService extends Service
     /** Resume processing to the given destination. */
     void resume(MessageAddress destination);
 
-
-    /** Allow the frozen message (if any) to proceed, for all
-     * destinations. */ 
+    /**
+     * Allow the frozen message (if any) to proceed, for all destinations.
+     */
     void stepAll();
 
-    /** Allow the frozen message (if any) to proceed, for the given
-     * destination. */ 
+    /**
+     * Allow the frozen message (if any) to proceed, for the given destination.
+     */
     void step(MessageAddress destination);
 }

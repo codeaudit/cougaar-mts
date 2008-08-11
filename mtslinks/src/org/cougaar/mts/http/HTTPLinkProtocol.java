@@ -21,8 +21,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  
  * </copyright> 
- */ 
- 
+ */
+
 package org.cougaar.mts.http;
 
 import java.io.IOException;
@@ -54,332 +54,301 @@ import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.UnregisteredNameException;
 import org.cougaar.mts.std.AttributedMessage;
 
-
 /**
- * This {@link LinkProtocol} uses the Cougaar's {@link
- * ServletService} (Tomcat) for communication via http.
+ * This {@link LinkProtocol} uses the Cougaar's {@link ServletService} (Tomcat)
+ * for communication via http.
  */
-public class HTTPLinkProtocol extends RPCLinkProtocol 
-{
-  
-	public final String SERVLET_URI = "/httpmts";
+public class HTTPLinkProtocol
+        extends RPCLinkProtocol {
+
+    public final String SERVLET_URI = "/httpmts";
 
     /**
-     * The preferred ServletService API to get the http/https port,
-     * which we obtain through reflection to avoid a "webserver"
-     * module compile dependency.
+     * The preferred ServletService API to get the http/https port, which we
+     * obtain through reflection to avoid a "webserver" module compile
+     * dependency.
      */
     private static final String ROOT_SERVLET_SERVICE_CLASS =
-      "org.cougaar.lib.web.service.RootServletService";
+            "org.cougaar.lib.web.service.RootServletService";
 
     private LoggingService logger;
     private ServletService _servletService;
     private boolean servant_made = false;
 
-    public void load() 
-    {
-	super.load();
-	logger = getLoggingService(); // from BoundComponent 
-    } 
-  
-
-    /**
-     * We release the ServletService here because in doing so,
-     * the ServletService.unregisterAll() is invoked. 
-     */
-    public void unload() {
-	ServiceBroker sb = getServiceBroker();
-	sb.releaseService(this, ServletService.class, _servletService);  
-	super.unload();
+    public void load() {
+        super.load();
+        logger = getLoggingService(); // from BoundComponent
     }
 
-  
+    /**
+     * We release the ServletService here because in doing so, the
+     * ServletService.unregisterAll() is invoked.
+     */
+    public void unload() {
+        ServiceBroker sb = getServiceBroker();
+        sb.releaseService(this, ServletService.class, _servletService);
+        super.unload();
+    }
+
     /**
      * Get the WP Entry Type for registering and querying for WP entries.
      */
-    public String getProtocolType() 
-    {
-	return "-HTTP"; 
+    public String getProtocolType() {
+        return "-HTTP";
     }
-  
+
     /**
      * Get the protocol to use for http connections.
      */
-    public String getProtocol() 
-    {
-	return "http";
+    public String getProtocol() {
+        return "http";
     }
-  
+
     /**
      * determined the underlying socket is encrypted.
      */
-    protected Boolean usesEncryptedSocket() 
-    {
-	return Boolean.FALSE;
+    protected Boolean usesEncryptedSocket() {
+        return Boolean.FALSE;
     }
-  
+
     /**
      * Returns 500 (hard-coded value less than RMI).
      */
-    protected int computeCost(AttributedMessage message) 
-    {
-	return 500;
+    protected int computeCost(AttributedMessage message) {
+        return 500;
     }
-  
-    protected String getPath()
-    {
-	return SERVLET_URI;
+
+    protected String getPath() {
+        return SERVLET_URI;
     }
-  
+
     /**
      * Create servlet that handle java serialized messages over HTTP.
      */
-    protected Servlet createServlet() 
-    {
-	return new HTTPLinkProtocolServlet(getDeliverer(), logger);
-    }
-  
-    /**
-     * Create destination link to stream java serialized messages over
-     * HTTP. 
-     */
-    protected DestinationLink createDestinationLink(MessageAddress addr) 
-    {
-	return new HTTPDestinationLink(addr); 
+    protected Servlet createServlet() {
+        return new HTTPLinkProtocolServlet(getDeliverer(), logger);
     }
 
-
-  
-
     /**
-     * Register the Servlet that will handle the messages on the
-     * receiving end.
+     * Create destination link to stream java serialized messages over HTTP.
      */
-    private void registerServlet(ServiceBroker sb) 
-    {
-	_servletService = (ServletService) 
-	    sb.getService(this, ServletService.class, null);
-	try {
-	    if(logger.isDebugEnabled()) {
-		logger.debug("registering " + getPath() + " with " + _servletService);
-	    }
-	    _servletService.register(getPath(), createServlet());
-	} catch(IllegalArgumentException iae) {
-	    // an IllegalArgumentException could occur if the servlet
-	    // path has already been registered.  for example, both
-	    // the HTTP and HTTPS LinkProtocols could be installed.
-	    logger.warn(getPath() + " already register.");
-	} catch(Exception e) {
-	    logger.error(getPath() + " failed to register.");
-	}
-    
-	// we release the ServletService in the unload() method
-	// because in doing so, the ServletService.unregisterAll() is
-	// invoked.
+    protected DestinationLink createDestinationLink(MessageAddress addr) {
+        return new HTTPDestinationLink(addr);
     }
-    
-    /**
-     * This function binds the url in the wp early.  But the servlet
-     * at that url can't be made until the ServletService is
-     * available.  This is handled by registerServlet(), which won't
-     * be called until the ServiceAvailableEvent says it's time.
-     */
-    protected void ensureNodeServant()
-    {
-	if (servant_made) return;
 
-	ServiceBroker sb = getServiceBroker();
+    /**
+     * Register the Servlet that will handle the messages on the receiving end.
+     */
+    private void registerServlet(ServiceBroker sb) {
+        _servletService = sb.getService(this, ServletService.class, null);
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("registering " + getPath() + " with " + _servletService);
+            }
+            _servletService.register(getPath(), createServlet());
+        } catch (IllegalArgumentException iae) {
+            // an IllegalArgumentException could occur if the servlet
+            // path has already been registered. for example, both
+            // the HTTP and HTTPS LinkProtocols could be installed.
+            logger.warn(getPath() + " already register.");
+        } catch (Exception e) {
+            logger.error(getPath() + " failed to register.");
+        }
+
+        // we release the ServletService in the unload() method
+        // because in doing so, the ServletService.unregisterAll() is
+        // invoked.
+    }
+
+    /**
+     * This function binds the url in the wp early. But the servlet at that url
+     * can't be made until the ServletService is available. This is handled by
+     * registerServlet(), which won't be called until the ServiceAvailableEvent
+     * says it's time.
+     */
+    protected void ensureNodeServant() {
+        if (servant_made) {
+            return;
+        }
+
+        ServiceBroker sb = getServiceBroker();
 
         // use the servlet service to get our local servlet port
-        int port = -1; 
+        int port = -1;
         Class ssClass;
         try {
-          ssClass = Class.forName(ROOT_SERVLET_SERVICE_CLASS);
+            ssClass = Class.forName(ROOT_SERVLET_SERVICE_CLASS);
         } catch (Exception e) {
-          ssClass = ServletService.class;
+            ssClass = ServletService.class;
         }
         Object ss = sb.getService(this, ssClass, null);
         if (ss != null) {
-          // port = ss.get<Protocol>Port();
-          try {
-            String s = getProtocol();
-            s = Character.toUpperCase(s.charAt(0))+s.substring(1);
-            s = "get"+s+"Port";
-            Method m = ssClass.getMethod(s, new Class[]{});
-            Object ret = m.invoke(ss, new Object[] {});
-            port = ((Integer) ret).intValue();
-          } catch (Exception e) {
-            if (logger.isWarnEnabled()) {
-              logger.warn("Unable to get "+getProtocol()+" port", e);
+            // port = ss.get<Protocol>Port();
+            try {
+                String s = getProtocol();
+                s = Character.toUpperCase(s.charAt(0)) + s.substring(1);
+                s = "get" + s + "Port";
+                Method m = ssClass.getMethod(s, new Class[] {});
+                Object ret = m.invoke(ss, new Object[] {});
+                port = ((Integer) ret).intValue();
+            } catch (Exception e) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("Unable to get " + getProtocol() + " port", e);
+                }
             }
-          }
-          sb.releaseService(this, ssClass, ss); 
+            sb.releaseService(this, ssClass, ss);
         }
         if (port < 0) {
-          if (logger.isWarnEnabled()) {
-            logger.warn(getProtocol()+" port is disabled");
-          }
+            if (logger.isWarnEnabled()) {
+                logger.warn(getProtocol() + " port is disabled");
+            }
         }
 
         MessageAddress node_addr = getNameSupport().getNodeMessageAddress();
-	String node_name = node_addr.toAddress();
-	try {
-	    InetAddress me = InetAddress.getLocalHost();
-	    URI nodeURI = new URI(getProtocol() + "://" + me.getHostName() +
-				  ':' + port + "/$" + node_name + getPath());
-	    setNodeURI(nodeURI);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+        String node_name = node_addr.toAddress();
+        try {
+            InetAddress me = InetAddress.getLocalHost();
+            URI nodeURI =
+                    new URI(getProtocol() + "://" + me.getHostName() + ':' + port + "/$"
+                            + node_name + getPath());
+            setNodeURI(nodeURI);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-	// Call registerServlet only if/when BlackboardService is
-	// available.  The BlackboardService is required because we
-	// want to register our servlet with that ServiceBroker.
-	if (sb.hasService(BlackboardService.class)) {
-	    registerServlet(sb);
-	} else {
-	    sb.addServiceListener(new ServiceAvailableListener() {
-		    public void serviceAvailable(ServiceAvailableEvent ae) {
-			Class svc_class = ae.getService();
-			if (BlackboardService.class.isAssignableFrom(svc_class))
-			    {
-				ServiceBroker svc_sb = ae.getServiceBroker();
-				registerServlet(svc_sb);
-				svc_sb.removeServiceListener(this);
-			    }
-		    }
-		});
-	}   
+        // Call registerServlet only if/when BlackboardService is
+        // available. The BlackboardService is required because we
+        // want to register our servlet with that ServiceBroker.
+        if (sb.hasService(BlackboardService.class)) {
+            registerServlet(sb);
+        } else {
+            sb.addServiceListener(new ServiceAvailableListener() {
+                public void serviceAvailable(ServiceAvailableEvent ae) {
+                    Class svc_class = ae.getService();
+                    if (BlackboardService.class.isAssignableFrom(svc_class)) {
+                        ServiceBroker svc_sb = ae.getServiceBroker();
+                        registerServlet(svc_sb);
+                        svc_sb.removeServiceListener(this);
+                    }
+                }
+            });
+        }
 
-	servant_made = true;
+        servant_made = true;
 
     }
 
     /**
-     * Servlets handle the new-address case automatically, so this is
-     * a no-op.
+     * Servlets handle the new-address case automatically, so this is a no-op.
      */
-    protected void remakeNodeServant()
-    {
+    protected void remakeNodeServant() {
     }
 
+    protected class HTTPDestinationLink
+            extends Link {
 
+        public HTTPDestinationLink(MessageAddress target) {
+            super(target);
+        }
 
-    protected class HTTPDestinationLink extends Link {
+        public Class getProtocolClass() {
+            return HTTPLinkProtocol.this.getClass();
+        }
 
-	public HTTPDestinationLink(MessageAddress target) 
-	{
-	    super(target);
-	}
+        protected Object decodeRemoteRef(URI ref)
+                throws Exception {
+            if (ref == null) {
+                return null;
+            } else {
+                return ref.toURL();
+            }
+        }
 
-	public Class getProtocolClass() {
-	    return HTTPLinkProtocol.this.getClass();
-	}
+        /**
+         * Posts the message to the target Agent's HTTP Link Protocol Servlet.
+         */
+        protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
+                throws NameLookupException, UnregisteredNameException, CommFailureException,
+                MisdeliveredMessageException {
+            try {
+                Object response = postMessage((URL) remote_ref, message);
+                if (response instanceof MessageAttributes) {
+                    return (MessageAttributes) response;
+                } else if (response instanceof MisdeliveredMessageException) {
+                    decache();
+                    throw (MisdeliveredMessageException) response;
+                } else {
+                    throw new CommFailureException((Exception) response);
+                }
+            } catch (Exception e) {
+                // e.printStackTrace();
+                throw new CommFailureException(e);
+            }
+        }
 
+        /**
+         * This method streams serialized java objects over HTTP, and could be
+         * overridden if streaming format is different (e.g., SOAP)
+         */
+        protected Object postMessage(URL url, AttributedMessage message)
+                throws IOException, ClassNotFoundException, UnknownHostException {
+            ObjectInputStream ois = null;
+            ObjectOutputStream out = null;
+            try {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("sending " + message.getRawMessage().getClass().getName() + "("
+                            + message.getOriginator() + "->" + message.getTarget() + ") to " + url);
+                }
+                // NOTE: Performing a URL.openConnection() does not
+                // necessarily open a new socket. Specifically,
+                // HttpUrlConnection reuses a previously opened socket
+                // to the target, and there is no way to force the
+                // underlying socket to close. From the javadoc:
+                // "Calling the disconnect() method may close the
+                // underlying socket if a persistent connection is
+                // otherwise idle at that time."
+                //
+                // However, This could pose a resource consumption
+                // issue. If this is the case, we need to use a
+                // different HTTP Client implementation such as
+                // Jakarta's Common HTTP Client.
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                // Don't follow redirects automatically.
+                conn.setInstanceFollowRedirects(false);
+                // Let the system know that we want to do output
+                conn.setDoOutput(true);
+                // Let the system know that we want to do input
+                conn.setDoInput(true);
+                // No caching, we want the real thing
+                conn.setUseCaches(false);
+                // Specify the content type
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setRequestMethod("POST");
+                // write object to output stream
+                out = new ObjectOutputStream(conn.getOutputStream());
+                out.writeObject(message);
+                out.flush();
 
-	protected Object decodeRemoteRef(URI ref)
-	    throws Exception
-	{
-	    if (ref == null) 
-		return null;
-	    else
-		return ref.toURL();
-	}
-
-	/**
-	 * Posts the message to the target Agent's HTTP Link Protocol Servlet.
-	 */
-	protected MessageAttributes forwardByProtocol(Object remote_ref,
-						      AttributedMessage message) 
-	    throws NameLookupException, UnregisteredNameException, 
-		   CommFailureException, MisdeliveredMessageException 
-	{
-	    try {
-		Object response = postMessage((URL) remote_ref, message);
-		if (response instanceof MessageAttributes) {
-		    return (MessageAttributes) response;
-		} else if (response instanceof MisdeliveredMessageException) {
-		    decache();
-		    throw (MisdeliveredMessageException) response;
-		} else {
-		    throw new CommFailureException((Exception) response);
-		}
-	    } catch (Exception e) {
-		//e.printStackTrace();
-		throw new CommFailureException(e);
-	    }
-	}
-
-    
-	/**
-	 * This method streams serialized java objects over HTTP, and
-	 * could be overridden if streaming format is different (e.g.,
-	 * SOAP) 
-	 */
-	protected Object postMessage(URL url, AttributedMessage message) 
-	    throws IOException, ClassNotFoundException, UnknownHostException 
-	{
-	    ObjectInputStream ois = null;
-	    ObjectOutputStream out = null;
-	    try {
-		if(logger.isDebugEnabled()) {
-		    logger.debug("sending " + 
-			       message.getRawMessage().getClass().getName() + 
-			       "(" + 
-			       message.getOriginator() + "->" +
-			       message.getTarget() + ") to " + url);
-		}
-		// NOTE: Performing a URL.openConnection() does not
-		// necessarily open a new socket.  Specifically,
-		// HttpUrlConnection reuses a previously opened socket
-		// to the target, and there is no way to force the
-		// underlying socket to close.  From the javadoc:
-		// "Calling the disconnect() method may close the
-		// underlying socket if a persistent connection is
-		// otherwise idle at that time."
-		//
-		// However, This could pose a resource consumption
-		// issue.  If this is the case, we need to use a
-		// different HTTP Client implementation such as
-		// Jakarta's Common HTTP Client.
-		HttpURLConnection conn = (HttpURLConnection)
-		    url.openConnection();
-		// Don't follow redirects automatically.
-		conn.setInstanceFollowRedirects(false);
-		// Let the system know that we want to do output
-		conn.setDoOutput(true);
-		// Let the system know that we want to do input
-		conn.setDoInput(true);
-		// No caching, we want the real thing
-		conn.setUseCaches(false);
-		// Specify the content type
-		conn.setRequestProperty("Content-Type",
-					"application/x-www-form-urlencoded");
-		conn.setRequestMethod("POST");
-		// write object to output stream
-		out = new ObjectOutputStream(conn.getOutputStream());
-		out.writeObject(message);
-		out.flush();
-
-		// get response
-		ois = new ObjectInputStream(conn.getInputStream());
-		return ois.readObject();
-	    } catch(Exception e) {
-		if (logger.isWarnEnabled())
-		    logger.warn("Exception in postMessge", e);
-	    } finally {
-		if (out != null) {
-		    out.close();
-		}
-		if (ois != null) {
-		    ois.close();
-		}
-	    }
-	    return null;
-	}
+                // get response
+                ois = new ObjectInputStream(conn.getInputStream());
+                return ois.readObject();
+            } catch (Exception e) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("Exception in postMessge", e);
+                }
+            } finally {
+                if (out != null) {
+                    out.close();
+                }
+                if (ois != null) {
+                    ois.close();
+                }
+            }
+            return null;
+        }
 
     }
-  
+
     protected void releaseNodeServant() {
     }
 }

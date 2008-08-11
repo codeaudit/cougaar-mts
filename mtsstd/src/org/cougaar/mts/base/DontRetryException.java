@@ -27,26 +27,22 @@
 package org.cougaar.mts.base;
 
 /**
- * This kind of IOException should be thrown if the receiving node
- * wants to indicate to the sending Node that it should not retry
- * sending a given message even though that message failed to be
- * delivered.  Typically this is used to avoid retries which are bound
- * to keep failing.
+ * This kind of IOException should be thrown if the receiving node wants to
+ * indicate to the sending Node that it should not retry sending a given message
+ * even though that message failed to be delivered. Typically this is used to
+ * avoid retries which are bound to keep failing.
  */
-public class DontRetryException 
-    extends CougaarIOException
-{
-    
-    private Exception cause;
+public class DontRetryException
+        extends CougaarIOException {
 
-    DontRetryException(Exception cause) 
-    {
-	this.cause = cause;
+    private final Exception cause;
+
+    DontRetryException(Exception cause) {
+        this.cause = cause;
     }
 
     public Throwable getCause() {
-	return cause;
+        return cause;
     }
-
 
 }

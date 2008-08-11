@@ -41,7 +41,8 @@ import org.cougaar.util.log.Logging;
  * 
  * @param <I> The class of the ID object for each outgoing message
  */
-class MessageSender<I> implements AttributeConstants {
+class MessageSender<I>
+        implements AttributeConstants {
     private final PollingStreamLinkProtocol<I> protocol;
     private final Logger log;
 
@@ -50,22 +51,21 @@ class MessageSender<I> implements AttributeConstants {
         log = Logging.getLogger(getClass().getName());
     }
 
-    MessageAttributes handleOutgoingMessage(URI uri, AttributedMessage mtsMessage) 
-            throws CommFailureException,
-            MisdeliveredMessageException {
+    MessageAttributes handleOutgoingMessage(URI uri, AttributedMessage mtsMessage)
+            throws CommFailureException, MisdeliveredMessageException {
         Object deadline = mtsMessage.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
         if (deadline instanceof Long) {
             long ttl = (Long) deadline - System.currentTimeMillis();
             if (ttl < 0) {
                 log.warn("Message already expired");
                 MessageAttributes metadata = new MessageReply(mtsMessage);
-                metadata.setAttribute(MessageAttributes.DELIVERY_ATTRIBUTE,
-                                      MessageAttributes.DELIVERY_STATUS_DROPPED);
+                metadata.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,
+                                      AttributeConstants.DELIVERY_STATUS_DROPPED);
                 return metadata;
             }
         }
         if (log.isInfoEnabled()) {
-            log.info("Sending message " + mtsMessage+ " to " + uri);
+            log.info("Sending message " + mtsMessage + " to " + uri);
         }
         MessageAttributes metadata = protocol.getReplySync().sendMessage(mtsMessage, uri);
         return metadata;

@@ -25,67 +25,53 @@
  */
 
 package org.cougaar.mts.base;
+
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
 
 /**
- * This {@link ServiceProvider} provides the {@link
- * LinkSelectionPolicy} service.  If no implementation of that service
- * has been loaded at the time this singleton is made, it will create
- * a default implementation, using {@link MinCostLinkSelectionPolicy}.
+ * This {@link ServiceProvider} provides the {@link LinkSelectionPolicy}
+ * service. If no implementation of that service has been loaded at the time
+ * this singleton is made, it will create a default implementation, using
+ * {@link MinCostLinkSelectionPolicy}.
  */
 public class LinkSelectionPolicyServiceProvider
-    implements ServiceProvider
-{
+        implements ServiceProvider {
 
     private LinkSelectionPolicy policy;
-    private LoggingService loggingService;
+    private final LoggingService loggingService;
 
-    LinkSelectionPolicyServiceProvider(ServiceBroker sb,
-				       Container container) 
-    {
-	loggingService = (LoggingService)
-	    sb.getService(this, LoggingService.class, null);
-	LinkSelectionProvisionService lsp = (LinkSelectionProvisionService)
-	    sb.getService(this, LinkSelectionProvisionService.class, null);
-	policy = lsp.getPolicy();
-	if (policy == null) {
-	    policy = new MinCostLinkSelectionPolicy();
-	    container.add(policy);
-	}
+    LinkSelectionPolicyServiceProvider(ServiceBroker sb, Container container) {
+        loggingService = sb.getService(this, LoggingService.class, null);
+        LinkSelectionProvisionService lsp =
+                sb.getService(this, LinkSelectionProvisionService.class, null);
+        policy = lsp.getPolicy();
+        if (policy == null) {
+            policy = new MinCostLinkSelectionPolicy();
+            container.add(policy);
+        }
     }
 
-
-
-
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == LinkSelectionPolicy.class) {
-	    if (requestor instanceof DestinationQueueImpl)
-		return policy;
-	    else if (loggingService.isErrorEnabled())
-		loggingService.error("Illegal request for LinkSelectionPolicy from "
-				   + requestor);
-	}
-	return null;
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == LinkSelectionPolicy.class) {
+            if (requestor instanceof DestinationQueueImpl) {
+                return policy;
+            } else if (loggingService.isErrorEnabled()) {
+                loggingService.error("Illegal request for LinkSelectionPolicy from " + requestor);
+            }
+        }
+        return null;
     }
 
-
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
-	if (serviceClass == LinkSelectionPolicy.class) {
-	    // ??
-	}
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
+        if (serviceClass == LinkSelectionPolicy.class) {
+            // ??
+        }
     }
-
-
-
 
 }

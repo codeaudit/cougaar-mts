@@ -25,6 +25,7 @@
  */
 
 package org.cougaar.mts.std;
+
 import java.io.FileInputStream;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,104 +44,101 @@ import org.cougaar.mts.base.DestinationQueue;
 import org.cougaar.mts.base.StandardAspect;
 
 /**
- * Not an aspect, but the aspect mechanism provides a simple way to
- * load classes on demand.  This is actually a ThreadListener which
- * alters the ThreadService's queuing behavior.
+ * Not an aspect, but the aspect mechanism provides a simple way to load classes
+ * on demand. This is actually a ThreadListener which alters the ThreadService's
+ * queuing behavior.
  */
 public class PrioritizedThreadsAspect
-    extends StandardAspect
-    implements ThreadListener
-{
+        extends StandardAspect
+        implements ThreadListener {
 
     private HashMap agent_priorities;
     private HashMap thread_priorities;
 
-    private Comparator priorityComparator =
-	new Comparator() {
-	    public boolean equals(Object x) {
-		return x == this;
-	    }
+    private final Comparator priorityComparator = new Comparator() {
+        public boolean equals(Object x) {
+            return x == this;
+        }
 
-	    public int compare(Object o1, Object o2) {
-		Object x = thread_priorities.get(o1);
-		Object y = thread_priorities.get(o2);
+        public int compare(Object o1, Object o2) {
+            Object x = thread_priorities.get(o1);
+            Object y = thread_priorities.get(o2);
 
-		// Entries placed on the queue before our listener
-		// starts won't be found by the map.  Deal with
-		// that here.
-		if (x == null && y == null) return 0;
-		if (x == null) return -1;
-		if (y == null) return 1;
-		
-		// Higher priority should precede lower, so reverse
-		// the arguments.
-		return ((Comparable) y).compareTo(x);
-	    }
-	};
+            // Entries placed on the queue before our listener
+            // starts won't be found by the map. Deal with
+            // that here.
+            if (x == null && y == null) {
+                return 0;
+            }
+            if (x == null) {
+                return -1;
+            }
+            if (y == null) {
+                return 1;
+            }
+
+            // Higher priority should precede lower, so reverse
+            // the arguments.
+            return ((Comparable) y).compareTo(x);
+        }
+    };
 
     public void load() {
-	super.load();
-	
-	thread_priorities = new HashMap();
-	agent_priorities = new HashMap();
-	Properties p = new Properties();
-	String priorities_file = 
-	    SystemProperties.getProperty("org.cougaar.lib.quo.priorities");
-	if (priorities_file != null) {
-	    try {
-		FileInputStream fis = new FileInputStream(priorities_file);
-		p.load(fis);
-		fis.close();
-	    } catch (java.io.IOException ex) {
-		System.err.println(ex);
-	    }
-	}
+        super.load();
 
-	Iterator itr = p.entrySet().iterator();
-	while (itr.hasNext()) {
-	    Map.Entry entry = (Map.Entry) itr.next();
-	    Object key = entry.getKey();
-	    String priority = (String) entry.getValue();
-	    if (priority != null) {
-		agent_priorities.put(key, new Integer(Integer.parseInt(priority)));
-	    }
-	}
-	
+        thread_priorities = new HashMap();
+        agent_priorities = new HashMap();
+        Properties p = new Properties();
+        String priorities_file = SystemProperties.getProperty("org.cougaar.lib.quo.priorities");
+        if (priorities_file != null) {
+            try {
+                FileInputStream fis = new FileInputStream(priorities_file);
+                p.load(fis);
+                fis.close();
+            } catch (java.io.IOException ex) {
+                System.err.println(ex);
+            }
+        }
 
-	ServiceBroker sb = getServiceBroker();
-	ThreadListenerService listenerService = (ThreadListenerService) 
-	    sb.getService(this, ThreadListenerService.class, null);
-	ThreadControlService controlService = (ThreadControlService) 
-	    sb.getService(this, ThreadControlService.class, null);
+        Iterator itr = p.entrySet().iterator();
+        while (itr.hasNext()) {
+            Map.Entry entry = (Map.Entry) itr.next();
+            Object key = entry.getKey();
+            String priority = (String) entry.getValue();
+            if (priority != null) {
+                agent_priorities.put(key, new Integer(Integer.parseInt(priority)));
+            }
+        }
 
+        ServiceBroker sb = getServiceBroker();
+        ThreadListenerService listenerService =
+                sb.getService(this, ThreadListenerService.class, null);
+        ThreadControlService controlService = sb.getService(this, ThreadControlService.class, null);
 
-	// Whack the queue
-	listenerService.addListener(this);
-	controlService.setQueueComparator(priorityComparator);
+        // Whack the queue
+        listenerService.addListener(this);
+        controlService.setQueueComparator(priorityComparator);
 
-	// we should release the services now.
+        // we should release the services now.
 
     }
-
 
     // MessageTransportAspect
     public Object getDelegate(Object delegatee, Class type) {
-	// not a real aspect, so no delegates
-	return null;
+        // not a real aspect, so no delegates
+        return null;
     }
-
-    
 
     // ThreadListener
     public void threadQueued(Schedulable thread, Object consumer) {
-	if (consumer instanceof DestinationQueue) {
-	    // Note the thread's priority just before it goes on the
-	    // queue.  The comparator will use this later. 
-	    DestinationQueue q  = (DestinationQueue) consumer;
-	    MessageAddress address = q.getDestination();
-	    Object priority =  agent_priorities.get(address.toString());
-	    thread_priorities.put(thread, priority);
-	}
+        if (consumer instanceof DestinationQueue) {
+            // Note the thread's priority just before it goes on the
+            // queue. The comparator will use this later.
+            DestinationQueue q = (DestinationQueue) consumer;
+            MessageAddress address = q.getDestination();
+            Object priority = agent_priorities.get(address.toString());
+            thread_priorities.put(thread, priority);
+        }
     }
 
     public void threadDequeued(Schedulable thread, Object consumer) {
@@ -155,7 +153,7 @@ public class PrioritizedThreadsAspect
     public void rightGiven(String consumer) {
     }
 
-    public  void rightReturned(String consumer) {
+    public void rightReturned(String consumer) {
     }
 
 }

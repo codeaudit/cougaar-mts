@@ -40,195 +40,164 @@ import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.core.wp.ListAllNodes;
-
 import org.cougaar.mts.std.AspectSupport;
 
 /**
- * This {@link ServiceProvider} provides the {@link NameSupport}
- * service.  An inner class implements that service.
+ * This {@link ServiceProvider} provides the {@link NameSupport} service. An
+ * inner class implements that service.
  */
-public final class NameSupportImpl implements ServiceProvider
-{
+public final class NameSupportImpl
+        implements ServiceProvider {
     private NameSupport service;
 
-    NameSupportImpl(String id,  ServiceBroker sb) 
-    {
-	service = new ServiceImpl(id, sb);
-	AspectSupport aspectSupport = (AspectSupport)
-	    sb.getService(this, AspectSupport.class, null);
-	service = (NameSupport) 
-	    aspectSupport.attachAspects(service, NameSupport.class);
+    NameSupportImpl(String id, ServiceBroker sb) {
+        service = new ServiceImpl(id, sb);
+        AspectSupport aspectSupport = sb.getService(this, AspectSupport.class, null);
+        service = aspectSupport.attachAspects(service, NameSupport.class);
     }
 
-    public Object getService(ServiceBroker sb, 
-			     Object requestor, 
-			     Class serviceClass) 
-    {
-	if (serviceClass == NameSupport.class) {
-	    return service;
-	} else {
-	    return null;
-	}
+    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        if (serviceClass == NameSupport.class) {
+            return service;
+        } else {
+            return null;
+        }
     }
 
-    public void releaseService(ServiceBroker sb, 
-			       Object requestor, 
-			       Class serviceClass, 
-			       Object service)
-    {
+    public void releaseService(ServiceBroker sb,
+                               Object requestor,
+                               Class serviceClass,
+                               Object service) {
     }
 
+    private final static class ServiceImpl
+            implements NameSupport {
+        private final LoggingService loggingService;
+        private final WhitePagesService wpService;
+        private final MessageAddress myNodeAddress;
+        private String hostname;
 
+        private ServiceImpl(String id, ServiceBroker sb) {
+            wpService = sb.getService(this, WhitePagesService.class, null);
+            loggingService = sb.getService(this, LoggingService.class, null);
+            myNodeAddress = MessageAddress.getMessageAddress(id);
 
-    private final static class ServiceImpl 
-	implements NameSupport
-    {
-	private LoggingService loggingService;
-	private WhitePagesService wpService;
-	private MessageAddress myNodeAddress;
-	private String id;
-	private String hostname;
+            try {
+                hostname = java.net.InetAddress.getLocalHost().getHostAddress();
+            } catch (java.net.UnknownHostException ex) {
+                loggingService.error(null, ex);
+            }
+        }
 
-	private ServiceImpl(String id, ServiceBroker sb) {
-	    this.id = id;
-	    wpService = (WhitePagesService) 
-		sb.getService(this, WhitePagesService.class, null);
-	    loggingService = (LoggingService)
-		sb.getService(this, LoggingService.class, null);
- 	    myNodeAddress = MessageAddress.getMessageAddress(id);
+        public MessageAddress getNodeMessageAddress() {
+            return myNodeAddress;
+        }
 
-	    try {
-		hostname =java.net.InetAddress.getLocalHost().getHostAddress();
-	    } catch (java.net.UnknownHostException ex) {
-		loggingService.error(null, ex);
-	    }
-	}
+        private class VoidWPCallback
+                implements Callback {
+            public void execute(Response response) {
+                if (response.isSuccess()) {
+                    if (loggingService.isInfoEnabled()) {
+                        loggingService.info("WP Response: " + response);
+                    }
+                } else {
+                    loggingService.error("WP Error: " + response);
+                }
+            }
+        }
 
-	public MessageAddress  getNodeMessageAddress() {
-	    return myNodeAddress;
-	}
+        private final void _register(String agent, URI ref, String protocol) {
+            AddressEntry entry = AddressEntry.getAddressEntry(agent, protocol, ref);
+            try {
+                Callback cb = new VoidWPCallback();
+                wpService.rebind(entry, cb);
+            } catch (Exception ex) {
+                loggingService.error(null, ex);
+            }
+        }
 
+        private final void _unregister(String agent, URI ref, String protocol) {
+            AddressEntry entry = AddressEntry.getAddressEntry(agent, protocol, ref);
+            Callback callback = new VoidWPCallback();
+            try {
+                wpService.unbind(entry, callback);
+            } catch (Exception ex) {
+                loggingService.error(null, ex);
+            }
+        }
 
-	private class VoidWPCallback implements Callback {
-	    public void execute(Response response) {
-		if (response.isSuccess()) {
-		    if (loggingService.isInfoEnabled()) {
-                        loggingService.info("WP Response: "+response);
-		    }
-		} else {
-		    loggingService.error("WP Error: "+response);
-		}
-	    }
-	}
+        public void registerAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
+            _register(addr.getAddress(), reference, protocol);
+        }
 
-	private final void _register(String agent, 
-				     URI ref,
-				     String protocol) 
-	{
-	    AddressEntry entry = 
-                AddressEntry.getAddressEntry(agent, protocol, ref);
-	    try {
-              Callback cb = new VoidWPCallback();
-	      wpService.rebind(entry, cb);
-	    } catch (Exception ex) {
-		loggingService.error(null, ex);
-	    }
-	}
+        public void unregisterAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
+            _unregister(addr.getAddress(), reference, protocol);
+        }
 
-	private final void _unregister(String agent, 
-				       URI ref,
-				       String protocol) 
-	{
-	    AddressEntry entry =
-		AddressEntry.getAddressEntry(agent, protocol, ref);
-	    Callback callback = new VoidWPCallback();
-	    try {
-		wpService.unbind(entry, callback);
-	    } catch (Exception ex) {
-		loggingService.error(null, ex);
-	    }
-	}
+        public void lookupAddressInNameServer(MessageAddress address,
+                                              String protocol,
+                                              Callback callback) {
+            wpService.get(address.getAddress(), protocol, callback);
+        }
 
-    
+        public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
+            return lookupAddressInNameServer(address, protocol, 0);
+        }
 
-	public void registerAgentInNameServer(URI reference, 
-					      MessageAddress addr, 
-					      String protocol)
-	{	
-	    _register(addr.getAddress(), reference, protocol);
-	}
-
-	public void unregisterAgentInNameServer(URI reference, 
-						MessageAddress addr, 
-						String protocol)
-	{	
-	    _unregister(addr.getAddress(), reference, protocol);
-	}
-
-	public void lookupAddressInNameServer(MessageAddress address, 
-					      String protocol,
-					      Callback callback)
-	{
-	    wpService.get(address.getAddress(), protocol, callback);
-	}
-
-	public URI lookupAddressInNameServer(MessageAddress address, 
-					     String protocol)
-	{
-	    return lookupAddressInNameServer(address, protocol, 0);
-	}
-
-	public URI lookupAddressInNameServer(MessageAddress address, 
-					     String protocol,
-					     long timeout)
-	{
+        public URI lookupAddressInNameServer(MessageAddress address, String protocol, long timeout) {
             AddressEntry entry;
-	    try {
-		entry = wpService.get(address.getAddress(), protocol, timeout);
-	    } catch (Exception ex) {
+            try {
+                entry = wpService.get(address.getAddress(), protocol, timeout);
+            } catch (Exception ex) {
                 entry = null;
-		loggingService.error(null, ex);
-	    }
-	    return (entry == null ? null : entry.getURI());
-	}
+                loggingService.error(null, ex);
+            }
+            return entry == null ? null : entry.getURI();
+        }
 
+        private static class EmptyIterator
+                implements Iterator {
+            public boolean hasNext() {
+                return false;
+            }
 
+            public Object next() {
+                return null;
+            }
 
-	private static class EmptyIterator implements Iterator {
-	    public boolean hasNext() {
-		return false;
-	    }
-	    public Object next() {
-		return null;
-	    }
-	    public void remove() {
-		throw new UnsupportedOperationException();
-	    }
-	}
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
 
-	public Iterator lookupMulticast(MulticastMessageAddress address) {
-	    try {
-		Set result = ListAllNodes.listAllNodes(wpService, 30000);
-		if (result == null) return new EmptyIterator();
+        public Iterator lookupMulticast(MulticastMessageAddress address) {
+            try {
+                Set result = ListAllNodes.listAllNodes(wpService, 30000);
+                if (result == null) {
+                    return new EmptyIterator();
+                }
                 final Iterator iter = result.iterator();
                 return new Iterator() {
                     public boolean hasNext() {
                         return iter.hasNext();
                     }
+
                     public Object next() {
                         String node = (String) iter.next();
                         return MessageAddress.getMessageAddress(node);
                     }
+
                     public void remove() {
                         throw new UnsupportedOperationException();
                     }
                 };
-	    } catch (Exception ex) {
-		if (loggingService.isWarnEnabled())
-		    loggingService.warn("Multicast had WP timout");
-		return new EmptyIterator();
-	    }
-	}
+            } catch (Exception ex) {
+                if (loggingService.isWarnEnabled()) {
+                    loggingService.warn("Multicast had WP timout");
+                }
+                return new EmptyIterator();
+            }
+        }
 
     }
 
