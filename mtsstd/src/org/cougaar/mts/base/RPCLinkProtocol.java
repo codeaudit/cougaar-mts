@@ -106,27 +106,10 @@ abstract public class RPCLinkProtocol
      * Ensure that some abstract form of 'servant' object exists for this
      * protocol that will allow other Nodes to send messages to this one.
      * <p>
-     * Conceptually this is an abstract method but for backward compatibility we
-     * have to provide a base implementation that invokes the deprecated method
-     * {@link findOrMakeNodeServant}.
-     * <p>
      * NB: ensureNodeServant should <b>only</b> be called from
      * {@link #remakeNodeServant}!.
      */
-    protected void ensureNodeServant() {
-        findOrMakeNodeServant();
-    }
-
-    /**
-     * The old name for {@link #ensureNodeServant}. Keep it around awhile as a
-     * deprecated method for backward compatibiity. If it's invoked and not
-     * overridden, that's an error.
-     */
-    @Deprecated
-    protected void findOrMakeNodeServant() {
-        String msg = getClass() + " must provide an implementation of ensureNodeServant";
-        throw new IllegalStateException(msg);
-    }
+    abstract protected void ensureNodeServant();
 
     /**
      * Releases all resources associated with this link protocol.
