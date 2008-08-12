@@ -49,13 +49,9 @@ final class DestinationQueueImpl
         extends MessageQueue
         implements DestinationQueue {
     private static final int INITIAL_RETRY_TIMEOUT =
-            PropertyParser.getInt("org.cougaar.core.mts.destq.retry.initialTimeout", 500); // 1
-                                                                                           // /
-                                                                                           // 2
-                                                                                           // second
+            PropertyParser.getInt("org.cougaar.core.mts.destq.retry.initialTimeout", 500); 
     private static final int MAX_RETRY_TIMEOUT =
-            PropertyParser.getInt("org.cougaar.core.mts.destq.retry.maxTimeout", 60 * 1000); // 1
-                                                                                             // minute
+            PropertyParser.getInt("org.cougaar.core.mts.destq.retry.maxTimeout", 60 * 1000); 
     private final MessageAddress destination;
     private LinkSelectionPolicy selectionPolicy;
     private DestinationQueue delegate;
