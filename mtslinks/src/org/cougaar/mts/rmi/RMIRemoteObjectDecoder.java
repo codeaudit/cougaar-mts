@@ -55,14 +55,10 @@ public final class RMIRemoteObjectDecoder {
             throws Exception {
         MyObjectInput lrIn = new MyObjectInput(uri);
         LiveRef lr = LiveRef.read(lrIn, lrIn.has_csf);
-        final RemoteRef rr = new UnicastRef(lr);
-        Class cl = Class.forName(lrIn.clname);
-        Constructor cons = cl.getConstructor(new Class[] {
-            RemoteRef.class
-        });
-        Object ret = cons.newInstance(new Object[] {
-            rr
-        });
+        RemoteRef rr = new UnicastRef(lr);
+        Class<?> cl = Class.forName(lrIn.clname);
+        Constructor<?> cons = cl.getConstructor(RemoteRef.class);
+        Object ret = cons.newInstance(rr);
         return ret;
     }
 

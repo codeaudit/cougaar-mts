@@ -310,8 +310,8 @@ public class UdpSocketLinkProtocol
             }
         }
 
-        public Class<?> getProtocolClass() {
-            return UdpSocketLinkProtocol.this.getClass();
+        public Class<UdpSocketLinkProtocol> getProtocolClass() {
+            return UdpSocketLinkProtocol.class;
         }
 
     }

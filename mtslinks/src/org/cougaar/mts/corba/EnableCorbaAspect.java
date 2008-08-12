@@ -36,13 +36,11 @@ import org.cougaar.mts.std.AttributedMessage;
  * the former 10 seconds in.
  */
 public class EnableCorbaAspect
-        extends StandardAspect
-
-{
+        extends StandardAspect {
     private long cutover_time;
     private final long startup_period = 10000; // make this a parameter
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class && object instanceof CorbaLinkProtocol) {
             return new Delegate((DestinationLink) object);
         }

@@ -25,7 +25,6 @@
  */
 package org.cougaar.mts.rmi;
 
-import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -56,8 +55,7 @@ public class MTImpl
     private transient final MessageDeliverer deliverer;
     private transient final SocketFactory socfac;
 
-    public MTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac)
-            throws RemoteException {
+    public MTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac) {
         // super(0, socfac, socfac);
         super();
         this.socfac = socfac;

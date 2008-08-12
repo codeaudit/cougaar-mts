@@ -166,6 +166,7 @@ public class HTTPLinkProtocol
      * registerServlet(), which won't be called until the ServiceAvailableEvent
      * says it's time.
      */
+    @SuppressWarnings("unchecked")
     protected void ensureNodeServant() {
         if (servant_made) {
             return;
@@ -251,8 +252,8 @@ public class HTTPLinkProtocol
             super(target);
         }
 
-        public Class getProtocolClass() {
-            return HTTPLinkProtocol.this.getClass();
+        public Class<HTTPLinkProtocol> getProtocolClass() {
+            return HTTPLinkProtocol.class;
         }
 
         protected Object decodeRemoteRef(URI ref)
@@ -291,7 +292,7 @@ public class HTTPLinkProtocol
          * overridden if streaming format is different (e.g., SOAP)
          */
         protected Object postMessage(URL url, AttributedMessage message)
-                throws IOException, ClassNotFoundException, UnknownHostException {
+                throws IOException, UnknownHostException {
             ObjectInputStream ois = null;
             ObjectOutputStream out = null;
             try {

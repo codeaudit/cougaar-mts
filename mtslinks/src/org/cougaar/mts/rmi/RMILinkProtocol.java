@@ -27,6 +27,7 @@ package org.cougaar.mts.rmi;
 
 import java.net.URI;
 import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -107,8 +108,7 @@ public class RMILinkProtocol
         return 1000;
     }
 
-    protected MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac)
-            throws java.rmi.RemoteException {
+    protected MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac) {
         return new MTImpl(myAddress, getServiceBroker(), socfac);
     }
 
@@ -134,17 +134,20 @@ public class RMILinkProtocol
         // the exception.
     }
 
+    /**
+     * Need to declare CommFailure exception even though it isn't thrown here
+     * because overriding methods can throw it.  Keep eclipse happy by adding
+     * javadoc for it.
+     *
+     * @throws CommFailureException
+     */
     protected MessageAttributes doForwarding(MT remote, AttributedMessage message)
-            throws MisdeliveredMessageException, java.rmi.RemoteException, CommFailureException
-    // Declare CommFailureException because the signature needs to
-    // match SerializedRMILinkProtocol's doForwarding method. That
-    // exception will never be thrown here.
-    {
+            throws MisdeliveredMessageException, RemoteException, CommFailureException {
         MessageAttributes result = null;
         try {
             SchedulableStatus.beginNetIO("RMI call");
             result = remote.rerouteMessage(message); // **** RMI-specific
-        } catch (java.rmi.RemoteException remote_ex) {
+        } catch (RemoteException remote_ex) {
             Throwable cause = remote_ex.getCause();
             checkForMisdelivery(cause, message);
             // Not a misdelivery - rethrow the remote exception
@@ -292,7 +295,7 @@ public class RMILinkProtocol
             }
         }
 
-        public Class getProtocolClass() {
+        public Class<? extends RMILinkProtocol> getProtocolClass() {
             return RMILinkProtocol.this.getClass();
         }
 

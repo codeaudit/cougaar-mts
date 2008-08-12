@@ -76,7 +76,7 @@ public interface DestinationLink {
     /**
      * @return the class of corresponding LinkProtocol.
      */
-    Class getProtocolClass();
+    Class<? extends LinkProtocol> getProtocolClass();
 
     /**
      * Is this link currently legitimate and functional? The default is true for

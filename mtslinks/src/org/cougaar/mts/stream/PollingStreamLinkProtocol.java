@@ -228,7 +228,8 @@ abstract public class PollingStreamLinkProtocol<I>
             }
         }
 
-        public Class<?> getProtocolClass() {
+        @SuppressWarnings("unchecked") // unavoidable (?) generics warning
+        public Class<? extends PollingStreamLinkProtocol> getProtocolClass() {
             return PollingStreamLinkProtocol.this.getClass();
         }
     }

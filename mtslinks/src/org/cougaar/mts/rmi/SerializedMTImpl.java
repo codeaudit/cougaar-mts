@@ -25,8 +25,6 @@
  */
 package org.cougaar.mts.rmi;
 
-import java.rmi.RemoteException;
-
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -44,8 +42,7 @@ import org.cougaar.mts.std.AttributedMessage;
 public class SerializedMTImpl
         extends MTImpl
         implements SerializedMT {
-    public SerializedMTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac)
-            throws RemoteException {
+    public SerializedMTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac) {
         super(addr, sb, socfac);
     }
 

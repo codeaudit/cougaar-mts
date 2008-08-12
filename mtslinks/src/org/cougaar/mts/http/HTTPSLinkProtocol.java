@@ -60,7 +60,7 @@ public class HTTPSLinkProtocol
 
     // cost of DestinationLink is hard-coded to 500
 
-    public Class getProtocolClass() {
+    public Class<HTTPSLinkProtocol> getProtocolClass() {
         return HTTPSLinkProtocol.class;
     } // getProtocolClass()
 

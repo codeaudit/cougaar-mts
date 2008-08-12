@@ -578,7 +578,7 @@ public class JMSLinkProtocol
             }
         }
 
-        public Class getProtocolClass() {
+        public Class<? extends JMSLinkProtocol> getProtocolClass() {
             return JMSLinkProtocol.this.getClass();
         }
 

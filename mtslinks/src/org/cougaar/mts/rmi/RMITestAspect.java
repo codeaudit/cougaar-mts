@@ -45,7 +45,7 @@ public class RMITestAspect
 {
     private RMISocketControlService svc;
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             return new Delegate((DestinationLink) object);
         } else {

@@ -47,11 +47,11 @@ abstract public class StandardAspect
         }
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         return null;
     }
 
-    public Object getReverseDelegate(Object delegate, Class type) {
+    public Object getReverseDelegate(Object delegate, Class<?> type) {
         return null;
     }
 

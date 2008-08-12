@@ -59,7 +59,7 @@ abstract public class DestinationLinkDelegateImplBase
         return link.cost(message);
     }
 
-    public Class getProtocolClass() {
+    public Class<? extends LinkProtocol> getProtocolClass() {
         return link.getProtocolClass();
     }
 

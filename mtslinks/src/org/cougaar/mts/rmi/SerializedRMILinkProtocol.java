@@ -56,8 +56,7 @@ public class SerializedRMILinkProtocol
         return super.computeCost(message);
     }
 
-    protected MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac)
-            throws java.rmi.RemoteException {
+    protected MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac) {
         return new SerializedMTImpl(myAddress, getServiceBroker(), socfac);
     }
 

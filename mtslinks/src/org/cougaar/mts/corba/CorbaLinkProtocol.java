@@ -135,7 +135,7 @@ public class CorbaLinkProtocol
             return mt;
         }
 
-        public Class getProtocolClass() {
+        public Class<CorbaLinkProtocol> getProtocolClass() {
             return CorbaLinkProtocol.class;
         }
 

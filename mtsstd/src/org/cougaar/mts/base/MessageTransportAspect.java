@@ -36,7 +36,7 @@ package org.cougaar.mts.base;
  * in envelopes in the proper (ie reverse order).
  */
 public interface MessageTransportAspect {
-    Object getDelegate(Object delegate, Class type);
+    Object getDelegate(Object delegate, Class<?> type);
 
-    Object getReverseDelegate(Object delegate, Class type);
+    Object getReverseDelegate(Object delegate, Class<?> type);
 }

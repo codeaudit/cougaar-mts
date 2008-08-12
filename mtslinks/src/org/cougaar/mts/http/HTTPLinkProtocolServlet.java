@@ -154,6 +154,7 @@ class HTTPLinkProtocolServlet
 
     private void debugHeaders(HttpServletRequest req) {
         logger.debug("########## HTTP HEADERS ##########");
+        @SuppressWarnings("unchecked") // HttpServletRequest not genericized
         Enumeration e = req.getHeaderNames();
         while (e.hasMoreElements()) {
             String hdr = (String) e.nextElement();

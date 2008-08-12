@@ -62,8 +62,11 @@ public class MTImpl
             message = (AttributedMessage) SerializationUtils.fromByteArray(message_bytes);
         } catch (DontRetryException mex) {
             dontRetryException(mex);
+            return null;
         } catch (java.io.IOException iox) {
+            return null;
         } catch (ClassNotFoundException cnf) {
+            return null;
         }
 
         MessageAttributes metadata = null;

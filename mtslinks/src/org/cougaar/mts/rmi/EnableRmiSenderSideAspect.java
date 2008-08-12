@@ -49,7 +49,7 @@ public class EnableRmiSenderSideAspect
         failureTimeout = getParameter("failure-timeout", 30000);
     }
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegatee;
             if (link.getProtocolClass() == RMILinkProtocol.class) {

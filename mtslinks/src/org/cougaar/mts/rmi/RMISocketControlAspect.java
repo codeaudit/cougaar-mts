@@ -76,7 +76,7 @@ public class RMISocketControlAspect
         rootSB.addService(RMISocketControlService.class, provider);
     }
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == Socket.class) {
             impl.cacheSocket((Socket) object);
         }
@@ -85,7 +85,8 @@ public class RMISocketControlAspect
 
     private class Provider
             implements ServiceProvider {
-        public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        
+        public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
             if (serviceClass == RMISocketControlService.class) {
                 return impl;
             } else if (serviceClass == SocketManagementService.class) {
@@ -97,7 +98,7 @@ public class RMISocketControlAspect
 
         public void releaseService(ServiceBroker sb,
                                    Object requestor,
-                                   Class serviceClass,
+                                   Class<?> serviceClass,
                                    Object service) {
         }
     }
