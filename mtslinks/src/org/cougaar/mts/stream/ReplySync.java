@@ -145,8 +145,13 @@ class ReplySync<I> {
     }
 
     boolean isReply(MessageAttributes attrs) {
-        boolean isReply = (Boolean) attrs.getAttribute(IS_MTS_REPLY_PROP);
-
+        Boolean isReply = (Boolean) attrs.getAttribute(IS_MTS_REPLY_PROP);
+        if (isReply == null) {
+            // attribute is not present, what does that mean?
+            log.warn("Message has no value for attribute " +IS_MTS_REPLY_PROP
+                     + "\n" + attrs);
+            return false;
+        }
         Integer id = (Integer) attrs.getAttribute(MESSAGE_NUMBER_PROP);
         if (!isReply) {
             if (log.isDebugEnabled()) {
