@@ -26,7 +26,6 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.service.LoggingService;
 
@@ -40,9 +39,9 @@ import org.cougaar.core.service.LoggingService;
 final class LinkProtocolFactory {
 
     private final LoggingService loggingService;
-    private final Container container;
+    private final MessageTransportServiceProvider container;
 
-    LinkProtocolFactory(Container container, ServiceBroker sb) {
+    LinkProtocolFactory(MessageTransportServiceProvider container, ServiceBroker sb) {
         loggingService = sb.getService(this, LoggingService.class, null);
         this.container = container;
         MessageTransportRegistryService reg =

@@ -26,7 +26,6 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
@@ -43,7 +42,7 @@ public class LinkSelectionPolicyServiceProvider
     private LinkSelectionPolicy policy;
     private final LoggingService loggingService;
 
-    LinkSelectionPolicyServiceProvider(ServiceBroker sb, Container container) {
+    LinkSelectionPolicyServiceProvider(ServiceBroker sb, MessageTransportServiceProvider container) {
         loggingService = sb.getService(this, LoggingService.class, null);
         LinkSelectionProvisionService lsp =
                 sb.getService(this, LinkSelectionProvisionService.class, null);

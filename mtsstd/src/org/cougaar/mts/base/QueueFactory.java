@@ -30,9 +30,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.cougaar.core.component.Component;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.std.AspectFactory;
+
 
 /**
  * This abstraction provides 'listener' support to inform interested parties
@@ -41,7 +43,16 @@ import org.cougaar.mts.std.AspectFactory;
 abstract class QueueFactory
         extends AspectFactory {
     private final Set<QueueListener> listeners = new HashSet<QueueListener>();
-
+    private final MessageTransportServiceProvider container;
+    
+    protected QueueFactory(MessageTransportServiceProvider container) {
+        this.container = container;
+    }
+    
+    protected void addComponent(Component component) {
+        container.add(component);
+    }
+    
     public void addListener(QueueListener listener) {
         synchronized (listeners) {
             listeners.add(listener);

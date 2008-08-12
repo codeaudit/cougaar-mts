@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import java.util.List;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.Message;
@@ -46,17 +45,17 @@ public class SendQueueFactory
         implements ServiceProvider, SendQueueProviderService {
     private SendQueue queue; // singleton
     private SendQueueImpl impl;
-    private final Container container;
     private final String id;
 
-    SendQueueFactory(Container container, String id) {
-        this.container = container;
+    SendQueueFactory(String id, MessageTransportServiceProvider container) {
+        super(container);
         this.id = id;
     }
 
     public void load() {
         super.load();
-        impl = new SendQueueImpl(id + "/OutQ", container);
+        impl = new SendQueueImpl(id + "/OutQ");
+        addComponent(impl);
         queue = attachAspects(impl, SendQueue.class);
     }
 

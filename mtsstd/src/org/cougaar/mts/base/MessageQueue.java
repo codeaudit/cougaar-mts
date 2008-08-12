@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
@@ -61,7 +60,7 @@ abstract class MessageQueue
     private AttributedMessage in_progress;
     private final Object in_progress_lock, queue_processing;
 
-    MessageQueue(String name, Container container) {
+    MessageQueue(String name) {
         this.name = name;
         in_progress_lock = new Object();
         queue_processing = new Object();

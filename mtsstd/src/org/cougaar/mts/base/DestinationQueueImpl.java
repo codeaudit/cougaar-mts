@@ -29,7 +29,6 @@ package org.cougaar.mts.base;
 import java.util.Iterator;
 import java.util.List;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadService;
@@ -105,10 +104,9 @@ final class DestinationQueueImpl
 
     }
 
-    DestinationQueueImpl(MessageAddress destination, Container container) {
-        super(destination.toString() + "/DestQ", container);
+    DestinationQueueImpl(MessageAddress destination) {
+        super(destination.toString() + "/DestQ");
         this.destination = destination;
-        container.add(this);
     }
 
     // workaround for bug 3723

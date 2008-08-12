@@ -265,7 +265,7 @@ public final class MessageTransportServiceProvider
         add(routerFactory);
         csb.addService(Router.class, routerFactory);
 
-        SendQueueFactory sendQFactory = new SendQueueFactory(this, id);
+        SendQueueFactory sendQFactory = new SendQueueFactory(id, this);
         add(sendQFactory);
         csb.addService(SendQueueProviderService.class, sendQFactory);
 

@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.Message;
@@ -56,10 +55,9 @@ public class DestinationQueueFactory
         implements DestinationQueueProviderService, DestinationQueueMonitorService, ServiceProvider {
     private final Map<MessageAddress,DestinationQueue> queues;
     private final List<DestinationQueueImpl> impls;
-    private final Container container;
 
-    DestinationQueueFactory(Container container) {
-        this.container = container;
+    DestinationQueueFactory(MessageTransportServiceProvider container) {
+        super(container);
         queues = new HashMap<MessageAddress,DestinationQueue>();
         impls = new ArrayList<DestinationQueueImpl>();
     }
@@ -78,7 +76,8 @@ public class DestinationQueueFactory
         synchronized (queues) {
             q = queues.get(dest);
             if (q == null) {
-                qimpl = new DestinationQueueImpl(dest, container);
+                qimpl = new DestinationQueueImpl(dest);
+                addComponent(qimpl);
                 q = attachAspects(qimpl, DestinationQueue.class);
                 qimpl.setDelegate(q);
                 queues.put(dest, q);

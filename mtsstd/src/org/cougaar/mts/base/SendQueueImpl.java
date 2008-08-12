@@ -26,7 +26,6 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.mts.std.AttributedMessage;
 
@@ -44,9 +43,8 @@ public final class SendQueueImpl
         implements SendQueue {
     private Router router;
 
-    public SendQueueImpl(String name, Container container) {
-        super(name, container);
-        container.add(this);
+    public SendQueueImpl(String name) {
+        super(name);
     }
 
     public void load() {
