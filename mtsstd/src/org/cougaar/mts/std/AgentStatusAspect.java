@@ -183,74 +183,23 @@ public class AgentStatusAspect
     }
 
     private AgentState newAgentState() {
-        AgentState state = new AgentState();
-        // JAZ must be a better way to initialize an object
-        state.timestamp = System.currentTimeMillis();
-        state.status = UNREGISTERED;
-        state.queueLength = 0;
-        state.receivedCount = 0;
-        state.receivedBytes = 0;
-        state.lastReceivedBytes = 0;
-        state.sendCount = 0;
-        state.deliveredCount = 0;
-        state.deliveredBytes = 0;
-        state.lastDeliveredBytes = 0;
-        state.deliveredLatencySum = 0;
-        state.lastDeliveredLatency = 0;
-        state.averageDeliveredLatency = 0;
-        state.unregisteredNameCount = 0;
-        state.nameLookupFailureCount = 0;
-        state.commFailureCount = 0;
-        state.misdeliveredMessageCount = 0;
-        state.lastLinkProtocolTried = null;
-        state.lastLinkProtocolSuccess = null;
-        state.lastHeardFrom = 0;
-        state.lastSentTo = 0;
-        state.lastFailedSend = 0;
-        return state;
+        return new AgentState();
     }
 
-    // JAZ must be a better way to clone an object
     private AgentState snapshotState(AgentState state) {
-        AgentState result = new AgentState();
-        synchronized (state) {
-            result.timestamp = state.timestamp;
-            result.status = state.status;
-            result.queueLength = state.queueLength;
-            result.receivedCount = state.receivedCount;
-            result.receivedBytes = state.receivedBytes;
-            result.lastReceivedBytes = state.lastReceivedBytes;
-            result.sendCount = state.sendCount;
-            result.deliveredCount = state.deliveredCount;
-            result.deliveredBytes = state.deliveredBytes;
-            result.lastDeliveredBytes = state.lastDeliveredBytes;
-            result.deliveredLatencySum = state.deliveredLatencySum;
-            result.lastDeliveredLatency = state.lastDeliveredLatency;
-            result.averageDeliveredLatency = state.averageDeliveredLatency;
-            result.unregisteredNameCount = state.unregisteredNameCount;
-            result.nameLookupFailureCount = state.nameLookupFailureCount;
-            result.commFailureCount = state.commFailureCount;
-            result.misdeliveredMessageCount = state.misdeliveredMessageCount;
-            result.lastLinkProtocolTried = state.lastLinkProtocolTried;
-            result.lastLinkProtocolSuccess = state.lastLinkProtocolSuccess;
-            result.lastHeardFrom = state.lastHeardFrom;
-            result.lastSentTo = state.lastSentTo;
-            result.lastFailedSend = state.lastFailedSend;
+        try {
+            return state.clone();
+        } catch (CloneNotSupportedException e) {
+            System.err.println("This can't happen");
+            return null;
         }
-        return result;
     }
 
     private Metric longMetric(long value) {
         return new MetricImpl(new Long(value), SEND_CREDIBILITY, "", "AgentStatusAspect");
     }
 
-    //
     // Agent Status Service Public Interface
-
-    // Deprecated: For backwards compatibility
-    public AgentState getAgentState(MessageAddress address) {
-        return getRemoteAgentState(address);
-    }
 
     public AgentState getNodeState() {
         return snapshotState(nodeState);
@@ -362,9 +311,7 @@ public class AgentStatusAspect
 
         public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
-                MisdeliveredMessageException
-
-        {
+                MisdeliveredMessageException {
             MessageAddress remoteAddr = message.getTarget().getPrimary();
             AgentState remoteState = ensureRemoteState(remoteAddr);
             MessageAddress localAddr = message.getOriginator().getPrimary();
@@ -408,7 +355,7 @@ public class AgentStatusAspect
                         remoteState.lastHeardFrom = endTime;
                         remoteState.lastSentTo = endTime;
                     }
-                    remoteState.status = AgentStatusService.ACTIVE;
+                    remoteState.status = AgentStatusService.Status.ACTIVE;
                     remoteState.timestamp = System.currentTimeMillis();
                     remoteState.deliveredCount++;
                     remoteState.deliveredBytes += msgBytes;
@@ -421,7 +368,7 @@ public class AgentStatusAspect
                     remoteState.lastLinkProtocolSuccess = getProtocolClass().getName();
                 }
                 synchronized (localState) {
-                    localState.status = AgentStatusService.ACTIVE;
+                    localState.status = AgentStatusService.Status.ACTIVE;
                     localState.timestamp = System.currentTimeMillis();
                     localState.deliveredCount++;
                     localState.deliveredBytes += msgBytes;
@@ -438,7 +385,7 @@ public class AgentStatusAspect
             } catch (UnregisteredNameException unreg) {
                 long now = System.currentTimeMillis();
                 synchronized (remoteState) {
-                    remoteState.status = UNREGISTERED;
+                    remoteState.status = Status.UNREGISTERED;
                     remoteState.timestamp = now;
                     remoteState.unregisteredNameCount++;
                     remoteState.lastFailedSend = now;
@@ -448,7 +395,7 @@ public class AgentStatusAspect
             } catch (NameLookupException namex) {
                 long now = System.currentTimeMillis();
                 synchronized (remoteState) {
-                    remoteState.status = UNKNOWN;
+                    remoteState.status = Status.UNKNOWN;
                     remoteState.timestamp = now;
                     remoteState.nameLookupFailureCount++;
                     remoteState.lastFailedSend = now;
@@ -458,7 +405,7 @@ public class AgentStatusAspect
             } catch (CommFailureException commex) {
                 long now = System.currentTimeMillis();
                 synchronized (remoteState) {
-                    remoteState.status = UNREACHABLE;
+                    remoteState.status = Status.UNREACHABLE;
                     remoteState.timestamp = now;
                     remoteState.commFailureCount++;
                     remoteState.lastFailedSend = now;
@@ -468,7 +415,7 @@ public class AgentStatusAspect
             } catch (MisdeliveredMessageException misd) {
                 long now = System.currentTimeMillis();
                 synchronized (remoteState) {
-                    remoteState.status = UNREGISTERED;
+                    remoteState.status = Status.UNREGISTERED;
                     remoteState.timestamp = now;
                     remoteState.misdeliveredMessageCount++;
                     remoteState.lastFailedSend = now;
@@ -532,8 +479,8 @@ public class AgentStatusAspect
 
     private class SendQueueDelegate
             extends SendQueueDelegateImplBase {
+        
         public SendQueueDelegate(SendQueue queue) {
-
             super(queue);
         }
 

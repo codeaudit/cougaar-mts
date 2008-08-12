@@ -100,7 +100,7 @@ abstract public class AgentStatusServlet
         out.print(getDescription(agent));
         out.print("</h2>");
         out.print("<table border=1>\n");
-        row(out, "Status", state.status);
+        row(out, "Status", state.status.name());
         row(out, "Messages Received", state.receivedCount);
         row(out, "Bytes Received", state.receivedBytes);
         row(out, "Last Received Bytes", state.lastReceivedBytes);
