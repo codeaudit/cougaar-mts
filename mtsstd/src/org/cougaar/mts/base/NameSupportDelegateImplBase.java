@@ -72,7 +72,7 @@ abstract public class NameSupportDelegateImplBase
         return nameSupport.lookupAddressInNameServer(address, protocol, timeout);
     }
 
-    public Iterator lookupMulticast(MulticastMessageAddress address) {
+    public Iterator<MessageAddress> lookupMulticast(MulticastMessageAddress address) {
         return nameSupport.lookupMulticast(address);
     }
 

@@ -44,7 +44,7 @@ public class MinCostLinkSelectionPolicy
     // System.out.println("ID=" +getRegistry().getIdentifier());
     // }
 
-    public DestinationLink selectLink(Iterator links,
+    public DestinationLink selectLink(Iterator<DestinationLink> links,
                                       AttributedMessage message,
                                       AttributedMessage failedMessage,
                                       int retryCount,
@@ -52,7 +52,7 @@ public class MinCostLinkSelectionPolicy
         int min_cost = -1;
         DestinationLink cheapest = null;
         while (links.hasNext()) {
-            DestinationLink link = (DestinationLink) links.next();
+            DestinationLink link = links.next();
             int cost = link.cost(message);
 
             // If a link reports 0 cost, use it. With proper

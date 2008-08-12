@@ -27,9 +27,6 @@
 package org.cougaar.mts.std;
 
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,10 +60,11 @@ public final class DestinationQueueMonitorServlet
 
     private final DestinationQueueMonitorService destinationQueueMonitorService;
 
-    private static final Comparator MESSAGE_ADDRESS_COMPARATOR = new Comparator() {
-        public int compare(Object a, Object b) {
-            String sa = ((MessageAddress) a).getAddress();
-            String sb = ((MessageAddress) b).getAddress();
+    private static final Comparator<MessageAddress> MESSAGE_ADDRESS_COMPARATOR = 
+        new Comparator<MessageAddress>() {
+        public int compare(MessageAddress a, MessageAddress b) {
+            String sa = a.getAddress();
+            String sb = b.getAddress();
             return sa.compareTo(sb);
         }
     };
@@ -75,9 +73,7 @@ public final class DestinationQueueMonitorServlet
         super(sb);
 
         destinationQueueMonitorService =
-                (DestinationQueueMonitorService) sb.getService(this,
-                                                               DestinationQueueMonitorService.class,
-                                                               null);
+            sb.getService(this, DestinationQueueMonitorService.class, null);
     }
 
     // Implementations of ServletFrameset's abstract methods
@@ -244,7 +240,7 @@ public final class DestinationQueueMonitorServlet
             count += messages.length;
         }
 
-        if (minTime > 0) {
+        if (minTime > 0 && minAddr != null) {
             out.print("Message[" + minCount + " / " + count + "] to " + minAddr.getAddress()
                     + " has been pending for <b>" + (System.currentTimeMillis() - minTime)
                     + "</b> millis (" + new Date(minTime) + ")<p>\n");
@@ -271,13 +267,13 @@ public final class DestinationQueueMonitorServlet
         printQueues(dest, out);
     }
 
-    protected List getDataSelectionList(HttpServletRequest request) {
+    protected List<String> getDataSelectionList(HttpServletRequest request) {
         MessageAddress[] destinations = getDestinations("*");
         int n = destinations.length;
         if (n == 0) {
             return Collections.singletonList("*");
         }
-        List ret = new ArrayList(n + 1);
+        List<String> ret = new ArrayList<String>(n + 1);
         ret.add("*");
         for (int i = 0; i < n; i++) {
             String s = destinations[i].getAddress();
@@ -317,9 +313,8 @@ public final class DestinationQueueMonitorServlet
             out.print("Null DestinationQueueMonitorService\n");
         } else {
             out.print("<ol>\n");
-            List l = getDataSelectionList(request);
-            for (int i = 0, n = l.size(); i < n; i++) {
-                String s = (String) l.get(i);
+            List<String> l = getDataSelectionList(request);
+            for (String s : l) {
                 out.print("<li><a href=\"" + request.getRequestURL() + "?" + FRAME + "="
                         + DATA_FRAME + "&" + DESTINATION_PARAM + "=" + s + "\" target=\""
                         + DATA_FRAME + "\">" + s + "</a></li>\n");
@@ -391,22 +386,6 @@ public final class DestinationQueueMonitorServlet
             printInfoFrame(request, out);
         } else {
             super.printFrame(frame, request, out);
-        }
-    }
-
-    private static final String encodeUTF8(String s) {
-        try {
-            return URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UTF-8 not supported?", e);
-        }
-    }
-
-    private static final String decodeUTF8(String s) {
-        try {
-            return URLDecoder.decode(s, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UTF-8 not supported?", e);
         }
     }
 

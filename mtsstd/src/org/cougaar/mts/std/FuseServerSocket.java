@@ -29,6 +29,7 @@ package org.cougaar.mts.std;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.cougaar.mts.base.ServerSocketWrapper;
 import org.cougaar.mts.base.SocketDelegateImplBase;
@@ -81,19 +82,19 @@ public class FuseServerSocket
         }
     }
 
-    private final HashMap stats;
+    private final Map<String,ConnectionStats> stats;
 
     public FuseServerSocket()
             throws java.io.IOException {
         super();
-        stats = new HashMap();
+        stats = new HashMap<String,ConnectionStats>();
     }
 
     private ConnectionStats getRecord(InetAddress address) {
         String client = address.getCanonicalHostName();
         ConnectionStats stat = null;
         synchronized (stats) {
-            stat = (ConnectionStats) stats.get(client);
+            stat = stats.get(client);
             if (stat == null) {
                 stat = new ConnectionStats(client);
                 stats.put(client, stat);

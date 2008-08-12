@@ -46,7 +46,7 @@ import org.cougaar.mts.base.StandardAspect;
 public class BufferedStreamsAspect
         extends StandardAspect {
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new BufferedMessageWriter(wtr);

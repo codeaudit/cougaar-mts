@@ -50,7 +50,7 @@ import org.cougaar.core.service.MessageProtectionService;
 public class MessageProtectionServiceImpl
         implements MessageProtectionService, ServiceProvider {
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == MessageProtectionService.class) {
             return this;
         } else {
@@ -60,7 +60,7 @@ public class MessageProtectionServiceImpl
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

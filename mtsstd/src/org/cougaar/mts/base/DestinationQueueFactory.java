@@ -28,11 +28,13 @@ package org.cougaar.mts.base;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
@@ -52,14 +54,14 @@ import org.cougaar.util.UnaryPredicate;
 public class DestinationQueueFactory
         extends QueueFactory
         implements DestinationQueueProviderService, DestinationQueueMonitorService, ServiceProvider {
-    private final HashMap queues;
-    private final ArrayList impls;
+    private final Map<MessageAddress,DestinationQueue> queues;
+    private final List<DestinationQueueImpl> impls;
     private final Container container;
 
     DestinationQueueFactory(Container container) {
         this.container = container;
-        queues = new HashMap();
-        impls = new ArrayList();
+        queues = new HashMap<MessageAddress,DestinationQueue>();
+        impls = new ArrayList<DestinationQueueImpl>();
     }
 
     /**
@@ -74,10 +76,10 @@ public class DestinationQueueFactory
         DestinationQueue q = null;
         DestinationQueueImpl qimpl = null;
         synchronized (queues) {
-            q = (DestinationQueue) queues.get(dest);
+            q = queues.get(dest);
             if (q == null) {
                 qimpl = new DestinationQueueImpl(dest, container);
-                q = (DestinationQueue) attachAspects(qimpl, DestinationQueue.class);
+                q = attachAspects(qimpl, DestinationQueue.class);
                 qimpl.setDelegate(q);
                 queues.put(dest, q);
                 synchronized (impls) {
@@ -90,14 +92,12 @@ public class DestinationQueueFactory
 
     // NB: This does _not_ prevent another thread from adding new
     // messages while the remove operation is in progress.
-    public void removeMessages(UnaryPredicate pred, ArrayList removed) {
-        ArrayList copy;
+    public void removeMessages(UnaryPredicate pred, List<Message> removed) {
+        List<MessageQueue> copy;
         synchronized (impls) {
-            copy = new ArrayList(impls);
+            copy = new ArrayList<MessageQueue>(impls);
         }
-        Iterator itr = copy.iterator();
-        while (itr.hasNext()) {
-            MessageQueue queue = (MessageQueue) itr.next();
+        for (MessageQueue queue : copy) {
             queue.removeMessages(pred, removed);
         }
         notifyListeners(removed);
@@ -115,12 +115,12 @@ public class DestinationQueueFactory
         DestinationQueue q = null;
         MessageAddress dest = destination.getPrimary();
         synchronized (queues) {
-            q = (DestinationQueue) queues.get(dest);
+            q = queues.get(dest);
         }
         return q == null ? null : q.snapshot();
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         // Restrict this service
         if (serviceClass == DestinationQueueProviderService.class) {
             return this;
@@ -132,7 +132,7 @@ public class DestinationQueueFactory
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

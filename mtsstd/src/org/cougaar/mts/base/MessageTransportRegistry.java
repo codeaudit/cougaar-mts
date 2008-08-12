@@ -29,6 +29,7 @@ package org.cougaar.mts.base;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -56,7 +57,7 @@ public final class MessageTransportRegistry
         service = new ServiceImpl(name, sb);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == MessageTransportRegistryService.class) {
             return service;
         } else {
@@ -66,7 +67,7 @@ public final class MessageTransportRegistry
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 
@@ -74,10 +75,13 @@ public final class MessageTransportRegistry
             implements MessageTransportRegistryService, IncarnationService.Callback {
 
         private final String name;
-        private final HashMap receiveLinks = new HashMap(89);
-        private final HashMap agentStates = new HashMap();
-        private final HashMap localClients = new HashMap();
-        private final ArrayList linkProtocols = new ArrayList();
+        private final Map<MessageAddress,ReceiveLink> receiveLinks = 
+            new HashMap<MessageAddress,ReceiveLink>();
+        private final Map<MessageAddress,AgentState> agentStates = 
+            new HashMap<MessageAddress,AgentState>();
+        private final Map<MessageAddress,MessageTransportClient> localClients = 
+            new HashMap<MessageAddress,MessageTransportClient>();
+        private final List<LinkProtocol> linkProtocols = new ArrayList<LinkProtocol>();
         private ReceiveLinkProviderService receiveLinkProvider;
         private NameSupport nameSupport;
         private final ServiceBroker sb;
@@ -114,9 +118,7 @@ public final class MessageTransportRegistry
         private void registerClientWithSociety(MessageTransportClient client) {
             // register with each component transport
             synchronized (linkProtocols) {
-                Iterator protocols = linkProtocols.iterator();
-                while (protocols.hasNext()) {
-                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                for (LinkProtocol protocol : linkProtocols) {
                     protocol.registerClient(client);
                 }
             }
@@ -125,9 +127,7 @@ public final class MessageTransportRegistry
         private void unregisterClientWithSociety(MessageTransportClient client) {
             // register with each component transport
             synchronized (linkProtocols) {
-                Iterator protocols = linkProtocols.iterator();
-                while (protocols.hasNext()) {
-                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                for (LinkProtocol protocol : linkProtocols) {
                     protocol.unregisterClient(client);
                 }
             }
@@ -136,7 +136,7 @@ public final class MessageTransportRegistry
         public synchronized void incarnationChanged(MessageAddress address, long incarnation) {
             MessageAddress key = address.getPrimary();
             MessageTransportClient client = null;
-            client = (MessageTransportClient) localClients.get(key);
+            client = localClients.get(key);
             if (client != null && client.getIncarnationNumber() < incarnation) {
                 agentStates.remove(key);
                 receiveLinks.remove(key);
@@ -216,20 +216,18 @@ public final class MessageTransportRegistry
         }
 
         public ReceiveLink findLocalReceiveLink(MessageAddress id) {
-            return (ReceiveLink) receiveLinks.get(id.getPrimary());
+            return receiveLinks.get(id.getPrimary());
         }
 
         // this is a slow implementation, as it conses a new set each time.
         // Better alternatives surely exist.
-        public Iterator findLocalMulticastReceivers(MulticastMessageAddress addr) {
+        public Iterator<MessageAddress> findLocalMulticastReceivers(MulticastMessageAddress addr) {
             if (addr.hasReceiverClass()) {
-                ArrayList result = new ArrayList();
-                Class mclass = addr.getReceiverClass();
+                List<MessageAddress> result = new ArrayList<MessageAddress>();
+                Class<?> mclass = addr.getReceiverClass();
                 if (mclass != null) {
-                    Iterator itr = receiveLinks.entrySet().iterator();
-                    while (itr.hasNext()) {
-                        Map.Entry entry = (Map.Entry) itr.next();
-                        ReceiveLink link = (ReceiveLink) entry.getValue();
+                    for (Map.Entry<MessageAddress,ReceiveLink> entry : receiveLinks.entrySet()) {
+                        ReceiveLink link = entry.getValue();
                         MessageTransportClient client = link.getClient();
                         if (mclass.isAssignableFrom(client.getClass())) {
                             result.add(entry.getKey());
@@ -251,11 +249,11 @@ public final class MessageTransportRegistry
                 return result.iterator();
 
             } else {
-                return new ArrayList(receiveLinks.keySet()).iterator();
+                return new ArrayList<MessageAddress>(receiveLinks.keySet()).iterator();
             }
         }
 
-        public Iterator findRemoteMulticastTransports(MulticastMessageAddress addr) {
+        public Iterator<MessageAddress> findRemoteMulticastTransports(MulticastMessageAddress addr) {
             return nameSupport().lookupMulticast(addr);
         }
 
@@ -272,9 +270,7 @@ public final class MessageTransportRegistry
         public void ipAddressChanged() {
             // inform each protocol
             synchronized (linkProtocols) {
-                Iterator protocols = linkProtocols.iterator();
-                while (protocols.hasNext()) {
-                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                for (LinkProtocol protocol : linkProtocols) {
                     protocol.ipAddressChanged();
                 }
             }
@@ -282,9 +278,7 @@ public final class MessageTransportRegistry
 
         public boolean addressKnown(MessageAddress address) {
             synchronized (linkProtocols) {
-                Iterator protocols = linkProtocols.iterator();
-                while (protocols.hasNext()) {
-                    LinkProtocol protocol = (LinkProtocol) protocols.next();
+                for (LinkProtocol protocol : linkProtocols) {
                     if (protocol.addressKnown(address)) {
                         return true;
                     }
@@ -293,15 +287,12 @@ public final class MessageTransportRegistry
             return false;
         }
 
-        public ArrayList getDestinationLinks(MessageAddress destination) {
-            ArrayList destinationLinks = new ArrayList();
+        public List<DestinationLink> getDestinationLinks(MessageAddress destination) {
+            List<DestinationLink> destinationLinks = new ArrayList<DestinationLink>();
             synchronized (linkProtocols) {
-                Iterator itr = linkProtocols.iterator();
-                DestinationLink link;
-                while (itr.hasNext()) {
-                    LinkProtocol lp = (LinkProtocol) itr.next();
+                for (LinkProtocol lp : linkProtocols) {
                     // Class lp_class = lp.getClass();
-                    link = lp.getDestinationLink(destination);
+                    DestinationLink link = lp.getDestinationLink(destination);
                     destinationLinks.add(link);
                 }
             }

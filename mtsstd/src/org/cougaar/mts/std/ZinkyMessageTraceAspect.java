@@ -33,7 +33,7 @@ import org.cougaar.mts.base.StandardAspect;
 
 public class ZinkyMessageTraceAspect
         extends StandardAspect {
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) delegate);
         } else {

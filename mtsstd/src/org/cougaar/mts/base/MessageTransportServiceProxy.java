@@ -27,7 +27,7 @@
 package org.cougaar.mts.base;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.Message;
@@ -85,14 +85,17 @@ public class MessageTransportServiceProxy
      * 
      * @return the list of dropped messages, which could be null.
      */
-    public synchronized ArrayList flushMessages() {
-        ArrayList droppedMessages = new ArrayList();
+    public synchronized List<Message> flushMessages() {
+        List<Message> droppedMessages = new ArrayList<Message>();
         link.flushMessages(droppedMessages);
-        ArrayList rawMessages = new ArrayList(droppedMessages.size());
-        Iterator itr = droppedMessages.iterator();
-        while (itr.hasNext()) {
-            AttributedMessage m = (AttributedMessage) itr.next();
-            rawMessages.add(m.getRawMessage());
+        List<Message> rawMessages = new ArrayList<Message>(droppedMessages.size());
+        for (Message message : droppedMessages) {
+            if (message instanceof AttributedMessage) {
+                AttributedMessage m = (AttributedMessage) message;
+                rawMessages.add(m.getRawMessage());
+            } else {
+                rawMessages.add(message);
+            }
         }
         return rawMessages;
     }

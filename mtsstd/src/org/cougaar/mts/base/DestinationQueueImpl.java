@@ -26,8 +26,8 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
@@ -59,10 +59,10 @@ final class DestinationQueueImpl
     private final MessageAddress destination;
     private LinkSelectionPolicy selectionPolicy;
     private DestinationQueue delegate;
-    private ArrayList destinationLinks;
+    private List<DestinationLink> destinationLinks;
 
     private class LinkIterator
-            implements Iterator {
+            implements Iterator<DestinationLink> {
         int position;
         DestinationLink next;
         private final AttributedMessage message;
@@ -75,7 +75,7 @@ final class DestinationQueueImpl
 
         private void findNextValidLink() {
             while (position < destinationLinks.size()) {
-                next = (DestinationLink) destinationLinks.get(position);
+                next = destinationLinks.get(position);
                 if (next.isValid(message)) {
                     if (loggingService.isDebugEnabled()) {
                         loggingService.debug("Link " + next.getProtocolClass() + " [" + position
@@ -96,7 +96,7 @@ final class DestinationQueueImpl
             return next != null;
         }
 
-        public Object next() {
+        public DestinationLink next() {
             DestinationLink link = next;
             ++position;
             findNextValidLink();
@@ -209,7 +209,7 @@ final class DestinationQueueImpl
             }
         }
 
-        Iterator links = new LinkIterator(message);
+        Iterator<DestinationLink> links = new LinkIterator(message);
         if (!links.hasNext()) {
             if (loggingService.isInfoEnabled()) {
                 loggingService.info("No valid links to " + destination);

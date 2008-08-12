@@ -26,11 +26,12 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
@@ -87,7 +88,7 @@ final public class SendLinkImpl
         }
     };
 
-    public void flushMessages(ArrayList droppedMessages) {
+    public void flushMessages(List<Message> droppedMessages) {
         synchronized (flush_lock) {
             sendq_factory.removeMessages(flushPredicate, droppedMessages);
             destq_factory.removeMessages(flushPredicate, droppedMessages);

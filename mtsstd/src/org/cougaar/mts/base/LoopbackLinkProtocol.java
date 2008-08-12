@@ -27,6 +27,7 @@
 package org.cougaar.mts.base;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -40,15 +41,15 @@ import org.cougaar.mts.std.AttributedMessage;
 public class LoopbackLinkProtocol
         extends LinkProtocol {
 
-    private final HashMap links;
+    private final Map<MessageAddress,DestinationLink> links;
 
     public LoopbackLinkProtocol() {
         super();
-        links = new HashMap();
+        links = new HashMap<MessageAddress,DestinationLink>();
     }
 
     public synchronized DestinationLink getDestinationLink(MessageAddress address) {
-        DestinationLink link = (DestinationLink) links.get(address);
+        DestinationLink link = links.get(address);
         if (link == null) {
             link = new Link(address);
             link = attachAspects(link, DestinationLink.class);
@@ -102,7 +103,7 @@ public class LoopbackLinkProtocol
             return true;
         }
 
-        public Class getProtocolClass() {
+        public Class<LoopbackLinkProtocol> getProtocolClass() {
             return LoopbackLinkProtocol.class;
         }
 

@@ -76,7 +76,7 @@ public class OldIncarnationAspect
         }
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             return new DestinationLinkDelegate((DestinationLink) delegate);
         } else if (type == MessageDeliverer.class) {

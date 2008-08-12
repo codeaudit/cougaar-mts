@@ -27,13 +27,15 @@
 package org.cougaar.mts.std;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
@@ -77,14 +79,14 @@ public class AgentStatusAspect
 
     private static final double SEND_CREDIBILITY = Constants.SECOND_MEAS_CREDIBILITY;
 
-    private final HashMap remoteStates;
-    private final HashMap localStates;
+    private final Map<MessageAddress,AgentState> remoteStates;
+    private final Map<MessageAddress,AgentState> localStates;
     private final AgentState nodeState;
     private MetricsUpdateService metricsUpdateService;
 
     public AgentStatusAspect() {
-        remoteStates = new HashMap();
-        localStates = new HashMap();
+        remoteStates = new HashMap<MessageAddress,AgentState>();
+        localStates = new HashMap<MessageAddress,AgentState>();
         nodeState = newAgentState();
     }
 
@@ -123,13 +125,10 @@ public class AgentStatusAspect
         }
     }
 
-    public void messagesRemoved(List messages) {
+    public void messagesRemoved(List<Message> messages) {
         LoggingService lsvc = getLoggingService();
         synchronized (messages) {
-            Iterator itr = messages.iterator();
-            AttributedMessage message;
-            while (itr.hasNext()) {
-                message = (AttributedMessage) itr.next();
+            for (Message message : messages) {
                 // handle removed message
                 MessageAddress remoteAddr = message.getTarget().getPrimary();
                 AgentState remoteState = ensureRemoteState(remoteAddr);
@@ -146,7 +145,7 @@ public class AgentStatusAspect
     private AgentState ensureRemoteState(MessageAddress address) {
         AgentState state = null;
         synchronized (remoteStates) {
-            state = (AgentState) remoteStates.get(address);
+            state = remoteStates.get(address);
             if (state == null) {
                 state = newAgentState();
                 remoteStates.put(address, state);
@@ -158,7 +157,7 @@ public class AgentStatusAspect
     private AgentState getRemoteState(MessageAddress address) {
         AgentState state = null;
         synchronized (remoteStates) {
-            state = (AgentState) remoteStates.get(address);
+            state = remoteStates.get(address);
         }
         return state;
     }
@@ -166,7 +165,7 @@ public class AgentStatusAspect
     private AgentState ensureLocalState(MessageAddress address) {
         AgentState state = null;
         synchronized (localStates) {
-            state = (AgentState) localStates.get(address);
+            state = localStates.get(address);
             if (state == null) {
                 state = newAgentState();
                 localStates.put(address, state);
@@ -178,7 +177,7 @@ public class AgentStatusAspect
     private AgentState getLocalState(MessageAddress address) {
         AgentState state = null;
         synchronized (localStates) {
-            state = (AgentState) localStates.get(address);
+            state = localStates.get(address);
         }
         return state;
     }
@@ -277,16 +276,16 @@ public class AgentStatusAspect
         }
     }
 
-    public Set getLocalAgents() {
-        Set result = new java.util.HashSet();
+    public Set<MessageAddress> getLocalAgents() {
+        Set<MessageAddress> result = new HashSet<MessageAddress>();
         synchronized (localStates) {
             result.addAll(localStates.keySet());
         }
         return result;
     }
 
-    public Set getRemoteAgents() {
-        Set result = new java.util.HashSet();
+    public Set<MessageAddress> getRemoteAgents() {
+        Set<MessageAddress> result = new HashSet<MessageAddress>();
         synchronized (remoteStates) {
             result.addAll(remoteStates.keySet());
         }
@@ -304,7 +303,7 @@ public class AgentStatusAspect
     // mechanism doesn't provide for station-specific ordering. But
     // it does provide an implicit early-vs-late switch, since
     // reverse delegates always run early. Use that here.
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) object);
         } else if (type == SendLink.class) {
@@ -316,7 +315,7 @@ public class AgentStatusAspect
         }
     }
 
-    public Object getReverseDelegate(Object object, Class type) {
+    public Object getReverseDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             return new DestinationLinkDelegate((DestinationLink) object);
         } else {
@@ -358,7 +357,7 @@ public class AgentStatusAspect
 
         boolean delivered(MessageAttributes attributes) {
             return attributes != null
-                    & attributes.getAttribute(DELIVERY_ATTRIBUTE).equals(DELIVERY_STATUS_DELIVERED);
+                    && attributes.getAttribute(DELIVERY_ATTRIBUTE).equals(DELIVERY_STATUS_DELIVERED);
         }
 
         public MessageAttributes forwardMessage(AttributedMessage message)

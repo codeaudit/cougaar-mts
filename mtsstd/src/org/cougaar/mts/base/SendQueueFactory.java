@@ -26,11 +26,12 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.util.UnaryPredicate;
 
@@ -56,19 +57,19 @@ public class SendQueueFactory
     public void load() {
         super.load();
         impl = new SendQueueImpl(id + "/OutQ", container);
-        queue = (SendQueue) attachAspects(impl, SendQueue.class);
+        queue = attachAspects(impl, SendQueue.class);
     }
 
     public SendQueue getSendQueue(MessageAddress sender) {
         return queue;
     }
 
-    public void removeMessages(UnaryPredicate pred, ArrayList removed) {
+    public void removeMessages(UnaryPredicate pred, List<Message> removed) {
         impl.removeMessages(pred, removed);
         notifyListeners(removed);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == SendQueueProviderService.class) {
             return this;
         }
@@ -77,7 +78,7 @@ public class SendQueueFactory
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

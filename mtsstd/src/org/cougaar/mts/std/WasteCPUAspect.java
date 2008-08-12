@@ -63,7 +63,7 @@ public class WasteCPUAspect
         }
     }
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) object;
             return new WasteCPUDestinationLink(link);

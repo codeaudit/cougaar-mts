@@ -26,10 +26,12 @@
 
 package org.cougaar.mts.std;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
@@ -107,7 +109,7 @@ public final class MessageTimeoutAspect
     }
 
     private void reclaim() {
-        ArrayList droppedMessages = new ArrayList(); // not using this yet
+        List<Message> droppedMessages = Collections.emptyList(); // not using this yet
         if (sendq_factory != null) {
             sendq_factory.removeMessages(timeoutPredicate, droppedMessages);
         }
@@ -150,7 +152,7 @@ public final class MessageTimeoutAspect
     /*
      * Aspect Code to hook into all the links in the MTS chain
      */
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) object);
         } else if (type == DestinationLink.class) {
@@ -194,7 +196,7 @@ public final class MessageTimeoutAspect
                     // store back into absolute attribute value
                     message.setAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE, new Long(the_timeout));
                 }
-            } else if (attr == null) {
+            } else {
                 attr = message.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
                 if (attr != null) { // check for absolute
                     if (attr instanceof Long) {

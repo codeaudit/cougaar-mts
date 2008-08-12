@@ -30,7 +30,8 @@ import java.net.URI;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
@@ -53,9 +54,9 @@ public class DestinationThreadConstrictor
         implements ThreadListener {
 
     private class Constrictor
-            implements Comparator {
+            implements Comparator<Schedulable> {
 
-        int timestamp_compare(Object o1, Object o2) {
+        int timestamp_compare(Schedulable o1, Schedulable o2) {
             long t1 = getTimestamp(o1);
             long t2 = getTimestamp(o2);
             if (t1 < t2) {
@@ -67,9 +68,9 @@ public class DestinationThreadConstrictor
             }
         }
 
-        public int compare(Object o1, Object o2) {
-            int count1 = getSchedulableNodeCount((Schedulable) o1);
-            int count2 = getSchedulableNodeCount((Schedulable) o2);
+        public int compare(Schedulable o1, Schedulable o2) {
+            int count1 = getSchedulableNodeCount(o1);
+            int count2 = getSchedulableNodeCount(o2);
 
             if (count1 == count2) {
                 // Since they're equal, only the timestamp is relevant.
@@ -118,17 +119,17 @@ public class DestinationThreadConstrictor
     private static final int MAX_THREADS_DEFAULT = 15;
     private static final String TOPOLOGY = "topology";
 
-    private final HashMap counts = new HashMap();
-    private final HashMap timestamps = new HashMap();
-    private final HashMap agent_nodes = new HashMap();
-    private final HashSet agents = new HashSet();
+    private final Map<String,Integer> counts = new HashMap<String,Integer>();
+    private final Map<Schedulable,Long> timestamps = new HashMap<Schedulable,Long>();
+    private final Map<MessageAddress,String> agent_nodes = new HashMap<MessageAddress,String>();
+    private final Set<MessageAddress> agents = new HashSet<MessageAddress>();
     private WhitePagesService wpService;
     private int maxPerNode;
     private int maxThreads;
 
-    private long getTimestamp(Object x) {
+    private long getTimestamp(Schedulable x) {
         synchronized (timestamps) {
-            return ((Long) timestamps.get(x)).longValue();
+            return timestamps.get(x).longValue();
         }
     }
 
@@ -142,12 +143,12 @@ public class DestinationThreadConstrictor
             }
             Integer count = null;
             synchronized (counts) {
-                count = (Integer) counts.get(node);
+                count = counts.get(node);
             }
             if (count == null) {
                 return 0;
             }
-            return count.intValue();
+            return count;
         } else {
             return 0;
         }
@@ -156,7 +157,7 @@ public class DestinationThreadConstrictor
 
     private String getNodeName(MessageAddress agent) {
         synchronized (agent_nodes) {
-            String node = (String) agent_nodes.get(agent.getPrimary());
+            String node = agent_nodes.get(agent.getPrimary());
             if (node != null) {
                 return node;
             }
@@ -178,14 +179,12 @@ public class DestinationThreadConstrictor
     private void lookupNodes() {
         // TBD: Agent -> Node
         // WP call? Ugh.
-        HashSet copy = null;
+        Set<MessageAddress> copy = null;
         synchronized (agents) {
-            copy = new HashSet(agents);
+            copy = new HashSet<MessageAddress>(agents);
         }
 
-        Iterator itr = copy.iterator();
-        while (itr.hasNext()) {
-            MessageAddress agent = (MessageAddress) itr.next();
+        for (MessageAddress agent : copy) {
             try {
                 AddressEntry entry = wpService.get(agent.getAddress(), TOPOLOGY, -1);
                 if (entry != null) {
@@ -216,14 +215,14 @@ public class DestinationThreadConstrictor
                 return;
             }
             synchronized (counts) {
-                Integer count = (Integer) counts.get(node);
+                Integer count = counts.get(node);
                 if (count == null) {
-                    count = new Integer(1);
+                    count = 1;
                 } else {
-                    count = new Integer(count.intValue() + 1);
+                    ++count;
                 }
                 counts.put(node, count);
-                if (count.intValue() >= maxThreads) {
+                if (count >= maxThreads) {
                     if (loggingService.isWarnEnabled()) {
                         loggingService.warn("Node " + node + " is using all the threads [" + count
                                 + "] in pool");
@@ -245,11 +244,11 @@ public class DestinationThreadConstrictor
                 return;
             }
             synchronized (counts) {
-                Integer count = (Integer) counts.get(node);
+                Integer count = counts.get(node);
                 if (count != null) {
-                    count = new Integer(count.intValue() - 1);
+                    --count;
                 } else {
-                    count = new Integer(0);
+                    count = 0;
                 }
                 if (loggingService.isDebugEnabled()) {
                     loggingService.debug("Decrement: count for " + addr + " on node " + node
@@ -293,7 +292,7 @@ public class DestinationThreadConstrictor
 
         ThreadControlService tcs = sb.getService(this, ThreadControlService.class, null);
         if (tcs != null) {
-            Comparator cmp = new Constrictor();
+            Comparator<Schedulable> cmp = new Constrictor();
             tcs.setQueueComparator(cmp, lane);
             tcs.setMaxRunningThreadCount(maxThreads, lane);
         } else {

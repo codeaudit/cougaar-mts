@@ -37,6 +37,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Attributes;
@@ -92,7 +93,7 @@ public class AttributedMessage
         super(contents.getOriginator(), contents.getTarget());
         this.contents = contents;
         attributes = new SimpleMessageAttributes();
-        attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
+        attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList<String>());
     }
 
     public AttributedMessage(Message contents, MessageAttributes initialAttributes) {
@@ -104,7 +105,7 @@ public class AttributedMessage
         } else {
             attributes = new SimpleMessageAttributes();
         }
-        attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList());
+        attributes.setAttribute(FILTERS_ATTRIBUTE, new ArrayList<String>());
     }
 
     /**
@@ -121,7 +122,7 @@ public class AttributedMessage
     // Should only be used by MessageReply. The second argument is
     // only there to distinguish the constructor signature. It's not
     // used for anything. Since this is a reply, flip the addresses.
-    public AttributedMessage(AttributedMessage source, Class msgClass) {
+    public AttributedMessage(AttributedMessage source, Class<?> msgClass) {
         super(source.getTarget(), source.getOriginator());
         this.contents = null;
         attributes = (MessageAttributes) source.attributes.cloneAttributes();
@@ -156,8 +157,9 @@ public class AttributedMessage
         if (logger.isDebugEnabled()) {
             Object old = getAttribute(FILTERS_ATTRIBUTE);
             if (old != null) {
-                if (old instanceof ArrayList) {
-                    ArrayList list = (ArrayList) old;
+                if (old instanceof List) {
+                    @SuppressWarnings("unchecked") // unavoidable
+                    List<String> list = (List<String>) old;
                     if (list.contains(name)) {
                         logger.debug("Duplicated filter " + name);
                     }
@@ -315,7 +317,8 @@ public class AttributedMessage
             rawOut.writeObject(getTarget());
 
             MessageStreamsFactory factory = MessageStreamsFactory.getFactory();
-            ArrayList aspectNames = (ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
+            @SuppressWarnings("unchecked") // unavoidable
+            List<String> aspectNames = (List) attributes.getAttribute(FILTERS_ATTRIBUTE);
             MessageWriter writer = factory.getMessageWriter(aspectNames);
 
             writer.finalizeAttributes(this);
@@ -371,7 +374,8 @@ public class AttributedMessage
             }
 
             MessageStreamsFactory factory = MessageStreamsFactory.getFactory();
-            ArrayList aspectNames = (ArrayList) attributes.getAttribute(FILTERS_ATTRIBUTE);
+            @SuppressWarnings("unchecked") // unavoidable
+            List<String> aspectNames = (List) attributes.getAttribute(FILTERS_ATTRIBUTE);
             MessageReader reader = factory.getMessageReader(aspectNames);
 
             reader.finalizeAttributes(this);

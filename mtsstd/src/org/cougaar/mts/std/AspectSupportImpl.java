@@ -64,7 +64,7 @@ public class AspectSupportImpl
         return service.attachAspects(rmi_socket, Socket.class);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == AspectSupport.class) {
             return service;
         } else {
@@ -74,7 +74,7 @@ public class AspectSupportImpl
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 
@@ -83,13 +83,11 @@ public class AspectSupportImpl
 
         private final List<MessageTransportAspect> aspects;
         private final Map<String, MessageTransportAspect> aspects_table;
-        private final Container container;
         private final LoggingService loggingService;
 
         private ServiceImpl(Container container, LoggingService loggingService) {
             aspects = new ArrayList<MessageTransportAspect>();
             aspects_table = new HashMap<String, MessageTransportAspect>();
-            this.container = container;
             this.loggingService = loggingService;
         }
 
@@ -153,6 +151,7 @@ public class AspectSupportImpl
             Iterator<MessageTransportAspect> itr = candidates.iterator();
             while (itr.hasNext()) {
                 MessageTransportAspect aspect = itr.next();
+                @SuppressWarnings("unchecked")
                 T candidate = (T) aspect.getDelegate(delegate, type);
                 if (candidate != null) {
                     delegate = candidate;
@@ -165,6 +164,7 @@ public class AspectSupportImpl
             ListIterator<MessageTransportAspect> litr = candidates.listIterator(candidates.size());
             while (litr.hasPrevious()) {
                 MessageTransportAspect aspect = litr.previous();
+                @SuppressWarnings("unchecked")
                 T candidate = (T) aspect.getReverseDelegate(delegate, type);
                 if (candidate != null) {
                     delegate = candidate;

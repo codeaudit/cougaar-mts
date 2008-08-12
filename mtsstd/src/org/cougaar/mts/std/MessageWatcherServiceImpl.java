@@ -27,7 +27,7 @@
 package org.cougaar.mts.std;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 import org.cougaar.core.mts.MessageTransportWatcher;
 import org.cougaar.core.service.MessageWatcherService;
@@ -43,17 +43,15 @@ import org.cougaar.mts.base.MessageTransportServiceProvider;
 public class MessageWatcherServiceImpl
         implements MessageWatcherService {
     private WatcherAspect aspect;
-    private ArrayList watchers;
+    private List<MessageTransportWatcher> watchers;
 
     public MessageWatcherServiceImpl(WatcherAspect aspect) {
         this.aspect = aspect;
-        this.watchers = new ArrayList();
+        this.watchers = new ArrayList<MessageTransportWatcher>();
     }
 
     public synchronized void release() {
-        Iterator itr = watchers.iterator();
-        while (itr.hasNext()) {
-            MessageTransportWatcher watcher = (MessageTransportWatcher) itr.next();
+        for (MessageTransportWatcher watcher : watchers) {
             aspect.removeWatcher(watcher);
         }
         watchers = null;

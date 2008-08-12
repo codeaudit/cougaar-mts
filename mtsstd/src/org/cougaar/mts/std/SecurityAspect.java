@@ -116,7 +116,7 @@ public class SecurityAspect
             SecureMessage rawMessage = (SecureMessage) message.getRawMessage();
             Message originalMessage = msm.unsecureMessage(rawMessage);
             AttributedMessage msg = new AttributedMessage(originalMessage, message);
-            if (msg == null && loggingService.isErrorEnabled()) {
+            if (loggingService.isErrorEnabled()) {
                 loggingService.error("MessageTransport " + this
                         + " received an unverifiable SecureMessage " + message);
             }
@@ -124,7 +124,7 @@ public class SecurityAspect
         }
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegate;
             return new SecureDestinationLink(link);
@@ -133,7 +133,7 @@ public class SecurityAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegate, Class type) {
+    public Object getReverseDelegate(Object delegate, Class<?> type) {
         if (type == MessageDeliverer.class) {
             return new SecureDeliverer((MessageDeliverer) delegate);
         } else {

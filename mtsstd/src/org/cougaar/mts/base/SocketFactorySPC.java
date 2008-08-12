@@ -76,7 +76,7 @@ public final class SocketFactorySPC
 
     private class SFSP
             implements ServiceProvider {
-        public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+        public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
             if (serviceClass == SocketFactoryService.class) {
                 return _sfs;
             }
@@ -85,7 +85,7 @@ public final class SocketFactorySPC
 
         public void releaseService(ServiceBroker sb,
                                    Object requestor,
-                                   Class serviceClass,
+                                   Class<?> serviceClass,
                                    Object service) {
             // no need to do anything
         }
@@ -112,7 +112,7 @@ public final class SocketFactorySPC
          * @param m Allows arbitrary preferences and parameters to be specified.
          * @return an object which is instanceof the requested class or null.
          **/
-        public Object getSocketFactory(Class clazz, Map m) {
+        public Object getSocketFactory(Class<?> clazz, Map<String,Boolean> m) {
             if (clazz == SSLSocketFactory.class) {
                 return SocketFactory.getSSLSocketFactory();
             } else if (clazz == SSLServerSocketFactory.class) {

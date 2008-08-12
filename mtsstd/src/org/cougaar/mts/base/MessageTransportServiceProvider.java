@@ -29,6 +29,7 @@ package org.cougaar.mts.base;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.cougaar.core.agent.Agent;
 import org.cougaar.core.component.ComponentDescription;
@@ -75,7 +76,8 @@ public final class MessageTransportServiceProvider
     private AgentStatusAspect agentStatusAspect;
 
     private String id;
-    private final HashMap proxies = new HashMap();
+    private final Map<MessageAddress,MessageTransportServiceProxy> proxies = 
+        new HashMap<MessageAddress,MessageTransportServiceProxy>();
 
     private AspectSupportImpl aspectSupportImpl;
 
@@ -168,7 +170,7 @@ public final class MessageTransportServiceProvider
     }
 
     // components specified in the config files
-    private List readConfig() {
+    private List<Object> readConfig() {
         ComponentDescriptions descs;
         if (loadState instanceof ComponentDescriptions) {
             // rehydration
@@ -193,12 +195,19 @@ public final class MessageTransportServiceProvider
         }
 
         // flatten
-        List l = new ArrayList();
+        List<Object> l = new ArrayList<Object>();
         if (descs != null) {
             // ubug 13451:
-            l.addAll(descs.selectComponentDescriptions(ComponentDescription.PRIORITY_INTERNAL));
+            @SuppressWarnings("unchecked") // util is not genericized
+            List<Object> internal = 
+                descs.selectComponentDescriptions(ComponentDescription.PRIORITY_INTERNAL);
+            l.addAll(internal);
+            
             // typical Aspects/LinkProtocols/etc
-            l.addAll(descs.selectComponentDescriptions(ComponentDescription.PRIORITY_COMPONENT));
+            @SuppressWarnings("unchecked") // util is not genericized
+            List<Object> component = 
+                descs.selectComponentDescriptions(ComponentDescription.PRIORITY_COMPONENT);
+            l.addAll(component);
         }
         return l;
     }
@@ -268,16 +277,15 @@ public final class MessageTransportServiceProvider
         MessageTransportClient client = (MessageTransportClient) requestor;
         MessageAddress addr = client.getMessageAddress();
         long incarnation = client.getIncarnationNumber();
-        MessageTransportServiceProxy proxy = (MessageTransportServiceProxy) proxies.get(addr);
+        MessageTransportServiceProxy proxy = proxies.get(addr);
         if (proxy != null && proxy.getIncarnationNumber() == incarnation) {
             return proxy;
         }
 
         // Make SendLink and attach aspect delegates
         SendLink link = new SendLinkImpl(addr, incarnation, getChildServiceBroker());
-        Class c = SendLink.class;
-        Object raw = aspectSupport.attachAspects(link, c);
-        link = (SendLink) raw;
+        Class<SendLink> c = SendLink.class;
+        link = aspectSupport.attachAspects(link, c);
 
         // Make proxy
         proxy = new MessageTransportServiceProxy(client, link);
@@ -292,7 +300,7 @@ public final class MessageTransportServiceProvider
 
     // ServiceProvider
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == MessageTransportService.class) {
             if (requestor instanceof MessageTransportClient) {
                 return findOrMakeProxy(requestor);
@@ -314,15 +322,14 @@ public final class MessageTransportServiceProvider
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
         if (serviceClass == MessageTransportService.class) {
             if (requestor instanceof MessageTransportClient) {
                 MessageTransportClient client = (MessageTransportClient) requestor;
                 MessageAddress addr = client.getMessageAddress();
-                MessageTransportService svc = (MessageTransportService) proxies.get(addr);
-                MessageTransportServiceProxy proxy =
-                        (MessageTransportServiceProxy) proxies.get(addr);
+                MessageTransportService svc = proxies.get(addr);
+                MessageTransportServiceProxy proxy = proxies.get(addr);
                 if (svc != service) {
                     return; // ???
                 }

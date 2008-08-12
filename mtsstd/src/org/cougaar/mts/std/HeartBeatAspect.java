@@ -118,7 +118,7 @@ public class HeartBeatAspect
     // 
     // Aspect Code to implement TrafficRecord Collection
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             return new HeartBeatDestinationLink((DestinationLink) object);
         } else if (type == MessageDeliverer.class) {

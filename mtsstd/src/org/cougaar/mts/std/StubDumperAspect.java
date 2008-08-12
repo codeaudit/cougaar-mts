@@ -44,7 +44,7 @@ public class StubDumperAspect
         super();
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == NameSupport.class) {
             return new NameSupportDelegate((NameSupport) delegate);
         } else {

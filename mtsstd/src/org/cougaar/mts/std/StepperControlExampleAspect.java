@@ -39,7 +39,7 @@ import org.cougaar.mts.base.StandardAspect;
  */
 public class StepperControlExampleAspect
         extends StandardAspect {
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationQueue.class) {
             return new DestinationQueueDelegate((DestinationQueue) delegatee);
         } else {

@@ -57,7 +57,7 @@ public class DestinationQueueMonitorPlugin
         } else {
             ServiceAvailableListener sal = new ServiceAvailableListener() {
                 public void serviceAvailable(ServiceAvailableEvent ae) {
-                    Class cl = ae.getService();
+                    Class <?>cl = ae.getService();
                     if (BlackboardService.class.isAssignableFrom(cl)) {
                         registerServlet();
                     }

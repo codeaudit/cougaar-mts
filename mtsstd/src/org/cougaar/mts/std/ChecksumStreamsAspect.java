@@ -68,7 +68,7 @@ public class ChecksumStreamsAspect
     private static final String CHECKSUM_ENABLE_ATTR = "org.cougaar.core.security.checksum.enable";
     private static final String CHECKSUM_VALID_ATTR = "org.cougaar.core.security.checksum.valid";
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new ChecksumMessageWriter(wtr);

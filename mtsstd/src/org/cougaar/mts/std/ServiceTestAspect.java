@@ -79,7 +79,7 @@ public class ServiceTestAspect
         return message;
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegate;
             return new TestDestinationLink(link);
@@ -88,7 +88,7 @@ public class ServiceTestAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegate, Class type) {
+    public Object getReverseDelegate(Object delegate, Class<?> type) {
         if (type == MessageDeliverer.class) {
             return new TestDeliverer((MessageDeliverer) delegate);
         } else {

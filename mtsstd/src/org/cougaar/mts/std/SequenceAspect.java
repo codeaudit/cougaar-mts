@@ -26,9 +26,11 @@
 
 package org.cougaar.mts.std;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.cougaar.core.mts.AgentState;
@@ -59,12 +61,12 @@ public class SequenceAspect
     private static final Integer ONE = new Integer(1);
     private static final Integer TWO = new Integer(2);
 
-    private static Comparator comparator = new MessageComparator();
+    private static Comparator<AttributedMessage> comparator = new MessageComparator();
 
     public SequenceAspect() {
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
             return new SequencedSendLink((SendLink) delegate);
         } else {
@@ -72,7 +74,7 @@ public class SequenceAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegate, Class type) {
+    public Object getReverseDelegate(Object delegate, Class<?> type) {
         if (type == ReceiveLink.class) {
             return new SequencedReceiveLink((ReceiveLink) delegate);
         } else {
@@ -80,14 +82,13 @@ public class SequenceAspect
         }
     }
 
-    private static int getSequenceNumber(Object message) {
-        AttributedMessage m = (AttributedMessage) message;
-        return ((Integer) m.getAttribute(SEQ)).intValue();
+    private static int getSequenceNumber(AttributedMessage message) {
+        return ((Integer) message.getAttribute(SEQ)).intValue();
     }
 
     private class SequencedSendLink
             extends SendLinkDelegateImplBase {
-        HashMap sequenceNumbers;
+        Map<MessageAddress,Integer> sequenceNumbers;
 
         private SequencedSendLink(SendLink link) {
             super(link);
@@ -103,9 +104,13 @@ public class SequenceAspect
             AgentState myState = getRegistry().getAgentState(myAddress);
 
             synchronized (myState) {
-                sequenceNumbers = (HashMap) myState.getAttribute(SEQ_SEND_MAP_ATTR);
-                if (sequenceNumbers == null) {
-                    sequenceNumbers = new HashMap();
+                @SuppressWarnings("unchecked") // unavoidable
+                Map<MessageAddress,Integer> map = 
+                    (Map<MessageAddress,Integer>) myState.getAttribute(SEQ_SEND_MAP_ATTR);
+                if (map != null) {
+                    sequenceNumbers = map;
+                } else {
+                    sequenceNumbers = new HashMap<MessageAddress,Integer>();
                     myState.setAttribute(SEQ_SEND_MAP_ATTR, sequenceNumbers);
                 }
             }
@@ -114,7 +119,7 @@ public class SequenceAspect
         private Integer nextSeq(AttributedMessage msg) {
             // Verify that msg.getOriginator() == getAddress() ?
             MessageAddress dest = msg.getTarget();
-            Integer next = (Integer) sequenceNumbers.get(dest.getPrimary());
+            Integer next = sequenceNumbers.get(dest.getPrimary());
             if (next == null) {
                 sequenceNumbers.put(dest.getPrimary(), TWO);
                 return ONE;
@@ -133,8 +138,8 @@ public class SequenceAspect
     }
 
     private static class MessageComparator
-            implements Comparator, java.io.Serializable {
-        public int compare(Object msg1, Object msg2) {
+            implements Comparator<AttributedMessage>, Serializable {
+        public int compare(AttributedMessage msg1, AttributedMessage msg2) {
             int seq1 = getSequenceNumber(msg1);
             int seq2 = getSequenceNumber(msg2);
             if (seq1 == seq2) {
@@ -155,11 +160,11 @@ public class SequenceAspect
     private static class ConversationState
             implements java.io.Serializable {
         int nextSeqNum;
-        TreeSet heldMessages;
+        TreeSet<AttributedMessage> heldMessages;
 
         public ConversationState() {
             nextSeqNum = 1;
-            heldMessages = new TreeSet(comparator);
+            heldMessages = new TreeSet<AttributedMessage>(comparator);
         }
 
         private void stripAndDeliver(AttributedMessage message, SequencedReceiveLink link) {
@@ -185,9 +190,9 @@ public class SequenceAspect
                 delivery_status = AttributeConstants.DELIVERY_STATUS_DROPPED_DUPLICATE;
             } else if (nextSeqNum == msgSeqNum) {
                 stripAndDeliver(message, link);
-                Iterator itr = heldMessages.iterator();
+                Iterator<AttributedMessage> itr = heldMessages.iterator();
                 while (itr.hasNext()) {
-                    AttributedMessage next = (AttributedMessage) itr.next();
+                    AttributedMessage next = itr.next();
                     if (getSequenceNumber(next) == nextSeqNum) {
                         if (loggingService.isDebugEnabled()) {
                             loggingService.debug("delivered held message" + next);
@@ -212,7 +217,7 @@ public class SequenceAspect
 
     private class SequencedReceiveLink
             extends ReceiveLinkDelegateImplBase {
-        HashMap conversationState;
+        Map<MessageAddress,ConversationState> conversationState;
 
         private SequencedReceiveLink(ReceiveLink link) {
             super(link);
@@ -220,9 +225,13 @@ public class SequenceAspect
             MessageAddress myAddress = getClient().getMessageAddress();
             AgentState myState = getRegistry().getAgentState(myAddress);
             synchronized (myState) {
-                conversationState = (HashMap) myState.getAttribute(SEQ_RECV_MAP_ATTR);
-                if (conversationState == null) {
-                    conversationState = new HashMap();
+                @SuppressWarnings("unchecked") // unavoidable
+                Map<MessageAddress,ConversationState> map = 
+                    (Map<MessageAddress,ConversationState>) myState.getAttribute(SEQ_RECV_MAP_ATTR);
+                if (map != null) {
+                    conversationState = map;
+                } else {
+                    conversationState = new HashMap<MessageAddress,ConversationState>();
                     myState.setAttribute(SEQ_RECV_MAP_ATTR, conversationState);
                 }
             }
@@ -237,7 +246,7 @@ public class SequenceAspect
             Object seq = message.getAttribute(SEQ);
             if (seq != null) {
                 MessageAddress src = message.getOriginator();
-                ConversationState conversation = (ConversationState) conversationState.get(src);
+                ConversationState conversation = conversationState.get(src);
                 if (conversation == null) {
                     conversation = new ConversationState();
                     conversationState.put(src, conversation);

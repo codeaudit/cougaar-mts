@@ -41,7 +41,7 @@ class SocketControlProvision
         impl = new SocketControlProvisionImpl();
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == SocketControlProvisionService.class) {
             return impl;
         }
@@ -50,7 +50,7 @@ class SocketControlProvision
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

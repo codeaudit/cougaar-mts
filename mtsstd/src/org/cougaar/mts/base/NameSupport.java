@@ -52,6 +52,6 @@ public interface NameSupport
 
     void lookupAddressInNameServer(MessageAddress address, String protocol, Callback callback);
 
-    Iterator lookupMulticast(MulticastMessageAddress address);
+    Iterator<MessageAddress> lookupMulticast(MulticastMessageAddress address);
 
 }

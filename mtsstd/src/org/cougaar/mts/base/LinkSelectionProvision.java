@@ -40,7 +40,7 @@ class LinkSelectionProvision
         impl = new LinkSelectionProvisionImpl();
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == LinkSelectionProvisionService.class) {
             return impl;
         }
@@ -49,7 +49,7 @@ class LinkSelectionProvision
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

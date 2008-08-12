@@ -70,11 +70,11 @@ public class SocketFactory
     private static final String SSL_SERVER_SOCFAC_CLASS =
             "org.cougaar.core.security.ssl.KeyRingSSLServerFactory";
 
-    private static final Class[] FORMALS = {};
+    private static final Class<?>[] FORMALS = {};
     private static final Object[] ACTUALS = {};
 
     static SSLSocketFactory getSSLSocketFactory() {
-        Class cls = null;
+        Class<?> cls = null;
         try {
             cls = Class.forName(SSL_SOCFAC_CLASS);
         } catch (ClassNotFoundException cnf) {
@@ -94,7 +94,7 @@ public class SocketFactory
     }
 
     static ServerSocketFactory getSSLServerSocketFactory() {
-        Class cls = null;
+        Class<?> cls = null;
         try {
             cls = Class.forName(SSL_SERVER_SOCFAC_CLASS);
         } catch (ClassNotFoundException cnf) {
@@ -116,7 +116,7 @@ public class SocketFactory
     private static final String WRAPPER_CLASS_PROP =
             "org.cougaar.message.transport.server_socket_class";
 
-    private static Class serverWrapperClass;
+    private static Class<?> serverWrapperClass;
     static {
         String classname = SystemProperties.getProperty(WRAPPER_CLASS_PROP);
         if (classname != null) {

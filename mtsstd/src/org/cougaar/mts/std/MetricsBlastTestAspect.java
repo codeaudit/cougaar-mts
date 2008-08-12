@@ -64,7 +64,7 @@ public class MetricsBlastTestAspect
         }
     }
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         return null;
 
     }

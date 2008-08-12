@@ -41,7 +41,7 @@ public class MessageSendTimeAspect
     public MessageSendTimeAspect() {
     }
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) object);
         } else {

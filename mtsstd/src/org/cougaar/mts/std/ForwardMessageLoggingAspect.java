@@ -37,6 +37,7 @@ import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.StandardAspect;
@@ -77,7 +78,7 @@ public class ForwardMessageLoggingAspect
         madeLog = true;
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             return new DestinationLinkDelegate((DestinationLink) delegate);
         } else {
@@ -180,7 +181,7 @@ public class ForwardMessageLoggingAspect
         MessageAddress src = msg.getOriginator();
         MessageAddress dst = msg.getTarget();
         String dst_agent = dst.getAddress();
-        Class pclass = link.getProtocolClass();
+        Class<? extends LinkProtocol> pclass = link.getProtocolClass();
         long now = System.currentTimeMillis();
         Object remote = link.getRemoteReference();
         String remoteIP = remote == null ? null : extractInetAddr(remote.toString());

@@ -26,11 +26,12 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.cougaar.core.component.Container;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.std.AttributedMessage;
@@ -47,14 +48,14 @@ abstract class MessageQueue
         implements Runnable {
 
     // Simplified queue
-    private static class SimpleQueue
-            extends LinkedList {
-        Object next() {
+    private static class SimpleQueue<T>
+            extends LinkedList<T> {
+        T next() {
             return removeFirst();
         }
     }
 
-    private final SimpleQueue queue;
+    private final SimpleQueue<AttributedMessage> queue;
     private Schedulable thread;
     private final String name;
     private AttributedMessage in_progress;
@@ -64,7 +65,7 @@ abstract class MessageQueue
         this.name = name;
         in_progress_lock = new Object();
         queue_processing = new Object();
-        queue = new SimpleQueue();
+        queue = new SimpleQueue<AttributedMessage>();
     }
 
     int getLane() {
@@ -80,7 +81,7 @@ abstract class MessageQueue
         return name;
     }
 
-    public void removeMessages(UnaryPredicate pred, ArrayList removed) {
+    public void removeMessages(UnaryPredicate pred, List<Message> removed) {
         // only one remove can be examining the queue at a time,
         // even if they are looking for orthogonal messages
         synchronized (queue_processing) {
@@ -114,9 +115,9 @@ abstract class MessageQueue
                 }
             }
             synchronized (queue) {
-                Iterator itr = queue.iterator();
+                Iterator<AttributedMessage> itr = queue.iterator();
                 while (itr.hasNext()) {
-                    msg = (AttributedMessage) itr.next();
+                    msg = itr.next();
                     if (pred.execute(msg)) {
                         removed.add(msg);
                         itr.remove();
@@ -142,7 +143,7 @@ abstract class MessageQueue
                             break; // done for now
                         }
                         synchronized (in_progress_lock) {
-                            in_progress = (AttributedMessage) queue.next();
+                            in_progress = queue.next();
                         }
                     }
                 }
@@ -206,12 +207,12 @@ abstract class MessageQueue
             }
             AttributedMessage[] ret = new AttributedMessage[size];
             int i = 0;
-            Iterator iter = queue.iterator();
+            Iterator<AttributedMessage> iter = queue.iterator();
             if (head != null) {
                 ret[i++] = head;
             }
             while (i < size) {
-                ret[i++] = (AttributedMessage) iter.next();
+                ret[i++] = iter.next();
             }
             return ret;
         }

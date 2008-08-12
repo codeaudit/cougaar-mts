@@ -63,7 +63,7 @@ final class LinkProtocolFactory {
     private LinkProtocol makeProtocol(String classname) {
         LinkProtocol protocol = null;
         try {
-            Class protocol_class = Class.forName(classname);
+            Class<?> protocol_class = Class.forName(classname);
             protocol = (LinkProtocol) protocol_class.newInstance();
         } catch (Exception xxx) {
             if (loggingService.isErrorEnabled()) {

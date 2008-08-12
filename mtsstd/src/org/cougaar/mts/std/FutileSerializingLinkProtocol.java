@@ -29,6 +29,7 @@ package org.cougaar.mts.std;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
@@ -46,15 +47,15 @@ class FutileSerializingLinkProtocol
 
 {
 
-    private final HashMap links;
+    private final Map<MessageAddress,DestinationLink> links;
 
     public FutileSerializingLinkProtocol() {
         super();
-        links = new HashMap();
+        links = new HashMap<MessageAddress,DestinationLink>();
     }
 
     public synchronized DestinationLink getDestinationLink(MessageAddress address) {
-        DestinationLink link = (DestinationLink) links.get(address);
+        DestinationLink link = links.get(address);
         if (link == null) {
             link = new Link(address);
             link = attachAspects(link, DestinationLink.class);
@@ -147,7 +148,7 @@ class FutileSerializingLinkProtocol
             return true;
         }
 
-        public Class getProtocolClass() {
+        public Class<FutileSerializingLinkProtocol> getProtocolClass() {
             return FutileSerializingLinkProtocol.class;
         }
 

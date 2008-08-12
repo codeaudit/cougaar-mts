@@ -53,7 +53,7 @@ public interface LinkSelectionPolicy
      * parameter can be used to examine the full set of attributes in this
      * scenario.
      */
-    DestinationLink selectLink(Iterator candidate_links,
+    DestinationLink selectLink(Iterator<DestinationLink> candidate_links,
                                AttributedMessage message,
                                AttributedMessage failedMsg,
                                int retryCount,

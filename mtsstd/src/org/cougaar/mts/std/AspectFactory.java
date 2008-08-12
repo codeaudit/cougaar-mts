@@ -26,7 +26,7 @@
 
 package org.cougaar.mts.std;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.mts.base.BoundComponent;
 
@@ -41,11 +41,11 @@ import org.cougaar.mts.base.BoundComponent;
 abstract public class AspectFactory
         extends BoundComponent {
 
-    public Object attachAspects(Object delegate, Class type) {
+    public <T> T attachAspects(T delegate, Class<T> type) {
         return getAspectSupport().attachAspects(delegate, type);
     }
 
-    public Object attachAspects(Object delegate, Class type, ArrayList aspectNames) {
+    public <T> T attachAspects(T delegate, Class<T> type, List<String> aspectNames) {
         return getAspectSupport().attachAspects(delegate, type, aspectNames);
     }
 

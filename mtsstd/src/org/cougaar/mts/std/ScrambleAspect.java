@@ -41,7 +41,7 @@ public class ScrambleAspect
     public ScrambleAspect() {
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
             return new ScrambledSendLink((SendLink) delegate);
         } else {

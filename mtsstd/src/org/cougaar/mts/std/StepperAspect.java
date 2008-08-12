@@ -33,7 +33,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -64,7 +64,7 @@ public final class StepperAspect
         extends StandardAspect {
 
     private StepFrame frame;
-    private HashMap controllers;
+    private Map<MessageAddress,StepController> controllers;
     private ThreadService threadService;
     private StepService service;
 
@@ -77,7 +77,7 @@ public final class StepperAspect
         return threadService;
     }
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationQueue.class) {
             return new DestinationQueueDelegate((DestinationQueue) delegatee);
         } else {
@@ -90,11 +90,9 @@ public final class StepperAspect
             if (frame == null) {
                 frame = new StepFrame(getRegistry().getIdentifier());
                 if (controllers == null) {
-                    controllers = new HashMap();
+                    controllers = new HashMap<MessageAddress,StepController>();
                 } else {
-                    Iterator i = controllers.values().iterator();
-                    while (i.hasNext()) {
-                        StepController controller = (StepController) i.next();
+                    for (StepController controller : controllers.values()) {
                         frame.addControllerWidget(controller);
                     }
                 }
@@ -126,46 +124,40 @@ public final class StepperAspect
     private class ServiceImpl
             implements StepService {
         public void pause(MessageAddress destination) {
-            StepController controller = (StepController) controllers.get(destination);
+            StepController controller = controllers.get(destination);
             if (controller != null) {
                 controller.pause();
             }
         }
 
         public void resume(MessageAddress destination) {
-            StepController controller = (StepController) controllers.get(destination);
+            StepController controller = controllers.get(destination);
             if (controller != null) {
                 controller.resume();
             }
         }
 
         public void step(MessageAddress destination) {
-            StepController controller = (StepController) controllers.get(destination);
+            StepController controller = controllers.get(destination);
             if (controller != null) {
                 controller.step();
             }
         }
 
         public synchronized void pauseAll() {
-            Iterator i = controllers.values().iterator();
-            while (i.hasNext()) {
-                StepController controller = (StepController) i.next();
+            for (StepController controller : controllers.values()) {
                 controller.pause();
             }
         }
 
         public synchronized void resumeAll() {
-            Iterator i = controllers.values().iterator();
-            while (i.hasNext()) {
-                StepController controller = (StepController) i.next();
+            for (StepController controller : controllers.values()) {
                 controller.resume();
             }
         }
 
         public synchronized void stepAll() {
-            Iterator i = controllers.values().iterator();
-            while (i.hasNext()) {
-                StepController controller = (StepController) i.next();
+            for (StepController controller : controllers.values()) {
                 controller.step();
             }
         }
@@ -173,7 +165,7 @@ public final class StepperAspect
 
     private class StepServiceProvider
             implements ServiceProvider {
-        public Object getService(ServiceBroker sb, Object client, Class serviceClass) {
+        public Object getService(ServiceBroker sb, Object client, Class<?> serviceClass) {
             if (serviceClass == StepService.class) {
                 return service;
             } else {
@@ -183,7 +175,7 @@ public final class StepperAspect
 
         public void releaseService(ServiceBroker sb,
                                    Object client,
-                                   Class serviceClass,
+                                   Class<?> serviceClass,
                                    Object service) {
         }
 

@@ -48,7 +48,7 @@ public class MulticastAspect
 
     private static final String MCAST = "org.cougaar.message.transport.is-multicast";
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) delegatee);
         } else {
@@ -56,7 +56,7 @@ public class MulticastAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegatee, Class type) {
+    public Object getReverseDelegate(Object delegatee, Class<?> type) {
         if (type == MessageDeliverer.class) {
             return new MessageDelivererDelegate((MessageDeliverer) delegatee);
         } else {
@@ -90,9 +90,9 @@ public class MulticastAspect
                         loggingService.debug("MCAST: Remote multicast to " + destination);
                     }
                     MulticastMessageAddress dst = (MulticastMessageAddress) destination;
-                    Iterator itr = getRegistry().findRemoteMulticastTransports(dst);
+                    Iterator<MessageAddress> itr = getRegistry().findRemoteMulticastTransports(dst);
                     while (itr.hasNext()) {
-                        nodeAddr = (MessageAddress) itr.next();
+                        nodeAddr = itr.next();
                         if (loggingService.isDebugEnabled()) {
                             loggingService.debug("MCAST: next address = " + nodeAddr);
                         }
@@ -123,11 +123,11 @@ public class MulticastAspect
                 if (loggingService.isDebugEnabled()) {
                     loggingService.debug("MCAST: Received multicast to " + mcastAddr);
                 }
-                Iterator i = getRegistry().findLocalMulticastReceivers(mcastAddr);
+                Iterator<MessageAddress> i = getRegistry().findLocalMulticastReceivers(mcastAddr);
                 MessageAddress localDestination = null;
                 AttributedMessage copy = new AttributedMessage(msg.getRawMessage(), msg);
                 while (i.hasNext()) {
-                    localDestination = (MessageAddress) i.next();
+                    localDestination = i.next();
                     if (loggingService.isDebugEnabled()) {
                         loggingService.debug("MCAST: Delivering to " + localDestination);
                     }

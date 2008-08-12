@@ -26,9 +26,10 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AttributedMessage;
@@ -72,7 +73,7 @@ public interface SendLink {
      * @param messages Dropped messages are added to this list.
      * @see org.cougaar.core.service.MessageTransportService#flushMessages()
      */
-    void flushMessages(ArrayList messages);
+    void flushMessages(List<Message> messages);
 
     /**
      * Releases hooks into the MTS and invalidates the SendLink. Called when the

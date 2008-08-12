@@ -49,7 +49,7 @@ public class SerializationAspect
     public SerializationAspect() {
     }
 
-    public Object getDelegate(Object object, Class type) {
+    public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) object;
             if (link.getProtocolClass() == LoopbackLinkProtocol.class) {

@@ -48,10 +48,10 @@ public class MessageDelivererFactory
         super.load();
         String name = id + "/Deliverer";
         MessageDeliverer d = new MessageDelivererImpl(name, getRegistry());
-        deliverer = (MessageDeliverer) attachAspects(d, MessageDeliverer.class);
+        deliverer = attachAspects(d, MessageDeliverer.class);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         // Could restrict this request to LinkProtocols
         if (serviceClass == MessageDeliverer.class) {
             return deliverer;
@@ -61,7 +61,7 @@ public class MessageDelivererFactory
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

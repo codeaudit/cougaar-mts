@@ -26,7 +26,7 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.mts.std.AspectFactory;
 import org.cougaar.mts.std.AttributedMessage;
@@ -53,14 +53,14 @@ public final class MessageStreamsFactory
     private MessageStreamsFactory() {
     }
 
-    public MessageReader getMessageReader(ArrayList aspectNames) {
+    public MessageReader getMessageReader(List<String> aspectNames) {
         MessageReader rdr = new MessageReaderImpl();
-        return (MessageReader) attachAspects(rdr, MessageReader.class, aspectNames);
+        return attachAspects(rdr, MessageReader.class, aspectNames);
     }
 
-    public MessageWriter getMessageWriter(ArrayList aspectNames) {
+    public MessageWriter getMessageWriter(List<String> aspectNames) {
         MessageWriter wtr = new MessageWriterImpl();
-        return (MessageWriter) attachAspects(wtr, MessageWriter.class, aspectNames);
+        return attachAspects(wtr, MessageWriter.class, aspectNames);
     }
 
     /**

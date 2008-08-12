@@ -37,6 +37,7 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.MessageReader;
 import org.cougaar.mts.base.MessageReaderDelegateImplBase;
 import org.cougaar.mts.base.MessageWriter;
@@ -61,7 +62,7 @@ public class CountBytesStreamsAspect
 
     // Return delegates for MessageReader, MessageWriter and
     // DestinationLink.
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new CountingMessageWriter(wtr);
@@ -71,7 +72,7 @@ public class CountBytesStreamsAspect
         } else if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegatee;
             // Only RPC is relevant here
-            Class cls = link.getProtocolClass();
+            Class<? extends LinkProtocol> cls = link.getProtocolClass();
             if (RPCLinkProtocol.class.isAssignableFrom(cls)) {
                 return new BandwidthDestinationLink(link);
             }

@@ -52,7 +52,7 @@ public class MessageTraceAspect
         super.load();
     }
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationLink.class) {
             // forward time
             return new DestinationLinkDelegate((DestinationLink) delegatee);

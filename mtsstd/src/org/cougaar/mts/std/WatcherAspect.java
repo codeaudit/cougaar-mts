@@ -27,7 +27,7 @@
 package org.cougaar.mts.std;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
@@ -51,13 +51,13 @@ import org.cougaar.mts.base.StandardAspect;
  */
 public class WatcherAspect
         extends StandardAspect {
-    private final ArrayList watchers;
+    private final List<MessageTransportWatcher> watchers;
 
     public WatcherAspect() {
-        this.watchers = new ArrayList();
+        this.watchers = new ArrayList<MessageTransportWatcher>();
     }
 
-    public Object getDelegate(Object delegate, Class type) {
+    public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) delegate);
         } else if (type == MessageDeliverer.class) {
@@ -78,10 +78,8 @@ public class WatcherAspect
     // Should the watchers see the AttributedMessage or its contents?
     private void notifyWatchersOfSend(AttributedMessage message) {
         Message rawMessage = message.getRawMessage();
-        Iterator itr = watchers.iterator();
         synchronized (this) {
-            while (itr.hasNext()) {
-                MessageTransportWatcher w = (MessageTransportWatcher) itr.next();
+            for (MessageTransportWatcher w : watchers) {
                 if (loggingService.isDebugEnabled()) {
                     loggingService.debug("Notifying " + w + " of send");
                 }
@@ -92,10 +90,8 @@ public class WatcherAspect
 
     private void notifyWatchersOfReceive(AttributedMessage message) {
         Message rawMessage = message.getRawMessage();
-        Iterator itr = watchers.iterator();
         synchronized (this) {
-            while (itr.hasNext()) {
-                MessageTransportWatcher w = (MessageTransportWatcher) itr.next();
+            for (MessageTransportWatcher w : watchers) {
                 if (loggingService.isDebugEnabled()) {
                     loggingService.debug("Notifying " + w + " of receive");
                 }

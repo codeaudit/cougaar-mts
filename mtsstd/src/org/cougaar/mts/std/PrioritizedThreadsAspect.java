@@ -29,7 +29,6 @@ package org.cougaar.mts.std;
 import java.io.FileInputStream;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -52,17 +51,17 @@ public class PrioritizedThreadsAspect
         extends StandardAspect
         implements ThreadListener {
 
-    private HashMap agent_priorities;
-    private HashMap thread_priorities;
+    private Map<Object,Integer> agent_priorities;
+    private Map<Schedulable,Integer> thread_priorities;
 
-    private final Comparator priorityComparator = new Comparator() {
+    private final Comparator<Schedulable> priorityComparator = new Comparator<Schedulable>() {
         public boolean equals(Object x) {
             return x == this;
         }
 
-        public int compare(Object o1, Object o2) {
-            Object x = thread_priorities.get(o1);
-            Object y = thread_priorities.get(o2);
+        public int compare(Schedulable o1, Schedulable o2) {
+            Integer x = thread_priorities.get(o1);
+            Integer y = thread_priorities.get(o2);
 
             // Entries placed on the queue before our listener
             // starts won't be found by the map. Deal with
@@ -79,15 +78,15 @@ public class PrioritizedThreadsAspect
 
             // Higher priority should precede lower, so reverse
             // the arguments.
-            return ((Comparable) y).compareTo(x);
+            return y.compareTo(x);
         }
     };
 
     public void load() {
         super.load();
 
-        thread_priorities = new HashMap();
-        agent_priorities = new HashMap();
+        thread_priorities = new HashMap<Schedulable,Integer>();
+        agent_priorities = new HashMap<Object,Integer>();
         Properties p = new Properties();
         String priorities_file = SystemProperties.getProperty("org.cougaar.lib.quo.priorities");
         if (priorities_file != null) {
@@ -100,13 +99,11 @@ public class PrioritizedThreadsAspect
             }
         }
 
-        Iterator itr = p.entrySet().iterator();
-        while (itr.hasNext()) {
-            Map.Entry entry = (Map.Entry) itr.next();
+        for (Map.Entry<Object,Object> entry : p.entrySet()) {
             Object key = entry.getKey();
             String priority = (String) entry.getValue();
             if (priority != null) {
-                agent_priorities.put(key, new Integer(Integer.parseInt(priority)));
+                agent_priorities.put(key, Integer.parseInt(priority));
             }
         }
 
@@ -124,7 +121,7 @@ public class PrioritizedThreadsAspect
     }
 
     // MessageTransportAspect
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         // not a real aspect, so no delegates
         return null;
     }
@@ -136,7 +133,7 @@ public class PrioritizedThreadsAspect
             // queue. The comparator will use this later.
             DestinationQueue q = (DestinationQueue) consumer;
             MessageAddress address = q.getDestination();
-            Object priority = agent_priorities.get(address.toString());
+            Integer priority = agent_priorities.get(address.toString());
             thread_priorities.put(thread, priority);
         }
     }

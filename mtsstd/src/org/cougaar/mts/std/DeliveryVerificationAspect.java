@@ -26,9 +26,7 @@
 
 package org.cougaar.mts.std;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +78,7 @@ public class DeliveryVerificationAspect
         TOO_LONG * 1000
     };
 
-    private final HashMap pendingMessages = new HashMap();
+    private final Map<AttributedMessage,Long> pendingMessages = new HashMap<AttributedMessage,Long>();
     private Schedulable schedulable;
     private final int timeout = TOO_LONG;
     private int infoTime;
@@ -161,11 +159,9 @@ public class DeliveryVerificationAspect
 
         long now = System.currentTimeMillis();
         synchronized (pendingMessages) {
-            Iterator itr = pendingMessages.entrySet().iterator();
-            while (itr.hasNext()) {
-                Map.Entry entry = (Map.Entry) itr.next();
-                AttributedMessage msg = (AttributedMessage) entry.getKey();
-                long time = ((Long) entry.getValue()).longValue();
+            for (Map.Entry<AttributedMessage,Long> entry : pendingMessages.entrySet()) {
+                AttributedMessage msg = entry.getKey();
+                long time = entry.getValue().longValue();
                 long deltaT = now - time;
                 if (timeToLog(deltaT)) {
                     if (deltaT >= warnTime) {
@@ -184,7 +180,7 @@ public class DeliveryVerificationAspect
     private void removeMessage(Message message) {
         LoggingService lsvc = getLoggingService();
         if (lsvc.isInfoEnabled()) {
-            Long time = (Long) pendingMessages.get(message);
+            Long time = pendingMessages.get(message);
             if (time != null) {
                 long now = System.currentTimeMillis();
                 long deltaT = now - time.longValue();
@@ -198,28 +194,25 @@ public class DeliveryVerificationAspect
         pendingMessages.remove(message);
     }
 
-    public void messagesRemoved(List messages) {
+    public void messagesRemoved(List<Message> messages) {
         LoggingService lsvc = getLoggingService();
         if (lsvc.isInfoEnabled()) {
             lsvc.info("Messages removed from queue");
         }
         synchronized (messages) {
-            Iterator itr = messages.iterator();
-            AttributedMessage message;
-            while (itr.hasNext()) {
-                message = (AttributedMessage) itr.next();
+            for (Message message : messages) {
                 synchronized (pendingMessages) {
                     pendingMessages.remove(message);
                 }
-                if (lsvc.isInfoEnabled()) {
-                    lsvc.info("Removing message " + message.logString());
+                if (lsvc.isInfoEnabled() && message instanceof AttributedMessage) {
+                    lsvc.info("Removing message " + ((AttributedMessage) message).logString());
                 }
             }
         }
     }
 
     // Aspect
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == SendLink.class) {
             SendLink link = (SendLink) delegatee;
             return new VerificationSendLink(link);
@@ -228,7 +221,7 @@ public class DeliveryVerificationAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegatee, Class type) {
+    public Object getReverseDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegatee;
             return new VerificationDestinationLink(link);
@@ -260,14 +253,12 @@ public class DeliveryVerificationAspect
             super.sendMessage(message);
         }
 
-        public void flushMessages(ArrayList messages) {
+        public void flushMessages(List<Message> messages) {
             super.flushMessages(messages);
             // 'messages' now holds a list of all retracted
             // Messages. Remove them from the pendingMessages map.
             synchronized (pendingMessages) {
-                Iterator i = messages.iterator();
-                while (i.hasNext()) {
-                    Message message = (Message) i.next();
+                for (Message message : messages) {
                     removeMessage(message);
                 }
             }

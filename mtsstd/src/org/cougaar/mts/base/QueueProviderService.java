@@ -26,9 +26,10 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.component.Service;
+import org.cougaar.core.mts.Message;
 import org.cougaar.util.UnaryPredicate;
 
 /**
@@ -42,7 +43,7 @@ public interface QueueProviderService
      * Removes any messages matching the given predicate, in all relevant
      * queues. Each removed message is added to the given ArrayList.
      */
-    void removeMessages(UnaryPredicate predicate, ArrayList removed);
+    void removeMessages(UnaryPredicate predicate, List<Message> removed);
 
     /**
      * Add the given listener to the list of those receiving callbacks for queue

@@ -54,7 +54,7 @@ public class LinkSelectionPolicyServiceProvider
         }
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == LinkSelectionPolicy.class) {
             if (requestor instanceof DestinationQueueImpl) {
                 return policy;
@@ -67,7 +67,7 @@ public class LinkSelectionPolicyServiceProvider
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
         if (serviceClass == LinkSelectionPolicy.class) {
             // ??

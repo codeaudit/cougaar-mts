@@ -54,7 +54,7 @@ public class MetricsTestAspect
     MetricsService svc;
     long lastUpdate = 0;
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == SendQueue.class) {
             return new DummySendQueue((SendQueue) delegatee);
         } else {

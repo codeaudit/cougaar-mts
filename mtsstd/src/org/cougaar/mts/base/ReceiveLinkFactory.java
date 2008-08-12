@@ -40,7 +40,7 @@ public class ReceiveLinkFactory
         extends AspectFactory
         implements ReceiveLinkProviderService, ServiceProvider {
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         // Could restrict this request to the registry
         if (serviceClass == ReceiveLinkProviderService.class) {
             if (requestor instanceof MessageTransportRegistry.ServiceImpl) {
@@ -52,7 +52,7 @@ public class ReceiveLinkFactory
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 
@@ -63,6 +63,6 @@ public class ReceiveLinkFactory
      */
     public ReceiveLink getReceiveLink(MessageTransportClient client) {
         ReceiveLink link = new ReceiveLinkImpl(client, getServiceBroker());
-        return (ReceiveLink) attachAspects(link, ReceiveLink.class);
+        return attachAspects(link, ReceiveLink.class);
     }
 }

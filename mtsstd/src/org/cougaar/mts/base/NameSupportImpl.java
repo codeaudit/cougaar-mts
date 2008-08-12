@@ -26,7 +26,9 @@
 
 package org.cougaar.mts.base;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -56,7 +58,7 @@ public final class NameSupportImpl
         service = aspectSupport.attachAspects(service, NameSupport.class);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == NameSupport.class) {
             return service;
         } else {
@@ -66,7 +68,7 @@ public final class NameSupportImpl
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 
@@ -75,16 +77,16 @@ public final class NameSupportImpl
         private final LoggingService loggingService;
         private final WhitePagesService wpService;
         private final MessageAddress myNodeAddress;
-        private String hostname;
 
         private ServiceImpl(String id, ServiceBroker sb) {
             wpService = sb.getService(this, WhitePagesService.class, null);
             loggingService = sb.getService(this, LoggingService.class, null);
             myNodeAddress = MessageAddress.getMessageAddress(id);
-
+            
+            // XXX Why is this here?
             try {
-                hostname = java.net.InetAddress.getLocalHost().getHostAddress();
-            } catch (java.net.UnknownHostException ex) {
+                InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException ex) {
                 loggingService.error(null, ex);
             }
         }
@@ -155,13 +157,13 @@ public final class NameSupportImpl
             return entry == null ? null : entry.getURI();
         }
 
-        private static class EmptyIterator
-                implements Iterator {
+        private static class EmptyIterator<T>
+                implements Iterator<T> {
             public boolean hasNext() {
                 return false;
             }
 
-            public Object next() {
+            public T next() {
                 return null;
             }
 
@@ -170,20 +172,21 @@ public final class NameSupportImpl
             }
         }
 
-        public Iterator lookupMulticast(MulticastMessageAddress address) {
+        public Iterator<MessageAddress> lookupMulticast(MulticastMessageAddress address) {
             try {
-                Set result = ListAllNodes.listAllNodes(wpService, 30000);
+                @SuppressWarnings("unchecked") // wp not genericized
+                Set<String> result = ListAllNodes.listAllNodes(wpService, 30000);
                 if (result == null) {
-                    return new EmptyIterator();
+                    return new EmptyIterator<MessageAddress>();
                 }
-                final Iterator iter = result.iterator();
-                return new Iterator() {
+                final Iterator<String> iter = result.iterator();
+                return new Iterator<MessageAddress>() {
                     public boolean hasNext() {
                         return iter.hasNext();
                     }
 
-                    public Object next() {
-                        String node = (String) iter.next();
+                    public MessageAddress next() {
+                        String node = iter.next();
                         return MessageAddress.getMessageAddress(node);
                     }
 
@@ -195,7 +198,7 @@ public final class NameSupportImpl
                 if (loggingService.isWarnEnabled()) {
                     loggingService.warn("Multicast had WP timout");
                 }
-                return new EmptyIterator();
+                return new EmptyIterator<MessageAddress>();
             }
         }
 

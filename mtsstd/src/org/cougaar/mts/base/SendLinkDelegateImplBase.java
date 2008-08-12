@@ -26,9 +26,10 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.mts.std.AttributedMessage;
@@ -53,7 +54,7 @@ abstract public class SendLinkDelegateImplBase
         link.sendMessage(message);
     }
 
-    public void flushMessages(ArrayList droppedMessages) {
+    public void flushMessages(List<Message> droppedMessages) {
         link.flushMessages(droppedMessages);
     }
 

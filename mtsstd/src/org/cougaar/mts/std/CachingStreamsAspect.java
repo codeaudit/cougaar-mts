@@ -42,7 +42,7 @@ import org.cougaar.mts.base.StandardAspect;
 public class CachingStreamsAspect
         extends StandardAspect {
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new CachingMessageWriter(wtr);
@@ -90,6 +90,10 @@ public class CachingStreamsAspect
             super(delegatee);
         }
 
+        public byte[] getCache() {
+            return cache;
+        }
+        
         public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_os = super.getObjectOutputStream(out);

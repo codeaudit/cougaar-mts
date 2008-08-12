@@ -42,10 +42,10 @@ public class RouterFactory
     public void load() {
         super.load();
         router = new RouterImpl(getServiceBroker());
-        router = (Router) attachAspects(router, Router.class);
+        router = attachAspects(router, Router.class);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         // Could restrict this request to the Router
         if (serviceClass == Router.class) {
             if (requestor instanceof SendQueueImpl) {
@@ -57,7 +57,7 @@ public class RouterFactory
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

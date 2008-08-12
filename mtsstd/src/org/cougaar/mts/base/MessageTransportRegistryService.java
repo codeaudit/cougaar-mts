@@ -26,8 +26,8 @@
 
 package org.cougaar.mts.base;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.AgentState;
@@ -55,9 +55,9 @@ public interface MessageTransportRegistryService
 
     ReceiveLink findLocalReceiveLink(MessageAddress id);
 
-    Iterator findLocalMulticastReceivers(MulticastMessageAddress addr);
+    Iterator<MessageAddress> findLocalMulticastReceivers(MulticastMessageAddress addr);
 
-    Iterator findRemoteMulticastTransports(MulticastMessageAddress addr);
+    Iterator<MessageAddress> findRemoteMulticastTransports(MulticastMessageAddress addr);
 
     void registerClient(MessageTransportClient client);
 
@@ -65,7 +65,7 @@ public interface MessageTransportRegistryService
 
     boolean addressKnown(MessageAddress address);
 
-    ArrayList getDestinationLinks(MessageAddress destination);
+    List<DestinationLink> getDestinationLinks(MessageAddress destination);
 
     AgentState getAgentState(MessageAddress agent);
 

@@ -61,7 +61,7 @@ public final class MessageQueueDumpServiceComponent
         rootsb.addService(MessageQueueDumpService.class, this);
     }
 
-    public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
+    public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
         if (serviceClass == MessageQueueDumpService.class
                 && requestor instanceof StateDumpServiceComponent) {
             return impl;
@@ -72,7 +72,7 @@ public final class MessageQueueDumpServiceComponent
 
     public void releaseService(ServiceBroker sb,
                                Object requestor,
-                               Class serviceClass,
+                               Class<?> serviceClass,
                                Object service) {
     }
 

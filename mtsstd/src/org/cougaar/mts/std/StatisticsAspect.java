@@ -155,7 +155,7 @@ public class StatisticsAspect
         statisticsSentTotalBytes += byteCount;
     }
 
-    public Object getDelegate(Object delegatee, Class type) {
+    public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new StatisticsWriter(wtr);

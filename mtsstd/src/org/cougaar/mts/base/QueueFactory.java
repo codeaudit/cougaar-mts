@@ -27,9 +27,10 @@
 package org.cougaar.mts.base;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.std.AspectFactory;
 
@@ -39,7 +40,7 @@ import org.cougaar.mts.std.AspectFactory;
  */
 abstract class QueueFactory
         extends AspectFactory {
-    private final HashSet listeners = new HashSet();
+    private final Set<QueueListener> listeners = new HashSet<QueueListener>();
 
     public void addListener(QueueListener listener) {
         synchronized (listeners) {
@@ -61,7 +62,7 @@ abstract class QueueFactory
         }
     }
 
-    protected void notifyListeners(List messages) {
+    protected void notifyListeners(List<Message> messages) {
         if (messages.isEmpty()) {
             return;
         }
@@ -70,10 +71,7 @@ abstract class QueueFactory
             lsvc.info("Notify listeners");
         }
         synchronized (listeners) {
-            Iterator itr = listeners.iterator();
-            QueueListener listener;
-            while (itr.hasNext()) {
-                listener = (QueueListener) itr.next();
+            for (QueueListener listener : listeners) {
                 if (lsvc.isInfoEnabled()) {
                     lsvc.info("Notify listener " + listener);
                 }
