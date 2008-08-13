@@ -68,7 +68,7 @@ public class XmppLinkProtocol
      * 
      * <pre>
      * someNode@gmail.com=somepassword
-     *          someOtherNode@gmail.com=someotherpassword
+     * someOtherNode@gmail.com=someotherpassword
      * </pre>
      */
     @Cougaar.Arg(name = "passwordsUri", defaultValue = Cougaar.NULL_VALUE)
