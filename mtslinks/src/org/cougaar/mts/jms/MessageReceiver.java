@@ -30,9 +30,9 @@ import javax.jms.Message;
 import javax.jms.ObjectMessage;
 
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 

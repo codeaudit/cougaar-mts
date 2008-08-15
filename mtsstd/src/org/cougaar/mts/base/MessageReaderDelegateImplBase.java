@@ -29,7 +29,6 @@ package org.cougaar.mts.base;
 import java.io.InputStream;
 import java.io.ObjectInput;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Convenience class for aspects which define {@link MessageReader} delegate

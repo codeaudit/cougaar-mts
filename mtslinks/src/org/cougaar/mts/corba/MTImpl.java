@@ -24,13 +24,13 @@ package org.cougaar.mts.corba;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SerializationUtils;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.DontRetryException;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.corba.idlj.CorbaDontRetryException;
 import org.cougaar.mts.corba.idlj.CorbaMisdeliveredMessage;
 import org.cougaar.mts.corba.idlj.MTPOA;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This is the CORBA servant class for the MT idl interface.

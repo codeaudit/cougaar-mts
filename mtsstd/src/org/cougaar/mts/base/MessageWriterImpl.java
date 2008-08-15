@@ -30,7 +30,6 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Default implementatiom of {@link MessageWriter} that uses a trivial

@@ -41,6 +41,7 @@ import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.LoggingService;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.ReceiveLink;
 import org.cougaar.mts.base.ReceiveLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLink;

@@ -33,9 +33,9 @@ import java.util.Map;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.thread.SchedulableStatus;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 

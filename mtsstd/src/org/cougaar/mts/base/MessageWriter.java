@@ -30,7 +30,6 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 
 import org.cougaar.core.mts.Attributes;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This is the final station in the sender for serializling LinkProyocols.

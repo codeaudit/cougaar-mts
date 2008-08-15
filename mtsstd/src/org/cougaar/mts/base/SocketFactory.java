@@ -40,7 +40,6 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.mts.std.AspectSupportImpl;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 

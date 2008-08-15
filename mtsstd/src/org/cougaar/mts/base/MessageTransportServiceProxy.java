@@ -35,7 +35,6 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.MessageTransportService;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Currently the only implementation of MessageTransportService. It does almost

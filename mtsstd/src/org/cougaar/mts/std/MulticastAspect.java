@@ -33,6 +33,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.SimpleMessageAttributes;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
 import org.cougaar.mts.base.MisdeliveredMessageException;

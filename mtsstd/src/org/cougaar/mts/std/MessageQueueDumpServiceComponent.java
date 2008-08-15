@@ -33,6 +33,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageQueueDumpService;
 import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.node.StateDumpServiceComponent;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.DestinationQueueMonitorService;
 import org.cougaar.util.log.Logger;
 

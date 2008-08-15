@@ -26,10 +26,10 @@
 
 package org.cougaar.mts.corba;
 
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This test Aspect prefers CORBA over RMI after a delay, by cutting the cost of

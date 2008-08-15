@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.base;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,11 +46,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.MessageProtectionService;
-import org.cougaar.mts.base.MessageReader;
-import org.cougaar.mts.base.MessageSecurityException;
-import org.cougaar.mts.base.MessageSerializationException;
-import org.cougaar.mts.base.MessageStreamsFactory;
-import org.cougaar.mts.base.MessageWriter;
+import org.cougaar.mts.std.MessageProtectionAspect;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
@@ -427,7 +423,7 @@ public class AttributedMessage
         throw ex;
     }
 
-    String logString() {
+    public String logString() {
         return "<From: " + getOriginator().getAddress() + " To: " + getTarget().getAddress()
                 + " Hash: " + hashCode() + " Id: " + getContentsId() + ">";
     }

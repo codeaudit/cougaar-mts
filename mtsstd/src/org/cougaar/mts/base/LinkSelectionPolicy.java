@@ -30,7 +30,6 @@ import java.util.Iterator;
 
 import org.cougaar.core.component.Component;
 import org.cougaar.core.component.Service;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The selection of a {@link DestinationLink} is handled by this MTS-internal

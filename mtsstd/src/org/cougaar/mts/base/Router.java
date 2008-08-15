@@ -27,7 +27,6 @@
 package org.cougaar.mts.base;
 
 import org.cougaar.core.component.Service;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The third station for an outgoing message. In theory a given Message

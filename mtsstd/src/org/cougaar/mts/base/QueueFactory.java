@@ -33,7 +33,6 @@ import java.util.Set;
 import org.cougaar.core.component.Component;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.std.AspectFactory;
 
 
 /**

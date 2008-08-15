@@ -29,10 +29,10 @@ import java.net.URI;
 
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.MessageReply;
 import org.cougaar.mts.base.MisdeliveredMessageException;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 

@@ -31,7 +31,6 @@ import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The only current implementation of ReceiveLink. The implementation of

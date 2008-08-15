@@ -35,7 +35,6 @@ import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
 
 /**

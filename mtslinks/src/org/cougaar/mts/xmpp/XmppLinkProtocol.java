@@ -19,7 +19,7 @@ import java.util.Properties;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.thread.SchedulableStatus;
-import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.stream.PollingStreamLinkProtocol;
 import org.cougaar.util.annotations.Cougaar;
 import org.jivesoftware.smack.Chat;

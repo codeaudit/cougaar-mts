@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import java.rmi.RemoteException;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This Exception is thrown when the message is delivered to a Node that does

@@ -29,10 +29,10 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SerializationUtils;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CougaarIOException;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SocketFactory;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Implementation of the {@link SerializedMT} rmi interface. It accepts a

@@ -35,7 +35,6 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
 
 /**

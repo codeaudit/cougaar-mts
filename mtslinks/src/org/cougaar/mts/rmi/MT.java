@@ -30,7 +30,7 @@ import java.rmi.RemoteException;
 
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.mts.base.AttributedMessage;
 
 /**
  * The RMI remote interface for inter-Node message passing.

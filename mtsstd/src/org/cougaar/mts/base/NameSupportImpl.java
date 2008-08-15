@@ -42,7 +42,6 @@ import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
 import org.cougaar.core.wp.ListAllNodes;
-import org.cougaar.mts.std.AspectSupport;
 
 /**
  * This {@link ServiceProvider} provides the {@link NameSupport} service. An

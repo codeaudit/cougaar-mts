@@ -24,11 +24,10 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.base;
 
 import java.util.List;
 
-import org.cougaar.mts.base.BoundComponent;
 
 /**
  * The root class of all aspect-ready factories. Such factories have the ability

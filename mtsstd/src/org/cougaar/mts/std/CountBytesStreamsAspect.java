@@ -34,6 +34,7 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;

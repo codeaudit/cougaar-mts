@@ -32,7 +32,6 @@ import java.util.List;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadService;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.PropertyParser;
 
 /**

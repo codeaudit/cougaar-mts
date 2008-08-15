@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The final station in the message transport system before an incoming message

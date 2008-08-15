@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The default, and for now only, implementation of Router. The

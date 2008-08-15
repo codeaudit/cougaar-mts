@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import java.util.Iterator;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * A cost-based {@link LinkSelectionPolicy} that chooses the cheapest link. If

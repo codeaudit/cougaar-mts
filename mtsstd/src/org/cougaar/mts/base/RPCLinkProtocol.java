@@ -44,7 +44,6 @@ import org.cougaar.core.service.wp.AddressEntry;
 import org.cougaar.core.service.wp.Callback;
 import org.cougaar.core.service.wp.Response;
 import org.cougaar.core.service.wp.WhitePagesService;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This is the parent class of all {@link LinkProtocol}s that use a

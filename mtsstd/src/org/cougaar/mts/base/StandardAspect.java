@@ -27,7 +27,6 @@
 package org.cougaar.mts.base;
 
 import org.cougaar.core.component.ServiceBroker;
-import org.cougaar.mts.std.AspectSupport;
 
 /**
  * Default base Aspect class. It handles the registration of the Aspect with the

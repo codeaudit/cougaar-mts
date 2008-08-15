@@ -31,10 +31,10 @@ import java.rmi.server.UnicastRemoteObject;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SocketFactory;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * RMI remote object providing the implementation of {@link MT}. Note that this

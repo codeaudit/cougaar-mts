@@ -29,7 +29,6 @@ package org.cougaar.mts.base;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.mts.std.AspectFactory;
 
 /**
  * This {@link ServiceProvider} both provides and implements the

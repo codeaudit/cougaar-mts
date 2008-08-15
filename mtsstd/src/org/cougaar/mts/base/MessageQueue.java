@@ -33,7 +33,6 @@ import java.util.List;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
-import org.cougaar.mts.std.AttributedMessage;
 import org.cougaar.util.UnaryPredicate;
 
 /**

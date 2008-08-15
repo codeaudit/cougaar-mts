@@ -26,7 +26,6 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This simple extension of {@link AttributedMessage} should be used only for

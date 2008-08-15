@@ -29,7 +29,6 @@ package org.cougaar.mts.base;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Convenience class for aspects which define {@link MessageWriter} delegate

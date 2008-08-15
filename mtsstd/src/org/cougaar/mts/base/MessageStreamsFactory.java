@@ -28,8 +28,6 @@ package org.cougaar.mts.base;
 
 import java.util.List;
 
-import org.cougaar.mts.std.AspectFactory;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This factory is used to create MessageReaders and MessageWriters with a

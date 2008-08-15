@@ -25,9 +25,9 @@
  */
 package org.cougaar.mts.rmi;
 
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.SocketFactory;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This {@link LinkProtocol} supports rmi over ssl. It's implemented as a simple

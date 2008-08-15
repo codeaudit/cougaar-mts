@@ -52,6 +52,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.service.ThreadService;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.DestinationQueue;
 import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;

@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Default implementatiom of {@link MessageReader} that uses a trivial

@@ -27,6 +27,7 @@
 package org.cougaar.mts.std;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.DestinationQueue;
 import org.cougaar.mts.base.DestinationQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;

@@ -15,7 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.std.AttributedMessage;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.util.annotations.Cougaar;
 
 /**

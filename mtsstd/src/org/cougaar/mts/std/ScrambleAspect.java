@@ -27,6 +27,7 @@
 package org.cougaar.mts.std;
 
 import org.cougaar.core.thread.Schedulable;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;

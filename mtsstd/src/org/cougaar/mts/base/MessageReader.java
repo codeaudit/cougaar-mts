@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.io.ObjectInput;
 
 import org.cougaar.core.mts.Attributes;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This is the first station in the receiver for serializling LinkProtocols.

@@ -31,10 +31,12 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.ProtectedInputStream;
 import org.cougaar.core.mts.ProtectedOutputStream;
 import org.cougaar.core.service.MessageProtectionService;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
@@ -57,21 +59,24 @@ import org.cougaar.mts.base.UnregisteredNameException;
  */
 public class MessageProtectionAspect
         extends StandardAspect {
-
-    private static MessageProtectionService svc;
-
-    static MessageProtectionService getMessageProtectionService() {
-        return svc;
+    
+    private static MessageProtectionAspect singleton;
+    
+    public static MessageProtectionService getMessageProtectionService() {
+        return singleton != null ? singleton.svc : null;
     }
-
+    
+    private MessageProtectionService svc;
+    
     public void load() {
         super.load();
-        svc = getServiceBroker().getService(this, MessageProtectionService.class, null);
-        // System.err.println("Got " +svc+ " from service broker");
-        // Temporary, until NAI's service is available
+        ServiceBroker serviceBroker = getServiceBroker();
+        svc = serviceBroker.getService(this, MessageProtectionService.class, null);
+        // Default if a real protection service isn't available
         if (svc == null) {
             svc = new MessageProtectionServiceImpl();
         }
+        singleton = this;
     }
 
     public Object getDelegate(Object delegatee, Class<?> type) {

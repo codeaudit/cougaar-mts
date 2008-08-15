@@ -26,7 +26,6 @@
 
 package org.cougaar.mts.base;
 
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The second station for an outgoing message is a SendQueue. In theory a given

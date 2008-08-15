@@ -29,7 +29,6 @@ package org.cougaar.mts.base;
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * The first or second station for an outgoing message on the receive side is a

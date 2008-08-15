@@ -24,13 +24,11 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.base;
 
 import java.util.List;
 
 import org.cougaar.core.component.Service;
-import org.cougaar.mts.base.MessageTransportAspect;
-import org.cougaar.mts.base.StandardAspect;
 
 /**
  * This is an MTS-internal utility service which supports the use of aspects.

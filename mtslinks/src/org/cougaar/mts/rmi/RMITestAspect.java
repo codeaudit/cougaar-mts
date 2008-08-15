@@ -26,6 +26,7 @@
 package org.cougaar.mts.rmi;
 
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
@@ -33,7 +34,6 @@ import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This test Aspect uses the {@link RMISocketControlService} to set socket

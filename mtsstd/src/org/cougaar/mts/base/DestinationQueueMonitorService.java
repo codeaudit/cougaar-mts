@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This is an MTS-internal service, accessible only to child components of the

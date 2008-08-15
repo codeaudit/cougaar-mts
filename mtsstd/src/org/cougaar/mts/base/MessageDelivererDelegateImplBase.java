@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * Convenience class for aspects which define {@link MessageDeliverer} delegate

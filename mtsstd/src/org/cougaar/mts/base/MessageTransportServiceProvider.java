@@ -49,8 +49,6 @@ import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.mts.std.AgentStatusAspect;
-import org.cougaar.mts.std.AspectSupport;
-import org.cougaar.mts.std.AspectSupportImpl;
 import org.cougaar.mts.std.MessageTimeoutAspect;
 import org.cougaar.mts.std.MessageWatcherServiceImpl;
 import org.cougaar.mts.std.MulticastAspect;

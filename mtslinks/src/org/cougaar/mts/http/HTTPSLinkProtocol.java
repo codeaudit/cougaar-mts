@@ -25,8 +25,8 @@
 package org.cougaar.mts.http;
 
 import org.cougaar.core.service.ServletService;
+import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.LinkProtocol;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * This {@link LinkProtocol} uses the Cougaar's {@link ServletService} (Tomcat)

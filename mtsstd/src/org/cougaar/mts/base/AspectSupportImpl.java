@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.base;
 
 import java.net.Socket;
 import java.util.ArrayList;
@@ -38,8 +38,6 @@ import org.cougaar.core.component.Container;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.base.MessageTransportAspect;
-import org.cougaar.mts.base.StandardAspect;
 
 /**
  * This {@link ServiceProvider} provides the {@link AspectSupport} service,

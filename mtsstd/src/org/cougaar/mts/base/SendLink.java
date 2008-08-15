@@ -32,7 +32,6 @@ import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.mts.std.AttributedMessage;
 
 /**
  * SendLink is the first station after the MessageTransportService

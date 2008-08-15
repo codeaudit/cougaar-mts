@@ -28,7 +28,6 @@ package org.cougaar.mts.base;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.mts.std.AspectFactory;
 
 /**
  * This {@link ServiceProvider} provides the {@link Router} service. The
