@@ -42,6 +42,8 @@ public interface AspectSupport
      * one, returns the last one added. If there are none, return null.
      */
     MessageTransportAspect findAspect(String classname);
+    
+    <T> T findAspect(Class<T> aspectClass);
 
     /**
      * Add an aspect to the global list.

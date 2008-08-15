@@ -95,6 +95,11 @@ public class AspectSupportImpl
         public synchronized MessageTransportAspect findAspect(String classname) {
             return aspects_table.get(classname);
         }
+        
+        @SuppressWarnings("unchecked")
+        public synchronized <T> T findAspect(Class<T> aspectClass) {
+            return (T) aspects_table.get(aspectClass.getName());
+        }
 
         public void addAspect(MessageTransportAspect aspect) {
             String classname = aspect.getClass().getName();
