@@ -49,9 +49,7 @@ import org.cougaar.core.service.MessageTransportService;
 import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.core.thread.ThreadServiceProvider;
 import org.cougaar.mts.std.AgentStatusAspect;
-import org.cougaar.mts.std.MessageTimeoutAspect;
 import org.cougaar.mts.std.MessageWatcherServiceImpl;
-import org.cougaar.mts.std.MulticastAspect;
 import org.cougaar.mts.std.StatisticsAspect;
 import org.cougaar.mts.std.WatcherAspect;
 
@@ -63,15 +61,10 @@ import org.cougaar.mts.std.WatcherAspect;
 public final class MessageTransportServiceProvider
         extends ContainerSupport
         implements ServiceProvider {
-    // Some special aspect classes
-    private static final String STATISTICS_ASPECT = "org.cougaar.mts.std.StatisticsAspect";
 
     // Services we use (more than once)
     private AspectSupport aspectSupport;
     private LoggingService loggingService;
-    // Hang on to these because they implement services we provide.
-    private WatcherAspect watcherAspect;
-    private AgentStatusAspect agentStatusAspect;
 
     private String id;
     private final Map<MessageAddress,MessageTransportServiceProxy> proxies = 
@@ -129,25 +122,6 @@ public final class MessageTransportServiceProvider
 
         aspectSupportImpl = new AspectSupportImpl(this, loggingService);
         csb.addService(AspectSupport.class, aspectSupportImpl);
-
-        // Do the standard set first, since they're assumed to be more
-        // generic than the user-specified set.
-
-        // Drop Stale messages
-        // Needs loaded first so all other aspets have a chance the
-        // process the message before it gets dropped)
-        add(new MessageTimeoutAspect());
-
-        // For the MessageWatcher service
-        watcherAspect = new WatcherAspect();
-        add(watcherAspect);
-
-        // Keep track of Agent state
-        agentStatusAspect = new AgentStatusAspect();
-        add(agentStatusAspect);
-
-        // Handling multicast messages
-        add(new MulticastAspect());
 
         // Could use a ComponentDescription
         ThreadServiceProvider tsp = new ThreadServiceProvider();
@@ -305,14 +279,14 @@ public final class MessageTransportServiceProvider
             } else {
                 throw new IllegalArgumentException("Requestor is not a MessageTransportClient");
             }
-        } else if (serviceClass == MessageStatisticsService.class) {
-            StatisticsAspect aspect =
-                    (StatisticsAspect) aspectSupport.findAspect(STATISTICS_ASPECT);
-            return aspect;
+        } 
+        if (serviceClass == MessageStatisticsService.class) {
+            return aspectSupport.findAspect(StatisticsAspect.class);
         } else if (serviceClass == MessageWatcherService.class) {
+            WatcherAspect watcherAspect = aspectSupport.findAspect(WatcherAspect.class);
             return new MessageWatcherServiceImpl(watcherAspect);
         } else if (serviceClass == AgentStatusService.class) {
-            return agentStatusAspect;
+            return aspectSupport.findAspect(AgentStatusAspect.class);
         } else {
             return null;
         }
