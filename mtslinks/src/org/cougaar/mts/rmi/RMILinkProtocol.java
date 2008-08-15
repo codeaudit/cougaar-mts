@@ -25,9 +25,13 @@
  */
 package org.cougaar.mts.rmi;
 
+import java.net.SocketException;
 import java.net.URI;
+import java.rmi.MarshalException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
 
 import org.cougaar.core.component.ServiceBroker;
@@ -44,12 +48,13 @@ import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.base.UnregisteredNameException;
+import org.cougaar.util.annotations.Cougaar;
 import org.cougaar.util.StateModelException;
 
 /**
  * This {@link LinkProtocol} handles message passing via RMI, one example
- * RPC-like communication. The interface is {@link MT}.
- * 
+ * of RPC communication. The interface is {@link MT}.
+ * <p>
  * The cost function of the DestinationLink inner subclass is currently
  * hardwired to an arbitrary value of 1000. This should be made smarter
  * eventually.
@@ -58,30 +63,36 @@ import org.cougaar.util.StateModelException;
 public class RMILinkProtocol
         extends RPCLinkProtocol {
 
-    // private MessageAddress myAddress;
     private MT myProxy;
     private final SocketFactory socfac;
     private RMISocketControlService controlService;
+    private int port = 0;
+    
+    @Cougaar.Arg(name="advertisedLocation", defaultValue=Cougaar.NULL_VALUE,
+                 description="Use this to advertise a specific RMI port and/or a host address "
+                     + " other than the locally defined one (eg the WAN address of a host on " 
+                     + " a private LAN")
+    private String advertisedLocation;
 
     public RMILinkProtocol() {
         super();
         socfac = getSocketFactory();
     }
 
-    // If LinkProtocols classes want to define this method, eg in
-    // order to provide a service, they should not in general invoke
-    // super.load(), since if they do they'll end up clobbering any
-    // services defined by super classes service. Instead they should
-    // use super_load(), defined in LinkProtocol, which runs the
-    // standard load() method without running any intervening ones.
+    /**
+     * If LinkProtocols classes want to define this method, eg in order to
+     * provide a service, they should not in general invoke super.load(), since
+     * if they do they'll end up clobbering any services defined by super class'
+     * service. Instead they should use {@link #super_load}, which runs the
+     * standard load() method without running any intervening ones.
+     */
     public void load() {
         super.load();
+        setupAdvertisedLocation();
         ServiceBroker sb = getServiceBroker();
-
-        // RMISocketControlService could be null
         controlService = sb.getService(this, RMISocketControlService.class, null);
     }
-
+    
     /**
      * @see org.cougaar.util.GenericStateModelAdapter#unload()
      */
@@ -99,23 +110,17 @@ public class RMILinkProtocol
         return "-RMI";
     }
 
-    protected SocketFactory getSocketFactory() {
-        return new SocketFactory(false, true);
-    }
-
     // If this is called, we've already found the remote reference.
     protected int computeCost(AttributedMessage message) {
         return 1000;
     }
 
-    protected MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac) {
-        return new MTImpl(myAddress, getServiceBroker(), socfac);
-    }
-
-    // Even though MisdeliveredMessageExceptions are
-    // RemoteExceptions, nonethless they'll be wrapped. Check for
-    // this case here. Also look for IllegalArgumentExceptions,
-    // which can also occur as a side-effect of mobility.
+    /**
+     * Even though {@link MisdeliveredMessageException} extends
+     * {@link RemoteException}, nonethless they'll be wrapped. Check for this
+     * case here. Also look for {@link IllegalArgumentException}, which can also
+     * occur as a side-effect of mobility.
+     */
     protected void checkForMisdelivery(Throwable ex, AttributedMessage message)
             throws MisdeliveredMessageException {
         if (ex instanceof MisdeliveredMessageException) {
@@ -170,51 +175,6 @@ public class RMILinkProtocol
         return new RMILink(address);
     }
 
-    // Standard RMI handling of security and other cougaar-specific io
-    // exceptions. Subclasses may need to do something different (see
-    // CORBALinkProtocol).
-    //
-    // If the argument itself is a MarshalException whose cause is a
-    // CougaarIOException, a local cougaar-specific error has occured.
-    //
-    // If the argument is some other RemoteException whose cause is an
-    // UnmarshalException whose cause in turn is a CougaarIOException,
-    // a remote cougaar-specific error has occured.
-    //
-    // Otherwise this is some other kind of remote error.
-    protected void handleSecurityException(Exception ex)
-            throws CommFailureException {
-        Throwable cause = ex.getCause();
-        if (ex instanceof java.rmi.MarshalException) {
-            if (cause instanceof CougaarIOException) {
-                throw new CommFailureException((Exception) cause);
-            }
-            // When a TransientIOException is thrown sometimes it
-            // triggers different exception on the socket, which gets
-            // through instead of the TransientIOException. For now we
-            // will catch these and treat them as if they were
-            // transient (though other kinds of SocketExceptions
-            // really shouldn't be).
-            else if (cause instanceof java.net.SocketException) {
-                // Throwing a CommFailureException doesn't seem right
-                // anymore (as of 1.4.2). So don't do it anymore,
-                // but log it.
-                if (loggingService.isDebugEnabled()) {
-                    loggingService.debug("Got a SocketException as the cause of a MarshallException: "
-                                                 + cause.getMessage(),
-                                         ex);
-                    // cause = new TransientIOException(cause.getMessage());
-                    // throw new CommFailureException((Exception) cause);
-                }
-            }
-        } else if (cause instanceof java.rmi.UnmarshalException) {
-            Throwable remote_cause = cause.getCause();
-            if (remote_cause instanceof CougaarIOException) {
-                throw new CommFailureException((Exception) remote_cause);
-            }
-        }
-    }
-
     protected void ensureNodeServant() {
         if (myProxy != null) {
             return;
@@ -222,9 +182,9 @@ public class RMILinkProtocol
         try {
             MessageAddress myAddress = getNameSupport().getNodeMessageAddress();
             myProxy = makeMTImpl(myAddress, socfac);
-            Remote remote = UnicastRemoteObject.exportObject(myProxy, 0, socfac, socfac);
+            Remote remote = UnicastRemoteObject.exportObject(myProxy, port, socfac, socfac);
             setNodeURI(RMIRemoteObjectEncoder.encode(remote));
-        } catch (java.rmi.RemoteException ex) {
+        } catch (RemoteException ex) {
             loggingService.error(null, ex);
         } catch (Exception other) {
             loggingService.error(null, other);
@@ -243,11 +203,87 @@ public class RMILinkProtocol
     protected void remakeNodeServant() {
         try {
             UnicastRemoteObject.unexportObject(myProxy, true);
-        } catch (java.rmi.NoSuchObjectException ex) {
+        } catch (NoSuchObjectException ex) {
             // don't care
         }
         myProxy = null;
         ensureNodeServant();
+    }
+    
+    /**
+     * Standard RMI handling of security and other cougaar-specific io
+     * exceptions. Subclasses may need to do something different (eg
+     * {@link org.cougaar.mts.corba.CorbaLinkProtocol}).
+     * <p>
+     * If the argument itself is a {@link MarshalException} whose cause is a
+     * {@link CougaarIOException}, a local cougaar-specific error has occured.
+     * <p>
+     * If the argument is some other {@link RemoteException} whose cause is an
+     * {@link UnmarshalException} whose cause in turn is a CougaarIOException, a
+     * remote cougaar-specific error has occured.
+     * <p>
+     * Otherwise this is some other kind of remote error.
+     */
+    private void handleSecurityException(Exception ex)
+            throws CommFailureException {
+        Throwable cause = ex.getCause();
+        if (ex instanceof MarshalException) {
+            if (cause instanceof CougaarIOException) {
+                throw new CommFailureException((Exception) cause);
+            }
+            // When a TransientIOException is thrown sometimes it
+            // triggers different exception on the socket, which gets
+            // through instead of the TransientIOException. For now we
+            // will catch these and treat them as if they were
+            // transient (though other kinds of SocketExceptions
+            // really shouldn't be).
+            else if (cause instanceof SocketException) {
+                // Throwing a CommFailureException doesn't seem right
+                // anymore (as of 1.4.2). So don't do it anymore,
+                // but log it.
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("Got a SocketException as the cause of a MarshallException: "
+                                                 + cause.getMessage(),
+                                         ex);
+                    // cause = new TransientIOException(cause.getMessage());
+                    // throw new CommFailureException((Exception) cause);
+                }
+            }
+        } else if (cause instanceof UnmarshalException) {
+            Throwable remote_cause = cause.getCause();
+            if (remote_cause instanceof CougaarIOException) {
+                throw new CommFailureException((Exception) remote_cause);
+            }
+        }
+    }
+
+    private SocketFactory getSocketFactory() {
+        return new SocketFactory(false, true);
+    }
+
+    private MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac) {
+        return new MTImpl(myAddress, getServiceBroker(), socfac);
+    }
+
+    private void setupAdvertisedLocation() {
+        if (advertisedLocation == null) {
+            return;
+        }
+        String[] hostAndPort = advertisedLocation.split(":");
+        if (hostAndPort.length != 2) {
+            loggingService.warn("The value of \"advertisedLocation\" should have the form"
+                                + " <host>:<port>");
+        }
+        String hostString = hostAndPort[0];
+        String portString = hostAndPort[1];
+        try {
+            port = Integer.parseInt(portString);
+        } catch (NumberFormatException e) {
+            loggingService.warn("The port field of \"advertisedLocation\", " +portString
+                                + " is not an integer");
+            return;
+        }
+        System.setProperty("java.rmi.server.hostname", hostString);
     }
 
     protected class RMILink
@@ -300,7 +336,6 @@ public class RMILinkProtocol
         }
 
         protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
-
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
@@ -315,7 +350,7 @@ public class RMILinkProtocol
                 // force recache of remote
                 decache();
                 throw cfe;
-            } catch (java.rmi.RemoteException ex) {
+            } catch (RemoteException ex) {
                 if (loggingService.isDebugEnabled()) {
                     loggingService.debug("RemoteException", ex);
                 }
