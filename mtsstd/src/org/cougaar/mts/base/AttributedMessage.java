@@ -46,7 +46,6 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.MessageProtectionService;
-import org.cougaar.mts.std.MessageProtectionAspect;
 import org.cougaar.util.log.Logger;
 import org.cougaar.util.log.Logging;
 
