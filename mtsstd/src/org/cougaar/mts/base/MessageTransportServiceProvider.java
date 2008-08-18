@@ -37,21 +37,14 @@ import org.cougaar.core.component.ComponentDescriptions;
 import org.cougaar.core.component.ContainerSupport;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
-import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.node.ComponentInitializerService;
 import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.service.LoggingService;
-import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.core.service.MessageTransportService;
-import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.core.thread.ThreadServiceProvider;
-import org.cougaar.mts.std.AgentStatusAspect;
-import org.cougaar.mts.std.MessageWatcherServiceImpl;
-import org.cougaar.mts.std.StatisticsAspect;
-import org.cougaar.mts.std.WatcherAspect;
 
 /**
  * This Component and Container is the ServiceProvider for the
@@ -198,9 +191,6 @@ public final class MessageTransportServiceProvider
 
         ServiceBroker rootsb = ncs.getRootServiceBroker();
         rootsb.addService(MessageTransportService.class, this);
-        rootsb.addService(MessageStatisticsService.class, this);
-        rootsb.addService(MessageWatcherService.class, this);
-        rootsb.addService(AgentStatusService.class, this);
     }
 
     private void createNameSupport(String id) {
@@ -279,19 +269,11 @@ public final class MessageTransportServiceProvider
             } else {
                 throw new IllegalArgumentException("Requestor is not a MessageTransportClient");
             }
-        } 
-        if (serviceClass == MessageStatisticsService.class) {
-            return aspectSupport.findAspect(StatisticsAspect.class);
-        } else if (serviceClass == MessageWatcherService.class) {
-            WatcherAspect watcherAspect = aspectSupport.findAspect(WatcherAspect.class);
-            return new MessageWatcherServiceImpl(watcherAspect);
-        } else if (serviceClass == AgentStatusService.class) {
-            return aspectSupport.findAspect(AgentStatusAspect.class);
-        } else {
+        }  else {
             return null;
         }
     }
-
+    
     public void releaseService(ServiceBroker sb,
                                Object requestor,
                                Class<?> serviceClass,
@@ -307,16 +289,6 @@ public final class MessageTransportServiceProvider
                 }
                 proxies.remove(addr);
                 proxy.release();
-            }
-        } else if (serviceClass == MessageStatisticsService.class) {
-            // The only resource used here is the StatisticsAspect,
-            // which stays around.
-        } else if (serviceClass == AgentStatusService.class) {
-            // The only resource used here is the aspect, which stays
-            // around.
-        } else if (serviceClass == MessageWatcherService.class) {
-            if (service instanceof MessageWatcherServiceImpl) {
-                ((MessageWatcherServiceImpl) service).release();
             }
         }
     }

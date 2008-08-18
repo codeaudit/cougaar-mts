@@ -29,10 +29,13 @@ package org.cougaar.mts.std;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportWatcher;
+import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.MessageDeliverer;
@@ -56,6 +59,34 @@ public class WatcherAspect
 
     public WatcherAspect() {
         this.watchers = new ArrayList<MessageTransportWatcher>();
+    }
+    
+    public void load() {
+        super.load();
+        
+        NodeControlService ncs = getServiceBroker().getService(this, NodeControlService.class, null);
+        ServiceBroker rootsb = ncs.getRootServiceBroker();
+        rootsb.addService(MessageWatcherService.class, new ServiceProvider(){
+
+            public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
+                if (serviceClass == MessageWatcherService.class) {
+                    return new MessageWatcherServiceImpl(WatcherAspect.this);
+                } else {
+                    return null;
+                }
+            }
+
+            public void releaseService(ServiceBroker sb,
+                                       Object requestor,
+                                       Class<?> serviceClass,
+                                       Object service) {
+                if (serviceClass == MessageWatcherService.class) {
+                    if (service instanceof MessageWatcherServiceImpl) {
+                        ((MessageWatcherServiceImpl) service).release();
+                    }
+                }
+            }
+        });
     }
 
     public Object getDelegate(Object delegate, Class<?> type) {

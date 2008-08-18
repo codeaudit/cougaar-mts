@@ -33,12 +33,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.AgentStatusService;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
+import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.qos.metrics.Constants;
 import org.cougaar.core.qos.metrics.Metric;
 import org.cougaar.core.qos.metrics.MetricImpl;
@@ -96,6 +98,28 @@ public class AgentStatusAspect
 
         ServiceBroker sb = getServiceBroker();
         metricsUpdateService = sb.getService(this, MetricsUpdateService.class, null);
+        
+        NodeControlService ncs = sb.getService(this, NodeControlService.class, null);
+
+        ServiceBroker rootsb = ncs.getRootServiceBroker();
+        rootsb.addService(AgentStatusService.class, new ServiceProvider(){
+
+            public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
+                if (serviceClass == AgentStatusService.class) {
+                    return AgentStatusAspect.this;
+                } else {
+                    return null;
+                }
+            }
+
+            public void releaseService(ServiceBroker sb,
+                                       Object requestor,
+                                       Class<?> serviceClass,
+                                       Object service) {
+                // no-op
+            }
+            
+        });
     }
 
     public void start() {

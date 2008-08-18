@@ -33,10 +33,13 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
+import org.cougaar.core.component.ServiceBroker;
+import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageStatistics;
+import org.cougaar.core.node.NodeControlService;
 import org.cougaar.core.service.MessageStatisticsService;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
@@ -89,6 +92,31 @@ public class StatisticsAspect
         messageLengthHistogram = new long[MessageStatistics.NBINS];
     }
 
+    public void load() {
+        super.load();
+        
+        NodeControlService ncs = getServiceBroker().getService(this, NodeControlService.class, null);
+        ServiceBroker rootsb = ncs.getRootServiceBroker();
+        rootsb.addService(MessageStatisticsService.class, new ServiceProvider(){
+
+            public Object getService(ServiceBroker sb, Object requestor, Class<?> serviceClass) {
+                if (serviceClass == MessageStatisticsService.class) {
+                    return StatisticsAspect.this;
+                } else {
+                    return null;
+                }
+            }
+
+            public void releaseService(ServiceBroker sb,
+                                       Object requestor,
+                                       Class<?> serviceClass,
+                                       Object service) {
+                // no-op
+            }
+            
+        });
+    }
+    
     public synchronized MessageStatistics.Statistics getMessageStatistics(boolean reset) {
         MessageStatistics.Statistics result =
                 new MessageStatistics.Statistics(averageQueueLength(),
