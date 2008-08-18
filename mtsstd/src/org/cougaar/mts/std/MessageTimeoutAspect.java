@@ -26,14 +26,13 @@
 
 package org.cougaar.mts.std;
 
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
@@ -57,18 +56,23 @@ import org.cougaar.util.UnaryPredicate;
  * Aspect to throw out a timed out message. Necessary for MsgLog et. al. Checks
  * every thread in MTS for timed out attributes on a message:
  * 
- * <pre>
- * -SendLink - DestinationLink - ReceiveLink
- * </pre>
- * 
  * @property org.cougaar.syncClock Is NTP clock synchronization guaranteed?
  *           default is false.
  */
 public final class MessageTimeoutAspect
         extends StandardAspect
         implements AttributeConstants {
+    
+    private static final boolean SYNC_CLOCK_AVAILABLE =
+        PropertyParser.getBoolean("org.cougaar.syncClock", false);
+    
+    private static final long RECLAIM_PERIOD =
+        PropertyParser.getLong("org.cougaar.core.mts.timout.reclaim", 60000);
+    
     private SendQueueProviderService sendq_factory;
+    
     private DestinationQueueProviderService destq_factory;
+    
     private final UnaryPredicate timeoutPredicate = new UnaryPredicate() {
         public boolean execute(Object x) {
             AttributedMessage msg = (AttributedMessage) x;
@@ -76,29 +80,15 @@ public final class MessageTimeoutAspect
         }
     };
 
-    public static final boolean SYNC_CLOCK_AVAILABLE =
-            PropertyParser.getBoolean("org.cougaar.syncClock", false);
-
-    public static final long RECLAIM_PERIOD =
-            PropertyParser.getLong("org.cougaar.core.mts.timout.reclaim", 60000);
-
-    public MessageTimeoutAspect() {
-    }
-
     public void load() {
         super.load();
-
-        ServiceBroker sb = getServiceBroker();
-        ThreadService tsvc = sb.getService(this, ThreadService.class, null);
-
         Runnable reclaimer = new Runnable() {
             public void run() {
                 reclaim();
             }
         };
-        Schedulable sched = tsvc.getThread(this, reclaimer, "Message Timeout Reclaimer");
+        Schedulable sched = threadService.getThread(this, reclaimer, "Message Timeout Reclaimer");
         sched.schedule(RECLAIM_PERIOD, RECLAIM_PERIOD);
-        sb.releaseService(this, ThreadService.class, tsvc);
 
     }
 
@@ -110,7 +100,8 @@ public final class MessageTimeoutAspect
     }
 
     private void reclaim() {
-        List<Message> droppedMessages = Collections.emptyList(); // not using this yet
+        // Keep track of the messages we deleted.  Not using this yet.
+        List<Message> droppedMessages = new LinkedList<Message>();
         if (sendq_factory != null) {
             sendq_factory.removeMessages(timeoutPredicate, droppedMessages);
         }
@@ -119,30 +110,25 @@ public final class MessageTimeoutAspect
         }
     }
 
-    // retrieves absolute timeout that convertTimeout stored for us
     private long getTimeout(AttributedMessage message) {
-        long the_timeout = -1;
         Object attr = message.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
-        if (attr != null) { // check for, convert to long
-            if (attr instanceof Long) {
-                the_timeout = ((Long) attr).longValue();
-                return the_timeout;
-            }
+        if (attr instanceof Long) {
+            return ((Long) attr).longValue();
+        } else {
+            // negative values indicate no timeout
+            return -1;
         }
-        return -1; // something extraordinarily large so msgs will never time
-                   // out
     }
 
     private boolean timedOut(AttributedMessage message, String station) {
-        long the_timeout = getTimeout(message);
-        // absolute timeout value of must be greater than 0;
-        if (the_timeout > 0) {
+        long timeout = getTimeout(message);
+        // negative values indicate no timeout
+        if (timeout > 0) {
             long now = System.currentTimeMillis();
-            if (the_timeout < now) {
-                // log that the message timed out
+            if (timeout < now) {
                 if (loggingService.isWarnEnabled()) {
                     loggingService.warn(station + " threw away a message=" + message.logString()
-                            + " Beyond deadline=" + (now - the_timeout) + " ms");
+                            + " Beyond deadline=" + (now - timeout) + " ms");
                 }
                 return true;
             }
@@ -150,8 +136,8 @@ public final class MessageTimeoutAspect
         return false;
     }
 
-    /*
-     * Aspect Code to hook into all the links in the MTS chain
+    /**
+     * Add aspects to check the timeout at various stations.
      */
     public Object getDelegate(Object object, Class<?> type) {
         if (type == SendLink.class) {
@@ -159,6 +145,7 @@ public final class MessageTimeoutAspect
         } else if (type == DestinationLink.class) {
             return new DestinationLinkDelegate((DestinationLink) object);
         } else if (type == ReceiveLink.class) {
+            // we can only do this if the sender and receiver clocks are sync'd
             if (SYNC_CLOCK_AVAILABLE) {
                 return new ReceiveLinkDelegate((ReceiveLink) object);
             } else {
@@ -169,59 +156,59 @@ public final class MessageTimeoutAspect
         }
     }
 
-    /*
-     * First thread in the msg chain to check timeout values Also computes
-     * timeout
+    /**
+     * When a message is offered, drop it silently if it's already timed out.
+     * At one we were also handling relative v absolute times here, but that
+     * was removed due to a misunderstanding and lack of documentation.
      */
     private class SendLinkDelegate
             extends SendLinkDelegateImplBase {
+        
         SendLinkDelegate(SendLink link) {
             super(link);
         }
 
-        // turns relative into absolute timeout
-        // stores back into absolute for other delegates to access
-        // null means no timeout was used
-        long convertTimeout(AttributedMessage message) {
-
-            long the_timeout = -1;
-
-            // Get either the relative or absolute timeout values here
-            // One (should) be null
+        /**
+         * Convert relative timeouts to absolute time. A relative time is
+         * indicated by an Integer, rather than a Long. This method works by
+         * side-effecting the attribute in the given message.
+         * <p>
+         * NB: The only call to this method was removed by Ray in late 2003,
+         * since its side-effecting nature wasn't documented and it appeared to
+         * be a no-op. There are still no callers, since it's not clear we want
+         * to revive the int v long semantics after all this time.
+         * 
+         * @see #sendMessage
+         */
+        private void ensureAbsoluteTimeout(AttributedMessage message) {
             Object attr = message.getAttribute(MESSAGE_SEND_TIMEOUT_ATTRIBUTE);
-            if (attr != null) { // check for relative
-                if (attr instanceof Integer) {
-                    the_timeout = ((Integer) attr).intValue();
-                    the_timeout += System.currentTimeMillis(); // turn into
-                                                               // absolute time
-                    // store back into absolute attribute value
-                    message.setAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE, new Long(the_timeout));
-                }
-            } else {
-                attr = message.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
-                if (attr != null) { // check for absolute
-                    if (attr instanceof Long) {
-                        the_timeout = ((Long) attr).longValue();
-                    }
-                }
+            if (attr instanceof Integer) {
+                int relativeTimeout = ((Integer) attr).intValue();
+                long absoluteTimeout = relativeTimeout + System.currentTimeMillis();
+                // store back into absolute attribute value
+                message.setAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE, absoluteTimeout);
             }
-            return the_timeout;
         }
 
+        /**
+         * If the message is already timed out, just drop it silently.
+         */
         public void sendMessage(AttributedMessage message) {
-            // convert relative timeouts to absolute
-            // long the_timeout = convertTimeout(message);
-
-            if (timedOut(message, "SendLink")) {
-                // drop message silently
-                return;
+            // skip the relative time conversion for now
+            // ensureAbsoluteTimeout(message);
+            if (!timedOut(message, "SendLink")) {
+                super.sendMessage(message);
             }
-            super.sendMessage(message);
         }
     }
 
+    /**
+     * If we're about to send a message that's already timed out, return the
+     * dropped status instead of sending.
+     */
     private class DestinationLinkDelegate
             extends DestinationLinkDelegateImplBase {
+
         DestinationLinkDelegate(DestinationLink delegatee) {
             super(delegatee);
         }
@@ -236,27 +223,29 @@ public final class MessageTimeoutAspect
                                       AttributeConstants.DELIVERY_STATUS_DROPPED);
                 return metadata;
             }
-            MessageAttributes metadata = super.forwardMessage(message);
-            return metadata;
+            return super.forwardMessage(message);
         }
     }
 
+    /**
+     * If a timed out message arrives, return the dropped status instead of
+     * delivering.
+     */
     private class ReceiveLinkDelegate
             extends ReceiveLinkDelegateImplBase {
+        
         ReceiveLinkDelegate(ReceiveLink delegatee) {
             super(delegatee);
         }
 
         public MessageAttributes deliverMessage(AttributedMessage message) {
             if (timedOut(message, "Deliverer")) {
-                // drop message, set delivery status to dropped
                 MessageAttributes metadata = new MessageReply(message);
                 metadata.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,
                                       AttributeConstants.DELIVERY_STATUS_DROPPED);
                 return metadata;
             }
-            MessageAttributes metadata = super.deliverMessage(message);
-            return metadata;
+            return super.deliverMessage(message);
         }
     }
 }
