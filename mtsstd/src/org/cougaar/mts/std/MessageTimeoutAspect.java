@@ -170,23 +170,27 @@ public final class MessageTimeoutAspect
 
         /**
          * Convert relative timeouts to absolute time. A relative time is
-         * indicated by an Integer, rather than a Long. This method works by
-         * side-effecting the attribute in the given message.
+         * provided with the attribute MESSAGE_SEND_TIMEOUT_ATTRIBUTE.
          * <p>
-         * NB: The only call to this method was removed by Ray in late 2003,
-         * since its side-effecting nature wasn't documented and it appeared to
-         * be a no-op. There are still no callers, since it's not clear we want
-         * to revive the int v long semantics after all this time.
-         * 
-         * @see #sendMessage
+         * This method works by side-effecting the absolute timeout attribute,
+         * MESSAGE_SEND_DEADLINE_ATTRIBUTE, in the given message.
          */
         private void ensureAbsoluteTimeout(AttributedMessage message) {
-            Object attr = message.getAttribute(MESSAGE_SEND_TIMEOUT_ATTRIBUTE);
-            if (attr instanceof Integer) {
-                int relativeTimeout = ((Integer) attr).intValue();
-                long absoluteTimeout = relativeTimeout + System.currentTimeMillis();
-                // store back into absolute attribute value
-                message.setAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE, absoluteTimeout);
+            Object timeout = message.getAttribute(MESSAGE_SEND_TIMEOUT_ATTRIBUTE);
+            Object deadline = message.getAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE);
+            if (timeout instanceof Integer) {
+                if (deadline == null) {
+                    int relativeTimeout = ((Integer) timeout).intValue();
+                    long absoluteTimeout = relativeTimeout + System.currentTimeMillis();
+                    // store back into absolute attribute value
+                    message.setAttribute(MESSAGE_SEND_DEADLINE_ATTRIBUTE, absoluteTimeout);
+                    message.removeAttribute(MESSAGE_SEND_TIMEOUT_ATTRIBUTE);
+                } else {
+                    // Both a timeout and a deadline are set. Prefer the deadline.
+                    String msg = "Ignoring timeout attribute since it also has a deadline"
+                        +"\n"+ message;
+                    loggingService.warn(msg);
+                }
             }
         }
 
@@ -194,8 +198,7 @@ public final class MessageTimeoutAspect
          * If the message is already timed out, just drop it silently.
          */
         public void sendMessage(AttributedMessage message) {
-            // skip the relative time conversion for now
-            // ensureAbsoluteTimeout(message);
+            ensureAbsoluteTimeout(message);
             if (!timedOut(message, "SendLink")) {
                 super.sendMessage(message);
             }
