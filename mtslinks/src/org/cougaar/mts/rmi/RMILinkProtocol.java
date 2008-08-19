@@ -270,20 +270,42 @@ public class RMILinkProtocol
             return;
         }
         String[] hostAndPort = advertisedLocation.split(":");
-        if (hostAndPort.length != 2) {
-            loggingService.warn("The value of \"advertisedLocation\" should have the form"
-                                + " <host>:<port>");
+        String portString;
+        String hostString;
+        switch (hostAndPort.length) {
+            case 1:
+                // host only
+                portString = null;
+                hostString  = advertisedLocation;
+                break;
+                
+            case 2:
+                // :port or host:port
+                portString = hostAndPort[1].trim();
+                hostString = hostAndPort[0].trim();
+                if (hostString.length() == 0) {
+                    hostString = null;
+                }
+                break;
+                
+            default:
+                // bad string
+                loggingService.warn("The value of \"advertisedLocation\" should have the form"
+                                    + " <host> or <host>:<port> or :<port>");
+                return;
         }
-        String hostString = hostAndPort[0];
-        String portString = hostAndPort[1];
-        try {
-            port = Integer.parseInt(portString);
-        } catch (NumberFormatException e) {
-            loggingService.warn("The port field of \"advertisedLocation\", " +portString
-                                + " is not an integer");
-            return;
+        if (portString != null) {
+            try {
+                port = Integer.parseInt(portString);
+            } catch (NumberFormatException e) {
+                loggingService.warn("The port field of \"advertisedLocation\", " + portString
+                        + " is not an integer");
+                return;
+            }
         }
-        System.setProperty("java.rmi.server.hostname", hostString);
+        if (hostString != null) {
+            System.setProperty("java.rmi.server.hostname", hostString);
+        }
     }
 
     protected class RMILink
