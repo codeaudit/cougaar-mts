@@ -274,18 +274,21 @@ public class RMILinkProtocol
         String hostString;
         switch (hostAndPort.length) {
             case 1:
-                // host only
+                // host or host:
+                hostString = advertisedLocation.trim();
+                if (hostString.endsWith(":")) {
+                    hostString = hostString.substring(0, hostString.length()-1);
+                }
                 portString = null;
-                hostString  = advertisedLocation;
                 break;
                 
             case 2:
                 // :port or host:port
-                portString = hostAndPort[1].trim();
                 hostString = hostAndPort[0].trim();
+                portString = hostAndPort[1].trim();
                 if (hostString.length() == 0) {
                     hostString = null;
-                }
+                } 
                 break;
                 
             default:
