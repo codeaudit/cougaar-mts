@@ -25,6 +25,7 @@
  */
 package org.cougaar.mts.rmi;
 
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.URI;
 import java.rmi.MarshalException;
@@ -37,6 +38,7 @@ import java.rmi.server.UnicastRemoteObject;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
@@ -66,13 +68,9 @@ public class RMILinkProtocol
     private MT myProxy;
     private final SocketFactory socfac;
     private RMISocketControlService controlService;
-    private int port = 0;
     
-    @Cougaar.Arg(name="advertisedLocation", defaultValue=Cougaar.NULL_VALUE,
-                 description="Use this to advertise a specific RMI port and/or a host address "
-                     + " other than the locally defined one (eg the WAN address of a host on " 
-                     + " a private LAN")
-    private String advertisedLocation;
+    @Cougaar.Arg(name="port", defaultValue="0")
+    private int port = 0;
 
     public RMILinkProtocol() {
         super();
@@ -88,8 +86,12 @@ public class RMILinkProtocol
      */
     public void load() {
         super.load();
-        setupAdvertisedLocation();
         ServiceBroker sb = getServiceBroker();
+        NodeIdentificationService nis = sb.getService(this, NodeIdentificationService.class, null);
+        InetAddress address = nis.getInetAddress();
+        sb.releaseService(this, NodeIdentificationService.class, nis);
+        String host = address.getHostAddress(); // XXX: dotted quad, is that what we want?
+        System.setProperty("java.rmi.server.hostname", host);
         controlService = sb.getService(this, RMISocketControlService.class, null);
     }
     
@@ -194,7 +196,7 @@ public class RMILinkProtocol
     protected void releaseNodeServant() {
         try {
             UnicastRemoteObject.unexportObject(myProxy, true);
-        } catch (java.rmi.NoSuchObjectException ex) {
+        } catch (NoSuchObjectException ex) {
             // don't care
         }
         myProxy = null;
@@ -263,52 +265,6 @@ public class RMILinkProtocol
 
     private MTImpl makeMTImpl(MessageAddress myAddress, SocketFactory socfac) {
         return new MTImpl(myAddress, getServiceBroker(), socfac);
-    }
-
-    private void setupAdvertisedLocation() {
-        if (advertisedLocation == null) {
-            return;
-        }
-        String[] hostAndPort = advertisedLocation.split(":");
-        String portString;
-        String hostString;
-        switch (hostAndPort.length) {
-            case 1:
-                // host or host:
-                hostString = advertisedLocation.trim();
-                if (hostString.endsWith(":")) {
-                    hostString = hostString.substring(0, hostString.length()-1);
-                }
-                portString = null;
-                break;
-                
-            case 2:
-                // :port or host:port
-                hostString = hostAndPort[0].trim();
-                portString = hostAndPort[1].trim();
-                if (hostString.length() == 0) {
-                    hostString = null;
-                } 
-                break;
-                
-            default:
-                // bad string
-                loggingService.warn("The value of \"advertisedLocation\" should have the form"
-                                    + " <host> or <host>:<port> or :<port>");
-                return;
-        }
-        if (portString != null) {
-            try {
-                port = Integer.parseInt(portString);
-            } catch (NumberFormatException e) {
-                loggingService.warn("The port field of \"advertisedLocation\", " + portString
-                        + " is not an integer");
-                return;
-            }
-        }
-        if (hostString != null) {
-            System.setProperty("java.rmi.server.hostname", hostString);
-        }
     }
 
     protected class RMILink
