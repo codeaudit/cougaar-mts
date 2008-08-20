@@ -56,7 +56,7 @@ abstract public class PollingStreamLinkProtocol<I>
      * Send a message or an ack to the given destination.
      */
     abstract protected I processOutgoingMessage(URI destination, MessageAttributes message)
-            throws IOException;
+            throws IOException, CommFailureException;
 
     /**
      * Make a Runnable that will run periodically to look for new messages and

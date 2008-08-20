@@ -135,6 +135,9 @@ class ReplySync<I> {
         } catch (IOException e) {
             log.warn("Unable to reply to delivered message from " + originatingUri + ": "
                     + e.getMessage());
+        } catch (CommFailureException e) {
+            log.warn("Unable to reply to delivered message from " + originatingUri + ": "
+                     + e.getMessage());
         }
     }
 
