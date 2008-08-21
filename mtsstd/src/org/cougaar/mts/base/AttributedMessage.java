@@ -241,6 +241,10 @@ public class AttributedMessage
         this.attributes.mergeAttributes(attributes);
     }
 
+    public boolean isEmpty() {
+        return attributes.isEmpty();
+    }
+    
     private byte[] serializeObject(Object object) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
