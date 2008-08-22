@@ -42,6 +42,7 @@ import org.cougaar.core.component.ServiceAvailableListener;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.service.BlackboardService;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.core.service.ServletService;
@@ -207,8 +208,13 @@ public class HTTPLinkProtocol
 
         MessageAddress node_addr = getNameSupport().getNodeMessageAddress();
         String node_name = node_addr.toAddress();
+        NodeIdentificationService nis = sb.getService(this, NodeIdentificationService.class, null);
+        InetAddress me = nis.getInetAddress();
+        sb.releaseService(this, NodeIdentificationService.class, nis);
+        if (me == null) {
+            throw new IllegalStateException("Local ip address is unavailable");
+        }
         try {
-            InetAddress me = InetAddress.getLocalHost();
             URI nodeURI =
                     new URI(getProtocol() + "://" + me.getHostName() + ':' + port + "/$"
                             + node_name + getPath());

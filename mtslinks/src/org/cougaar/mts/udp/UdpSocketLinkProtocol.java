@@ -24,9 +24,11 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.service.ThreadService;
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.core.thread.SchedulableStatus;
@@ -142,14 +144,14 @@ public class UdpSocketLinkProtocol
             throws URISyntaxException {
         int localPort = inputConnection.getLocalPort();
         String input = null;
-        InetAddress localHost = null;
-        try {
-            localHost = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            throw new URISyntaxException("xxx", e.getMessage());
-
+        ServiceBroker sb = getServiceBroker();
+        NodeIdentificationService nis = sb.getService(this, NodeIdentificationService.class, null);
+        InetAddress localHost = nis.getInetAddress();
+        sb.releaseService(this, NodeIdentificationService.class, nis);
+        if (localHost == null) {
+            throw new URISyntaxException("Local ip address is unavailable", null);
         }
-        String hostname = localHost.getCanonicalHostName();
+        String hostname = localHost.getHostAddress();
         input = "udp://" + hostname + ":" + localPort + "/";
         return new URI(input);
     }
