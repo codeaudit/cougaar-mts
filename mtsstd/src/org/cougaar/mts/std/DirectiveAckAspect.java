@@ -25,10 +25,9 @@ import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
-import org.cougaar.mts.base.MessageTransportRegistryService;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
-import org.cougaar.mts.base.ReceiveLink;
+import org.cougaar.mts.base.OutOfBandMessageService;
 import org.cougaar.mts.base.SendQueue;
 import org.cougaar.mts.base.SendQueueDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
@@ -40,10 +39,6 @@ import org.cougaar.mts.base.UnregisteredNameException;
  * the sending Agent contain the reply status for each {@link RelayDirective} it
  * contains. Use the directive's <code>reply</code> field to hold the delivery
  * status {@link MessageAttributes}.
- * 
- * <p>
- * TODO: The receipt messages are out-of-band and need to be tagged as such so
- * that other aspects (eg {@link SequenceAspect}) ignore them.
  */
 public class DirectiveAckAspect 
         extends StandardAspect
@@ -51,15 +46,16 @@ public class DirectiveAckAspect
     
     private final Set<AttributedMessage> outstandingMessages = new HashSet<AttributedMessage>();
     private MessageAddress nodeAddress;
+    private OutOfBandMessageService oobs;
     
-    
-    public void load() {
-        super.load();
+    public void start() {
+        super.start();
         ServiceBroker sb = getServiceBroker();
         NodeIdentificationService nis = 
             sb.getService(this, NodeIdentificationService.class, null);
         nodeAddress = nis.getMessageAddress();
         sb.releaseService(this, NodeIdentificationService.class, nis);
+        oobs = sb.getService(this, OutOfBandMessageService.class, null);
     }
     
     /**
@@ -173,22 +169,11 @@ public class DirectiveAckAspect
                     receipts[i] = responseDirective;
                 }
                 
-                // Construct the receipt message
-                // TODO: Ensure this is the relevant incarnation number
-                long incarnation = original.getIncarnationNumber();
+                // Construct and send the receipt message
+                long incarnation = original.getIncarnationNumber(); // XXX: Is this right?
                 Message receipt = new DirectiveMessage(nodeAddress, dest, incarnation, receipts);
-                AttributedMessage attributedReceipt = new AttributedMessage(receipt);
-                // TODO: Tag the message as being out-of-band so that other aspects ignore it,
+                oobs.sendOutOfBandMessage(receipt, reply, dest);
                 
-                // By-pass the MessageDeliverer, go directly to ReceiveLink
-                MessageTransportRegistryService registry = getRegistry();
-                synchronized (registry) {
-                    ReceiveLink link = registry.findLocalReceiveLink(dest);
-                    if (link != null) {
-                        link.deliverMessage(attributedReceipt);
-                    }
-                }
-
                 outstandingMessages.remove(message);
             }
             return reply;

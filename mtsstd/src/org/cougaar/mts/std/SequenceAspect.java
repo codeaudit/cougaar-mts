@@ -42,6 +42,7 @@ import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.base.AttributedMessage;
+import org.cougaar.mts.base.OutOfBandMessageService;
 import org.cougaar.mts.base.ReceiveLink;
 import org.cougaar.mts.base.ReceiveLinkDelegateImplBase;
 import org.cougaar.mts.base.SendLink;
@@ -64,6 +65,8 @@ public class SequenceAspect
 
     private static Comparator<AttributedMessage> comparator = new MessageComparator();
 
+    private OutOfBandMessageService oobs;
+    
     public SequenceAspect() {
     }
 
@@ -82,7 +85,12 @@ public class SequenceAspect
             return null;
         }
     }
-
+    
+    public void start() {
+        super.start();
+        oobs = getServiceBroker().getService(this, OutOfBandMessageService.class, null);
+    }
+    
     private static int getSequenceNumber(AttributedMessage message) {
         return ((Integer) message.getAttribute(SEQ)).intValue();
     }
@@ -244,6 +252,10 @@ public class SequenceAspect
         }
 
         public MessageAttributes deliverMessage(AttributedMessage message) {
+            if (oobs != null && oobs.isOutOfBandMessage(message)) {
+                // ignore out of band messages
+                return super.deliverMessage(message);
+            }
             Object seq = message.getAttribute(SEQ);
             if (seq != null) {
                 MessageAddress src = message.getOriginator();

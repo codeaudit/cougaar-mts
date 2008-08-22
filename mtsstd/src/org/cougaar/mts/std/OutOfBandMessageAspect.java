@@ -8,7 +8,9 @@ package org.cougaar.mts.std;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.MessageTransportRegistryService;
 import org.cougaar.mts.base.OutOfBandMessageService;
@@ -47,8 +49,8 @@ public final class OutOfBandMessageAspect
     }
 
     private static final class OutOfBandMessage extends AttributedMessage {
-        public OutOfBandMessage(AttributedMessage msg) {
-            super(msg);
+        public OutOfBandMessage(Message msg, MessageAttributes attrs) {
+            super(msg, attrs);
         }
     }
     
@@ -57,11 +59,12 @@ public final class OutOfBandMessageAspect
             return message instanceof OutOfBandMessage;
         }
         
-        public boolean sendOutOfBandMessage(AttributedMessage message, MessageAddress destinaion) {
+        public boolean sendOutOfBandMessage(Message message, MessageAttributes attrs, 
+                                            MessageAddress destinaion) {
             synchronized (registry) {
                 ReceiveLink link = registry.findLocalReceiveLink(destinaion);
                 if (link != null) {
-                    link.deliverMessage(new OutOfBandMessage(message));
+                    link.deliverMessage(new OutOfBandMessage(message, attrs));
                     return true;
                 } else {
                     return false;

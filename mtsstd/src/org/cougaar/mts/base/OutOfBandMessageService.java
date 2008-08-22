@@ -7,7 +7,9 @@
 package org.cougaar.mts.base;
 
 import org.cougaar.core.component.Service;
+import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
+import org.cougaar.core.mts.MessageAttributes;
 
 /**
  * Within the MTS we sometimes need to send internal messages
@@ -17,7 +19,9 @@ import org.cougaar.core.mts.MessageAddress;
 public interface OutOfBandMessageService
         extends Service {
     
-    public boolean sendOutOfBandMessage(AttributedMessage message, MessageAddress destinaion);
+    public boolean sendOutOfBandMessage(Message message, 
+                                        MessageAttributes attributes,
+                                        MessageAddress destination);
     
     public boolean isOutOfBandMessage(AttributedMessage message);
 
