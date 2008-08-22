@@ -89,6 +89,9 @@ public class RMILinkProtocol
         ServiceBroker sb = getServiceBroker();
         NodeIdentificationService nis = sb.getService(this, NodeIdentificationService.class, null);
         InetAddress address = nis.getInetAddress();
+        if (address == null) {
+            throw new IllegalStateException("Can't load RMI link protocol: host ip address is not available");
+        }
         sb.releaseService(this, NodeIdentificationService.class, nis);
         String host = address.getHostAddress(); // XXX: dotted quad, is that what we want?
         System.setProperty("java.rmi.server.hostname", host);
