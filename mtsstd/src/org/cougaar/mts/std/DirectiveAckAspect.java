@@ -79,26 +79,6 @@ public class DirectiveAckAspect
     }
     
     /**
-     * Return the given Directive as RelayDirective if possible. Otherwise
-     * return null. Usually this just involves a downcast. If the given
-     * Directive has change reports we need to extract the true Directive it
-     * holds and operate on that one instead.
-     */
-    private RelayDirective getRelayDirective(Directive directive) {
-        Directive candidate;
-        if (directive instanceof DirectiveMessage.DirectiveWithChangeReports) {
-            candidate = ((DirectiveMessage.DirectiveWithChangeReports) directive).getDirective();
-        } else {
-            candidate = directive;
-        }
-        if (candidate instanceof RelayDirective) {
-            return (RelayDirective) candidate;
-        } else {
-            return null;
-        }
-    }
-    
-    /**
      * Make a receipt for the given Directive, using the reply status as the
      * content.
      */
@@ -121,17 +101,9 @@ public class DirectiveAckAspect
         }
         
         public void sendMessage(AttributedMessage message) {
-            if (message.getAttribute(RECEIPT_REQUESTED) != null) {
-                Message raw = message.getRawMessage();
-                if (raw instanceof DirectiveMessage) {
-                    DirectiveMessage dmesg = (DirectiveMessage) raw;
-                    for (Directive directive : dmesg.getDirectives()) {
-                        if (getRelayDirective(directive) != null) {
-                            outstandingMessages.add(message);
-                            break;
-                        }
-                    }
-                }
+            if (message.getAttribute(RECEIPT_REQUESTED) != null 
+                    && RelayDirective.hasRelayDirectives(message.getRawMessage())) {
+                outstandingMessages.add(message);
             }
             super.sendMessage(message);
         }
@@ -162,7 +134,7 @@ public class DirectiveAckAspect
                 List<RelayDirective> relevantDirectives = 
                     new ArrayList<RelayDirective>(originalDirectives.length);
                 for (Directive directive : originalDirectives) {
-                    RelayDirective relayDirective = getRelayDirective(directive);
+                    RelayDirective relayDirective = RelayDirective.getRelayDirective(directive);
                     if (relayDirective != null) {
                         relevantDirectives.add(relayDirective);
                     }
