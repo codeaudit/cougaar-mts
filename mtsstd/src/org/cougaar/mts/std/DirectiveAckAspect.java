@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.cougaar.core.blackboard.Directive;
 import org.cougaar.core.blackboard.DirectiveMessage;
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
@@ -34,12 +35,11 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * Look for RelayDirectives in DirectiveMessages with the
- * {@link #RECEIPT_REQUESTED} attribute, and try to inject a receipt message
- * back to the sender on delivery.
- * <p>
- * Use the reply field of the Relay to hold the delivery status
- * {@link MessageAttributes}.
+ * After delivering a {@link DirectiveMessage} with a non-null value for the
+ * {@link #RECEIPT_REQUESTED} attribute, try to inject a receipt message back to
+ * the sending Agent contain the reply status for each {@link RelayDirective} it
+ * contains. Use the directive's <code>reply</code> field to hold the delivery
+ * status {@link MessageAttributes}.
  * 
  * <p>
  * TODO: The receipt messages are out-of-band and need to be tagged as such so
@@ -48,17 +48,26 @@ import org.cougaar.mts.base.UnregisteredNameException;
 public class DirectiveAckAspect 
         extends StandardAspect
         implements AttributeConstants {
+    
     private final Set<AttributedMessage> outstandingMessages = new HashSet<AttributedMessage>();
     private MessageAddress nodeAddress;
     
     
     public void load() {
         super.load();
+        ServiceBroker sb = getServiceBroker();
         NodeIdentificationService nis = 
-            getServiceBroker().getService(this, NodeIdentificationService.class, null);
+            sb.getService(this, NodeIdentificationService.class, null);
         nodeAddress = nis.getMessageAddress();
+        sb.releaseService(this, NodeIdentificationService.class, nis);
     }
     
+    /**
+     * The delegate for {@link SendQueue} remembers each DirectiveMessage that
+     * requests a receipt. The delegate for {@DestinationLink}
+     * checks for successful delivery (ie, no exceptions), and in that case
+     * injects a receipt message back to the sending Agent.
+     */
     public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) delegate);
@@ -68,6 +77,12 @@ public class DirectiveAckAspect
         return null;
     }
     
+    /**
+     * Return the given Directive as RelayDirective if possible. Otherwise
+     * return null. Usually this just involves a downcast. If the given
+     * Directive has change reports we need to extract the true Directive it
+     * holds and operate on that one instead.
+     */
     private RelayDirective getRelayDirective(Directive directive) {
         Directive candidate;
         if (directive instanceof DirectiveMessage.DirectiveWithChangeReports) {
@@ -82,7 +97,11 @@ public class DirectiveAckAspect
         }
     }
     
-    private Directive makeAck(RelayDirective original, MessageAttributes reply) {
+    /**
+     * Make a receipt for the given Directive, using the reply status as the
+     * content.
+     */
+    private Directive makeReceiptDirective(RelayDirective original, MessageAttributes reply) {
        UID requestorUID = original.getUID();
        RelayDirective.Response dir = 
            new RelayDirective.Response(requestorUID, reply.cloneAttributes());
@@ -91,6 +110,10 @@ public class DirectiveAckAspect
        return dir;
     }
     
+    /**
+     * Whenever a message enters the MTS, keep track of it if it's 
+     * a DirectiveMessage at least one of whose Directives is a Relay.
+     */
     private class SendQueueDelegate extends SendQueueDelegateImplBase {
         SendQueueDelegate(SendQueue queue) {
             super(queue);
@@ -113,7 +136,16 @@ public class DirectiveAckAspect
         }
     }
     
+    /**
+     * Whenever a DirectiveMessage we're keeping track of is sent without exceptions,
+     * inject a receipt message back to the originator for each RelayDirective
+     * it contains.
+     */
     private class DestinationLinkDelegate extends DestinationLinkDelegateImplBase {
+        DestinationLinkDelegate(DestinationLink link) {
+            super(link);
+        }
+        
         public MessageAttributes forwardMessage(AttributedMessage message) 
                 throws UnregisteredNameException,
                 NameLookupException,
@@ -123,6 +155,9 @@ public class DirectiveAckAspect
             if (outstandingMessages.contains(message)) {
                 DirectiveMessage original = (DirectiveMessage) message.getRawMessage();
                 Directive[] originalDirectives = original.getDirectives();
+                MessageAddress dest = message.getOriginator();
+                
+                // Construct and collect receipt directives for each RelayDirective
                 List<RelayDirective> relevantDirectives = 
                     new ArrayList<RelayDirective>(originalDirectives.length);
                 for (Directive directive : originalDirectives) {
@@ -131,29 +166,26 @@ public class DirectiveAckAspect
                         relevantDirectives.add(relayDirective);
                     }
                 }
-                MessageAddress dest = message.getOriginator();
+                Directive[] receipts = new Directive[relevantDirectives.size()];
+                for (int i=0; i<receipts.length; i++) {
+                    RelayDirective requestDirective = relevantDirectives.get(i);
+                    Directive responseDirective = makeReceiptDirective(requestDirective, reply);
+                    receipts[i] = responseDirective;
+                }
                 
+                // Construct the receipt message
                 // TODO: Ensure this is the relevant incarnation number
                 long incarnation = original.getIncarnationNumber();
+                Message receipt = new DirectiveMessage(nodeAddress, dest, incarnation, receipts);
+                AttributedMessage attributedReceipt = new AttributedMessage(receipt);
+                // TODO: Tag the message as being out-of-band so that other aspects ignore it,
                 
-                Directive[] acks = new Directive[relevantDirectives.size()];
-                for (int i=0; i<acks.length; i++) {
-                    RelayDirective requestDirective = relevantDirectives.get(i);
-                    Directive responseDirective = makeAck(requestDirective, reply);
-                    acks[i] = responseDirective;
-                }
-                Message ack = new DirectiveMessage(nodeAddress, dest, incarnation, acks);
-                AttributedMessage attributedAck = new AttributedMessage(ack);
+                // By-pass the MessageDeliverer, go directly to ReceiveLink
                 MessageTransportRegistryService registry = getRegistry();
-                
                 synchronized (registry) {
-                    // This is locked to prevent the receiver from
-                    // unregistering between the lookup and the delivery.
-                    // The corresponding unregister lock is on a private
-                    // method in MesageTransportRegistry, removeLocalClient.
                     ReceiveLink link = registry.findLocalReceiveLink(dest);
                     if (link != null) {
-                        link.deliverMessage(attributedAck);
+                        link.deliverMessage(attributedReceipt);
                     }
                 }
 
@@ -161,10 +193,5 @@ public class DirectiveAckAspect
             }
             return reply;
         }
-
-        protected DestinationLinkDelegate(DestinationLink link) {
-            super(link);
-        }
     }
-
 }
