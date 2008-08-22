@@ -17,6 +17,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.relay.RelayDirective;
+import org.cougaar.core.relay.RelayDirectiveUtil;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
@@ -85,7 +86,7 @@ public class DirectiveAckAspect
         
         public void sendMessage(AttributedMessage message) {
             if (message.getAttribute(RECEIPT_REQUESTED) != null 
-                    && RelayDirective.hasRelayDirectives(message.getRawMessage())) {
+                    && RelayDirectiveUtil.hasRelayDirectives(message.getRawMessage())) {
                 outstandingMessages.add(message);
             }
             super.sendMessage(message);
@@ -111,7 +112,7 @@ public class DirectiveAckAspect
             if (outstandingMessages.contains(message)) {
                 DirectiveMessage original = (DirectiveMessage) message.getRawMessage();
                 Message receipt = 
-                    RelayDirective.makeReceiptMessage(nodeAddress, original, reply.cloneAttributes());
+                    RelayDirectiveUtil.makeReceiptMessage(nodeAddress, original, reply.cloneAttributes());
                 oobs.sendOutOfBandMessage(receipt, null, message.getOriginator());
                 outstandingMessages.remove(message);
             }
