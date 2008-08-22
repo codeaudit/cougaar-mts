@@ -7,6 +7,7 @@
 package org.cougaar.mts.std;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.cougaar.core.blackboard.DirectiveMessage;
@@ -15,6 +16,7 @@ import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
+import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.relay.RelayDirective;
 import org.cougaar.core.relay.RelayDirectiveUtil;
@@ -22,11 +24,14 @@ import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
+import org.cougaar.mts.base.DestinationQueueProviderService;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.OutOfBandMessageService;
+import org.cougaar.mts.base.QueueListener;
 import org.cougaar.mts.base.SendQueue;
 import org.cougaar.mts.base.SendQueueDelegateImplBase;
+import org.cougaar.mts.base.SendQueueProviderService;
 import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
@@ -39,7 +44,7 @@ import org.cougaar.mts.base.UnregisteredNameException;
  */
 public class DirectiveAckAspect 
         extends StandardAspect
-        implements AttributeConstants {
+        implements AttributeConstants,QueueListener {
     
     private final Set<AttributedMessage> outstandingMessages = new HashSet<AttributedMessage>();
     private MessageAddress nodeAddress;
@@ -54,10 +59,43 @@ public class DirectiveAckAspect
             loggingService.error(msg);
             throw new IllegalStateException(msg);
         }
+        SendQueueProviderService sendqProvider = 
+            sb.getService(this, SendQueueProviderService.class, null);
+        sendqProvider.addListener(this);
+        DestinationQueueProviderService destqProvider = 
+            sb.getService(this, DestinationQueueProviderService.class, null);
+        destqProvider.addListener(this);
         NodeIdentificationService nis = 
             sb.getService(this, NodeIdentificationService.class, null);
         nodeAddress = nis.getMessageAddress();
+        sb.releaseService(this, SendQueueProviderService.class, sendqProvider);
+        sb.releaseService(this, DestinationQueueProviderService.class, destqProvider);
         sb.releaseService(this, NodeIdentificationService.class, nis);
+    }
+    
+    /**
+     * If we delete a DirectiveMessage from any of the MTS queues, and if that
+     * message has relays and was tagged RECEIPT_REQUESTED, then send an
+     * out-of-band receipt to the originator indicating that the Directive was
+     * dropped.
+     */
+    public void messagesRemoved(List<Message> deletedMessages) {
+        for (Message message : deletedMessages) {
+            if (message instanceof AttributedMessage) {
+                AttributedMessage attributedMessage = (AttributedMessage) message;
+                if (attributedMessage.getAttribute(RECEIPT_REQUESTED) != null) {
+                    Message rawMessage = attributedMessage.getRawMessage();
+                    if (RelayDirectiveUtil.hasRelayDirectives(rawMessage)) {
+                        DirectiveMessage dmsg = (DirectiveMessage) rawMessage;
+                        MessageAttributes receipt = new SimpleMessageAttributes();
+                        receipt.setAttribute(DELIVERY_ATTRIBUTE, DELIVERY_STATUS_DROPPED);
+                        Message receiptMsg =
+                                RelayDirectiveUtil.makeReceiptMessage(nodeAddress, dmsg, receipt);
+                        oobs.sendOutOfBandMessage(receiptMsg, null, dmsg.getOriginator());
+                    }
+                }
+            }
+        }
     }
     
     /**
