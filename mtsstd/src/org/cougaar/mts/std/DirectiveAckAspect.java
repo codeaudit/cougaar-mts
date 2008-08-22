@@ -6,12 +6,9 @@
 
 package org.cougaar.mts.std;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.cougaar.core.blackboard.Directive;
 import org.cougaar.core.blackboard.DirectiveMessage;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
@@ -20,7 +17,6 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.relay.RelayDirective;
-import org.cougaar.core.util.UID;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
@@ -77,20 +73,7 @@ public class DirectiveAckAspect
         }
         return null;
     }
-    
-    /**
-     * Make a receipt for the given Directive, using the reply status as the
-     * content.
-     */
-    private Directive makeReceiptDirective(RelayDirective original, MessageAttributes reply) {
-       UID requestorUID = original.getUID();
-       RelayDirective.Response dir = 
-           new RelayDirective.Response(requestorUID, reply.cloneAttributes());
-       dir.setSource(original.getDestination());
-       dir.setDestination(original.getSource());
-       return dir;
-    }
-    
+   
     /**
      * Whenever a message enters the MTS, keep track of it if it's 
      * a DirectiveMessage at least one of whose Directives is a Relay.
@@ -127,30 +110,9 @@ public class DirectiveAckAspect
             MessageAttributes reply = super.forwardMessage(message);
             if (outstandingMessages.contains(message)) {
                 DirectiveMessage original = (DirectiveMessage) message.getRawMessage();
-                Directive[] originalDirectives = original.getDirectives();
-                MessageAddress dest = message.getOriginator();
-                
-                // Construct and collect receipt directives for each RelayDirective
-                List<RelayDirective> relevantDirectives = 
-                    new ArrayList<RelayDirective>(originalDirectives.length);
-                for (Directive directive : originalDirectives) {
-                    RelayDirective relayDirective = RelayDirective.getRelayDirective(directive);
-                    if (relayDirective != null) {
-                        relevantDirectives.add(relayDirective);
-                    }
-                }
-                Directive[] receipts = new Directive[relevantDirectives.size()];
-                for (int i=0; i<receipts.length; i++) {
-                    RelayDirective requestDirective = relevantDirectives.get(i);
-                    Directive responseDirective = makeReceiptDirective(requestDirective, reply);
-                    receipts[i] = responseDirective;
-                }
-                
-                // Construct and send the receipt message
-                long incarnation = original.getIncarnationNumber(); // XXX: Is this right?
-                Message receipt = new DirectiveMessage(nodeAddress, dest, incarnation, receipts);
-                oobs.sendOutOfBandMessage(receipt, reply, dest);
-                
+                Message receipt = 
+                    RelayDirective.makeReceiptMessage(nodeAddress, original, reply.cloneAttributes());
+                oobs.sendOutOfBandMessage(receipt, null, message.getOriginator());
                 outstandingMessages.remove(message);
             }
             return reply;
