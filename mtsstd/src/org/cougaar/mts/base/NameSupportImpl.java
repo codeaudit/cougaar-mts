@@ -81,13 +81,6 @@ public final class NameSupportImpl
             wpService = sb.getService(this, WhitePagesService.class, null);
             loggingService = sb.getService(this, LoggingService.class, null);
             myNodeAddress = MessageAddress.getMessageAddress(id);
-            
-            // XXX Why is this here?
-            try {
-                InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException ex) {
-                loggingService.error(null, ex);
-            }
         }
 
         public MessageAddress getNodeMessageAddress() {
