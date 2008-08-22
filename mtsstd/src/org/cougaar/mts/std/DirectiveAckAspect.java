@@ -51,11 +51,16 @@ public class DirectiveAckAspect
     public void start() {
         super.start();
         ServiceBroker sb = getServiceBroker();
+        oobs = sb.getService(this, OutOfBandMessageService.class, null);
+        if (oobs == null) {
+            String msg = "DirectAckAspect requires OutOfBandMessageService, which is not available!";
+            loggingService.error(msg);
+            throw new IllegalStateException(msg);
+        }
         NodeIdentificationService nis = 
             sb.getService(this, NodeIdentificationService.class, null);
         nodeAddress = nis.getMessageAddress();
         sb.releaseService(this, NodeIdentificationService.class, nis);
-        oobs = sb.getService(this, OutOfBandMessageService.class, null);
     }
     
     /**
