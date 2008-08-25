@@ -13,11 +13,9 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
-import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -171,8 +169,9 @@ public class UdpMulticastLinkProtocol
     /**
      * Send a datagram to the destination.
      */
-    protected MessageAttributes processOutgoingMessage(DatagramSocket destination,
-                                                       AttributedMessage message)
+    private MessageAttributes processOutgoingMessage(MulticastSocket destination,
+                                                     AttributedMessage message, 
+                                                     InetSocketAddress address)
             throws IOException {
         if (!isServantAlive()) {
             if (loggingService.isDebugEnabled()) {
@@ -210,13 +209,11 @@ public class UdpMulticastLinkProtocol
         synchronized (destination) {
             try {
                 SchedulableStatus.beginNetIO("Multicast Send packet");
-                SocketAddress remoteSocketAddress = destination.getRemoteSocketAddress();
-                DatagramPacket packet =
-                        new DatagramPacket(payload, 0, payload.length, remoteSocketAddress);
+                DatagramPacket packet = new DatagramPacket(payload, 0, payload.length, address);
                 destination.send(packet);
                 if (loggingService.isInfoEnabled()) {
                     loggingService.info("Sent packet of " + payload.length + " bytes from "
-                            + servantUri + " to " + remoteSocketAddress);
+                            + servantUri + " to " + destination);
                 }
                 MessageAttributes metadata = new MessageReply(message);
                 metadata.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,
@@ -310,7 +307,17 @@ public class UdpMulticastLinkProtocol
         public boolean isValid(AttributedMessage message) {
             return outputConnection != null;
         }
-
+        
+        protected URI getRemoteURI() {
+            try {
+                return new URI("crap://from-crapola");
+            } catch (URISyntaxException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return null;
+            }
+        }
+        
         protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             if (loggingService.isInfoEnabled()) {
@@ -323,7 +330,7 @@ public class UdpMulticastLinkProtocol
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
-                return processOutgoingMessage(outputConnection, message);
+                return processOutgoingMessage(outputConnection, message, address);
             } catch (IOException e) {
                 throw new CommFailureException(e);
             }
