@@ -55,54 +55,6 @@ final class DestinationQueueImpl
     private DestinationQueue delegate;
     private List<DestinationLink> destinationLinks;
 
-    private class LinkIterator
-            implements Iterator<DestinationLink> {
-        int position;
-        DestinationLink next;
-        private final AttributedMessage message;
-
-        LinkIterator(AttributedMessage message) {
-            position = 0;
-            this.message = message;
-            findNextValidLink();
-        }
-
-        private void findNextValidLink() {
-            while (position < destinationLinks.size()) {
-                next = destinationLinks.get(position);
-                if (next.isValid(message)) {
-                    if (loggingService.isDebugEnabled()) {
-                        loggingService.debug("Link " + next.getProtocolClass() + " [" + position
-                                + "] for " + next.getDestination() + " is valid");
-                    }
-                    return;
-                }
-                if (loggingService.isDebugEnabled()) {
-                    loggingService.debug("Link " + next.getProtocolClass() + " [" + position
-                            + "] for " + next.getDestination() + " is not valid");
-                }
-                ++position;
-            }
-            next = null;
-        }
-
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        public DestinationLink next() {
-            DestinationLink link = next;
-            ++position;
-            findNextValidLink();
-            return link;
-        }
-
-        public void remove() {
-            throw new RuntimeException("Cannot remove link");
-        }
-
-    }
-
     DestinationQueueImpl(MessageAddress destination) {
         super(destination.toString() + "/DestQ");
         this.destination = destination;
@@ -269,6 +221,54 @@ final class DestinationQueueImpl
         message.restoreSnapshot();
         scheduleRestart(retryTimeout);
         retryTimeout = Math.min(retryTimeout + retryTimeout, MAX_RETRY_TIMEOUT);
+    }
+
+    private class LinkIterator
+            implements Iterator<DestinationLink> {
+        int position;
+        DestinationLink next;
+        private final AttributedMessage message;
+    
+        LinkIterator(AttributedMessage message) {
+            position = 0;
+            this.message = message;
+            findNextValidLink();
+        }
+    
+        private void findNextValidLink() {
+            while (position < destinationLinks.size()) {
+                next = destinationLinks.get(position);
+                if (next.isValid(message)) {
+                    if (loggingService.isDebugEnabled()) {
+                        loggingService.debug("Link " + next.getProtocolClass() + " [" + position
+                                + "] for " + next.getDestination() + " is valid");
+                    }
+                    return;
+                }
+                if (loggingService.isDebugEnabled()) {
+                    loggingService.debug("Link " + next.getProtocolClass() + " [" + position
+                            + "] for " + next.getDestination() + " is not valid");
+                }
+                ++position;
+            }
+            next = null;
+        }
+    
+        public boolean hasNext() {
+            return next != null;
+        }
+    
+        public DestinationLink next() {
+            DestinationLink link = next;
+            ++position;
+            findNextValidLink();
+            return link;
+        }
+    
+        public void remove() {
+            throw new RuntimeException("Cannot remove link");
+        }
+    
     }
 
 }
