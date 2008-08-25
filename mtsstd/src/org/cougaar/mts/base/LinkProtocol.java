@@ -30,7 +30,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.core.mts.MulticastMessageAddress;
+import org.cougaar.core.mts.SocketMessageAddress;
 
 /**
  * The parent class of all Link Protocols. Instantiable subclasses are required
@@ -133,12 +133,8 @@ abstract public class LinkProtocol
      * @param destination
      * @return
      */
-    public boolean supportsAddress(MessageAddress destination) {
-        if (destination instanceof MulticastMessageAddress) {
-            MulticastMessageAddress mma = (MulticastMessageAddress) destination;
-            return !mma.isTrueMulticast();
-        }
-        return true;
+    public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
+        return !SocketMessageAddress.class.isAssignableFrom(addressType);
     }
 
 }
