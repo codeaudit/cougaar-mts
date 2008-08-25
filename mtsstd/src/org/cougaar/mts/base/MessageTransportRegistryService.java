@@ -26,6 +26,7 @@
 
 package org.cougaar.mts.base;
 
+import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.List;
 
@@ -72,4 +73,9 @@ public interface MessageTransportRegistryService
     void removeAgentState(MessageAddress agent);
 
     void ipAddressChanged();
+    
+    // Multicast
+    void join(MessageAddress client, InetSocketAddress multicastAddress);
+    void leave(MessageAddress client, InetSocketAddress multicastAddress);
+    Iterable<MessageAddress> getSocketListeners(InetSocketAddress multicastAddress);
 }

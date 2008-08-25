@@ -26,6 +26,9 @@
 
 package org.cougaar.mts.base;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
@@ -136,5 +139,14 @@ abstract public class LinkProtocol
     public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
         return !SocketMessageAddress.class.isAssignableFrom(addressType);
     }
+    
+    
+    // Multicast
+    public void join(InetSocketAddress multicastAddress) throws IOException {
+        throw new IOException(this + " cannot join multicast groups");
+    }
 
+    public void leave(InetSocketAddress multicastAddress) throws IOException {
+        throw new IOException(this + " cannot leave multicast groups");
+    }
 }

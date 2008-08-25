@@ -18,9 +18,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.SocketAddress;
-import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -48,15 +52,36 @@ public class UdpMulticastLinkProtocol
         extends RPCLinkProtocol {
     private static final int MAX_PAYLOAD_SIZE = 64 * 1024; // notional, 64K
 
-    private DatagramSocket inputConnection;
     private URI servantUri;
     private final Timer timer = new Timer("Multicast Data Poller");
+    private final Map<InetSocketAddress,MulticastSocket> multicastAddresses = 
+        new HashMap<InetSocketAddress,MulticastSocket>();
 
     /**
      * Support only true multicast addresses
      */
     public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
         return SocketMessageAddress.class.isAssignableFrom(addressType);
+    }
+    
+    public void join(InetSocketAddress multicastAddress) throws IOException {
+        synchronized (multicastAddresses) {
+            MulticastSocket skt = new MulticastSocket(multicastAddress.getPort());
+            skt.setSoTimeout(100);
+            skt.joinGroup(multicastAddress.getAddress());
+            multicastAddresses.put(multicastAddress,skt);
+        }
+    }
+    
+    public void leave(InetSocketAddress multicastAddress) throws IOException {
+        MulticastSocket socket;
+        synchronized (multicastAddresses) {
+            socket = multicastAddresses.get(multicastAddress);
+            multicastAddresses.remove(multicastAddress);
+        }
+        if (socket != null) {
+            socket.leaveGroup(multicastAddress.getAddress());
+        }
     }
 
     protected int computeCost(AttributedMessage message) {
@@ -76,10 +101,6 @@ public class UdpMulticastLinkProtocol
         }
 
         String node = getNameSupport().getNodeMessageAddress().getAddress();
-        if (!openInputSocket(node)) {
-            releaseNodeServant();
-            return;
-        }
 
         try {
             servantUri = makeURI(node);
@@ -99,9 +120,15 @@ public class UdpMulticastLinkProtocol
 
     protected void releaseNodeServant() {
         timer.cancel();
-        if (inputConnection != null) {
-            inputConnection.close();
-            inputConnection = null;
+        synchronized (multicastAddresses) {
+            for (Map.Entry<InetSocketAddress,MulticastSocket> entry : multicastAddresses.entrySet()) {
+                try {
+                    entry.getValue().leaveGroup(entry.getKey().getAddress());
+                } catch (IOException e) {
+                    loggingService.error("Error closing multicast socket", e);
+                }
+            }
+            multicastAddresses.clear();
         }
         servantUri = null;
         // XXX: Do we need to close the sockets in outputSockets?
@@ -118,7 +145,7 @@ public class UdpMulticastLinkProtocol
      * We must have an open UDP socket and a non-null servant
      */
     protected boolean isServantAlive() {
-        return inputConnection != null && servantUri != null && super.isServantAlive();
+        return servantUri != null && super.isServantAlive();
     }
 
     protected String getProtocolType() {
@@ -127,16 +154,6 @@ public class UdpMulticastLinkProtocol
 
     protected Boolean usesEncryptedSocket() {
         return false;
-    }
-
-    private boolean openInputSocket(String node) {
-        try {
-            inputConnection = new DatagramSocket();
-            return true;
-        } catch (SocketException e) {
-            loggingService.warn("Couldn't create UDP socket: " + e.getMessage());
-            return false;
-        }
     }
 
     private URI makeURI(String myServantId)
@@ -217,14 +234,19 @@ public class UdpMulticastLinkProtocol
             }
         }
     }
+    
+    /**
+     * FIXME: Placeholder
+     */
+    private Collection<MessageAddress> lookupAddresses(InetSocketAddress socketAddress) {
+        return new ArrayList<MessageAddress>();
+    }
 
     /**
      * Read and dispatch an incoming message on a stream.
-     * 
-     * This is protected so that it can be invoked by a subclass, not
-     * (typically) to be overridden.
      */
-    private void processingIncomingMessage(InputStream stream) {
+    private void processingIncomingMessage(InputStream stream, InetSocketAddress socketAddress) {
+        
         Object rawObject = null;
         ObjectInputStream ois = null;
 
@@ -235,34 +257,37 @@ public class UdpMulticastLinkProtocol
             return;
         }
 
-        try {
-            rawObject = ois.readObject();
-        } catch (ClassNotFoundException e) {
-            loggingService.warn("Processing Incoming message, unknown object type :"
-                    + e.getMessage());
-            return;
-        } catch (IOException e) {
-            loggingService.warn("Processing Incoming message, deserializing error :"
-                    + e.getMessage());
-            return;
-        }
-        if (rawObject instanceof MessageAttributes) {
-            AttributedMessage message = (AttributedMessage) rawObject;
-            if (loggingService.isInfoEnabled()) {
-                loggingService.info("Delivering from " + message.getOriginator() + " to "
-                        + message.getTarget() + "\n" + message);
-            }
+        Collection<MessageAddress> destinations = lookupAddresses(socketAddress);
+        for (MessageAddress destination : destinations) {
             try {
-                getDeliverer().deliverMessage(message, message.getTarget());
-                // no further use for the return value
-            } catch (MisdeliveredMessageException e) {
-                if (loggingService.isWarnEnabled()) {
-                    loggingService.warn("Misdelivered from " + message.getOriginator() + " to "
-                            + message.getTarget() + ": " + e.getMessage() + "\n" + message);
-                }
+                rawObject = ois.readObject();
+            } catch (ClassNotFoundException e) {
+                loggingService.warn("Processing Incoming message, unknown object type :"
+                        + e.getMessage());
+                continue;
+            } catch (IOException e) {
+                loggingService.warn("Processing Incoming message, deserializing error :"
+                        + e.getMessage());
+                continue;
             }
-        } else {
-            loggingService.warn("Processing Incoming message is not MessageAttributes");
+            if (rawObject instanceof MessageAttributes) {
+                AttributedMessage message = (AttributedMessage) rawObject;
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Delivering from " + message.getOriginator() + " to "
+                            + message.getTarget() + "\n" + message);
+                }
+                try {
+                    getDeliverer().deliverMessage(message, destination);
+                    // no further use for the return value
+                } catch (MisdeliveredMessageException e) {
+                    if (loggingService.isWarnEnabled()) {
+                        loggingService.warn("Misdelivered from " + message.getOriginator() + " to "
+                                + message.getTarget() + ": " + e.getMessage() + "\n" + message);
+                    }
+                }
+            } else {
+                loggingService.warn("Processing Incoming message is not MessageAttributes");
+            }
         }
     }
 
@@ -323,17 +348,30 @@ public class UdpMulticastLinkProtocol
                 // too early
                 return;
             }
+            Map<InetSocketAddress,MulticastSocket> map = 
+                new HashMap<InetSocketAddress,MulticastSocket>();
+            synchronized (multicastAddresses) {
+                map.putAll(multicastAddresses);
+            }
             try {
-                SchedulableStatus.beginNetIO("UDP Receive packet");
-                inputConnection.receive(incoming);
-                int length = incoming.getLength();
-                byte[] payload = incoming.getData();
-                if (loggingService.isInfoEnabled()) {
-                    loggingService.info("Received datagram packet of size " + length + " from "
-                            + inputConnection.getInetAddress());
+                SchedulableStatus.beginNetIO("Multicast Receive packet");
+                for (Map.Entry<InetSocketAddress,MulticastSocket> entry : map.entrySet()) {
+                    MulticastSocket skt = entry.getValue();
+                    try {
+                        skt.receive(incoming); // need this to timeout
+                    } catch (SocketTimeoutException e) {
+                        // no data, continue on other sockets
+                        continue;
+                    }
+                    int length = incoming.getLength();
+                    byte[] payload = incoming.getData();
+                    if (loggingService.isInfoEnabled()) {
+                        loggingService.info("Received datagram packet of size " + length + " from "
+                                            + skt.getInetAddress());
+                    }
+                    InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
+                    processingIncomingMessage(byteStream, entry.getKey());
                 }
-                InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
-                processingIncomingMessage(byteStream);
             } catch (IOException e) {
                 loggingService.warn(e.getMessage());
                 releaseNodeServant(); // ????

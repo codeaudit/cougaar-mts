@@ -26,8 +26,12 @@
 
 package org.cougaar.mts.base;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +43,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.SimpleMessageAttributes;
+import org.cougaar.core.mts.SocketMessageAddress;
 import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
 
@@ -87,6 +92,8 @@ public final class MessageTransportRegistry
         private final ServiceBroker sb;
         private final LoggingService loggingService;
         private final IncarnationService incarnationService;
+        private final Map<InetSocketAddress,Collection<MessageAddress>> mcast =
+            new HashMap<InetSocketAddress,Collection<MessageAddress>>();
 
         private ServiceImpl(String name, ServiceBroker sb) {
             this.name = name;
@@ -129,6 +136,14 @@ public final class MessageTransportRegistry
             synchronized (linkProtocols) {
                 for (LinkProtocol protocol : linkProtocols) {
                     protocol.unregisterClient(client);
+                }
+                for (Map.Entry<InetSocketAddress,Collection<MessageAddress>> entry : mcast.entrySet()) {
+                    Collection<MessageAddress> clients = entry.getValue();
+                    clients.remove(client.getMessageAddress());
+                    if (clients.isEmpty()) {
+                        InetSocketAddress multicastAddress = entry.getKey();
+                        removeMulticastListener(multicastAddress);
+                    }
                 }
             }
         }
@@ -299,7 +314,71 @@ public final class MessageTransportRegistry
             }
             return destinationLinks;
         }
+        
+        // Multicast
+        public Iterable<MessageAddress> getSocketListeners(InetSocketAddress multicastAddress) {
+            synchronized (linkProtocols) {
+                Collection<MessageAddress> addresses = mcast.get(multicastAddress);
+                if (addresses == null) {
+                    return null;
+                } else {
+                    return new ArrayList<MessageAddress>(addresses);
+                }
+            }
+        }
+        
+        public void join(MessageAddress client, InetSocketAddress multicastAddress) {
+            synchronized (linkProtocols) {
+                Collection<MessageAddress> clients = mcast.get(multicastAddress);
+                if (clients == null) {
+                    clients = new HashSet<MessageAddress>();
+                    mcast.put(multicastAddress, clients);
+                }
+                boolean newAddress = clients.isEmpty();
+                clients.add(client);
+                if (newAddress) {
+                    addMulticastListener(multicastAddress);
+                }
+            }
+        }
 
+        public void leave(MessageAddress client, InetSocketAddress multicastAddress) {
+            synchronized (linkProtocols) {
+                Collection<MessageAddress> clients = mcast.get(multicastAddress);
+                if (clients != null) {
+                    clients.remove(client);
+                    if (clients.isEmpty()) {
+                        removeMulticastListener(multicastAddress);
+                    }
+                }
+            }
+        }
+
+        private void addMulticastListener(InetSocketAddress multicastAddress) {
+            for (LinkProtocol lp : linkProtocols) {
+                if (lp.supportsAddressType(SocketMessageAddress.class)) {
+                    try {
+                        lp.join(multicastAddress);
+                    } catch (IOException e) {
+                        loggingService.error("Failed to join multicast group "
+                                + multicastAddress);
+                    }
+                }
+            }
+        }
+
+        private void removeMulticastListener(InetSocketAddress multicastAddress) {
+            for (LinkProtocol lp : linkProtocols) {
+                if (lp.supportsAddressType(SocketMessageAddress.class)) {
+                    try {
+                        lp.leave(multicastAddress);
+                    } catch (IOException e) {
+                        loggingService.error("Failed to leave multicast group "
+                                             + multicastAddress);
+                    }
+                }
+            }
+        }
     }
 
 }
