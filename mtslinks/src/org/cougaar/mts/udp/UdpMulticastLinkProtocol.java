@@ -32,7 +32,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.mts.SocketMessageAddress;
+import org.cougaar.core.mts.InetMessageAddress;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.base.AttributedMessage;
@@ -61,7 +61,7 @@ public class UdpMulticastLinkProtocol
      * Support only true multicast addresses
      */
     public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
-        return SocketMessageAddress.class.isAssignableFrom(addressType);
+        return InetMessageAddress.class.isAssignableFrom(addressType);
     }
     
     public void join(InetSocketAddress multicastAddress) throws IOException {
@@ -89,10 +89,10 @@ public class UdpMulticastLinkProtocol
     }
 
     protected DestinationLink createDestinationLink(MessageAddress address) {
-        if (!(address instanceof SocketMessageAddress)) {
+        if (!(address instanceof InetMessageAddress)) {
             throw new RuntimeException(address + " is not a SocketMessageAddress");
         }
-        return new MulticastLink((SocketMessageAddress) address);
+        return new MulticastLink((InetMessageAddress) address);
     }
 
     protected void ensureNodeServant() {
@@ -296,7 +296,7 @@ public class UdpMulticastLinkProtocol
         private MulticastSocket outputConnection;
         private final InetSocketAddress address;
         
-        private MulticastLink(SocketMessageAddress destination) {
+        private MulticastLink(InetMessageAddress destination) {
             super(destination);
             address = destination.getSocketAddress();
         }

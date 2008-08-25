@@ -43,7 +43,7 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.SimpleMessageAttributes;
-import org.cougaar.core.mts.SocketMessageAddress;
+import org.cougaar.core.mts.InetMessageAddress;
 import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
 
@@ -356,7 +356,7 @@ public final class MessageTransportRegistry
 
         private void addMulticastListener(InetSocketAddress multicastAddress) {
             for (LinkProtocol lp : linkProtocols) {
-                if (lp.supportsAddressType(SocketMessageAddress.class)) {
+                if (lp.supportsAddressType(InetMessageAddress.class)) {
                     try {
                         lp.join(multicastAddress);
                     } catch (IOException e) {
@@ -369,7 +369,7 @@ public final class MessageTransportRegistry
 
         private void removeMulticastListener(InetSocketAddress multicastAddress) {
             for (LinkProtocol lp : linkProtocols) {
-                if (lp.supportsAddressType(SocketMessageAddress.class)) {
+                if (lp.supportsAddressType(InetMessageAddress.class)) {
                     try {
                         lp.leave(multicastAddress);
                     } catch (IOException e) {

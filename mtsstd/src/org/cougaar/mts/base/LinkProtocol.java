@@ -33,7 +33,7 @@ import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.core.mts.SocketMessageAddress;
+import org.cougaar.core.mts.InetMessageAddress;
 
 /**
  * The parent class of all Link Protocols. Instantiable subclasses are required
@@ -137,7 +137,7 @@ abstract public class LinkProtocol
      * @return
      */
     public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
-        return !SocketMessageAddress.class.isAssignableFrom(addressType);
+        return !InetMessageAddress.class.isAssignableFrom(addressType);
     }
     
     
