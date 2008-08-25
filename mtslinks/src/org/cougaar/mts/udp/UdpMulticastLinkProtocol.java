@@ -21,8 +21,6 @@ import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -30,9 +28,9 @@ import java.util.TimerTask;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
+import org.cougaar.core.mts.InetMessageAddress;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
-import org.cougaar.core.mts.InetMessageAddress;
 import org.cougaar.core.node.NodeIdentificationService;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.base.AttributedMessage;
@@ -49,7 +47,7 @@ import org.cougaar.mts.base.UnregisteredNameException;
  * acks.
  */
 public class UdpMulticastLinkProtocol
-        extends RPCLinkProtocol {
+        extends RPCLinkProtocol { // NO NO NO No No No
     private static final int MAX_PAYLOAD_SIZE = 64 * 1024; // notional, 64K
 
     private URI servantUri;
@@ -145,7 +143,7 @@ public class UdpMulticastLinkProtocol
      * We must have an open UDP socket and a non-null servant
      */
     protected boolean isServantAlive() {
-        return servantUri != null && super.isServantAlive();
+        return servantUri != null;
     }
 
     protected String getProtocolType() {
@@ -235,11 +233,8 @@ public class UdpMulticastLinkProtocol
         }
     }
     
-    /**
-     * FIXME: Placeholder
-     */
-    private Collection<MessageAddress> lookupAddresses(InetSocketAddress socketAddress) {
-        return new ArrayList<MessageAddress>();
+    private Iterable<MessageAddress> lookupAddresses(InetSocketAddress multicastAddress) {
+        return getRegistry().getGroupListeners(multicastAddress);
     }
 
     /**
@@ -257,7 +252,7 @@ public class UdpMulticastLinkProtocol
             return;
         }
 
-        Collection<MessageAddress> destinations = lookupAddresses(socketAddress);
+        Iterable<MessageAddress> destinations = lookupAddresses(socketAddress);
         for (MessageAddress destination : destinations) {
             try {
                 rawObject = ois.readObject();
@@ -299,10 +294,21 @@ public class UdpMulticastLinkProtocol
         private MulticastLink(InetMessageAddress destination) {
             super(destination);
             address = destination.getSocketAddress();
+            try {
+                outputConnection = new MulticastSocket(address.getPort());
+                outputConnection.joinGroup(address.getAddress());
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
+        public int cost(AttributedMessage msg) {
+            return 1;
         }
 
         public boolean isValid(AttributedMessage message) {
-            return ensureNodeServantIsAlive() && super.isValid(message);
+            return outputConnection != null;
         }
 
         protected Object decodeRemoteRef(URI ref)
@@ -310,8 +316,6 @@ public class UdpMulticastLinkProtocol
             if (loggingService.isInfoEnabled()) {
                 loggingService.info("Remote URI for " + getDestination() + " is " + ref);
             }
-            outputConnection = new MulticastSocket(address.getPort());
-            outputConnection.joinGroup(address.getAddress());
             return ref;
         }
 
