@@ -291,9 +291,10 @@ public final class MessageTransportRegistry
             List<DestinationLink> destinationLinks = new ArrayList<DestinationLink>();
             synchronized (linkProtocols) {
                 for (LinkProtocol lp : linkProtocols) {
-                    // Class lp_class = lp.getClass();
-                    DestinationLink link = lp.getDestinationLink(destination);
-                    destinationLinks.add(link);
+                    if (lp.supportsAddress(destination)) {
+                        DestinationLink link = lp.getDestinationLink(destination);
+                        destinationLinks.add(link);
+                    }
                 }
             }
             return destinationLinks;
