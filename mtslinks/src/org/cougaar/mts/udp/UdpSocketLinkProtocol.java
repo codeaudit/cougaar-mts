@@ -20,17 +20,16 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.node.NodeIdentificationService;
-import org.cougaar.core.service.ThreadService;
-import org.cougaar.core.thread.Schedulable;
 import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
@@ -52,8 +51,8 @@ public class UdpSocketLinkProtocol
 
     private DatagramSocket inputConnection;
     private URI servantUri;
-    private Schedulable poller;
     private final Map<URI, DatagramSocket> outputSockets = new HashMap<URI, DatagramSocket>();
+    private final Timer timer = new Timer("UDP Data Poller");
 
     @Cougaar.Arg(name = "port", defaultValue = "0")
     private int port;
@@ -86,20 +85,15 @@ public class UdpSocketLinkProtocol
             return;
         }
 
-        Runnable task = new InputSocketPoller();
-        poller =
-                threadService.getThread(this, task, "Message Poller", ThreadService.WILL_BLOCK_LANE);
+        TimerTask task = new InputSocketPoller();
         // FIXME: Workaround for name-server bootstrapping problem
         // Delay reading incoming packets to give the Name Server agent time to
         // initialize
-        poller.schedule(5000, 1);
+        timer.schedule(task, 5000, 1);
     }
 
     protected void releaseNodeServant() {
-        if (poller != null) {
-            poller.cancelTimer();
-            poller = null;
-        }
+        timer.cancel();
         if (inputConnection != null) {
             inputConnection.close();
             inputConnection = null;
@@ -322,7 +316,7 @@ public class UdpSocketLinkProtocol
      * Periodically check the BPA for messages to us.
      */
     private class InputSocketPoller
-            implements Runnable {
+            extends TimerTask {
         private final DatagramPacket incoming;
 
         public InputSocketPoller() {
