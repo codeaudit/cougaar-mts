@@ -26,9 +26,7 @@
 
 package org.cougaar.mts.base;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Set;
 
