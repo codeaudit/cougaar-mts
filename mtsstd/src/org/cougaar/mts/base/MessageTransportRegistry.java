@@ -316,7 +316,7 @@ public final class MessageTransportRegistry
         }
         
         // Multicast
-        public Iterable<MessageAddress> getSocketListeners(InetSocketAddress multicastAddress) {
+        public Iterable<MessageAddress> getGroupListeners(InetSocketAddress multicastAddress) {
             synchronized (linkProtocols) {
                 Collection<MessageAddress> addresses = mcast.get(multicastAddress);
                 if (addresses == null) {
@@ -327,7 +327,7 @@ public final class MessageTransportRegistry
             }
         }
         
-        public void join(MessageAddress client, InetSocketAddress multicastAddress) {
+        public void joinGroup(MessageTransportClient client, InetSocketAddress multicastAddress) {
             synchronized (linkProtocols) {
                 Collection<MessageAddress> clients = mcast.get(multicastAddress);
                 if (clients == null) {
@@ -335,18 +335,18 @@ public final class MessageTransportRegistry
                     mcast.put(multicastAddress, clients);
                 }
                 boolean newAddress = clients.isEmpty();
-                clients.add(client);
+                clients.add(client.getMessageAddress());
                 if (newAddress) {
                     addMulticastListener(multicastAddress);
                 }
             }
         }
 
-        public void leave(MessageAddress client, InetSocketAddress multicastAddress) {
+        public void leaveGroup(MessageTransportClient client, InetSocketAddress multicastAddress) {
             synchronized (linkProtocols) {
                 Collection<MessageAddress> clients = mcast.get(multicastAddress);
                 if (clients != null) {
-                    clients.remove(client);
+                    clients.remove(client.getMessageAddress());
                     if (clients.isEmpty()) {
                         removeMulticastListener(multicastAddress);
                     }

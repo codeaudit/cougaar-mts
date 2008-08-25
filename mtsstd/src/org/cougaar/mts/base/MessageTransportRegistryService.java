@@ -75,7 +75,7 @@ public interface MessageTransportRegistryService
     void ipAddressChanged();
     
     // Multicast
-    void join(MessageAddress client, InetSocketAddress multicastAddress);
-    void leave(MessageAddress client, InetSocketAddress multicastAddress);
-    Iterable<MessageAddress> getSocketListeners(InetSocketAddress multicastAddress);
+    void joinGroup(MessageTransportClient client, InetSocketAddress multicastAddress);
+    void leaveGroup(MessageTransportClient client, InetSocketAddress multicastAddress);
+    Iterable<MessageAddress> getGroupListeners(InetSocketAddress multicastAddress);
 }

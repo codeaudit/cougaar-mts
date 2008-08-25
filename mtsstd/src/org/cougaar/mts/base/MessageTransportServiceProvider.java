@@ -245,12 +245,13 @@ public final class MessageTransportServiceProvider
         }
 
         // Make SendLink and attach aspect delegates
-        SendLink link = new SendLinkImpl(addr, incarnation, getChildServiceBroker());
+        ServiceBroker csb = getChildServiceBroker();
+        SendLink link = new SendLinkImpl(addr, incarnation, csb);
         Class<SendLink> c = SendLink.class;
         link = aspectSupport.attachAspects(link, c);
 
         // Make proxy
-        proxy = new MessageTransportServiceProxy(client, link);
+        proxy = new MessageTransportServiceProxy(client, link, csb);
         proxies.put(addr, proxy);
         if (loggingService.isDebugEnabled()) {
             loggingService.debug("Created MessageTransportServiceProxy for " + requestor

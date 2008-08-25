@@ -29,11 +29,13 @@ package org.cougaar.mts.base;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentState;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
+import org.cougaar.core.mts.SocketMessageAddress;
 import org.cougaar.core.service.MessageTransportService;
 
 /**
@@ -43,13 +45,16 @@ import org.cougaar.core.service.MessageTransportService;
  */
 public class MessageTransportServiceProxy
         implements MessageTransportService {
+    private final ServiceBroker sb;
     private SendLink link;
     private MessageTransportClient client;
     private boolean registered = false;
 
-    public MessageTransportServiceProxy(MessageTransportClient client, SendLink link) {
+    public MessageTransportServiceProxy(MessageTransportClient client, SendLink link,
+                                        ServiceBroker sb) {
         this.client = client;
         this.link = link;
+        this.sb = sb;
     }
 
     synchronized long getIncarnationNumber() {
@@ -150,6 +155,19 @@ public class MessageTransportServiceProxy
      */
     public boolean addressKnown(MessageAddress a) {
         return link.addressKnown(a);
+    }
+
+    // Multicast
+    public void joinGroup(MessageTransportClient client, SocketMessageAddress multicastAddress) {
+        MessageTransportRegistryService mtrs = 
+            sb.getService(this, MessageTransportRegistryService.class, null);
+        mtrs.joinGroup(client, multicastAddress.getSocketAddress());
+    }
+
+    public void leaveGroup(MessageTransportClient client, SocketMessageAddress multicastAddress) {
+        MessageTransportRegistryService mtrs = 
+            sb.getService(this, MessageTransportRegistryService.class, null);
+        mtrs.leaveGroup(client, multicastAddress.getSocketAddress());
     }
 
 }
