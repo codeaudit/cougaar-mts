@@ -16,6 +16,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -51,6 +52,8 @@ import org.cougaar.mts.base.UnregisteredNameException;
  */
 public class UdpMulticastLinkProtocol
         extends RPCLinkProtocol {
+    private static final int SOCKET_TIMEOUT_SECONDS = 5;
+    
     private static final int MAX_PAYLOAD_SIZE = 64 * 1024; // notional, 64K
 
     private URI servantUri;
@@ -76,11 +79,12 @@ public class UdpMulticastLinkProtocol
             TimerTask task = tasks.get(multicastAddress);
             if (task == null) {
                 MulticastSocket skt = new MulticastSocket(multicastAddress.getPort());
+                skt.setSoTimeout(SOCKET_TIMEOUT_SECONDS*1000);  // notional timeout
                 skt.joinGroup(multicastAddress.getAddress());
                 multicastAddresses.put(multicastAddress, skt);
                 task = new InputSocketPoller(skt, multicastAddress);
                 tasks.put(multicastAddress, task);
-                timer.schedule(task, 0, 10);
+                timer.schedule(task, 0);
             }
         }
     }
@@ -267,7 +271,6 @@ public class UdpMulticastLinkProtocol
 
         try {
             ois = new ObjectInputStream(stream);
-            // FIXME: deserializing a DirectiveMessage whose target is multicast throws an exception
             Object rawObject = ois.readObject();
             if (rawObject instanceof AttributedMessage) {
                 message = (AttributedMessage) rawObject;
@@ -338,12 +341,12 @@ public class UdpMulticastLinkProtocol
         }
         
         /**
-         * This {@link RPCLinkProtocol#Link }method is meaningless for this
-         * protocol but must return non-null.  So override and return crap.
+         * This {@link RPCLinkProtocol#Link} method is meaningless here
+         * but must return non-null.  So override and return junk.
          */
         protected URI getRemoteURI() {
             try {
-                return new URI("crap://from-crapola");
+                return new URI("junk://never-used");
             } catch (URISyntaxException e) {
                 loggingService.warn("This is impossible");
                 return null;
@@ -352,9 +355,6 @@ public class UdpMulticastLinkProtocol
         
         protected Object decodeRemoteRef(URI ref)
                 throws Exception {
-            if (loggingService.isInfoEnabled()) {
-                loggingService.info("Remote URI for " + getDestination() + " is " + ref);
-            }
             return ref;
         }
 
@@ -382,6 +382,7 @@ public class UdpMulticastLinkProtocol
         private final DatagramPacket incoming;
         private final MulticastSocket socket;
         private final InetSocketAddress address;
+        private boolean cancelled;
         
         public InputSocketPoller(MulticastSocket socket, InetSocketAddress address) {
             byte[] data = new byte[MAX_PAYLOAD_SIZE];
@@ -390,34 +391,50 @@ public class UdpMulticastLinkProtocol
             this.address = address;
         }
 
+        public boolean cancel() {
+            cancelled = true;
+            return super.cancel();
+        }
+        
         public void run() {
-            if (!isServantAlive()) {
-                // too early
-                return;
-            }
-            Map<InetSocketAddress,MulticastSocket> map = 
-                new HashMap<InetSocketAddress,MulticastSocket>();
-            synchronized (multicastAddresses) {
-                map.putAll(multicastAddresses);
-            }
-            try {
-                SchedulableStatus.beginNetIO("Multicast Receive packet");
-                if (loggingService.isInfoEnabled()) {
-                    loggingService.info("Waiting for datagram packet from " + address);
+            while (!cancelled) {
+                if (!isServantAlive()) {
+                    // too early?
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        // don't care
+                    }
+                    continue;
                 }
-                socket.receive(incoming);
-                int length = incoming.getLength();
-                byte[] payload = incoming.getData();
-                if (loggingService.isInfoEnabled()) {
-                    loggingService.info("Received datagram packet of size " + length + " from "
-                                        + address);
+                if (!cancelled) {
+                    try {
+                        SchedulableStatus.beginNetIO("Multicast Receive packet");
+                        if (loggingService.isInfoEnabled()) {
+                            loggingService.info("Waiting for datagram packet from " + address);
+                        }
+                        socket.receive(incoming);
+                        int length = incoming.getLength();
+                        byte[] payload = incoming.getData();
+                        if (loggingService.isInfoEnabled()) {
+                            loggingService.info("Received datagram packet of size " + length
+                                    + " from " + address);
+                        }
+                        InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
+                        processingIncomingMessage(byteStream, address);
+                    } catch (SocketTimeoutException e) {
+                        // waited too long
+                        if (loggingService.isInfoEnabled()) {
+                            loggingService.info("No data from " +address
+                                                + " for " +SOCKET_TIMEOUT_SECONDS+ " seconds");
+                        }
+                    } catch (IOException e) {
+                        // XXX: Should we just quit at this point?
+                        loggingService.warn(e.getMessage());
+                    } finally {
+                        SchedulableStatus.endBlocking();
+                    }
                 }
-                InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
-                processingIncomingMessage(byteStream, address);
-            } catch (IOException e) {
-                loggingService.warn(e.getMessage());
-            } finally {
-                SchedulableStatus.endBlocking();
             }
         }
 
