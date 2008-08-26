@@ -16,7 +16,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -41,17 +40,24 @@ import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * Simple best-effort UDP link protocol: send messages and hope for the best. No
- * acks.
+ * Multicast via UDP.
+ * <p>
+ * This protocol only knows how to send to an {@link InetMessageAddress}, which
+ * is assumed to be contain a multicast address.
+ * <p>
+ * For reading, it will poll every {@link InetMessageAddress} to which it's
+ * currently joined.
  */
 public class UdpMulticastLinkProtocol
-        extends RPCLinkProtocol { // NO NO NO No No No
+        extends RPCLinkProtocol {
     private static final int MAX_PAYLOAD_SIZE = 64 * 1024; // notional, 64K
 
     private URI servantUri;
     private final Timer timer = new Timer("Multicast Data Poller");
     private final Map<InetSocketAddress,MulticastSocket> multicastAddresses = 
         new HashMap<InetSocketAddress,MulticastSocket>();
+    private final Map<InetSocketAddress,TimerTask> tasks =
+        new HashMap<InetSocketAddress,TimerTask>();
 
     /**
      * Support only true multicast addresses
@@ -60,20 +66,38 @@ public class UdpMulticastLinkProtocol
         return InetMessageAddress.class.isAssignableFrom(addressType);
     }
     
+    /**
+     * Join the given multicast group. Plugins only have access to this method
+     * indirectly, via {@link org.cougaar.core.agent.service.MessageSwitchService#joinGroup}
+     */
     public void join(InetSocketAddress multicastAddress) throws IOException {
         synchronized (multicastAddresses) {
-            MulticastSocket skt = new MulticastSocket(multicastAddress.getPort());
-            skt.setSoTimeout(100);
-            skt.joinGroup(multicastAddress.getAddress());
-            multicastAddresses.put(multicastAddress,skt);
+            TimerTask task = tasks.get(multicastAddress);
+            if (task == null) {
+                MulticastSocket skt = new MulticastSocket(multicastAddress.getPort());
+                skt.joinGroup(multicastAddress.getAddress());
+                multicastAddresses.put(multicastAddress, skt);
+                task = new InputSocketPoller(skt, multicastAddress);
+                tasks.put(multicastAddress, task);
+                timer.schedule(task, 0, 10);
+            }
         }
     }
     
+    /**
+     * Leave the given multicast group. Plugins only have access to this method
+     * indirectly, via {@link org.cougaar.core.agent.service.MessageSwitchService#leaveGroup}
+     */
     public void leave(InetSocketAddress multicastAddress) throws IOException {
         MulticastSocket socket;
         synchronized (multicastAddresses) {
             socket = multicastAddresses.get(multicastAddress);
             multicastAddresses.remove(multicastAddress);
+            TimerTask task = tasks.get(multicastAddress);
+            if (task != null) {
+                task.cancel();
+                tasks.remove(multicastAddress);
+            }
         }
         if (socket != null) {
             socket.leaveGroup(multicastAddress.getAddress());
@@ -106,12 +130,6 @@ public class UdpMulticastLinkProtocol
             releaseNodeServant();
             return;
         }
-
-        TimerTask task = new InputSocketPoller();
-        // FIXME: Workaround for name-server bootstrapping problem
-        // Delay reading incoming packets to give the Name Server agent time to
-        // initialize
-        timer.schedule(task, 5000, 1);
     }
 
     protected void releaseNodeServant() {
@@ -125,9 +143,13 @@ public class UdpMulticastLinkProtocol
                 }
             }
             multicastAddresses.clear();
+            for (TimerTask task : tasks.values()) {
+                task.cancel();
+            }
+            tasks.clear();
+            timer.cancel();
         }
         servantUri = null;
-        // XXX: Do we need to close the sockets in outputSockets?
     }
 
     protected void remakeNodeServant() {
@@ -251,7 +273,11 @@ public class UdpMulticastLinkProtocol
 
         Iterable<MessageAddress> destinations = lookupAddresses(socketAddress);
         for (MessageAddress destination : destinations) {
+            if (loggingService.isInfoEnabled()) {
+                loggingService.info("Dispatching received multicast message to " + destination);
+            }
             try {
+                // FIXME: deserializing a DirectiveMessage whose target is multicast throws an exception
                 rawObject = ois.readObject();
             } catch (ClassNotFoundException e) {
                 loggingService.warn("Processing Incoming message, unknown object type :"
@@ -262,7 +288,7 @@ public class UdpMulticastLinkProtocol
                         + e.getMessage());
                 continue;
             }
-            if (rawObject instanceof MessageAttributes) {
+            if (rawObject instanceof AttributedMessage) {
                 AttributedMessage message = (AttributedMessage) rawObject;
                 if (loggingService.isInfoEnabled()) {
                     loggingService.info("Delivering from " + message.getOriginator() + " to "
@@ -295,8 +321,8 @@ public class UdpMulticastLinkProtocol
                 outputConnection = new MulticastSocket(address.getPort());
                 outputConnection.joinGroup(address.getAddress());
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                loggingService.warn("Unable to join multicast group " + address
+                                    + ": " + e.getMessage());
             }
         }
         
@@ -308,12 +334,15 @@ public class UdpMulticastLinkProtocol
             return outputConnection != null;
         }
         
+        /**
+         * This {@link RPCLinkProtocol#Link }method is meaningless for this
+         * protocol but must return non-null.  So override and return crap.
+         */
         protected URI getRemoteURI() {
             try {
                 return new URI("crap://from-crapola");
             } catch (URISyntaxException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                loggingService.warn("This is impossible");
                 return null;
             }
         }
@@ -343,15 +372,19 @@ public class UdpMulticastLinkProtocol
     }
 
     /**
-     * Periodically check the BPA for messages to us.
+     * Periodically check a multicast address for new data
      */
     private class InputSocketPoller
             extends TimerTask {
         private final DatagramPacket incoming;
-
-        public InputSocketPoller() {
+        private final MulticastSocket socket;
+        private final InetSocketAddress address;
+        
+        public InputSocketPoller(MulticastSocket socket, InetSocketAddress address) {
             byte[] data = new byte[MAX_PAYLOAD_SIZE];
             incoming = new DatagramPacket(data, MAX_PAYLOAD_SIZE);
+            this.socket = socket;
+            this.address = address;
         }
 
         public void run() {
@@ -366,26 +399,20 @@ public class UdpMulticastLinkProtocol
             }
             try {
                 SchedulableStatus.beginNetIO("Multicast Receive packet");
-                for (Map.Entry<InetSocketAddress,MulticastSocket> entry : map.entrySet()) {
-                    MulticastSocket skt = entry.getValue();
-                    try {
-                        skt.receive(incoming); // need this to timeout
-                    } catch (SocketTimeoutException e) {
-                        // no data, continue on other sockets
-                        continue;
-                    }
-                    int length = incoming.getLength();
-                    byte[] payload = incoming.getData();
-                    if (loggingService.isInfoEnabled()) {
-                        loggingService.info("Received datagram packet of size " + length + " from "
-                                            + skt.getInetAddress());
-                    }
-                    InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
-                    processingIncomingMessage(byteStream, entry.getKey());
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Waiting for datagram packet from " + address);
                 }
+                socket.receive(incoming);
+                int length = incoming.getLength();
+                byte[] payload = incoming.getData();
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Received datagram packet of size " + length + " from "
+                                        + socket.getInetAddress());
+                }
+                InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
+                processingIncomingMessage(byteStream, address);
             } catch (IOException e) {
                 loggingService.warn(e.getMessage());
-                releaseNodeServant(); // ????
             } finally {
                 SchedulableStatus.endBlocking();
             }
