@@ -33,6 +33,7 @@ import org.cougaar.core.thread.SchedulableStatus;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
+import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageReply;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
@@ -260,51 +261,53 @@ public class UdpMulticastLinkProtocol
      * Read and dispatch an incoming message on a stream.
      */
     private void processingIncomingMessage(InputStream stream, InetSocketAddress socketAddress) {
-        
-        Object rawObject = null;
+        // Deseriaize the message
+        AttributedMessage message = null;
         ObjectInputStream ois = null;
 
         try {
             ois = new ObjectInputStream(stream);
+            // FIXME: deserializing a DirectiveMessage whose target is multicast throws an exception
+            Object rawObject = ois.readObject();
+            if (rawObject instanceof AttributedMessage) {
+                message = (AttributedMessage) rawObject;
+            } else {
+                loggingService.warn("Expected " +AttributedMessage.class
+                                    + " found " +rawObject.getClass());
+                return;
+            }
         } catch (IOException e) {
             loggingService.warn("Processing Incoming message, stream error :" + e.getMessage());
             return;
-        }
+        } catch (ClassNotFoundException e) {
+            loggingService.warn("Processing Incoming message, unknown object type :"
+                                + e.getMessage());
+            return;
+        } 
 
+        // Deliver to each joined Agent
+        MessageDeliverer deliverer = getDeliverer();
         Iterable<MessageAddress> destinations = lookupAddresses(socketAddress);
+        if (destinations == null || !destinations.iterator().hasNext()) {
+            if (loggingService.isInfoEnabled()) {
+                loggingService.info("No agents have joined group " + socketAddress);
+            }
+            return;
+        }
         for (MessageAddress destination : destinations) {
             if (loggingService.isInfoEnabled()) {
                 loggingService.info("Dispatching received multicast message to " + destination);
             }
+           
             try {
-                // FIXME: deserializing a DirectiveMessage whose target is multicast throws an exception
-                rawObject = ois.readObject();
-            } catch (ClassNotFoundException e) {
-                loggingService.warn("Processing Incoming message, unknown object type :"
-                        + e.getMessage());
-                continue;
-            } catch (IOException e) {
-                loggingService.warn("Processing Incoming message, deserializing error :"
-                        + e.getMessage());
-                continue;
-            }
-            if (rawObject instanceof AttributedMessage) {
-                AttributedMessage message = (AttributedMessage) rawObject;
-                if (loggingService.isInfoEnabled()) {
-                    loggingService.info("Delivering from " + message.getOriginator() + " to "
-                            + message.getTarget() + "\n" + message);
+                deliverer.deliverMessage(message, destination);
+                // no further use for the return value
+            } catch (MisdeliveredMessageException e) {
+                if (loggingService.isWarnEnabled()) {
+                    loggingService.warn("Misdelivered from " + message.getOriginator() + " to "
+                                        + message.getTarget() + ": " + e.getMessage()
+                                        + "\n" + message);
                 }
-                try {
-                    getDeliverer().deliverMessage(message, destination);
-                    // no further use for the return value
-                } catch (MisdeliveredMessageException e) {
-                    if (loggingService.isWarnEnabled()) {
-                        loggingService.warn("Misdelivered from " + message.getOriginator() + " to "
-                                + message.getTarget() + ": " + e.getMessage() + "\n" + message);
-                    }
-                }
-            } else {
-                loggingService.warn("Processing Incoming message is not MessageAttributes");
             }
         }
     }
@@ -407,7 +410,7 @@ public class UdpMulticastLinkProtocol
                 byte[] payload = incoming.getData();
                 if (loggingService.isInfoEnabled()) {
                     loggingService.info("Received datagram packet of size " + length + " from "
-                                        + socket.getInetAddress());
+                                        + address);
                 }
                 InputStream byteStream = new ByteArrayInputStream(payload, 0, length);
                 processingIncomingMessage(byteStream, address);
