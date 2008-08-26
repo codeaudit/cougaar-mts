@@ -40,7 +40,6 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.SimpleMessageAttributes;
-import org.cougaar.core.service.LoggingService;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.OutOfBandMessageService;
 import org.cougaar.mts.base.ReceiveLink;
@@ -55,20 +54,11 @@ import org.cougaar.mts.base.StandardAspect;
  */
 public class SequenceAspect
         extends StandardAspect {
-
     private static final String SEQ = "org.cougaar.message.transport.sequencenumber";
     private static final String SEQ_SEND_MAP_ATTR = "org.cougaar.message.transport.sequence.send";
     private static final String SEQ_RECV_MAP_ATTR = "org.cougaar.message.transport.sequence.recv";
 
-    private static final Integer ONE = new Integer(1);
-    private static final Integer TWO = new Integer(2);
-
-    private static Comparator<AttributedMessage> comparator = new MessageComparator();
-
     private OutOfBandMessageService oobs;
-    
-    public SequenceAspect() {
-    }
 
     public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
@@ -85,19 +75,20 @@ public class SequenceAspect
             return null;
         }
     }
-    
+
     public void start() {
         super.start();
         oobs = getServiceBroker().getService(this, OutOfBandMessageService.class, null);
     }
-    
-    private static int getSequenceNumber(AttributedMessage message) {
+
+    private int getSequenceNumber(AttributedMessage message) {
         return ((Integer) message.getAttribute(SEQ)).intValue();
     }
 
     private class SequencedSendLink
             extends SendLinkDelegateImplBase {
-        Map<MessageAddress,Integer> sequenceNumbers;
+        
+        private Map<MessageAddress, Integer> sequenceNumbers;
 
         private SequencedSendLink(SendLink link) {
             super(link);
@@ -114,137 +105,54 @@ public class SequenceAspect
 
             synchronized (myState) {
                 @SuppressWarnings("unchecked") // unavoidable
-                Map<MessageAddress,Integer> map = 
-                    (Map<MessageAddress,Integer>) myState.getAttribute(SEQ_SEND_MAP_ATTR);
+                Map<MessageAddress, Integer> map =
+                        (Map<MessageAddress, Integer>) myState.getAttribute(SEQ_SEND_MAP_ATTR);
                 if (map != null) {
                     sequenceNumbers = map;
                 } else {
-                    sequenceNumbers = new HashMap<MessageAddress,Integer>();
+                    sequenceNumbers = new HashMap<MessageAddress, Integer>();
                     myState.setAttribute(SEQ_SEND_MAP_ATTR, sequenceNumbers);
                 }
             }
         }
 
-        private Integer nextSeq(AttributedMessage msg) {
+        private int nextSeq(AttributedMessage msg) {
             // Verify that msg.getOriginator() == getAddress() ?
             MessageAddress dest = msg.getTarget();
-            Integer next = sequenceNumbers.get(dest.getPrimary());
-            if (next == null) {
-                sequenceNumbers.put(dest.getPrimary(), TWO);
-                return ONE;
-            } else {
-                int n = next.intValue();
-                sequenceNumbers.put(dest.getPrimary(), new Integer(1 + n));
-                return next;
-            }
+            MessageAddress primary = dest.getPrimary();
+            Integer nextInt = sequenceNumbers.get(primary);
+            int next = nextInt == null ? 1 : nextInt.intValue();
+            sequenceNumbers.put(primary, next + 1);
+            return next;
         }
 
         public void sendMessage(AttributedMessage message) {
-            Integer sequence_number = nextSeq(message);
-            message.setAttribute(SEQ, sequence_number);
+            int sequenceNumber = nextSeq(message);
+            message.setAttribute(SEQ, sequenceNumber);
             super.sendMessage(message);
-        }
-    }
-
-    private static class MessageComparator
-            implements Comparator<AttributedMessage>, Serializable {
-        public int compare(AttributedMessage msg1, AttributedMessage msg2) {
-            int seq1 = getSequenceNumber(msg1);
-            int seq2 = getSequenceNumber(msg2);
-            if (seq1 == seq2) {
-                return 0;
-            } else if (seq1 < seq2) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-
-        public boolean equals(Object obj) {
-            return obj == this;
-        }
-
-    }
-
-    private static class ConversationState
-            implements java.io.Serializable {
-        int nextSeqNum;
-        TreeSet<AttributedMessage> heldMessages;
-
-        public ConversationState() {
-            nextSeqNum = 1;
-            heldMessages = new TreeSet<AttributedMessage>(comparator);
-        }
-
-        private void stripAndDeliver(AttributedMessage message, SequencedReceiveLink link) {
-            // message.removeAttribute(SEQ);
-            link.superDeliverMessage(message);
-            nextSeqNum++;
-        }
-
-        private MessageAttributes handleNewMessage(AttributedMessage message,
-                                                   SequencedReceiveLink link,
-                                                   LoggingService loggingService) {
-            MessageAttributes meta = new SimpleMessageAttributes();
-            String delivery_status = null;
-            int msgSeqNum = getSequenceNumber(message);
-            if (nextSeqNum > msgSeqNum) {
-                Message contents = message.getRawMessage();
-                if (loggingService.isDebugEnabled()) {
-                    loggingService.debug("Dropping duplicate " + " <"
-                            + contents.getClass().getName() + " " + contents.hashCode() + " "
-                            + message.getOriginator() + "->" + message.getTarget() + " #"
-                            + msgSeqNum);
-                }
-                delivery_status = AttributeConstants.DELIVERY_STATUS_DROPPED_DUPLICATE;
-            } else if (nextSeqNum == msgSeqNum) {
-                stripAndDeliver(message, link);
-                Iterator<AttributedMessage> itr = heldMessages.iterator();
-                while (itr.hasNext()) {
-                    AttributedMessage next = itr.next();
-                    if (getSequenceNumber(next) == nextSeqNum) {
-                        if (loggingService.isDebugEnabled()) {
-                            loggingService.debug("delivered held message" + next);
-                        }
-                        stripAndDeliver(next, link);
-                        itr.remove();
-                    }
-                }// end while
-                delivery_status = AttributeConstants.DELIVERY_STATUS_DELIVERED;
-            } else {
-                if (loggingService.isDebugEnabled()) {
-                    loggingService.debug("holding out of sequence message" + message);
-                }
-                heldMessages.add(message);
-                delivery_status = AttributeConstants.DELIVERY_STATUS_HELD;
-            }
-
-            meta.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE, delivery_status);
-            return meta;
         }
     }
 
     private class SequencedReceiveLink
             extends ReceiveLinkDelegateImplBase {
-        Map<MessageAddress,ConversationState> conversationState;
+        
+        private final Map<MessageAddress, ConversationState> conversationState;
 
         private SequencedReceiveLink(ReceiveLink link) {
             super(link);
-
             MessageAddress myAddress = getClient().getMessageAddress();
             AgentState myState = getRegistry().getAgentState(myAddress);
             synchronized (myState) {
                 @SuppressWarnings("unchecked") // unavoidable
-                Map<MessageAddress,ConversationState> map = 
-                    (Map<MessageAddress,ConversationState>) myState.getAttribute(SEQ_RECV_MAP_ATTR);
+                Map<MessageAddress, ConversationState> map =
+                        (Map<MessageAddress, ConversationState>) myState.getAttribute(SEQ_RECV_MAP_ATTR);
                 if (map != null) {
                     conversationState = map;
                 } else {
-                    conversationState = new HashMap<MessageAddress,ConversationState>();
+                    conversationState = new HashMap<MessageAddress, ConversationState>();
                     myState.setAttribute(SEQ_RECV_MAP_ATTR, conversationState);
                 }
             }
-            // conversationState = new HashMap();
         }
 
         private void superDeliverMessage(AttributedMessage message) {
@@ -264,15 +172,93 @@ public class SequenceAspect
                     conversation = new ConversationState();
                     conversationState.put(src, conversation);
                 }
-
-                return conversation.handleNewMessage(message, this, loggingService);
+                return conversation.handleNewMessage(message, this);
             } else {
-                if (loggingService.isErrorEnabled()) {
-                    loggingService.error("No Sequence tag: " + message);
+                if (loggingService.isWarnEnabled()) {
+                    loggingService.warn("No Sequence tag: " + message);
                 }
                 return super.deliverMessage(message);
             }
 
+        }
+    }
+
+    private class MessageComparator
+            implements Comparator<AttributedMessage>, Serializable {
+        public int compare(AttributedMessage msg1, AttributedMessage msg2) {
+            int seq1 = getSequenceNumber(msg1);
+            int seq2 = getSequenceNumber(msg2);
+            return seq1-seq2;
+        }
+    }
+
+    private class ConversationState
+            implements Serializable {
+        
+        private int nextSeqNum;
+        private final TreeSet<AttributedMessage> heldMessages;
+        private final Comparator<AttributedMessage> comparator = new MessageComparator();
+        
+        public ConversationState() {
+            nextSeqNum = 1;
+            heldMessages = new TreeSet<AttributedMessage>(comparator);
+        }
+
+        private void stripAndDeliver(AttributedMessage message, SequencedReceiveLink link) {
+            // message.removeAttribute(SEQ);
+            link.superDeliverMessage(message);
+            nextSeqNum++;
+        }
+
+        private MessageAttributes handleNewMessage(AttributedMessage message,
+                                                   SequencedReceiveLink link) {
+            String destination = link.getClient().getMessageAddress().getAddress();
+            String source = message.getOriginator().getAddress();
+            MessageAttributes meta = new SimpleMessageAttributes();
+            String deliveryStatus = null;
+            int msgSeqNum = getSequenceNumber(message);
+            if (nextSeqNum > msgSeqNum) {
+                // We're already beyond this one -- drop it
+                Message contents = message.getRawMessage();
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Dropping duplicate " + " <"
+                            + contents.getClass().getName() + " " + contents.hashCode() + " "
+                            + message.getOriginator() + "->" + message.getTarget() + " #"
+                            + msgSeqNum);
+                }
+                deliveryStatus = AttributeConstants.DELIVERY_STATUS_DROPPED_DUPLICATE;
+            } else if (nextSeqNum == msgSeqNum) {
+                // In sync now -- deliver this message along with any held messages
+                // that follow immediately without gaps.
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Delivered message #" + nextSeqNum
+                                        + " from " +source+ " to " +destination);
+                }
+                stripAndDeliver(message, link);
+                Iterator<AttributedMessage> itr = heldMessages.iterator();
+                while (itr.hasNext()) {
+                    AttributedMessage next = itr.next();
+                    if (getSequenceNumber(next) == nextSeqNum) {
+                        if (loggingService.isInfoEnabled()) {
+                            loggingService.info("Delivered held message #" + nextSeqNum
+                                                + " from " +source+ " to " +destination);
+                        }
+                        stripAndDeliver(next, link);
+                        itr.remove();
+                    }
+                }
+                deliveryStatus = AttributeConstants.DELIVERY_STATUS_DELIVERED;
+            } else {
+                if (loggingService.isInfoEnabled()) {
+                    loggingService.info("Holding out of sequence message #" + msgSeqNum
+                                        + " from " +source+ " to " +destination);
+                }
+                heldMessages.add(message);
+                deliveryStatus = AttributeConstants.DELIVERY_STATUS_HELD;
+            }
+
+            meta.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE, deliveryStatus);
+            return meta;
         }
     }
 
