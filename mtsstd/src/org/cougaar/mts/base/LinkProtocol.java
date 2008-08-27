@@ -131,12 +131,15 @@ abstract public class LinkProtocol
     }
     
     /**
-     * By default, no support for true multicast addresses
-     * @param destination
-     * @return
+     * By default, a protocol can handle everything <em>except</em> true
+     * multicast addresses.
+     * <p>
+     * TODO: If we decide to convert the old-style MulticastAddress to extend
+     * GroupMessageAddress, we'll need to pass those here, since in that case the
+     * protocol doesn't matter.
      */
     public boolean supportsAddressType(MessageAddress address) {
-        return !GroupMessageAddress.class.isAssignableFrom(address.getClass());
+        return !address.isGroupAddress();
     }
     
     
