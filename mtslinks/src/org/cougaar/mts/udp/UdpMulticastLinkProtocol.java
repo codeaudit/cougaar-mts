@@ -26,7 +26,8 @@ import java.util.TimerTask;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AttributeConstants;
-import org.cougaar.core.mts.InetMessageAddress;
+import org.cougaar.core.mts.GroupMessageAddress;
+import org.cougaar.core.mts.InetMulticastMessageAddress;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.node.NodeIdentificationService;
@@ -44,10 +45,10 @@ import org.cougaar.mts.base.UnregisteredNameException;
 /**
  * Multicast via UDP.
  * <p>
- * This protocol only knows how to send to an {@link InetMessageAddress}, which
+ * This protocol only knows how to send to an {@link InetMulticastMessageAddress}, which
  * is assumed to be contain a multicast address.
  * <p>
- * For reading, it will poll every {@link InetMessageAddress} to which it's
+ * For reading, it will poll every {@link InetMulticastMessageAddress} to which it's
  * currently joined.
  */
 public class UdpMulticastLinkProtocol
@@ -58,31 +59,33 @@ public class UdpMulticastLinkProtocol
 
     private URI servantUri;
     private final Timer timer = new Timer("Multicast Data Poller");
-    private final Map<InetSocketAddress,MulticastSocket> multicastAddresses = 
-        new HashMap<InetSocketAddress,MulticastSocket>();
-    private final Map<InetSocketAddress,TimerTask> tasks =
-        new HashMap<InetSocketAddress,TimerTask>();
+    private final Map<InetMulticastMessageAddress,MulticastSocket> multicastAddresses = 
+        new HashMap<InetMulticastMessageAddress,MulticastSocket>();
+    private final Map<InetMulticastMessageAddress,TimerTask> tasks =
+        new HashMap<InetMulticastMessageAddress,TimerTask>();
 
     /**
      * Support only true multicast addresses
      */
-    public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
-        return InetMessageAddress.class.isAssignableFrom(addressType);
+    public boolean supportsAddressType(MessageAddress address) {
+        return address instanceof InetMulticastMessageAddress;
     }
     
     /**
      * Join the given multicast group. Plugins only have access to this method
      * indirectly, via {@link org.cougaar.core.agent.service.MessageSwitchService#joinGroup}
      */
-    public void join(InetSocketAddress multicastAddress) throws IOException {
+    public void join(GroupMessageAddress addr) throws IOException {
+        InetMulticastMessageAddress multicastAddress = (InetMulticastMessageAddress) addr;
+        InetSocketAddress socketAddr = multicastAddress.getReference();
         synchronized (multicastAddresses) {
             TimerTask task = tasks.get(multicastAddress);
             if (task == null) {
-                MulticastSocket skt = new MulticastSocket(multicastAddress.getPort());
+                MulticastSocket skt = new MulticastSocket(socketAddr.getPort());
                 skt.setSoTimeout(SOCKET_TIMEOUT_SECONDS*1000);  // notional timeout
-                skt.joinGroup(multicastAddress.getAddress());
+                skt.joinGroup(socketAddr.getAddress());
                 multicastAddresses.put(multicastAddress, skt);
-                task = new InputSocketPoller(skt, multicastAddress);
+                task = new InputSocketPoller(skt, socketAddr);
                 tasks.put(multicastAddress, task);
                 timer.schedule(task, 0);
             }
@@ -93,7 +96,9 @@ public class UdpMulticastLinkProtocol
      * Leave the given multicast group. Plugins only have access to this method
      * indirectly, via {@link org.cougaar.core.agent.service.MessageSwitchService#leaveGroup}
      */
-    public void leave(InetSocketAddress multicastAddress) throws IOException {
+    public void leave(GroupMessageAddress addr) throws IOException {
+        InetMulticastMessageAddress multicastAddress = (InetMulticastMessageAddress) addr;
+        InetSocketAddress socketAddr = multicastAddress.getReference();
         MulticastSocket socket;
         synchronized (multicastAddresses) {
             socket = multicastAddresses.get(multicastAddress);
@@ -105,7 +110,7 @@ public class UdpMulticastLinkProtocol
             }
         }
         if (socket != null) {
-            socket.leaveGroup(multicastAddress.getAddress());
+            socket.leaveGroup(socketAddr.getAddress());
         }
     }
 
@@ -114,10 +119,10 @@ public class UdpMulticastLinkProtocol
     }
 
     protected DestinationLink createDestinationLink(MessageAddress address) {
-        if (!(address instanceof InetMessageAddress)) {
+        if (!(address instanceof InetMulticastMessageAddress)) {
             throw new RuntimeException(address + " is not a SocketMessageAddress");
         }
-        return new MulticastLink((InetMessageAddress) address);
+        return new MulticastLink((InetMulticastMessageAddress) address);
     }
 
     protected void ensureNodeServant() {
@@ -140,9 +145,12 @@ public class UdpMulticastLinkProtocol
     protected void releaseNodeServant() {
         timer.cancel();
         synchronized (multicastAddresses) {
-            for (Map.Entry<InetSocketAddress,MulticastSocket> entry : multicastAddresses.entrySet()) {
+            for (Map.Entry<InetMulticastMessageAddress,MulticastSocket> entry : multicastAddresses.entrySet()) {
+                MulticastSocket socket = entry.getValue();
+                InetMulticastMessageAddress key = entry.getKey();
+                InetSocketAddress socketAddr = key.getReference();
                 try {
-                    entry.getValue().leaveGroup(entry.getKey().getAddress());
+                    socket.leaveGroup(socketAddr.getAddress());
                 } catch (IOException e) {
                     loggingService.error("Error closing multicast socket", e);
                 }
@@ -320,9 +328,9 @@ public class UdpMulticastLinkProtocol
         private MulticastSocket outputConnection;
         private final InetSocketAddress address;
         
-        private MulticastLink(InetMessageAddress destination) {
+        private MulticastLink(InetMulticastMessageAddress destination) {
             super(destination);
-            address = destination.getSocketAddress();
+            address = destination.getReference();
             try {
                 outputConnection = new MulticastSocket(address.getPort());
                 outputConnection.joinGroup(address.getAddress());

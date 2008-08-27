@@ -27,7 +27,6 @@
 package org.cougaar.mts.base;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,11 +38,11 @@ import java.util.Map;
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
 import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.GroupMessageAddress;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.MulticastMessageAddress;
 import org.cougaar.core.mts.SimpleMessageAttributes;
-import org.cougaar.core.mts.InetMessageAddress;
 import org.cougaar.core.service.IncarnationService;
 import org.cougaar.core.service.LoggingService;
 
@@ -92,8 +91,10 @@ public final class MessageTransportRegistry
         private final ServiceBroker sb;
         private final LoggingService loggingService;
         private final IncarnationService incarnationService;
-        private final Map<InetSocketAddress,Collection<MessageAddress>> mcast =
-            new HashMap<InetSocketAddress,Collection<MessageAddress>>();
+        private final Map<GroupMessageAddress,Collection<MessageAddress>> mcast =
+            new HashMap<GroupMessageAddress,Collection<MessageAddress>>();
+        private final Map<Object, GroupMessageAddress> mcastRefs =
+            new HashMap<Object,GroupMessageAddress>();
 
         private ServiceImpl(String name, ServiceBroker sb) {
             this.name = name;
@@ -137,11 +138,11 @@ public final class MessageTransportRegistry
                 for (LinkProtocol protocol : linkProtocols) {
                     protocol.unregisterClient(client);
                 }
-                for (Map.Entry<InetSocketAddress,Collection<MessageAddress>> entry : mcast.entrySet()) {
+                for (Map.Entry<GroupMessageAddress,Collection<MessageAddress>> entry : mcast.entrySet()) {
                     Collection<MessageAddress> clients = entry.getValue();
                     clients.remove(client.getMessageAddress());
                     if (clients.isEmpty()) {
-                        InetSocketAddress multicastAddress = entry.getKey();
+                        GroupMessageAddress multicastAddress = entry.getKey();
                         removeMulticastListener(multicastAddress);
                     }
                 }
@@ -306,7 +307,7 @@ public final class MessageTransportRegistry
             List<DestinationLink> destinationLinks = new ArrayList<DestinationLink>();
             synchronized (linkProtocols) {
                 for (LinkProtocol lp : linkProtocols) {
-                    if (lp.supportsAddressType(destination.getClass())) {
+                    if (lp.supportsAddressType(destination)) {
                         DestinationLink link = lp.getDestinationLink(destination);
                         destinationLinks.add(link);
                     }
@@ -316,7 +317,8 @@ public final class MessageTransportRegistry
         }
         
         // Multicast
-        public Iterable<MessageAddress> getGroupListeners(InetSocketAddress multicastAddress) {
+        public Iterable<MessageAddress> getGroupListeners(Object groupReference) {
+            GroupMessageAddress multicastAddress = mcastRefs.get(groupReference);
             synchronized (linkProtocols) {
                 Collection<MessageAddress> addresses = mcast.get(multicastAddress);
                 if (addresses == null) {
@@ -327,12 +329,13 @@ public final class MessageTransportRegistry
             }
         }
         
-        public void joinGroup(MessageTransportClient client, InetSocketAddress multicastAddress) {
+        public void joinGroup(MessageTransportClient client, GroupMessageAddress multicastAddress) {
             synchronized (linkProtocols) {
                 Collection<MessageAddress> clients = mcast.get(multicastAddress);
                 if (clients == null) {
                     clients = new HashSet<MessageAddress>();
                     mcast.put(multicastAddress, clients);
+                    mcastRefs.put(multicastAddress.getReference(), multicastAddress);
                 }
                 boolean newAddress = clients.isEmpty();
                 clients.add(client.getMessageAddress());
@@ -342,7 +345,7 @@ public final class MessageTransportRegistry
             }
         }
 
-        public void leaveGroup(MessageTransportClient client, InetSocketAddress multicastAddress) {
+        public void leaveGroup(MessageTransportClient client, GroupMessageAddress multicastAddress) {
             synchronized (linkProtocols) {
                 Collection<MessageAddress> clients = mcast.get(multicastAddress);
                 if (clients != null) {
@@ -354,9 +357,9 @@ public final class MessageTransportRegistry
             }
         }
 
-        private void addMulticastListener(InetSocketAddress multicastAddress) {
+        private void addMulticastListener(GroupMessageAddress multicastAddress) {
             for (LinkProtocol lp : linkProtocols) {
-                if (lp.supportsAddressType(InetMessageAddress.class)) {
+                if (lp.supportsAddressType(multicastAddress)) {
                     try {
                         lp.join(multicastAddress);
                     } catch (IOException e) {
@@ -367,9 +370,9 @@ public final class MessageTransportRegistry
             }
         }
 
-        private void removeMulticastListener(InetSocketAddress multicastAddress) {
+        private void removeMulticastListener(GroupMessageAddress multicastAddress) {
             for (LinkProtocol lp : linkProtocols) {
-                if (lp.supportsAddressType(InetMessageAddress.class)) {
+                if (lp.supportsAddressType(multicastAddress)) {
                     try {
                         lp.leave(multicastAddress);
                     } catch (IOException e) {

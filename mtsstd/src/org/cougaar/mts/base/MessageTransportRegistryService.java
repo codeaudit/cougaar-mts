@@ -26,12 +26,12 @@
 
 package org.cougaar.mts.base;
 
-import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.List;
 
 import org.cougaar.core.component.Service;
 import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.GroupMessageAddress;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
 import org.cougaar.core.mts.MulticastMessageAddress;
@@ -75,7 +75,7 @@ public interface MessageTransportRegistryService
     void ipAddressChanged();
     
     // Multicast
-    void joinGroup(MessageTransportClient client, InetSocketAddress multicastAddress);
-    void leaveGroup(MessageTransportClient client, InetSocketAddress multicastAddress);
-    Iterable<MessageAddress> getGroupListeners(InetSocketAddress multicastAddress);
+    void joinGroup(MessageTransportClient client, GroupMessageAddress multicastAddress);
+    void leaveGroup(MessageTransportClient client, GroupMessageAddress multicastAddress);
+    Iterable<MessageAddress> getGroupListeners(Object groupReference);
 }

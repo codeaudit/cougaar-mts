@@ -31,11 +31,11 @@ import java.util.List;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.AgentState;
+import org.cougaar.core.mts.GroupMessageAddress;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.core.mts.InetMessageAddress;
 import org.cougaar.core.service.MessageTransportService;
 
 /**
@@ -158,16 +158,16 @@ public class MessageTransportServiceProxy
     }
 
     // Multicast
-    public void joinGroup(MessageTransportClient client, InetMessageAddress multicastAddress) {
+    public void joinGroup(MessageTransportClient client, GroupMessageAddress multicastAddress) {
         MessageTransportRegistryService mtrs = 
             sb.getService(this, MessageTransportRegistryService.class, null);
-        mtrs.joinGroup(client, multicastAddress.getSocketAddress());
+        mtrs.joinGroup(client, multicastAddress);
     }
 
-    public void leaveGroup(MessageTransportClient client, InetMessageAddress multicastAddress) {
+    public void leaveGroup(MessageTransportClient client, GroupMessageAddress multicastAddress) {
         MessageTransportRegistryService mtrs = 
             sb.getService(this, MessageTransportRegistryService.class, null);
-        mtrs.leaveGroup(client, multicastAddress.getSocketAddress());
+        mtrs.leaveGroup(client, multicastAddress);
     }
 
 }

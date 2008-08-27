@@ -27,13 +27,12 @@
 package org.cougaar.mts.base;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.component.ServiceProvider;
+import org.cougaar.core.mts.GroupMessageAddress;
 import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageTransportClient;
-import org.cougaar.core.mts.InetMessageAddress;
 
 /**
  * The parent class of all Link Protocols. Instantiable subclasses are required
@@ -136,17 +135,17 @@ abstract public class LinkProtocol
      * @param destination
      * @return
      */
-    public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
-        return !InetMessageAddress.class.isAssignableFrom(addressType);
+    public boolean supportsAddressType(MessageAddress address) {
+        return !GroupMessageAddress.class.isAssignableFrom(address.getClass());
     }
     
     
     // Multicast
-    public void join(InetSocketAddress multicastAddress) throws IOException {
+    public void join(GroupMessageAddress multicastAddress) throws IOException {
         throw new IOException(this + " cannot join multicast groups");
     }
 
-    public void leave(InetSocketAddress multicastAddress) throws IOException {
+    public void leave(GroupMessageAddress multicastAddress) throws IOException {
         throw new IOException(this + " cannot leave multicast groups");
     }
 }
