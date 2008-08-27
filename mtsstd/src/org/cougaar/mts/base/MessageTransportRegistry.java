@@ -305,9 +305,10 @@ public final class MessageTransportRegistry
 
         public List<DestinationLink> getDestinationLinks(MessageAddress destination) {
             List<DestinationLink> destinationLinks = new ArrayList<DestinationLink>();
+            Class<? extends MessageAddress> addressType = destination.getClass();
             synchronized (linkProtocols) {
                 for (LinkProtocol lp : linkProtocols) {
-                    if (lp.supportsAddressType(destination)) {
+                    if (lp.supportsAddressType(addressType)) {
                         DestinationLink link = lp.getDestinationLink(destination);
                         destinationLinks.add(link);
                     }
@@ -358,8 +359,9 @@ public final class MessageTransportRegistry
         }
 
         private void addMulticastListener(GroupMessageAddress multicastAddress) {
+            Class<? extends MessageAddress> addressType = multicastAddress.getClass();
             for (LinkProtocol lp : linkProtocols) {
-                if (lp.supportsAddressType(multicastAddress)) {
+                if (lp.supportsAddressType(addressType)) {
                     try {
                         lp.join(multicastAddress);
                     } catch (IOException e) {
@@ -371,8 +373,9 @@ public final class MessageTransportRegistry
         }
 
         private void removeMulticastListener(GroupMessageAddress multicastAddress) {
+            Class<? extends MessageAddress> addressType = multicastAddress.getClass();
             for (LinkProtocol lp : linkProtocols) {
-                if (lp.supportsAddressType(multicastAddress)) {
+                if (lp.supportsAddressType(addressType)) {
                     try {
                         lp.leave(multicastAddress);
                     } catch (IOException e) {

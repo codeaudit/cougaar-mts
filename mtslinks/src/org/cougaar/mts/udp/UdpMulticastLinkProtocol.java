@@ -65,10 +65,10 @@ public class UdpMulticastLinkProtocol
         new HashMap<InetMulticastMessageAddress,TimerTask>();
 
     /**
-     * Support only true multicast addresses
+     * Support only internet multicast addresses
      */
-    public boolean supportsAddressType(MessageAddress address) {
-        return address instanceof InetMulticastMessageAddress;
+    public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
+        return addressType == InetMulticastMessageAddress.class;
     }
     
     /**

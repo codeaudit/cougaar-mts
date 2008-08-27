@@ -138,12 +138,12 @@ abstract public class LinkProtocol
      * GroupMessageAddress, we'll need to pass those here, since in that case the
      * protocol doesn't matter.
      */
-    public boolean supportsAddressType(MessageAddress address) {
-        return !address.isGroupAddress();
+    public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
+        return !GroupMessageAddress.class.isAssignableFrom(addressType);
     }
     
     
-    // Multicast
+    // Multicast, not supported by default.
     public void join(GroupMessageAddress multicastAddress) throws IOException {
         throw new IOException(this + " cannot join multicast groups");
     }
