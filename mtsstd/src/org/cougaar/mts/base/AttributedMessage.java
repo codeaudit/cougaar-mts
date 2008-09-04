@@ -61,9 +61,8 @@ public class AttributedMessage
         extends Message
         implements Externalizable, MessageAttributes, AttributeConstants {
 
-    private transient final Logger logger = Logging.getLogger(getClass().getName());
-
-    private final String FILTERS_ATTRIBUTE = "Filters";
+    private static final String FILTERS_ATTRIBUTE = "Filters";
+    private static final Logger logger = Logging.getLogger(AttributedMessage.class.getName());
 
     private Message contents;
     private MessageAttributes attributes;
