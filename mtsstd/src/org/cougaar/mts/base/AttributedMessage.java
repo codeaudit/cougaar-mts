@@ -29,6 +29,7 @@ package org.cougaar.mts.base;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -256,17 +257,20 @@ public class AttributedMessage
         return bos.toByteArray();
     }
 
-    private Object deserializeObject(byte[] bytes) {
+    private Object deserializeObject(byte[] bytes) throws IOException, ClassNotFoundException {
         Object result = null;
         try {
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             ObjectInputStream ois = new ObjectInputStream(bis);
             result = ois.readObject();
             ois.close();
-        } catch (Exception ex) {
-            logger.error(null, ex);
+        } catch (IOException ex) {
+            logger.warn("Error while deserializing attributes", ex);
+            throw ex;
+        } catch (ClassNotFoundException ex) {
+            logger.warn("Error while deserializing attributes", ex);
+            throw ex;
         }
-
         return result;
     }
 
@@ -285,7 +289,7 @@ public class AttributedMessage
     }
 
     private void readAttributes(ObjectInput in)
-            throws java.io.IOException, GeneralSecurityException, ClassNotFoundException {
+            throws IOException, GeneralSecurityException, ClassNotFoundException {
         MessageProtectionService svc = MessageProtectionAspect.getMessageProtectionService();
         byte[] rawData = (byte[]) in.readObject();
         if (svc != null) {
@@ -293,7 +297,7 @@ public class AttributedMessage
         } else {
             attributes = (SimpleMessageAttributes) deserializeObject(rawData);
         }
-        attributes.setLocalAttribute(HEADER_BYTES_ATTRIBUTE, new Integer(rawData.length));
+            attributes.setLocalAttribute(HEADER_BYTES_ATTRIBUTE, new Integer(rawData.length));
     }
 
     // Externalizable interface
