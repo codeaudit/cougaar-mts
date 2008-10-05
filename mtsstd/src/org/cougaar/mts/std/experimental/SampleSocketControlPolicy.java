@@ -24,39 +24,26 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.experimental;
 
-import org.cougaar.core.service.LoggingService;
-import org.cougaar.mts.base.AttributedMessage;
-import org.cougaar.mts.base.SendLink;
-import org.cougaar.mts.base.SendLinkDelegateImplBase;
-import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.base.AbstractSocketControlPolicy;
+import org.cougaar.mts.base.SocketControlPolicy;
+import org.cougaar.mts.base.SocketFactory;
 
-public class ZinkyMessageTraceAspect
-        extends StandardAspect {
-    public Object getDelegate(Object delegate, Class<?> type) {
-        if (type == SendLink.class) {
-            return new SendLinkDelegate((SendLink) delegate);
-        } else {
-            return null;
-        }
-    }
+/**
+ * This Component is an example of {@link SocketControlPolicy}. It does nothing
+ * other than log requests.
+ */
+public class SampleSocketControlPolicy
+        extends AbstractSocketControlPolicy {
 
-    public class SendLinkDelegate
-            extends SendLinkDelegateImplBase {
-
-        public SendLinkDelegate(SendLink link) {
-            super(link);
+    public int getConnectTimeout(SocketFactory factory, String host, int port) {
+        if (loggingService.isDebugEnabled()) {
+            loggingService.debug("getConnectTimeout for " + host + ':' + port + " mts="
+                    + factory.isMTS() + " ssl=" + factory.usesSSL());
         }
 
-        public void sendMessage(AttributedMessage msg) {
-            LoggingService log = getLoggingService();
-            if (log.isWarnEnabled()) {
-                log.warn("Sending " + msg);
-            }
-            super.sendMessage(msg);
-        }
-
+        return 0;
     }
 
 }

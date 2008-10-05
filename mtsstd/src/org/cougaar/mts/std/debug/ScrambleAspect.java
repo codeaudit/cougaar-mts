@@ -24,13 +24,14 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.debug;
 
 import org.cougaar.core.thread.Schedulable;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
+import org.cougaar.mts.std.SequenceAspect;
 
 /**
  * This test Aspect scrambles the order of messages. Its main purpose is to test

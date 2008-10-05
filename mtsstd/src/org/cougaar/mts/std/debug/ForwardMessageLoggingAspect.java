@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.debug;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;

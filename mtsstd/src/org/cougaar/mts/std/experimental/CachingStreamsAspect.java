@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.experimental;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;

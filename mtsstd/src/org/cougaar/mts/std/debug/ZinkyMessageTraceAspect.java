@@ -24,52 +24,37 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.debug;
 
-import java.net.URI;
-
-import org.cougaar.core.mts.MessageAddress;
-import org.cougaar.mts.base.NameSupport;
-import org.cougaar.mts.base.NameSupportDelegateImplBase;
+import org.cougaar.core.service.LoggingService;
+import org.cougaar.mts.base.AttributedMessage;
+import org.cougaar.mts.base.SendLink;
+import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
 
-/**
- * This debugging Aspect logs URIs and stubs of local and remote references,
- * respectively.
- */
-public class StubDumperAspect
+public class ZinkyMessageTraceAspect
         extends StandardAspect {
-
-    public StubDumperAspect() {
-        super();
-    }
-
     public Object getDelegate(Object delegate, Class<?> type) {
-        if (type == NameSupport.class) {
-            return new NameSupportDelegate((NameSupport) delegate);
+        if (type == SendLink.class) {
+            return new SendLinkDelegate((SendLink) delegate);
         } else {
             return null;
         }
     }
 
-    public class NameSupportDelegate
-            extends NameSupportDelegateImplBase {
+    public class SendLinkDelegate
+            extends SendLinkDelegateImplBase {
 
-        public NameSupportDelegate(NameSupport nameSupport) {
-            super(nameSupport);
+        public SendLinkDelegate(SendLink link) {
+            super(link);
         }
 
-        public void registerAgentInNameServer(URI reference, MessageAddress address, String protocol) {
-            super.registerAgentInNameServer(reference, address, protocol);
-
-            loggingService.info("\nRegistering " + address + " for " + protocol + " = ["
-                    + reference + "]");
-        }
-
-        public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
-            URI result = super.lookupAddressInNameServer(address, protocol);
-            loggingService.info("\nLookup " + address + " for " + protocol + " = [" + result + "]");
-            return result;
+        public void sendMessage(AttributedMessage msg) {
+            LoggingService log = getLoggingService();
+            if (log.isWarnEnabled()) {
+                log.warn("Sending " + msg);
+            }
+            super.sendMessage(msg);
         }
 
     }

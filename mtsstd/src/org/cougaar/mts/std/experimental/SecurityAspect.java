@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.experimental;
 
 import org.cougaar.bootstrap.SystemProperties;
 import org.cougaar.core.mts.Message;

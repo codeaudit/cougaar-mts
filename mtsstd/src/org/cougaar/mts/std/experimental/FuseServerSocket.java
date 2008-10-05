@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.experimental;
 
 import java.net.InetAddress;
 import java.net.Socket;

@@ -24,7 +24,7 @@
  * </copyright>
  */
 
-package org.cougaar.mts.std;
+package org.cougaar.mts.std.debug;
 
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.mts.base.AttributedMessage;
