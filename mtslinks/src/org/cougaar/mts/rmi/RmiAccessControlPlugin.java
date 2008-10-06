@@ -18,7 +18,7 @@ import org.cougaar.core.plugin.ComponentPlugin;
 import org.cougaar.core.service.ServletService;
 
 /**
- *
+ * Servlet that blocks RMI sockets from being created to Blacklist Hosts
  */
 public class RmiAccessControlPlugin
         extends ComponentPlugin {

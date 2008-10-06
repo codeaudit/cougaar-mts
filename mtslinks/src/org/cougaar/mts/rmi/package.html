@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> 
+<body>
+
+<p>This package contains the RMI and RMI-SSL link protocols. The RMI link protocol is used by default
+for inter-node communication and are mature and highly tested.
+
+<b>This page is under construction.</b> We hope to simplify the configuration of RMI advanced features 
+
+<h2>Configuration</h2>
+To add features beyond the basic LAN and WAN templates, MTS Aspects must be added to the configuration 
+file for each node.
+
+<h3>Configuring SSL</h3>
+SSL can be used to encrypt the RMI connections.
+<p>
+Enable SSL socket factory
+ <pre>
+ -Dorg.cougaar.message.transport.server_socket_class=org.cougaar.mts.rmi.ManagedServerSocket
+ </pre>
+<p>
+Add SSL link protocol
+<pre>
+ &lt;component class="org.cougaar.mts.rmi.SSLRMILinkProtocol"
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+    
+ &lt;component class="org.cougaar.mts.base.LoopbackLinkProtocol"
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+
+</pre>
+
+<h3>Configuring Fail-over</h3> 
+RMI is not appropriate for some WAN and Firewalled environments. In these environments, you may want 
+use RMI for inter-node communications among Nodes on the same LAN, but a different link protocol 
+to access remote Nodes. 
+<p>
+To enable the RMI link protocol all the following XML to all Nodes in a Runtime Configuration 
+<p?
+<pre>
+&lt;component class='org.cougaar.mts.rmi.EnableRmiSenderSideAspect'
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+            
+ &lt;component class='org.cougaar.mts.rmi.RMISocketControlAspect'
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+ 
+ &lt;component class='org.cougaar.mts.rmi.RMITestAspect'
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+               
+ &lt;component class="org.cougaar.mts.rmi.RMILinkProtocol"
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+    
+ &lt;component class="org.cougaar.mts.base.LoopbackLinkProtocol"
+    insertionpoint="Node.AgentManager.Agent.MessageTransport.Component"&gt;
+        
+ &lt;component class="org.cougaar.mts.rmi.RmiAccessControlPlugin"&gt;
+ </pre>
+
+
+<h3>Configuring Network Address Translation (NAT)</h3> 
+
+<b> TBD </b>
+
+<p>For a more complete description of the MTS, see
+<a href="../../../../../OnlineManual/MessageTransport/index.html">
+Message Transport Service online manual
+</a>.
+
+</body>
+</html>

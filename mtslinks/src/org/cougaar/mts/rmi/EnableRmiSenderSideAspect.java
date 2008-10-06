@@ -36,9 +36,11 @@ import org.cougaar.mts.base.StandardAspect;
 import org.cougaar.mts.base.UnregisteredNameException;
 
 /**
- * Sample Aspect that will disable RMI for 30 seconds (by default) after a
+ * Sample Aspect that will disable all of RMI for 30 seconds (by default) after a
  * failure.
  * 
+ * TODO Only disable RMI to failed destinations. 
+ * So that RMI can be used for LAN and other LinkProtocol for WAN
  */
 public class EnableRmiSenderSideAspect
         extends StandardAspect {
