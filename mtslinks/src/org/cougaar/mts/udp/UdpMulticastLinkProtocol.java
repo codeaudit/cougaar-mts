@@ -54,6 +54,8 @@ import org.cougaar.mts.base.UnregisteredNameException;
 public class UdpMulticastLinkProtocol
         extends RPCLinkProtocol {
     private static final int SOCKET_TIMEOUT_SECONDS = 5;
+    private static final int TIME_TO_LIVE=1;
+    private static final int TRAFFIC_CLASS=0;
     
     private static final int MAX_PAYLOAD_SIZE = 64 * 1024; // notional, 64K
 
@@ -63,7 +65,23 @@ public class UdpMulticastLinkProtocol
         new HashMap<InetMulticastMessageAddress,MulticastSocket>();
     private final Map<InetMulticastMessageAddress,TimerTask> tasks =
         new HashMap<InetMulticastMessageAddress,TimerTask>();
-
+    
+    private int timeToLive = TIME_TO_LIVE;
+    private int trafficClass = TRAFFIC_CLASS;
+    private int socketTimeout = SOCKET_TIMEOUT_SECONDS;
+    
+    
+    public void load() {
+        super.load();
+        timeToLive = (int) getParameter("timeToLive", TIME_TO_LIVE);
+        trafficClass = (int) getParameter("timeToLive", TRAFFIC_CLASS);
+        socketTimeout= (int) getParameter("socketTimeout", SOCKET_TIMEOUT_SECONDS);
+        loggingService.info("Multicast Parameters"
+                            + " TTL=" + timeToLive
+                            + " TOS=" + trafficClass
+                            + " SocketTimeOut=" + socketTimeout);
+    }
+    
     /**
      * Support only internet multicast addresses
      */
@@ -82,7 +100,9 @@ public class UdpMulticastLinkProtocol
             TimerTask task = tasks.get(multicastAddress);
             if (task == null) {
                 MulticastSocket skt = new MulticastSocket(socketAddr.getPort());
-                skt.setSoTimeout(SOCKET_TIMEOUT_SECONDS*1000);  // notional timeout
+                skt.setSoTimeout(socketTimeout*1000);  // notional timeout
+                skt.setTimeToLive(timeToLive);
+                skt.setTrafficClass(trafficClass);
                 skt.joinGroup(socketAddr.getAddress());
                 multicastAddresses.put(multicastAddress, skt);
                 task = new InputSocketPoller(skt, socketAddr);
@@ -333,6 +353,8 @@ public class UdpMulticastLinkProtocol
             address = destination.getReference();
             try {
                 outputConnection = new MulticastSocket(address.getPort());
+                outputConnection.setTrafficClass(trafficClass);
+                outputConnection.setTimeToLive(timeToLive);
                 outputConnection.joinGroup(address.getAddress());
             } catch (IOException e) {
                 loggingService.warn("Unable to join multicast group " + address
@@ -434,7 +456,7 @@ public class UdpMulticastLinkProtocol
                         // waited too long
                         if (loggingService.isInfoEnabled()) {
                             loggingService.info("No data from " +address
-                                                + " for " +SOCKET_TIMEOUT_SECONDS+ " seconds");
+                                                + " for " +socketTimeout+ " seconds");
                         }
                     } catch (IOException e) {
                         // XXX: Should we just quit at this point?

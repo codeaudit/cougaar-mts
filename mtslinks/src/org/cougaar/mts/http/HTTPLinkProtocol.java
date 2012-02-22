@@ -169,12 +169,57 @@ public class HTTPLinkProtocol
      */
     @SuppressWarnings("unchecked")
     protected void ensureNodeServant() {
-        if (servant_made) {
+        if (logger.isDebugEnabled()) {
+            logger.warn("Ensuring Servlet " + servant_made);
+        }
+            if (servant_made) {
             return;
         }
-
         ServiceBroker sb = getServiceBroker();
 
+        // Call registerServlet only if/when BlackboardService is
+        // available. The BlackboardService is required because we
+        // want to register our servlet with that ServiceBroker.
+        if (sb.hasService(BlackboardService.class)) {
+            registerServlet(sb);
+            int port = findServletPort();
+            registerNodeURI(sb, port);
+ 
+        } else {
+            sb.addServiceListener(new ServiceAvailableListener() {
+                public void serviceAvailable(ServiceAvailableEvent ae) {
+                    Class svc_class = ae.getService();
+                    if (BlackboardService.class.isAssignableFrom(svc_class)) {
+                        ServiceBroker svc_sb = ae.getServiceBroker();
+                         registerServlet(svc_sb);
+                         int port = findServletPort();
+                         registerNodeURI(svc_sb, port);
+                        svc_sb.removeServiceListener(this);
+                    }
+                }
+            });
+        }
+
+        servant_made = true;
+
+    }
+    
+    private int findServletPort() {
+        int port = -1;
+        try {
+            if ("http".equals(getProtocol())){
+                port = _servletService.getHttpPort();
+            } else  {
+                port = _servletService.getHttpsPort();
+              }
+        } catch (Exception e) {
+          // do nothing
+        }
+        return port;        
+    }
+
+    @SuppressWarnings("unchecked")
+    private int findRootServletPort(ServiceBroker sb) {
         // use the servlet service to get our local servlet port
         int port = -1;
         Class ssClass;
@@ -202,10 +247,13 @@ public class HTTPLinkProtocol
         }
         if (port < 0) {
             if (logger.isWarnEnabled()) {
-                logger.warn(getProtocol() + " port is disabled");
+                logger.warn(getProtocol() + " server disabled");
             }
         }
+        return port;
+    }
 
+    private void registerNodeURI(ServiceBroker sb, int port) {
         MessageAddress node_addr = getNameSupport().getNodeMessageAddress();
         String node_name = node_addr.toAddress();
         NodeIdentificationService nis = sb.getService(this, NodeIdentificationService.class, null);
@@ -222,33 +270,13 @@ public class HTTPLinkProtocol
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // Call registerServlet only if/when BlackboardService is
-        // available. The BlackboardService is required because we
-        // want to register our servlet with that ServiceBroker.
-        if (sb.hasService(BlackboardService.class)) {
-            registerServlet(sb);
-        } else {
-            sb.addServiceListener(new ServiceAvailableListener() {
-                public void serviceAvailable(ServiceAvailableEvent ae) {
-                    Class svc_class = ae.getService();
-                    if (BlackboardService.class.isAssignableFrom(svc_class)) {
-                        ServiceBroker svc_sb = ae.getServiceBroker();
-                        registerServlet(svc_sb);
-                        svc_sb.removeServiceListener(this);
-                    }
-                }
-            });
-        }
-
-        servant_made = true;
-
     }
 
     /**
      * Servlets handle the new-address case automatically, so this is a no-op.
      */
     protected void remakeNodeServant() {
+        ensureNodeServant();
     }
 
     protected class HTTPDestinationLink
@@ -341,7 +369,7 @@ public class HTTPLinkProtocol
                 return ois.readObject();
             } catch (Exception e) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("Exception in postMessge", e);
+                    logger.warn("Exception in http Post Message: " + e.getMessage());
                 }
             } finally {
                 if (out != null) {
