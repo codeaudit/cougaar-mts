@@ -117,7 +117,7 @@ abstract public class RPCLinkProtocol
      * This method is invoked when the MTS is unloaded so the garbage collector
      * can reclaim all resources that had been allocated.
      * 
-     * Fix for bug 3965: http://bugs.cougaar.org/show_bug.cgi?id=3965
+     * Fix for bug 3965.
      */
     abstract protected void releaseNodeServant();
 
