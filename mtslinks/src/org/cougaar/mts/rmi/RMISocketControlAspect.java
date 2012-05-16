@@ -57,7 +57,7 @@ import org.cougaar.mts.base.StandardAspect;
 public class RMISocketControlAspect
         extends StandardAspect {
 
-    private Impl impl;
+    private Implementation impl;
 
     public RMISocketControlAspect() {
     }
@@ -66,7 +66,7 @@ public class RMISocketControlAspect
         super.load();
 
         Provider provider = new Provider();
-        impl = new Impl();
+        impl = new Implementation();
         SocketManager.getSocketManager().addListener(impl);
 
         ServiceBroker sb = getServiceBroker();
@@ -103,7 +103,7 @@ public class RMISocketControlAspect
         }
     }
 
-    private class Impl
+    private class Implementation
             implements RMISocketControlService, SocketManagementListener {
         final Map<String, List<Socket>> clientSockets; // host:port key -> list
                                                        // of sockets
@@ -116,7 +116,7 @@ public class RMISocketControlAspect
         final Map<InetAddress, List<Socket>> remoteSockets =
                 new HashMap<InetAddress, List<Socket>>();
 
-        Impl() {
+        Implementation() {
             clientSockets = new HashMap<String, List<Socket>>();
             references = new HashMap<MessageAddress, Remote>();
             addresses = new HashMap<Remote, MessageAddress>();
