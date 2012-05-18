@@ -109,7 +109,8 @@ public class DestinationThreadConstrictor
             return compare;
         }
 
-        public boolean equals(Object x) {
+        @Override
+      public boolean equals(Object x) {
             return x == this;
         }
 
@@ -259,7 +260,8 @@ public class DestinationThreadConstrictor
         }
     }
 
-    public void start() {
+    @Override
+   public void start() {
         super.start();
 
         maxPerNode = (int) getParameter("MaxPerNode", MAX_PER_NODE_DEFAULT);

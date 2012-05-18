@@ -88,7 +88,8 @@ public class DeliveryVerificationAspect
     public DeliveryVerificationAspect() {
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         // initializeParameter(WARN_TIME_PARAM,WARN_TIME_VALUE_STR);
@@ -98,7 +99,8 @@ public class DeliveryVerificationAspect
 
     }
 
-    public void start() {
+    @Override
+   public void start() {
         super.start();
         ServiceBroker sb = getServiceBroker();
         SendQueueProviderService sendq_fact =
@@ -213,7 +215,8 @@ public class DeliveryVerificationAspect
     }
 
     // Aspect
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == SendLink.class) {
             SendLink link = (SendLink) delegatee;
             return new VerificationSendLink(link);
@@ -222,7 +225,8 @@ public class DeliveryVerificationAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getReverseDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegatee;
             return new VerificationDestinationLink(link);
@@ -238,7 +242,8 @@ public class DeliveryVerificationAspect
             super(link);
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             MessageAddress destination = message.getTarget();
             if (destination instanceof MulticastMessageAddress) {
                 LoggingService lsvc = getLoggingService();
@@ -254,7 +259,8 @@ public class DeliveryVerificationAspect
             super.sendMessage(message);
         }
 
-        public void flushMessages(List<Message> messages) {
+        @Override
+      public void flushMessages(List<Message> messages) {
             super.flushMessages(messages);
             // 'messages' now holds a list of all retracted
             // Messages. Remove them from the pendingMessages map.
@@ -273,7 +279,8 @@ public class DeliveryVerificationAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             try {

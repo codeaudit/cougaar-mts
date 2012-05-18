@@ -49,7 +49,6 @@ import org.cougaar.core.service.ServletService;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
@@ -76,7 +75,8 @@ public class HTTPLinkProtocol
     private ServletService _servletService;
     private boolean servant_made = false;
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         logger = getLoggingService(); // from BoundComponent
     }
@@ -85,7 +85,8 @@ public class HTTPLinkProtocol
      * We release the ServletService here because in doing so, the
      * ServletService.unregisterAll() is invoked.
      */
-    public void unload() {
+    @Override
+   public void unload() {
         ServiceBroker sb = getServiceBroker();
         sb.releaseService(this, ServletService.class, _servletService);
         super.unload();
@@ -94,7 +95,8 @@ public class HTTPLinkProtocol
     /**
      * Get the WP Entry Type for registering and querying for WP entries.
      */
-    public String getProtocolType() {
+    @Override
+   public String getProtocolType() {
         return "-HTTP";
     }
 
@@ -108,14 +110,16 @@ public class HTTPLinkProtocol
     /**
      * determined the underlying socket is encrypted.
      */
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return Boolean.FALSE;
     }
 
     /**
      * Returns 500 (hard-coded value less than RMI).
      */
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return 500;
     }
 
@@ -133,7 +137,8 @@ public class HTTPLinkProtocol
     /**
      * Create destination link to stream java serialized messages over HTTP.
      */
-    protected DestinationLink createDestinationLink(MessageAddress addr) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress addr) {
         return new HTTPDestinationLink(addr);
     }
 
@@ -167,7 +172,8 @@ public class HTTPLinkProtocol
      * registerServlet(), which won't be called until the ServiceAvailableEvent
      * says it's time.
      */
-    @SuppressWarnings("unchecked")
+    @Override
+   @SuppressWarnings("unchecked")
     protected void ensureNodeServant() {
         if (logger.isDebugEnabled()) {
             logger.warn("Ensuring Servlet " + servant_made);
@@ -275,7 +281,8 @@ public class HTTPLinkProtocol
     /**
      * Servlets handle the new-address case automatically, so this is a no-op.
      */
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         ensureNodeServant();
     }
 
@@ -290,7 +297,8 @@ public class HTTPLinkProtocol
             return HTTPLinkProtocol.class;
         }
 
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             if (ref == null) {
                 return null;
@@ -302,7 +310,8 @@ public class HTTPLinkProtocol
         /**
          * Posts the message to the target Agent's HTTP Link Protocol Servlet.
          */
-        protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
@@ -384,6 +393,7 @@ public class HTTPLinkProtocol
 
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
     }
 }

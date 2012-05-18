@@ -30,7 +30,6 @@ import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DontRetryException;
-import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
@@ -68,26 +67,31 @@ public class CorbaLinkProtocol
 
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return PROTOCOL_TYPE;
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return Boolean.FALSE;
     }
 
     // If this is called, we've already found the remote reference.
     // The cost is currently hardwired at an arbitrary value of 1001
     // (a little more than RMI).
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return 1001;
     }
 
-    protected DestinationLink createDestinationLink(MessageAddress address) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress address) {
         return new CorbaLink(address);
     }
 
-    protected void ensureNodeServant() {
+    @Override
+   protected void ensureNodeServant() {
         if (myProxy != null) {
             return;
         }
@@ -102,7 +106,8 @@ public class CorbaLinkProtocol
         setNodeURI(URI.create(orb.object_to_string(myProxy)));
     }
 
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         if (myProxy != null) {
             try {
                 byte[] oid = poa.reference_to_id(myProxy);
@@ -127,7 +132,8 @@ public class CorbaLinkProtocol
             super(destination);
         }
 
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             String ior = ref.toString();
             org.omg.CORBA.Object raw = orb.string_to_object(ior);
@@ -139,7 +145,8 @@ public class CorbaLinkProtocol
             return CorbaLinkProtocol.class;
         }
 
-        protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             byte[] bytes = null;
@@ -188,7 +195,8 @@ public class CorbaLinkProtocol
 
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
     }
 
 }

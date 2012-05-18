@@ -42,7 +42,8 @@ public class _MTStub
         "IDL:cougaar/MT:1.0"
     };
 
-    public String[] _ids() {
+    @Override
+   public String[] _ids() {
         return __ids.clone();
     }
 

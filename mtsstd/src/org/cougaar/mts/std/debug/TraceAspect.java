@@ -87,7 +87,8 @@ public class TraceAspect
         getLog().println(id + "\t" + System.currentTimeMillis() + "\t" + key + "\t" + cleanInfo);
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) delegate);
         } else if (type == Router.class) {
@@ -114,21 +115,25 @@ public class TraceAspect
             super(nameSupport);
         }
 
-        public MessageAddress getNodeMessageAddress() {
+        @Override
+      public MessageAddress getNodeMessageAddress() {
             return super.getNodeMessageAddress();
         }
 
-        public void registerAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
+        @Override
+      public void registerAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
             log("NameSupport", "Register Agent " + addr + " " + reference);
             super.registerAgentInNameServer(reference, addr, protocol);
         }
 
-        public void unregisterAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
+        @Override
+      public void unregisterAgentInNameServer(URI reference, MessageAddress addr, String protocol) {
             log("NameSupport", "Unregister Agent " + addr + " " + reference);
             super.unregisterAgentInNameServer(reference, addr, protocol);
         }
 
-        public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
+        @Override
+      public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
             URI res = super.lookupAddressInNameServer(address, protocol);
             log("NameSupport", "Lookup of " + address + " returned " + res);
             return res;
@@ -142,7 +147,8 @@ public class TraceAspect
             super(queue);
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             log("SendQueue", message.toString() + " (" + this.size() + ")");
             super.sendMessage(message);
         }
@@ -154,7 +160,8 @@ public class TraceAspect
             super(router);
         }
 
-        public void routeMessage(AttributedMessage message) {
+        @Override
+      public void routeMessage(AttributedMessage message) {
             log("Router", message.getTarget().toString());
             super.routeMessage(message);
         }
@@ -167,12 +174,14 @@ public class TraceAspect
             super(queue);
         }
 
-        public void holdMessage(AttributedMessage message) {
+        @Override
+      public void holdMessage(AttributedMessage message) {
             log("DestinationQueue", message.toString());
             super.holdMessage(message);
         }
 
-        public void dispatchNextMessage(AttributedMessage message) {
+        @Override
+      public void dispatchNextMessage(AttributedMessage message) {
             log("DestinationQueue dispatch", message.toString());
             super.dispatchNextMessage(message);
         }
@@ -185,7 +194,8 @@ public class TraceAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException
 
@@ -202,7 +212,8 @@ public class TraceAspect
             super(deliverer);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
                 throws MisdeliveredMessageException {
             log("MessageDeliverer", message.toString());
             return super.deliverMessage(message, dest);
@@ -216,7 +227,8 @@ public class TraceAspect
             super(link);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message) {
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message) {
             log("ReceiveLink", message.toString());
             return super.deliverMessage(message);
         }

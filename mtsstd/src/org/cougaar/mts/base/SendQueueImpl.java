@@ -46,13 +46,15 @@ public final class SendQueueImpl
         super(name);
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         ServiceBroker sb = getServiceBroker();
         router = sb.getService(this, Router.class, null);
     }
 
-    /**
+    @Override
+   /**
      * This is the callback from the internal thread.
      */
     boolean dispatch(AttributedMessage message) {

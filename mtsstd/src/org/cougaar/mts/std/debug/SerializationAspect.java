@@ -50,7 +50,8 @@ public class SerializationAspect
     public SerializationAspect() {
     }
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) object;
             if (link.getProtocolClass() == LoopbackLinkProtocol.class) {
@@ -71,7 +72,8 @@ public class SerializationAspect
             super(link);
         }
 
-        public synchronized MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public synchronized MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException
 

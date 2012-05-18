@@ -26,7 +26,6 @@
 package org.cougaar.mts.rmi;
 
 import org.cougaar.mts.base.AttributedMessage;
-import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.SocketFactory;
 
 /**
@@ -40,7 +39,8 @@ public class SSLRMILinkProtocol
         super();
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-SSLRMI";
     }
 
@@ -50,11 +50,13 @@ public class SSLRMILinkProtocol
 
     // If this is called, we've already found the remote reference.
     // Later this will be based on the destination, rss, etc.
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return super.computeCost(message) * 2;
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return Boolean.TRUE;
     }
 

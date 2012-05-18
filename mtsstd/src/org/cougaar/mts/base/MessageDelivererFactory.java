@@ -43,7 +43,8 @@ public class MessageDelivererFactory
         this.id = id;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         String name = id + "/Deliverer";
         MessageDeliverer d = new MessageDelivererImpl(name, getRegistry());

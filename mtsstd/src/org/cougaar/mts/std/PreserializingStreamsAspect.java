@@ -61,7 +61,8 @@ public class PreserializingStreamsAspect
 
     // Return delegates for MessageReader, MessageWriter and
     // DestinationLink.
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new PSMessageWriter(wtr);
@@ -87,7 +88,8 @@ public class PreserializingStreamsAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             // Register Aspect as a Message Streaming filter
@@ -112,7 +114,8 @@ public class PreserializingStreamsAspect
         // ByteArrayOutputStream. Nothing downstream will see any
         // data at all until the byte-stream is closed at
         // finishOutput.
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             next = super.getObjectOutputStream(out);
             byte_os = new ByteArrayOutputStream();
@@ -121,7 +124,8 @@ public class PreserializingStreamsAspect
 
         // Done writing to the ByteArrayOutputStream. Extract the
         // byte array and write it to the next filter.
-        public void finishOutput()
+        @Override
+      public void finishOutput()
                 throws java.io.IOException {
             byte_os.flush();
             byte_os.close();
@@ -155,7 +159,8 @@ public class PreserializingStreamsAspect
         // At this point we should get a byte array from the next
         // stream in the chain. Make a ByteArrayInputStream out of
         // it. Earlier filters will be reading from that.
-        public InputStream getObjectInputStream(ObjectInput in)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput in)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream raw_is = super.getObjectInputStream(in);
             ObjectInputStream object_in = null;

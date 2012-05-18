@@ -34,7 +34,12 @@ public class MessageSerializationException
         extends DontRetryException
         implements java.io.Serializable {
 
-    public MessageSerializationException(Exception cause) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public MessageSerializationException(Exception cause) {
         super(cause);
     }
 

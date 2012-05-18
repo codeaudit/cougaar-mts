@@ -42,7 +42,8 @@ public class MessageSendTimeAspect
     public MessageSendTimeAspect() {
     }
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) object);
         } else {
@@ -56,7 +57,8 @@ public class MessageSendTimeAspect
             super(link);
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             long now = System.currentTimeMillis();
             message.setAttribute(MESSAGE_SEND_TIME_ATTRIBUTE, new Long(now));
             super.sendMessage(message);

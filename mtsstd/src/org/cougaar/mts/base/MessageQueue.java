@@ -48,7 +48,12 @@ abstract class MessageQueue
     // Simplified queue
     private static class SimpleQueue<T>
             extends LinkedList<T> {
-        T next() {
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      T next() {
             return removeFirst();
         }
     }
@@ -70,7 +75,8 @@ abstract class MessageQueue
         return ThreadService.BEST_EFFORT_LANE;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         thread = threadService.getThread(this, this, name, getLane());
     }

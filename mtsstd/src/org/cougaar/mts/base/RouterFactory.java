@@ -38,7 +38,8 @@ public class RouterFactory
         implements ServiceProvider {
     private Router router;
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         router = new RouterImpl(getServiceBroker());
         router = attachAspects(router, Router.class);

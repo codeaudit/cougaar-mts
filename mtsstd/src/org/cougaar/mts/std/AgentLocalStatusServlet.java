@@ -40,27 +40,37 @@ import org.cougaar.core.mts.MessageAddress;
 public class AgentLocalStatusServlet
         extends AgentStatusServlet {
 
-    public AgentLocalStatusServlet(ServiceBroker sb) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public AgentLocalStatusServlet(ServiceBroker sb) {
         super(sb);
     }
 
-    public String getPath() {
+    @Override
+   public String getPath() {
         return "/message/between-Any-agent-and-Local-Agent";
     }
 
-    public String getDescription(MessageAddress agent) {
+    @Override
+   public String getDescription(MessageAddress agent) {
         return "Message Transport statistics between local agent " + agent + " and any other agent";
     }
 
-    public String getTitle() {
+    @Override
+   public String getTitle() {
         return "Message Transport statistics for agents on node " + getNodeID();
     }
 
-    protected boolean isRemote() {
+    @Override
+   protected boolean isRemote() {
         return false;
     }
 
-    protected AgentStatusService.AgentState getState(MessageAddress agent) {
+    @Override
+   protected AgentStatusService.AgentState getState(MessageAddress agent) {
         AgentStatusService.AgentState state = null;
 
         if (agentStatusService != null) {

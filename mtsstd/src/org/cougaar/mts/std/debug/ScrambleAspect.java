@@ -31,7 +31,6 @@ import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.SendLink;
 import org.cougaar.mts.base.SendLinkDelegateImplBase;
 import org.cougaar.mts.base.StandardAspect;
-import org.cougaar.mts.std.SequenceAspect;
 
 /**
  * This test Aspect scrambles the order of messages. Its main purpose is to test
@@ -43,7 +42,8 @@ public class ScrambleAspect
     public ScrambleAspect() {
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
             return new ScrambledSendLink((SendLink) delegate);
         } else {
@@ -74,7 +74,8 @@ public class ScrambleAspect
             }
         }
 
-        public synchronized void sendMessage(AttributedMessage message) {
+        @Override
+      public synchronized void sendMessage(AttributedMessage message) {
             messageCount++;
             if (heldMessage == null) {
                 holdMessage(message);

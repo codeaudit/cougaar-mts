@@ -29,12 +29,14 @@ public class FileLinkProtocol
     @Cougaar.Arg(name = "rootDirectory", defaultValue = "/tmp/cougaar")
     private String rootDirectory;
 
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         // very cheap
         return 0;
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-FILE";
     }
 
@@ -48,7 +50,8 @@ public class FileLinkProtocol
         return new File(rootDirectory, TMP_SUBDIRECTORY);
     }
 
-    protected URI makeURI(String myServantId)
+    @Override
+   protected URI makeURI(String myServantId)
             throws URISyntaxException {
         File file = new File(rootDirectory, myServantId);
         file.mkdirs();
@@ -59,11 +62,13 @@ public class FileLinkProtocol
         }
     }
 
-    protected boolean establishConnections(String node) {
+    @Override
+   protected boolean establishConnections(String node) {
         return true;
     }
 
-    protected File processOutgoingMessage(URI destination, MessageAttributes message)
+    @Override
+   protected File processOutgoingMessage(URI destination, MessageAttributes message)
             throws IOException {
         // serialize message to a temp file
         File tempDir = getTmpSubdirectory(destination);
@@ -93,11 +98,13 @@ public class FileLinkProtocol
         return messageFile;
     }
 
-    protected Runnable makePollerTask() {
+    @Override
+   protected Runnable makePollerTask() {
         return new FilePoller();
     }
 
-    protected int getReplyTimeoutMillis() {
+    @Override
+   protected int getReplyTimeoutMillis() {
         return 1000;
     }
 

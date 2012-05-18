@@ -42,6 +42,11 @@ public class MessageTransportException
         extends Exception {
 
     /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   /**
      * Constructs a MessageTransportException with a specified detail message.
      * but an Unknown type
      * 

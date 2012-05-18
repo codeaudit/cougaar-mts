@@ -15,7 +15,8 @@ import org.cougaar.mts.base.MessageTransportRegistryService;
  */
 public class AddressChangeServletComponent
         extends BoundComponent {
-    public void start() {
+    @Override
+   public void start() {
         super.start();
         ServiceBroker sb = getServiceBroker();
         new AddressChangeServlet(sb);
@@ -23,22 +24,29 @@ public class AddressChangeServletComponent
 
     private static class AddressChangeServlet
             extends BaseServlet {
-        MessageTransportRegistryService svc;
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+      MessageTransportRegistryService svc;
 
         AddressChangeServlet(ServiceBroker sb) {
             super(sb);
             svc = sb.getService(this, MessageTransportRegistryService.class, null);
         }
 
-        protected String getPath() {
+        @Override
+      protected String getPath() {
             return "/mts/address-changed-test";
         }
 
-        protected String getTitle() {
+        @Override
+      protected String getTitle() {
             return "Address Change Test";
         }
 
-        protected void printPage(HttpServletRequest request, PrintWriter out) {
+        @Override
+      protected void printPage(HttpServletRequest request, PrintWriter out) {
             svc.ipAddressChanged();
             out.println("Link Protocols have been reset");
         }

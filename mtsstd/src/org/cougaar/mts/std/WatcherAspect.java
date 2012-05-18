@@ -40,7 +40,6 @@ import org.cougaar.core.service.MessageWatcherService;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
-import org.cougaar.mts.base.MessageTransportServiceProvider;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SendQueue;
 import org.cougaar.mts.base.SendQueueDelegateImplBase;
@@ -61,7 +60,8 @@ public class WatcherAspect
         this.watchers = new ArrayList<MessageTransportWatcher>();
     }
     
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         
         NodeControlService ncs = getServiceBroker().getService(this, NodeControlService.class, null);
@@ -89,7 +89,8 @@ public class WatcherAspect
         });
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) delegate);
         } else if (type == MessageDeliverer.class) {
@@ -138,7 +139,8 @@ public class WatcherAspect
             super(queue);
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             super.sendMessage(message);
             notifyWatchersOfSend(message);
         }
@@ -151,7 +153,8 @@ public class WatcherAspect
             super(deliverer);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
                 throws MisdeliveredMessageException {
             MessageAttributes result = super.deliverMessage(message, dest);
             notifyWatchersOfReceive(message);

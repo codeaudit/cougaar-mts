@@ -49,11 +49,13 @@ public class MessageTraceAspect
         implements AttributeConstants {
     private static final String SUBMISSION_TIME_ATTRIBUTE = "SUBMIT!";
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
     }
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationLink.class) {
             // forward time
             return new DestinationLinkDelegate((DestinationLink) delegatee);
@@ -71,7 +73,8 @@ public class MessageTraceAspect
             super(link);
         }
 
-        public void sendMessage(AttributedMessage msg) {
+        @Override
+      public void sendMessage(AttributedMessage msg) {
             long now = System.currentTimeMillis();
             msg.setLocalAttribute(SUBMISSION_TIME_ATTRIBUTE, new Long(now));
             super.sendMessage(msg);
@@ -110,7 +113,8 @@ public class MessageTraceAspect
                     + "," + message_size + "," + header_size);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage msg)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage msg)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException
 

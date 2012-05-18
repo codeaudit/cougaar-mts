@@ -311,7 +311,8 @@ public class AttributedMessage
      * through the nested filtering streams. Finally, allow the Attributes to do
      * postprocessing.
      */
-    public void writeExternal(ObjectOutput rawOut)
+    @Override
+   public void writeExternal(ObjectOutput rawOut)
             throws java.io.IOException {
         try {
             // Source and Destination MUST be in the clear
@@ -363,7 +364,8 @@ public class AttributedMessage
      * through the nested filtering streams. Finally, allow the Attributes to do
      * postprocessing.
      */
-    public void readExternal(ObjectInput rawIn)
+    @Override
+   public void readExternal(ObjectInput rawIn)
             throws java.io.IOException, ClassNotFoundException {
         try {
             setOriginator((MessageAddress) rawIn.readObject());
@@ -434,7 +436,8 @@ public class AttributedMessage
                 + " Hash: " + hashCode() + " Id: " + getContentsId() + ">";
     }
 
-    public String toString() {
+    @Override
+   public String toString() {
         String s = getClass().getName();
         s = s.substring(s.lastIndexOf('.') + 1);
         return "(" + s + " from=" + getOriginator().getAddress() + " to="

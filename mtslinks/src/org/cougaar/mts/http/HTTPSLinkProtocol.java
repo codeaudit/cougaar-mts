@@ -24,9 +24,7 @@
  */
 package org.cougaar.mts.http;
 
-import org.cougaar.core.service.ServletService;
 import org.cougaar.mts.base.AttributedMessage;
-import org.cougaar.mts.base.LinkProtocol;
 
 /**
  * This {@link LinkProtocol} uses the Cougaar's {@link ServletService} (Tomcat)
@@ -38,23 +36,27 @@ public class HTTPSLinkProtocol
         super();
     }
 
-    public String getProtocolType() {
+    @Override
+   public String getProtocolType() {
         return "-HTTPS";
     }
 
-    public String getProtocol() {
+    @Override
+   public String getProtocol() {
         return "https";
     }
 
     /**
      * Returns TRUE
      */
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return Boolean.TRUE;
     }
 
     // hard-code value. higher than RMI but lower than SSLRMI
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return super.computeCost(message) * 3;
     }
 

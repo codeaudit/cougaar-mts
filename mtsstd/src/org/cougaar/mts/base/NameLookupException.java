@@ -32,7 +32,12 @@ package org.cougaar.mts.base;
  **/
 public class NameLookupException
         extends Exception {
-    public NameLookupException(Exception nested) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public NameLookupException(Exception nested) {
         super(nested.toString());
     }
 }

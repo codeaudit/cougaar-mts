@@ -38,7 +38,8 @@ abstract public class AbstractSocketControlPolicy
         extends BoundComponent
         implements SocketControlPolicy {
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         ServiceBroker sb = getServiceBroker();

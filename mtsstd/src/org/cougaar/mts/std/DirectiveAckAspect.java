@@ -18,7 +18,6 @@ import org.cougaar.core.mts.MessageAddress;
 import org.cougaar.core.mts.MessageAttributes;
 import org.cougaar.core.mts.SimpleMessageAttributes;
 import org.cougaar.core.node.NodeIdentificationService;
-import org.cougaar.core.relay.RelayDirective;
 import org.cougaar.core.relay.RelayDirectiveUtil;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
@@ -50,7 +49,8 @@ public class DirectiveAckAspect
     private MessageAddress nodeAddress;
     private OutOfBandMessageService oobs;
     
-    public void start() {
+    @Override
+   public void start() {
         super.start();
         ServiceBroker sb = getServiceBroker();
         oobs = sb.getService(this, OutOfBandMessageService.class, null);
@@ -104,7 +104,8 @@ public class DirectiveAckAspect
      * checks for successful delivery (ie, no exceptions), and in that case
      * injects a receipt message back to the sending Agent.
      */
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) delegate);
         } else if (type == DestinationLink.class) {
@@ -122,7 +123,8 @@ public class DirectiveAckAspect
             super(queue);
         }
         
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             if (message.getAttribute(RECEIPT_REQUESTED) != null 
                     && RelayDirectiveUtil.hasRelayDirectives(message.getRawMessage())) {
                 outstandingMessages.add(message);
@@ -141,7 +143,8 @@ public class DirectiveAckAspect
             super(link);
         }
         
-        public MessageAttributes forwardMessage(AttributedMessage message) 
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message) 
                 throws UnregisteredNameException,
                 NameLookupException,
                 CommFailureException,

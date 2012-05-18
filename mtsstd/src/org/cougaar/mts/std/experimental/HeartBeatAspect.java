@@ -70,7 +70,8 @@ public class HeartBeatAspect
         super();
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         String dstAddr = getParameter("dstAddr", "NODE1");
         hb_dest = MessageAddress.getMessageAddress(dstAddr);
@@ -99,7 +100,12 @@ public class HeartBeatAspect
 
     static class HBMessage
             extends Message {
-        HBMessage(MessageAddress src, MessageAddress dest) {
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      HBMessage(MessageAddress src, MessageAddress dest) {
             super(src, dest);
         }
     };
@@ -119,7 +125,8 @@ public class HeartBeatAspect
     // 
     // Aspect Code to implement TrafficRecord Collection
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             return new HeartBeatDestinationLink((DestinationLink) object);
         } else if (type == MessageDeliverer.class) {
@@ -142,7 +149,8 @@ public class HeartBeatAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             // Attempt to Deliver message
@@ -165,7 +173,8 @@ public class HeartBeatAspect
             super(delegatee);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
                 throws MisdeliveredMessageException {
             Object count = message.getAttribute(I_AM_A_HEARTBEAT_ATTRIBUTE);
             if (count != null) {

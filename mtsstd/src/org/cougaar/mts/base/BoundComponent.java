@@ -49,7 +49,8 @@ abstract public class BoundComponent
 
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         getLoggingService();
         getThreadService();

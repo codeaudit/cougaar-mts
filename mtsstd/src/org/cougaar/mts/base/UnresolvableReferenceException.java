@@ -31,7 +31,12 @@ package org.cougaar.mts.base;
  */
 public class UnresolvableReferenceException
         extends java.io.IOException {
-    public UnresolvableReferenceException(String msg) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public UnresolvableReferenceException(String msg) {
         super(msg);
     }
 

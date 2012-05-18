@@ -27,7 +27,8 @@ public final class OutOfBandMessageAspect
     private OutOfBandMessageService service;
     private MessageTransportRegistryService registry;
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         registry = getRegistry();
         service = new OutOfBandMessageServiceImpl();

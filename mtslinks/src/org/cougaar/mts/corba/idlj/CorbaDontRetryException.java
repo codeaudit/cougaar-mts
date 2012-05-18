@@ -8,7 +8,11 @@ package org.cougaar.mts.corba.idlj;
 
 public final class CorbaDontRetryException
         extends org.omg.CORBA.UserException {
-    public byte cause[] = null;
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   public byte cause[] = null;
 
     public CorbaDontRetryException() {
         super(CorbaDontRetryExceptionHelper.id());

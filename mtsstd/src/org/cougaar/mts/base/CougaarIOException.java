@@ -36,7 +36,12 @@ abstract public class CougaarIOException
         extends IOException
         implements Serializable {
 
-    public CougaarIOException() {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public CougaarIOException() {
         super();
     }
 

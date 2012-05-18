@@ -46,14 +46,20 @@ public class WasteCPUAspect
     private static class ExpRandom
             extends java.util.Random {
 
-        ExpRandom() {
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      ExpRandom() {
             // super is uniform distribution
             super();
         }
 
         // period is the average period,
         // the range can go from zero to ten times the period
-        public int nextInt(int period) {
+        @Override
+      public int nextInt(int period) {
             double raw = -(period * Math.log(super.nextDouble()));
             // clip upper tail
             if (raw > 10 * period) {
@@ -64,7 +70,8 @@ public class WasteCPUAspect
         }
     }
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) object;
             return new WasteCPUDestinationLink(link);
@@ -84,7 +91,8 @@ public class WasteCPUAspect
             super(link);
         }
 
-        public synchronized MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public synchronized MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException
 

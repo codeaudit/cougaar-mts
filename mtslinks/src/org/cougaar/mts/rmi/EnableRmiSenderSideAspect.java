@@ -46,12 +46,14 @@ public class EnableRmiSenderSideAspect
         extends StandardAspect {
     private long failureTimeout;
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         failureTimeout = getParameter("failure-timeout", 30000);
     }
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegatee;
             if (link.getProtocolClass() == RMILinkProtocol.class) {
@@ -69,7 +71,8 @@ public class EnableRmiSenderSideAspect
             super(delegatee);
         }
 
-        public boolean isValid(AttributedMessage message) {
+        @Override
+      public boolean isValid(AttributedMessage message) {
             long now = System.currentTimeMillis();
             if (now - last_fail_time < failureTimeout) {
                 return false;
@@ -78,7 +81,8 @@ public class EnableRmiSenderSideAspect
             }
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             long now = System.currentTimeMillis();

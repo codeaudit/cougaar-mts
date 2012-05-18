@@ -36,7 +36,12 @@ public class MessageSecurityException
         extends DontRetryException
         implements java.io.Serializable {
 
-    public MessageSecurityException(Exception cause) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public MessageSecurityException(Exception cause) {
         super(cause);
     }
 

@@ -46,7 +46,8 @@ import org.cougaar.mts.base.StandardAspect;
 public class BufferedStreamsAspect
         extends StandardAspect {
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new BufferedMessageWriter(wtr);
@@ -66,7 +67,8 @@ public class BufferedStreamsAspect
         }
 
         // Join point
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_oos = super.getObjectOutputStream(out);
             return new BufferedOutputStream(raw_oos);
@@ -81,7 +83,8 @@ public class BufferedStreamsAspect
             super(delegatee);
         }
 
-        public InputStream getObjectInputStream(ObjectInput in)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput in)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream raw_ois = super.getObjectInputStream(in);
             return new BufferedInputStream(raw_ois);

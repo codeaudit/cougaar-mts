@@ -69,7 +69,8 @@ public class ChecksumStreamsAspect
     private static final String CHECKSUM_ENABLE_ATTR = "org.cougaar.core.security.checksum.enable";
     private static final String CHECKSUM_VALID_ATTR = "org.cougaar.core.security.checksum.valid";
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new ChecksumMessageWriter(wtr);
@@ -117,7 +118,8 @@ public class ChecksumStreamsAspect
             super(delegatee);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
                 throws MisdeliveredMessageException {
 
             System.out.println("Message Checksum Valid = "
@@ -134,7 +136,8 @@ public class ChecksumStreamsAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             // Register checksum Aspect as a Message Streaming filter
@@ -159,12 +162,14 @@ public class ChecksumStreamsAspect
                 super(wrapped);
             }
 
+            @Override
             public void write(int b)
                     throws IOException {
                 super.write(b);
                 checksum += b;
             }
 
+            @Override
             public void write(byte[] b, int off, int len)
                     throws java.io.IOException {
                 out.write(b, off, len);
@@ -174,6 +179,7 @@ public class ChecksumStreamsAspect
                 }
             }
 
+            @Override
             public void write(byte[] b)
                     throws java.io.IOException {
                 out.write(b);
@@ -189,14 +195,16 @@ public class ChecksumStreamsAspect
             super(delegatee);
         }
 
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_os = super.getObjectOutputStream(out);
             stream = new ObjectOutputStream(new ChecksumOutputStream(raw_os));
             return stream;
         }
 
-        public void finishOutput()
+        @Override
+      public void finishOutput()
                 throws java.io.IOException {
             // Send the Checksum as a tailer
             try {
@@ -224,6 +232,7 @@ public class ChecksumStreamsAspect
                 super(wrapped);
             }
 
+            @Override
             public int read()
                     throws IOException {
                 int b = in.read();
@@ -231,6 +240,7 @@ public class ChecksumStreamsAspect
                 return b;
             }
 
+            @Override
             public int read(byte[] b, int off, int len)
                     throws IOException {
                 int count = in.read(b, off, len);
@@ -249,6 +259,7 @@ public class ChecksumStreamsAspect
                 return count;
             }
 
+            @Override
             public int read(byte[] b)
                     throws IOException {
                 int count = in.read(b);
@@ -265,19 +276,22 @@ public class ChecksumStreamsAspect
             super(delegatee);
         }
 
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             super.finalizeAttributes(msg);
             this.msg = msg;
         }
 
-        public InputStream getObjectInputStream(ObjectInput in)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput in)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream raw_is = super.getObjectInputStream(in);
             stream = new ObjectInputStream(new ChecksumInputStream(raw_is));
             return stream;
         }
 
-        public void finishInput()
+        @Override
+      public void finishInput()
                 throws java.io.IOException {
             System.err.println("Entering ChecksumStreamsAspect finishInput");
             // The tailer itself wasn't included in the checksum

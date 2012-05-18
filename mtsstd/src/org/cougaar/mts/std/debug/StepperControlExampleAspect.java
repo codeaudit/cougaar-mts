@@ -40,7 +40,8 @@ import org.cougaar.mts.base.StandardAspect;
  */
 public class StepperControlExampleAspect
         extends StandardAspect {
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationQueue.class) {
             return new DestinationQueueDelegate((DestinationQueue) delegatee);
         } else {
@@ -56,7 +57,8 @@ public class StepperControlExampleAspect
             super(delegatee);
         }
 
-        public void dispatchNextMessage(AttributedMessage msg) {
+        @Override
+      public void dispatchNextMessage(AttributedMessage msg) {
             super.dispatchNextMessage(msg);
             if (++count == 2) {
                 // Seccond message to this destination has just gone

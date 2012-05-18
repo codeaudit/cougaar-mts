@@ -63,7 +63,8 @@ public class CountBytesStreamsAspect
 
     // Return delegates for MessageReader, MessageWriter and
     // DestinationLink.
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new CountingMessageWriter(wtr);
@@ -89,7 +90,8 @@ public class CountBytesStreamsAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             // Register Aspect as a Message Streaming filter
@@ -133,18 +135,21 @@ public class CountBytesStreamsAspect
             // using super, since the default FilterOutputStream
             // methods aren't very efficient.
 
+            @Override
             public void write(int b)
                     throws java.io.IOException {
                 out.write(b);
                 ++count;
             }
 
+            @Override
             public void write(byte[] b, int off, int len)
                     throws java.io.IOException {
                 out.write(b, off, len);
                 count += len;
             }
 
+            @Override
             public void write(byte[] b)
                     throws java.io.IOException {
                 out.write(b);
@@ -158,7 +163,8 @@ public class CountBytesStreamsAspect
         }
 
         // Create and return the byte-counting FilterOutputStream
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_os = super.getObjectOutputStream(out);
             return new CountingOutputStream(raw_os);
@@ -166,7 +172,8 @@ public class CountBytesStreamsAspect
 
         // Save the message, since we'll need it later (in
         // postProcess).
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             super.finalizeAttributes(msg);
             this.msg = msg;
         }
@@ -176,7 +183,8 @@ public class CountBytesStreamsAspect
         // Even if it weren't a local attribute, the receive would
         // never see it. But other aspect delegates can get at it. In
         // fact the DestinationLink delegate above does so.
-        public void postProcess() {
+        @Override
+      public void postProcess() {
             super.postProcess();
             if (msg != null) {
                 msg.setLocalAttribute(COUNT_ATTR, new Integer(count));
@@ -199,16 +207,19 @@ public class CountBytesStreamsAspect
                 super(wrapped);
             }
 
+            @Override
             public int read()
                     throws java.io.IOException {
                 return in.read();
             }
 
+            @Override
             public int read(byte[] b, int off, int len)
                     throws java.io.IOException {
                 return in.read(b, off, len);
             }
 
+            @Override
             public int read(byte[] b)
                     throws java.io.IOException {
                 return in.read(b);
@@ -219,7 +230,8 @@ public class CountBytesStreamsAspect
             super(delegatee);
         }
 
-        public InputStream getObjectInputStream(ObjectInput in)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput in)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream raw_is = super.getObjectInputStream(in);
             return new CountingInputStream(raw_is);

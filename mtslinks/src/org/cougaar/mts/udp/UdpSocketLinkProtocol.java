@@ -57,15 +57,18 @@ public class UdpSocketLinkProtocol
     @Cougaar.Arg(name = "port", defaultValue = "0")
     private int port;
 
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return 1;
     }
 
-    protected DestinationLink createDestinationLink(MessageAddress address) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress address) {
         return new UdpLink(address);
     }
 
-    protected void ensureNodeServant() {
+    @Override
+   protected void ensureNodeServant() {
         if (servantUri != null) {
             return;
         }
@@ -92,7 +95,8 @@ public class UdpSocketLinkProtocol
         timer.schedule(task, 5000, 1);
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
         timer.cancel();
         if (inputConnection != null) {
             inputConnection.close();
@@ -102,7 +106,8 @@ public class UdpSocketLinkProtocol
         // XXX: Do we need to close the sockets in outputSockets?
     }
 
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         if (isServantAlive()) {
             releaseNodeServant();
         }
@@ -112,15 +117,18 @@ public class UdpSocketLinkProtocol
     /**
      * We must have an open UDP socket and a non-null servant
      */
-    protected boolean isServantAlive() {
+    @Override
+   protected boolean isServantAlive() {
         return inputConnection != null && servantUri != null && super.isServantAlive();
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-UDP";
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return false;
     }
 
@@ -271,11 +279,13 @@ public class UdpSocketLinkProtocol
             super(destination);
         }
 
-        public boolean isValid(AttributedMessage message) {
+        @Override
+      public boolean isValid(AttributedMessage message) {
             return ensureNodeServantIsAlive() && super.isValid(message);
         }
 
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             if (loggingService.isInfoEnabled()) {
                 loggingService.info("Remote URI for " + getDestination() + " is " + ref);
@@ -296,7 +306,8 @@ public class UdpSocketLinkProtocol
             return ref;
         }
 
-        protected MessageAttributes forwardByProtocol(Object remote, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object remote, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
@@ -324,7 +335,8 @@ public class UdpSocketLinkProtocol
             incoming = new DatagramPacket(data, MAX_PAYLOAD_SIZE);
         }
 
-        public void run() {
+        @Override
+      public void run() {
             if (!isServantAlive()) {
                 // too early
                 return;

@@ -38,7 +38,8 @@ abstract public class AbstractLinkSelectionPolicy
         extends BoundComponent
         implements LinkSelectionPolicy {
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         ServiceBroker sb = getServiceBroker();

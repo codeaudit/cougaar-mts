@@ -58,7 +58,8 @@ public class ForwardMessageLoggingAspect
     private boolean madeLog;
     private WhitePagesService wp;
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         ServiceBroker sb = getServiceBroker();
         wp = sb.getService(this, WhitePagesService.class, null);
@@ -79,7 +80,8 @@ public class ForwardMessageLoggingAspect
         madeLog = true;
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             return new DestinationLinkDelegate((DestinationLink) delegate);
         } else {
@@ -226,7 +228,8 @@ public class ForwardMessageLoggingAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage msg)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage msg)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException
 

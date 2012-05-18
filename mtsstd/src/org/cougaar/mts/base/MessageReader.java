@@ -29,8 +29,6 @@ package org.cougaar.mts.base;
 import java.io.InputStream;
 import java.io.ObjectInput;
 
-import org.cougaar.core.mts.Attributes;
-
 /**
  * This is the first station in the receiver for serializling LinkProtocols.
  * MessageWriter and MessageReader allow aspect authors to examine and filter

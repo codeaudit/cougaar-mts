@@ -55,7 +55,8 @@ public class PrioritizedThreadsAspect
     private Map<Schedulable,Integer> thread_priorities;
 
     private final Comparator<Schedulable> priorityComparator = new Comparator<Schedulable>() {
-        public boolean equals(Object x) {
+        @Override
+      public boolean equals(Object x) {
             return x == this;
         }
 
@@ -82,7 +83,8 @@ public class PrioritizedThreadsAspect
         }
     };
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         thread_priorities = new HashMap<Schedulable,Integer>();
@@ -121,7 +123,8 @@ public class PrioritizedThreadsAspect
     }
 
     // MessageTransportAspect
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         // not a real aspect, so no delegates
         return null;
     }

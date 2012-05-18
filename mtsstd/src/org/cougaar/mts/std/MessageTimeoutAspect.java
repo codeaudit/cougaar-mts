@@ -74,13 +74,19 @@ public final class MessageTimeoutAspect
     private DestinationQueueProviderService destq_factory;
     
     private final UnaryPredicate timeoutPredicate = new UnaryPredicate() {
-        public boolean execute(Object x) {
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      public boolean execute(Object x) {
             AttributedMessage msg = (AttributedMessage) x;
             return timedOut(msg, "Message Timeout Reclaimer");
         }
     };
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         Runnable reclaimer = new Runnable() {
             public void run() {
@@ -92,7 +98,8 @@ public final class MessageTimeoutAspect
 
     }
 
-    public void start() {
+    @Override
+   public void start() {
         super.start();
         ServiceBroker sb = getServiceBroker();
         sendq_factory = sb.getService(this, SendQueueProviderService.class, null);
@@ -139,7 +146,8 @@ public final class MessageTimeoutAspect
     /**
      * Add aspects to check the timeout at various stations.
      */
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) object);
         } else if (type == DestinationLink.class) {
@@ -197,7 +205,8 @@ public final class MessageTimeoutAspect
         /**
          * If the message is already timed out, just drop it silently.
          */
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             ensureAbsoluteTimeout(message);
             if (!timedOut(message, "SendLink")) {
                 super.sendMessage(message);
@@ -216,7 +225,8 @@ public final class MessageTimeoutAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             if (timedOut(message, "DestinationLink")) {
@@ -241,7 +251,8 @@ public final class MessageTimeoutAspect
             super(delegatee);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message) {
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message) {
             if (timedOut(message, "Deliverer")) {
                 MessageAttributes metadata = new MessageReply(message);
                 metadata.setAttribute(AttributeConstants.DELIVERY_ATTRIBUTE,

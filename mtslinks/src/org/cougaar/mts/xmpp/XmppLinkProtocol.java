@@ -76,20 +76,24 @@ public class XmppLinkProtocol
 
     private final Properties passwords = new Properties();
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         loadPasswordFile();
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-XMPP";
     }
 
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return 1;
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
         if (serverConnection != null && serverConnection.isConnected()) {
             serverConnection.disconnect();
             serverConnection = null;
@@ -100,16 +104,19 @@ public class XmppLinkProtocol
     /**
      * We must have a connected, authenticated connection and a non-null servant
      */
-    protected boolean isServantAlive() {
+    @Override
+   protected boolean isServantAlive() {
         return serverConnection != null && serverConnection.isAuthenticated()
                 && super.isServantAlive();
     }
 
-    protected int getReplyTimeoutMillis() {
+    @Override
+   protected int getReplyTimeoutMillis() {
         return REPLY_EXPIRATION_SECS * 1000;
     }
 
-    protected boolean establishConnections(String node) {
+    @Override
+   protected boolean establishConnections(String node) {
         String[] userinfo = jabberId.split("@");
         String user = userinfo[0];
         String service = userinfo[1];
@@ -142,13 +149,15 @@ public class XmppLinkProtocol
         }
     }
 
-    protected URI makeURI(String myServantId)
+    @Override
+   protected URI makeURI(String myServantId)
             throws URISyntaxException {
         String input = "xmpp://" + jabberId;
         return new URI(input);
     }
 
-    protected Runnable makePollerTask() {
+    @Override
+   protected Runnable makePollerTask() {
         return null;
     }
 
@@ -156,7 +165,8 @@ public class XmppLinkProtocol
      * Send a base64'ized message to a buddy. The message can either be an MTS
      * AttributedMessage or an ack.
      */
-    protected Chat processOutgoingMessage(URI destination, MessageAttributes message)
+    @Override
+   protected Chat processOutgoingMessage(URI destination, MessageAttributes message)
             throws IOException {
         if (!isServantAlive()) {
             if (loggingService.isDebugEnabled()) {

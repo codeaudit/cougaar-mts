@@ -29,8 +29,6 @@ package org.cougaar.mts.base;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 
-import org.cougaar.core.mts.Attributes;
-
 /**
  * This is the final station in the sender for serializling LinkProyocols.
  * MessageWriter and MessageReader allow aspect authors to examine and filter

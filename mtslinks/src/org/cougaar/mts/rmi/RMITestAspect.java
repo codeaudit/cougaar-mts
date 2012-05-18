@@ -45,7 +45,8 @@ public class RMITestAspect
 {
     private RMISocketControlService svc;
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             return new Delegate((DestinationLink) object);
         } else {
@@ -53,7 +54,8 @@ public class RMITestAspect
         }
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         svc = getServiceBroker().getService(this, RMISocketControlService.class, null);
@@ -66,7 +68,8 @@ public class RMITestAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             svc.setSoTimeout(getDestination(), 2000);

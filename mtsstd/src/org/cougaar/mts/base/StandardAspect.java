@@ -36,7 +36,8 @@ abstract public class StandardAspect
         extends BoundComponent
         implements MessageTransportAspect {
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         ServiceBroker sb = getServiceBroker();

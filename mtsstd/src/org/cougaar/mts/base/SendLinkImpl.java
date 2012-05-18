@@ -79,7 +79,12 @@ final public class SendLinkImpl
     }
 
     private final UnaryPredicate flushPredicate = new UnaryPredicate() {
-        public boolean execute(Object m) {
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      public boolean execute(Object m) {
             AttributedMessage msg = (AttributedMessage) m;
             MessageAddress primalAddress = addr.getPrimary();
             MessageAddress src = msg.getOriginator().getPrimary();

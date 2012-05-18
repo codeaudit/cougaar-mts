@@ -93,7 +93,8 @@ public class AgentStatusAspect
         nodeState = newAgentState();
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         ServiceBroker sb = getServiceBroker();
@@ -122,7 +123,8 @@ public class AgentStatusAspect
         });
     }
 
-    public void start() {
+    @Override
+   public void start() {
         super.start();
 
         ServiceBroker sb = getServiceBroker();
@@ -277,7 +279,8 @@ public class AgentStatusAspect
     // mechanism doesn't provide for station-specific ordering. But
     // it does provide an implicit early-vs-late switch, since
     // reverse delegates always run early. Use that here.
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == SendQueue.class) {
             return new SendQueueDelegate((SendQueue) object);
         } else if (type == SendLink.class) {
@@ -289,7 +292,8 @@ public class AgentStatusAspect
         }
     }
 
-    public Object getReverseDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getReverseDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class) {
             return new DestinationLinkDelegate((DestinationLink) object);
         } else {
@@ -303,14 +307,16 @@ public class AgentStatusAspect
             super(link);
         }
 
-        public void release() {
+        @Override
+      public void release() {
             MessageAddress addr = getAddress().getPrimary();
             synchronized (localStates) {
                 localStates.remove(addr);
             }
         }
 
-        public void registerClient(MessageTransportClient client) {
+        @Override
+      public void registerClient(MessageTransportClient client) {
             super.registerClient(client);
             ensureLocalState(getAddress().getPrimary());
         }
@@ -334,7 +340,8 @@ public class AgentStatusAspect
                     && attributes.getAttribute(DELIVERY_ATTRIBUTE).equals(DELIVERY_STATUS_DELIVERED);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             MessageAddress remoteAddr = message.getTarget().getPrimary();
@@ -459,7 +466,8 @@ public class AgentStatusAspect
             super(delegatee);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message, MessageAddress dest)
                 throws MisdeliveredMessageException {
             String remoteAgent = message.getOriginator().getAddress();
             String heard_key = "Agent" + KEY_SEPR + remoteAgent + KEY_SEPR + "HeardTime";
@@ -509,7 +517,8 @@ public class AgentStatusAspect
             super(queue);
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             MessageAddress remoteAddr = message.getTarget().getPrimary();
             AgentState remoteState = ensureRemoteState(remoteAddr);
             MessageAddress localAddr = message.getOriginator().getPrimary();

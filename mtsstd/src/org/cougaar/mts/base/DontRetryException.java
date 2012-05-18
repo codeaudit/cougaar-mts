@@ -35,13 +35,18 @@ package org.cougaar.mts.base;
 public class DontRetryException
         extends CougaarIOException {
 
-    private final Exception cause;
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   private final Exception cause;
 
     DontRetryException(Exception cause) {
         this.cause = cause;
     }
 
-    public Throwable getCause() {
+    @Override
+   public Throwable getCause() {
         return cause;
     }
 

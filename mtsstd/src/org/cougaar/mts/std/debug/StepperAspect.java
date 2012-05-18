@@ -78,7 +78,8 @@ public final class StepperAspect
         return threadService;
     }
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == DestinationQueue.class) {
             return new DestinationQueueDelegate((DestinationQueue) delegatee);
         } else {
@@ -105,7 +106,8 @@ public final class StepperAspect
         return frame;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         service = new ServiceImpl();
         ServiceBroker sb = getServiceBroker();
@@ -185,7 +187,11 @@ public final class StepperAspect
     private class StepFrame
             extends JFrame
             implements ScrollPaneConstants {
-        private final JComponent contents;
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+      private final JComponent contents;
         private JComponent controllers, scroller;
 
         private StepFrame(String id) {
@@ -227,7 +233,8 @@ public final class StepperAspect
             cp.add(contents);
 
             addWindowListener(new WindowAdapter() {
-                public void windowClosing(WindowEvent e) {
+                @Override
+               public void windowClosing(WindowEvent e) {
                     frameClosing();
                 }
             });
@@ -265,7 +272,11 @@ public final class StepperAspect
     private static class StepController
             extends JPanel
             implements ScrollPaneConstants {
-        private final DestinationQueueDelegate delegate;
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+      private final DestinationQueueDelegate delegate;
         private final JButton send;
         private final JCheckBox pause;
         private final JTextArea messageWindow;
@@ -412,7 +423,8 @@ public final class StepperAspect
             }
         }
 
-        public void dispatchNextMessage(AttributedMessage msg) {
+        @Override
+      public void dispatchNextMessage(AttributedMessage msg) {
             ensureWidget(msg.getTarget());
             widget.increment();
             if (!stepping) {

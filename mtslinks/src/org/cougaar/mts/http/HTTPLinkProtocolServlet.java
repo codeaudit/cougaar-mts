@@ -49,7 +49,11 @@ import org.cougaar.mts.base.MisdeliveredMessageException;
  */
 class HTTPLinkProtocolServlet
         extends HttpServlet {
-    private final LoggingService logger;
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   private final LoggingService logger;
     private final MessageDeliverer deliverer;
 
     // Logging is from the owner's logger (HTTPLinkProtocol)
@@ -68,12 +72,14 @@ class HTTPLinkProtocolServlet
         out.println("</body></html>");
     }
 
-    public void doGet(HttpServletRequest req, HttpServletResponse resp)
+    @Override
+   public void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         usage(resp);
     }
 
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
+    @Override
+   public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         Object result = null;
 

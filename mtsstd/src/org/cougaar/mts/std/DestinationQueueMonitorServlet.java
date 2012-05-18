@@ -52,7 +52,11 @@ import org.cougaar.mts.base.DestinationQueueMonitorService;
 public final class DestinationQueueMonitorServlet
         extends ServletFrameset {
 
-    // values for the FRAME url parameter
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   // values for the FRAME url parameter
     private static final String INFO_FRAME = "infoFrame";
     private static final String SELECT_FRAME = "selectFrame";
 
@@ -79,11 +83,13 @@ public final class DestinationQueueMonitorServlet
 
     // Implementations of ServletFrameset's abstract methods
 
-    public String getPath() {
+    @Override
+   public String getPath() {
         return "/message/queues";
     }
 
-    public String getTitle() {
+    @Override
+   public String getTitle() {
         return "MTS Queues";
     }
 
@@ -260,7 +266,8 @@ public final class DestinationQueueMonitorServlet
         endTable(out);
     }
 
-    public void printPage(HttpServletRequest request, PrintWriter out) {
+    @Override
+   public void printPage(HttpServletRequest request, PrintWriter out) {
         String dest = request.getParameter(DESTINATION_PARAM);
         if (dest == null) {
             return;
@@ -371,11 +378,13 @@ public final class DestinationQueueMonitorServlet
         out.print("</html>\n");
     }
 
-    protected String getMiddleFrame() {
+    @Override
+   protected String getMiddleFrame() {
         return INFO_FRAME;
     }
 
-    protected final void printFrame(String frame, HttpServletRequest request, PrintWriter out) {
+    @Override
+   protected final void printFrame(String frame, HttpServletRequest request, PrintWriter out) {
         String format = request.getParameter(FORMAT_PARAM);
         if (format != null && format.equalsIgnoreCase("xml")) {
             printXML(request, out);

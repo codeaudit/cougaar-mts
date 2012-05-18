@@ -39,7 +39,12 @@ import org.cougaar.core.mts.MessageAddress;
  **/
 public class UnregisteredNameException
         extends Exception {
-    public UnregisteredNameException(MessageAddress addr) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public UnregisteredNameException(MessageAddress addr) {
         super(addr + " not found");
     }
 }

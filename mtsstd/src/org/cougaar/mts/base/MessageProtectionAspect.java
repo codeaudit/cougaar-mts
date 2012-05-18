@@ -53,7 +53,8 @@ public class MessageProtectionAspect
     
     private MessageProtectionService svc;
     
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         ServiceBroker serviceBroker = getServiceBroker();
         svc = serviceBroker.getService(this, MessageProtectionService.class, null);
@@ -64,7 +65,8 @@ public class MessageProtectionAspect
         singleton = this;
     }
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new ProtectedMessageWriter(wtr);
@@ -91,12 +93,14 @@ public class MessageProtectionAspect
             super(delegatee);
         }
 
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             this.msg = msg;
             super.finalizeAttributes(msg);
         }
 
-        public OutputStream getObjectOutputStream(ObjectOutput oo)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput oo)
                 throws java.io.IOException {
             OutputStream os = super.getObjectOutputStream(oo);
             stream = svc.getOutputStream(os, msg.getOriginator(), msg.getTarget(), msg);
@@ -104,7 +108,8 @@ public class MessageProtectionAspect
             return stream;
         }
 
-        public void finishOutput()
+        @Override
+      public void finishOutput()
                 throws java.io.IOException {
             stream.finishOutput(msg);
             super.finishOutput();
@@ -120,12 +125,14 @@ public class MessageProtectionAspect
             super(delegatee);
         }
 
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             this.msg = msg;
             super.finalizeAttributes(msg);
         }
 
-        public InputStream getObjectInputStream(ObjectInput oi)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput oi)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream is = super.getObjectInputStream(oi);
             stream = svc.getInputStream(is, msg.getOriginator(), msg.getTarget(), msg);
@@ -133,7 +140,8 @@ public class MessageProtectionAspect
             return stream;
         }
 
-        public void finishInput()
+        @Override
+      public void finishInput()
                 throws java.io.IOException {
             stream.finishInput(msg);
             super.finishInput();
@@ -167,7 +175,8 @@ public class MessageProtectionAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             // Register Aspect as a Message Streaming filter

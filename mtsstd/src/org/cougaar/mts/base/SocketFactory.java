@@ -55,7 +55,11 @@ public class SocketFactory
         extends RMISocketFactory
         implements java.io.Serializable {
 
-    private static transient Logger logger =
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   private static transient Logger logger =
             Logging.getLogger("org.cougaar.mts.base.SocketFactory");
     // This has to be set very early from outside
     private static transient SocketControlProvisionService PolicyProvider;
@@ -148,7 +152,8 @@ public class SocketFactory
         return use_ssl;
     }
 
-    public Socket createSocket(String host, int port)
+    @Override
+   public Socket createSocket(String host, int port)
             throws IOException, UnknownHostException {
         Socket socket = new Socket();
         InetSocketAddress endpoint = new InetSocketAddress(host, port);
@@ -171,7 +176,8 @@ public class SocketFactory
         return use_aspects ? AspectSupportImpl.attachRMISocketAspects(socket) : socket;
     }
 
-    public ServerSocket createServerSocket(int port)
+    @Override
+   public ServerSocket createServerSocket(int port)
             throws IOException {
         ServerSocket s = null;
         if (use_ssl) {
@@ -195,7 +201,8 @@ public class SocketFactory
         }
     }
 
-    public int hashCode() {
+    @Override
+   public int hashCode() {
         if (use_ssl) {
             if (use_aspects) {
                 return 0;
@@ -209,7 +216,8 @@ public class SocketFactory
         }
     }
 
-    public boolean equals(Object o) {
+    @Override
+   public boolean equals(Object o) {
         if (this == o) {
             return true;
         }

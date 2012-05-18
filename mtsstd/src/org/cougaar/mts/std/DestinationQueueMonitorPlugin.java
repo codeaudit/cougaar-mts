@@ -45,7 +45,8 @@ public class DestinationQueueMonitorPlugin
         this.sb = sb;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         // we want the servlet service, but it's loaded after the MTS.

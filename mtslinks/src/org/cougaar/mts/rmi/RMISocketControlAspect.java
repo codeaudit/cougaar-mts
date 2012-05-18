@@ -62,7 +62,8 @@ public class RMISocketControlAspect
     public RMISocketControlAspect() {
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
 
         Provider provider = new Provider();
@@ -76,7 +77,8 @@ public class RMISocketControlAspect
         rootSB.addService(RMISocketControlService.class, provider);
     }
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == Socket.class) {
             impl.cacheSocket((Socket) object);
         }

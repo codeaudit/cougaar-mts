@@ -44,14 +44,13 @@ import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.CougaarIOException;
 import org.cougaar.mts.base.DestinationLink;
-import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.NameLookupException;
 import org.cougaar.mts.base.RPCLinkProtocol;
 import org.cougaar.mts.base.SocketFactory;
 import org.cougaar.mts.base.UnregisteredNameException;
-import org.cougaar.util.annotations.Cougaar;
 import org.cougaar.util.StateModelException;
+import org.cougaar.util.annotations.Cougaar;
 
 /**
  * This {@link LinkProtocol} handles message passing via RMI, one example
@@ -84,7 +83,8 @@ public class RMILinkProtocol
      * service. Instead they should use {@link #super_load}, which runs the
      * standard load() method without running any intervening ones.
      */
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         ServiceBroker sb = getServiceBroker();
         NodeIdentificationService nis = sb.getService(this, NodeIdentificationService.class, null);
@@ -101,7 +101,8 @@ public class RMILinkProtocol
     /**
      * @see org.cougaar.util.GenericStateModelAdapter#unload()
      */
-    public synchronized void unload()
+    @Override
+   public synchronized void unload()
             throws StateModelException {
         super.unload();
         if (controlService != null) {
@@ -111,12 +112,14 @@ public class RMILinkProtocol
         controlService = null;
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-RMI";
     }
 
     // If this is called, we've already found the remote reference.
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return 1000;
     }
 
@@ -172,15 +175,18 @@ public class RMILinkProtocol
         return result;
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return Boolean.FALSE;
     }
 
-    protected DestinationLink createDestinationLink(MessageAddress address) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress address) {
         return new RMILink(address);
     }
 
-    protected void ensureNodeServant() {
+    @Override
+   protected void ensureNodeServant() {
         if (myProxy != null) {
             return;
         }
@@ -196,7 +202,8 @@ public class RMILinkProtocol
         }
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
         try {
             UnicastRemoteObject.unexportObject(myProxy, true);
         } catch (NoSuchObjectException ex) {
@@ -205,7 +212,8 @@ public class RMILinkProtocol
         myProxy = null;
     }
 
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         try {
             UnicastRemoteObject.unexportObject(myProxy, true);
         } catch (NoSuchObjectException ex) {
@@ -277,7 +285,8 @@ public class RMILinkProtocol
             super(destination);
         }
 
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             MessageAddress target = getDestination();
             if (getRegistry().isLocalClient(target)) {
@@ -319,7 +328,8 @@ public class RMILinkProtocol
             return RMILinkProtocol.this.getClass();
         }
 
-        protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object remote_ref, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {

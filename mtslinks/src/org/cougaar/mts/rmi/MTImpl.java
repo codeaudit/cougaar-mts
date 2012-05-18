@@ -26,7 +26,6 @@
 package org.cougaar.mts.rmi;
 
 import java.rmi.server.RemoteObject;
-import java.rmi.server.UnicastRemoteObject;
 
 import org.cougaar.core.component.ServiceBroker;
 import org.cougaar.core.mts.MessageAddress;
@@ -50,7 +49,12 @@ import org.cougaar.mts.base.SocketFactory;
 public class MTImpl
         extends RemoteObject
         implements MT {
-    private final MessageAddress address;
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   private final MessageAddress address;
 
     private transient final MessageDeliverer deliverer;
     private transient final SocketFactory socfac;
@@ -76,7 +80,8 @@ public class MTImpl
         return address;
     }
 
-    public String toString() {
+    @Override
+   public String toString() {
         return "MT for " + getMessageAddress();
     }
 }

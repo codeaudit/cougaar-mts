@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.cougaar.core.mts.MessageTransportWatcher;
 import org.cougaar.core.service.MessageWatcherService;
-import org.cougaar.mts.base.MessageTransportServiceProvider;
 
 /**
  * This entity implements the {@link MessageWatcherService}. It's used in

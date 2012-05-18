@@ -40,14 +40,16 @@ public class EnableCorbaAspect
     private long cutover_time;
     private final long startup_period = 10000; // make this a parameter
 
-    public Object getDelegate(Object object, Class<?> type) {
+    @Override
+   public Object getDelegate(Object object, Class<?> type) {
         if (type == DestinationLink.class && object instanceof CorbaLinkProtocol) {
             return new Delegate((DestinationLink) object);
         }
         return null;
     }
 
-    public void start() {
+    @Override
+   public void start() {
         cutover_time = System.currentTimeMillis() + startup_period;
         super.start();
     }
@@ -63,7 +65,8 @@ public class EnableCorbaAspect
             super(link);
         }
 
-        public int cost(AttributedMessage message) {
+        @Override
+      public int cost(AttributedMessage message) {
             System.currentTimeMillis();
             int cost = super.cost(message);
             return timeToCutover() ? cost / 10 : cost;

@@ -100,11 +100,13 @@ public class JMSLinkProtocol
 
     // messages
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
     }
 
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         // TODO Better cost function for JMS transport
         // TODO JAZ This might be the place to ensure the session and Servent
         // Be careful not to test on each call. if failed only test once per
@@ -114,7 +116,8 @@ public class JMSLinkProtocol
         return 1500;
     }
 
-    protected DestinationLink createDestinationLink(MessageAddress address) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress address) {
         return new JMSLink(address);
     }
 
@@ -274,7 +277,8 @@ public class JMSLinkProtocol
         return servantDestination;
     }
 
-    protected void ensureNodeServant() {
+    @Override
+   protected void ensureNodeServant() {
         if (servantDestination != null) {
             return;
         }
@@ -426,11 +430,13 @@ public class JMSLinkProtocol
         flush.close();
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-JMS";
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
         // Tear down context->factory->connection->session->producers and
         // consumers
         if (loggingService.isInfoEnabled()) {
@@ -468,7 +474,8 @@ public class JMSLinkProtocol
     // other calls can't block. Instead
     // they return immediately.
     // TODO add a min retry period
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         synchronized (remakeLock) {
             if (remakeInProgress) {
                 return;
@@ -481,7 +488,8 @@ public class JMSLinkProtocol
         remakeInProgress = false;
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return Boolean.FALSE;
     }
 
@@ -490,7 +498,8 @@ public class JMSLinkProtocol
         receiver.handleIncomingMessage(msg);
     }
 
-    protected boolean isServantAlive() {
+    @Override
+   protected boolean isServantAlive() {
         return super.isServantAlive() && session != null && servantDestination != null
                 && consumer != null && receiver != null;
     }
@@ -518,11 +527,13 @@ public class JMSLinkProtocol
             this.sender = makeMessageSender(findOrMakeReplySync());
         }
 
-        public boolean isValid(AttributedMessage message) {
+        @Override
+      public boolean isValid(AttributedMessage message) {
             return ensureNodeServantIsAlive() && super.isValid(message);
         }
 
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             if (ref == null) {
                 if (loggingService.isWarnEnabled()) {
@@ -555,7 +566,8 @@ public class JMSLinkProtocol
             return null;
         }
 
-        protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             if (!(destination instanceof Destination)) {

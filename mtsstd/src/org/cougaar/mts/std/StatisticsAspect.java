@@ -92,7 +92,8 @@ public class StatisticsAspect
         messageLengthHistogram = new long[MessageStatistics.NBINS];
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         
         NodeControlService ncs = getServiceBroker().getService(this, NodeControlService.class, null);
@@ -184,7 +185,8 @@ public class StatisticsAspect
         statisticsSentTotalBytes += byteCount;
     }
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new StatisticsWriter(wtr);
@@ -210,7 +212,8 @@ public class StatisticsAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage msg)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage msg)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             // Register Aspect as a Message Streaming filter
@@ -253,7 +256,8 @@ public class StatisticsAspect
             super(deliverer);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage msg, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage msg, MessageAddress dest)
                 throws MisdeliveredMessageException
 
         {
@@ -287,7 +291,8 @@ public class StatisticsAspect
             super(queue);
         }
 
-        public void holdMessage(AttributedMessage m) {
+        @Override
+      public void holdMessage(AttributedMessage m) {
             updateQueueStatistics();
             ++currentAllQueuesSize;
             super.holdMessage(m);
@@ -303,19 +308,22 @@ public class StatisticsAspect
             super(out);
         }
 
-        public void write(int b)
+        @Override
+      public void write(int b)
                 throws java.io.IOException {
             out.write(b);
             byteCount += 1;
         }
 
-        public void write(byte[] b)
+        @Override
+      public void write(byte[] b)
                 throws java.io.IOException {
             out.write(b);
             byteCount += b.length;
         }
 
-        public void write(byte[] b, int o, int len)
+        @Override
+      public void write(byte[] b, int o, int len)
                 throws java.io.IOException {
             out.write(b, o, len);
             byteCount += len;
@@ -332,20 +340,23 @@ public class StatisticsAspect
             super(delegatee);
         }
 
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             super.finalizeAttributes(msg);
             this.msg = msg;
         }
 
         // Create and return the byte-counting FilterOutputStream
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_os = super.getObjectOutputStream(out);
             wrapper = new StatisticsOutputStream(raw_os);
             return wrapper;
         }
 
-        public void finishOutput()
+        @Override
+      public void finishOutput()
                 throws java.io.IOException {
             super.finishOutput();
             int msgBytes = wrapper.byteCount;
@@ -365,20 +376,23 @@ public class StatisticsAspect
             super(wrapped);
         }
 
-        public int read()
+        @Override
+      public int read()
                 throws java.io.IOException {
             byteCount++;
             return in.read();
         }
 
-        public int read(byte[] b, int off, int len)
+        @Override
+      public int read(byte[] b, int off, int len)
                 throws java.io.IOException {
             int bytes_read = in.read(b, off, len);
             byteCount += bytes_read;
             return bytes_read;
         }
 
-        public int read(byte[] b)
+        @Override
+      public int read(byte[] b)
                 throws java.io.IOException {
             int bytes_read = in.read(b);
             byteCount += bytes_read;
@@ -396,19 +410,22 @@ public class StatisticsAspect
             super(delegatee);
         }
 
-        public InputStream getObjectInputStream(ObjectInput in)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput in)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream raw_is = super.getObjectInputStream(in);
             wrapper = new StatisticsInputStream(raw_is);
             return wrapper;
         }
 
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             this.msg = msg;
             super.finalizeAttributes(msg);
         }
 
-        public void finishInput()
+        @Override
+      public void finishInput()
                 throws java.io.IOException {
             super.finishInput();
             int msgBytes = wrapper.byteCount;

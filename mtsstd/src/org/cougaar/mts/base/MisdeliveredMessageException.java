@@ -35,7 +35,12 @@ import java.rmi.RemoteException;
  **/
 public class MisdeliveredMessageException
         extends RemoteException {
-    public MisdeliveredMessageException(AttributedMessage message) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public MisdeliveredMessageException(AttributedMessage message) {
         super(message + " misdelivered");
     }
 }

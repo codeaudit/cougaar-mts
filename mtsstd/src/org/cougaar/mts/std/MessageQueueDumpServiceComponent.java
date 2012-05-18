@@ -56,7 +56,8 @@ public final class MessageQueueDumpServiceComponent
         rootsb = ncs == null ? null : ncs.getRootServiceBroker();
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         impl = new Impl(sb);
         rootsb.addService(MessageQueueDumpService.class, this);

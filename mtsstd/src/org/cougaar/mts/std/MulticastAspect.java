@@ -49,7 +49,8 @@ public class MulticastAspect
 
     private static final String MCAST = "org.cougaar.message.transport.is-multicast";
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) delegatee);
         } else {
@@ -57,7 +58,8 @@ public class MulticastAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getReverseDelegate(Object delegatee, Class<?> type) {
         if (type == MessageDeliverer.class) {
             return new MessageDelivererDelegate((MessageDeliverer) delegatee);
         } else {
@@ -72,7 +74,8 @@ public class MulticastAspect
             super(link);
         }
 
-        public void sendMessage(AttributedMessage msg) {
+        @Override
+      public void sendMessage(AttributedMessage msg) {
             MessageAddress destination = msg.getTarget();
             if (destination instanceof MulticastMessageAddress) {
                 msg.setAttribute(MCAST, destination);
@@ -116,7 +119,8 @@ public class MulticastAspect
             super(deliverer);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage msg, MessageAddress destination)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage msg, MessageAddress destination)
                 throws MisdeliveredMessageException {
             MulticastMessageAddress mcastAddr = (MulticastMessageAddress) msg.getAttribute(MCAST);
 

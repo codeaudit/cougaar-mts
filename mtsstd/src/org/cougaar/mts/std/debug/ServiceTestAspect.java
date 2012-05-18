@@ -33,7 +33,6 @@ import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.DestinationLink;
 import org.cougaar.mts.base.DestinationLinkDelegateImplBase;
-import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.LinkProtocolService;
 import org.cougaar.mts.base.MessageDeliverer;
 import org.cougaar.mts.base.MessageDelivererDelegateImplBase;
@@ -80,7 +79,8 @@ public class ServiceTestAspect
         return message;
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegate;
             return new TestDestinationLink(link);
@@ -89,7 +89,8 @@ public class ServiceTestAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getReverseDelegate(Object delegate, Class<?> type) {
         if (type == MessageDeliverer.class) {
             return new TestDeliverer((MessageDeliverer) delegate);
         } else {
@@ -103,7 +104,8 @@ public class ServiceTestAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             return super.forwardMessage(send(message));
@@ -117,7 +119,8 @@ public class ServiceTestAspect
             super(deliverer);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage m, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage m, MessageAddress dest)
                 throws MisdeliveredMessageException {
             return super.deliverMessage(receive(m), dest);
         }

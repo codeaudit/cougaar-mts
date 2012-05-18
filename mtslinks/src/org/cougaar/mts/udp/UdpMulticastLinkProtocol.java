@@ -71,7 +71,8 @@ public class UdpMulticastLinkProtocol
     private int socketTimeout = SOCKET_TIMEOUT_SECONDS;
     
     
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         timeToLive = (int) getParameter("timeToLive", TIME_TO_LIVE);
         trafficClass = (int) getParameter("timeToLive", TRAFFIC_CLASS);
@@ -85,7 +86,8 @@ public class UdpMulticastLinkProtocol
     /**
      * Support only internet multicast addresses
      */
-    public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
+    @Override
+   public boolean supportsAddressType(Class<? extends MessageAddress> addressType) {
         return addressType == InetMulticastMessageAddress.class;
     }
     
@@ -93,7 +95,8 @@ public class UdpMulticastLinkProtocol
      * Join the given multicast group. Plugins only have access to this method
      * indirectly, via {@link org.cougaar.core.agent.service.MessageSwitchService#joinGroup}
      */
-    public void join(GroupMessageAddress addr) throws IOException {
+    @Override
+   public void join(GroupMessageAddress addr) throws IOException {
         InetMulticastMessageAddress multicastAddress = (InetMulticastMessageAddress) addr;
         InetSocketAddress socketAddr = multicastAddress.getReference();
         synchronized (multicastAddresses) {
@@ -116,7 +119,8 @@ public class UdpMulticastLinkProtocol
      * Leave the given multicast group. Plugins only have access to this method
      * indirectly, via {@link org.cougaar.core.agent.service.MessageSwitchService#leaveGroup}
      */
-    public void leave(GroupMessageAddress addr) throws IOException {
+    @Override
+   public void leave(GroupMessageAddress addr) throws IOException {
         InetMulticastMessageAddress multicastAddress = (InetMulticastMessageAddress) addr;
         InetSocketAddress socketAddr = multicastAddress.getReference();
         MulticastSocket socket;
@@ -134,18 +138,21 @@ public class UdpMulticastLinkProtocol
         }
     }
 
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return 1;
     }
 
-    protected DestinationLink createDestinationLink(MessageAddress address) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress address) {
         if (!(address instanceof InetMulticastMessageAddress)) {
             throw new RuntimeException(address + " is not a SocketMessageAddress");
         }
         return new MulticastLink((InetMulticastMessageAddress) address);
     }
 
-    protected void ensureNodeServant() {
+    @Override
+   protected void ensureNodeServant() {
         if (servantUri != null) {
             return;
         }
@@ -162,7 +169,8 @@ public class UdpMulticastLinkProtocol
         }
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
         timer.cancel();
         synchronized (multicastAddresses) {
             for (Map.Entry<InetMulticastMessageAddress,MulticastSocket> entry : multicastAddresses.entrySet()) {
@@ -185,7 +193,8 @@ public class UdpMulticastLinkProtocol
         servantUri = null;
     }
 
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         if (isServantAlive()) {
             releaseNodeServant();
         }
@@ -195,15 +204,18 @@ public class UdpMulticastLinkProtocol
     /**
      * We must have an open UDP socket and a non-null servant
      */
-    protected boolean isServantAlive() {
+    @Override
+   protected boolean isServantAlive() {
         return servantUri != null;
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-UDP-MULTICAST";
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return false;
     }
 
@@ -362,11 +374,13 @@ public class UdpMulticastLinkProtocol
             }
         }
         
-        public int cost(AttributedMessage msg) {
+        @Override
+      public int cost(AttributedMessage msg) {
             return 1;
         }
 
-        public boolean isValid(AttributedMessage message) {
+        @Override
+      public boolean isValid(AttributedMessage message) {
             return outputConnection != null;
         }
         
@@ -374,7 +388,8 @@ public class UdpMulticastLinkProtocol
          * This {@link RPCLinkProtocol#Link} method is meaningless here
          * but must return non-null.  So override and return junk.
          */
-        protected URI getRemoteURI() {
+        @Override
+      protected URI getRemoteURI() {
             try {
                 return new URI("junk://never-used");
             } catch (URISyntaxException e) {
@@ -383,12 +398,14 @@ public class UdpMulticastLinkProtocol
             }
         }
         
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             return ref;
         }
 
-        protected MessageAttributes forwardByProtocol(Object remote, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object remote, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {
@@ -421,12 +438,14 @@ public class UdpMulticastLinkProtocol
             this.address = address;
         }
 
-        public boolean cancel() {
+        @Override
+      public boolean cancel() {
             cancelled = true;
             return super.cancel();
         }
         
-        public void run() {
+        @Override
+      public void run() {
             while (!cancelled) {
                 if (!isServantAlive()) {
                     // too early?

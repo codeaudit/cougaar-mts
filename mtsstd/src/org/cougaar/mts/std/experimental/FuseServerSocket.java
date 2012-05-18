@@ -49,7 +49,8 @@ public class FuseServerSocket
             super(delegatee);
         }
 
-        public void close()
+        @Override
+      public void close()
                 throws java.io.IOException {
             InetAddress client = getInetAddress();
             boolean alreadyClosed = isClosed();
@@ -103,7 +104,8 @@ public class FuseServerSocket
         return stat;
     }
 
-    public Socket accept()
+    @Override
+   public Socket accept()
             throws java.io.IOException {
         Socket socket = super.accept();
         socket = new FuseSocket(socket);

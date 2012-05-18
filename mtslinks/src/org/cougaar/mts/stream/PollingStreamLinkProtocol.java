@@ -135,11 +135,13 @@ abstract public class PollingStreamLinkProtocol<I>
         }
     }
 
-    protected DestinationLink createDestinationLink(MessageAddress address) {
+    @Override
+   protected DestinationLink createDestinationLink(MessageAddress address) {
         return new StreamLink(address);
     }
 
-    protected void ensureNodeServant() {
+    @Override
+   protected void ensureNodeServant() {
         if (servantUri != null) {
             return;
         }
@@ -172,7 +174,8 @@ abstract public class PollingStreamLinkProtocol<I>
         }
     }
 
-    protected void releaseNodeServant() {
+    @Override
+   protected void releaseNodeServant() {
         servantUri = null;
         setNodeURI(null);
         if (poller != null) {
@@ -181,14 +184,16 @@ abstract public class PollingStreamLinkProtocol<I>
         }
     }
 
-    protected void remakeNodeServant() {
+    @Override
+   protected void remakeNodeServant() {
         if (isServantAlive()) {
             releaseNodeServant();
         }
         ensureNodeServant();
     }
 
-    protected Boolean usesEncryptedSocket() {
+    @Override
+   protected Boolean usesEncryptedSocket() {
         return false;
     }
 
@@ -202,16 +207,19 @@ abstract public class PollingStreamLinkProtocol<I>
             this.sender = makeMessageSender();
         }
 
-        public boolean isValid(AttributedMessage message) {
+        @Override
+      public boolean isValid(AttributedMessage message) {
             return ensureNodeServantIsAlive() && super.isValid(message);
         }
 
-        protected Object decodeRemoteRef(URI ref)
+        @Override
+      protected Object decodeRemoteRef(URI ref)
                 throws Exception {
             return uri = ref;
         }
 
-        protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
+        @Override
+      protected MessageAttributes forwardByProtocol(Object destination, AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             try {

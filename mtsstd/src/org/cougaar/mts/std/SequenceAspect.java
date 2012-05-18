@@ -60,7 +60,8 @@ public class SequenceAspect
 
     private OutOfBandMessageService oobs;
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
             return new SequencedSendLink((SendLink) delegate);
         } else {
@@ -68,7 +69,8 @@ public class SequenceAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getReverseDelegate(Object delegate, Class<?> type) {
         if (type == ReceiveLink.class) {
             return new SequencedReceiveLink((ReceiveLink) delegate);
         } else {
@@ -76,7 +78,8 @@ public class SequenceAspect
         }
     }
 
-    public void start() {
+    @Override
+   public void start() {
         super.start();
         oobs = getServiceBroker().getService(this, OutOfBandMessageService.class, null);
     }
@@ -97,7 +100,8 @@ public class SequenceAspect
         // This can't be done in the constructor, since that runs when
         // the client first requests the MessageTransportService (too
         // early). Wait for registration.
-        public synchronized void registerClient(MessageTransportClient client) {
+        @Override
+      public synchronized void registerClient(MessageTransportClient client) {
             super.registerClient(client);
 
             MessageAddress myAddress = getAddress();
@@ -126,7 +130,8 @@ public class SequenceAspect
             return next;
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             int sequenceNumber = nextSeq(message);
             message.setAttribute(SEQ, sequenceNumber);
             super.sendMessage(message);
@@ -159,7 +164,8 @@ public class SequenceAspect
             super.deliverMessage(message);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage message) {
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage message) {
             if (oobs != null && oobs.isOutOfBandMessage(message)) {
                 // ignore out of band messages
                 return super.deliverMessage(message);
@@ -185,7 +191,12 @@ public class SequenceAspect
 
     private class MessageComparator
             implements Comparator<AttributedMessage>, Serializable {
-        public int compare(AttributedMessage msg1, AttributedMessage msg2) {
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      public int compare(AttributedMessage msg1, AttributedMessage msg2) {
             int seq1 = getSequenceNumber(msg1);
             int seq2 = getSequenceNumber(msg2);
             return seq1-seq2;
@@ -195,7 +206,11 @@ public class SequenceAspect
     private class ConversationState
             implements Serializable {
         
-        private int nextSeqNum;
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+      private int nextSeqNum;
         private final TreeSet<AttributedMessage> heldMessages;
         private final Comparator<AttributedMessage> comparator = new MessageComparator();
         

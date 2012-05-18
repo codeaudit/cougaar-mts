@@ -107,7 +107,8 @@ abstract public class LinkProtocol
         getRegistry().addLinkProtocol(this);
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super_load();
     }
 

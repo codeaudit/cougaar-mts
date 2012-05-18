@@ -67,11 +67,13 @@ public final class MessageTransportServiceProvider
 
     private MessageStreamsFactory msgFactory;
 
-    protected String specifyContainmentPoint() {
+    @Override
+   protected String specifyContainmentPoint() {
         return Agent.INSERTION_POINT + ".MessageTransport";
     }
 
-    public void load() {
+    @Override
+   public void load() {
         transitState("load()", UNLOADED, LOADED);
 
         beforeConfig();
@@ -82,26 +84,33 @@ public final class MessageTransportServiceProvider
     }
 
     // disable super load sequence
-    protected void loadHighPriorityComponents() {
+    @Override
+   protected void loadHighPriorityComponents() {
     }
 
-    protected void loadInternalPriorityComponents() {
+    @Override
+   protected void loadInternalPriorityComponents() {
     }
 
-    protected void loadBinderPriorityComponents() {
+    @Override
+   protected void loadBinderPriorityComponents() {
     }
 
-    protected void loadComponentPriorityComponents() {
+    @Override
+   protected void loadComponentPriorityComponents() {
     }
 
-    protected void loadLowPriorityComponents() {
+    @Override
+   protected void loadLowPriorityComponents() {
     }
 
-    protected ComponentDescriptions findInitialComponentDescriptions() {
+    @Override
+   protected ComponentDescriptions findInitialComponentDescriptions() {
         return null;
     }
 
-    protected ComponentDescriptions findExternalComponentDescriptions() {
+    @Override
+   protected ComponentDescriptions findExternalComponentDescriptions() {
         return null;
     }
 
@@ -297,7 +306,8 @@ public final class MessageTransportServiceProvider
     /**
      * @see org.cougaar.core.component.ContainerSupport#unload()
      */
-    public void unload() {
+    @Override
+   public void unload() {
         super.unload();
         aspectSupportImpl.unload();
 

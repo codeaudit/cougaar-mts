@@ -173,7 +173,8 @@ abstract public class RPCLinkProtocol
         }
     }
 
-    public boolean addressKnown(MessageAddress address) {
+    @Override
+   public boolean addressKnown(MessageAddress address) {
         throw new RuntimeException("The addressKnown method is not supported");
     }
 
@@ -183,7 +184,8 @@ abstract public class RPCLinkProtocol
     // services defined by super classes service. Instead they should
     // use super_load(), defined in LinkProtocol, which runs the
     // standard load() method without running any intervening ones.
-    public void load() {
+    @Override
+   public void load() {
         super_load();
 
         ServiceBroker sb = getServiceBroker();
@@ -208,7 +210,8 @@ abstract public class RPCLinkProtocol
         return ref != null;
     }
 
-    public final void registerClient(MessageTransportClient client) {
+    @Override
+   public final void registerClient(MessageTransportClient client) {
         synchronized (ipAddrLock) {
             clients.add(client);
             if (isServantAlive()) {
@@ -230,7 +233,8 @@ abstract public class RPCLinkProtocol
         }
     }
 
-    public final void unregisterClient(MessageTransportClient client) {
+    @Override
+   public final void unregisterClient(MessageTransportClient client) {
         synchronized (ipAddrLock) {
             try {
 
@@ -268,7 +272,8 @@ abstract public class RPCLinkProtocol
 
     // Unregister all current clients (inform the WP); close the RMI
     // listener; remake the RMI impl; re-register clients (WP).
-    public void ipAddressChanged() {
+    @Override
+   public void ipAddressChanged() {
         synchronized (ipAddrLock) {
             // update hostname property
             try {
@@ -295,7 +300,8 @@ abstract public class RPCLinkProtocol
 
     // Factory methods:
 
-    public DestinationLink getDestinationLink(MessageAddress address) {
+    @Override
+   public DestinationLink getDestinationLink(MessageAddress address) {
         DestinationLink link = null;
         synchronized (links) {
             link = links.get(address);
@@ -317,7 +323,8 @@ abstract public class RPCLinkProtocol
         // protocol-specific methods would go here.
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+   @SuppressWarnings("unchecked")
     // until the declaration is fixed
     public Object getService(ServiceBroker sb, Object requestor, Class serviceClass) {
         if (serviceClass == Service.class) {
@@ -327,7 +334,8 @@ abstract public class RPCLinkProtocol
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+   @SuppressWarnings("unchecked")
     // until the declaration is fixed
     public void releaseService(ServiceBroker sb,
                                Object requestor,

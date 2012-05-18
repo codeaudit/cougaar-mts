@@ -48,27 +48,32 @@ public class MessageWriterImpl
             this.out = out;
         }
 
-        public void close()
+        @Override
+      public void close()
                 throws java.io.IOException {
             out.close();
         }
 
-        public void flush()
+        @Override
+      public void flush()
                 throws java.io.IOException {
             out.flush();
         }
 
-        public void write(int b)
+        @Override
+      public void write(int b)
                 throws java.io.IOException {
             out.write(b);
         }
 
-        public void write(byte[] b)
+        @Override
+      public void write(byte[] b)
                 throws java.io.IOException {
             out.write(b);
         }
 
-        public void write(byte[] b, int off, int len)
+        @Override
+      public void write(byte[] b, int off, int len)
                 throws java.io.IOException {
             out.write(b, off, len);
         }

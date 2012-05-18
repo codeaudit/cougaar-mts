@@ -125,7 +125,8 @@ public class SecurityAspect
         }
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == DestinationLink.class) {
             DestinationLink link = (DestinationLink) delegate;
             return new SecureDestinationLink(link);
@@ -134,7 +135,8 @@ public class SecurityAspect
         }
     }
 
-    public Object getReverseDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getReverseDelegate(Object delegate, Class<?> type) {
         if (type == MessageDeliverer.class) {
             return new SecureDeliverer((MessageDeliverer) delegate);
         } else {
@@ -148,7 +150,8 @@ public class SecurityAspect
             super(link);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws UnregisteredNameException, NameLookupException, CommFailureException,
                 MisdeliveredMessageException {
             return super.forwardMessage(secure(message));
@@ -162,7 +165,8 @@ public class SecurityAspect
             super(deliverer);
         }
 
-        public MessageAttributes deliverMessage(AttributedMessage m, MessageAddress dest)
+        @Override
+      public MessageAttributes deliverMessage(AttributedMessage m, MessageAddress dest)
                 throws MisdeliveredMessageException {
             return super.deliverMessage(unsecure(m), dest);
         }

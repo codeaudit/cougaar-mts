@@ -117,7 +117,8 @@ public class MessageProtectionServiceImpl
             super(stream);
         }
 
-        public void finishOutput(MessageAttributes attr)
+        @Override
+      public void finishOutput(MessageAttributes attr)
                 throws java.io.IOException {
         }
     }
@@ -128,7 +129,8 @@ public class MessageProtectionServiceImpl
             super(stream);
         }
 
-        public void finishInput(MessageAttributes attr)
+        @Override
+      public void finishInput(MessageAttributes attr)
                 throws java.io.IOException {
         }
 

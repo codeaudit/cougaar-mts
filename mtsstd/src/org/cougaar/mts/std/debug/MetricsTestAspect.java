@@ -55,7 +55,8 @@ public class MetricsTestAspect
     MetricsService svc;
     long lastUpdate = 0;
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == SendQueue.class) {
             return new DummySendQueue((SendQueue) delegatee);
         } else {
@@ -63,7 +64,8 @@ public class MetricsTestAspect
         }
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         ServiceBroker sb = getServiceBroker();
         update = sb.getService(this, MetricsUpdateService.class, null);
@@ -90,7 +92,8 @@ public class MetricsTestAspect
             super(delegatee);
         }
 
-        public void sendMessage(AttributedMessage message) {
+        @Override
+      public void sendMessage(AttributedMessage message) {
             runTest();
             super.sendMessage(message);
         }

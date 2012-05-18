@@ -43,7 +43,8 @@ public class MessageReply
         super(source, MessageReply.class);
     }
 
-    protected boolean replyOnly() {
+    @Override
+   protected boolean replyOnly() {
         return true;
     }
 

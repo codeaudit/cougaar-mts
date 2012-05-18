@@ -9,7 +9,12 @@ package org.cougaar.mts.corba.idlj;
 public final class CorbaMisdeliveredMessage
         extends org.omg.CORBA.UserException {
 
-    public CorbaMisdeliveredMessage() {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public CorbaMisdeliveredMessage() {
         super(CorbaMisdeliveredMessageHelper.id());
     } // ctor
 

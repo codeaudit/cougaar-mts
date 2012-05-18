@@ -27,7 +27,6 @@
 package org.cougaar.mts.std.experimental;
 
 import org.cougaar.mts.base.AbstractSocketControlPolicy;
-import org.cougaar.mts.base.SocketControlPolicy;
 import org.cougaar.mts.base.SocketFactory;
 
 /**

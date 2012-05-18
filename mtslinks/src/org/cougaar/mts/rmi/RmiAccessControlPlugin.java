@@ -25,7 +25,8 @@ public class RmiAccessControlPlugin
     ServletService servletService;
     RMISocketControlService rmiAccess;
 
-    protected void setupSubscriptions() {
+    @Override
+   protected void setupSubscriptions() {
 
         this.rmiAccess = getServiceBroker().getService(this, RMISocketControlService.class, null);
 
@@ -38,7 +39,8 @@ public class RmiAccessControlPlugin
 
     }
 
-    protected void execute() {
+    @Override
+   protected void execute() {
 
     }
 
@@ -81,12 +83,19 @@ public class RmiAccessControlPlugin
 
     private class MyServlet
             extends HttpServlet {
-        public void doGet(HttpServletRequest req, HttpServletResponse res)
+        /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public void doGet(HttpServletRequest req, HttpServletResponse res)
                 throws IOException {
             doit(req, res);
         }
 
-        public void doPost(HttpServletRequest req, HttpServletResponse res)
+        @Override
+      public void doPost(HttpServletRequest req, HttpServletResponse res)
                 throws IOException {
             doit(req, res);
         }

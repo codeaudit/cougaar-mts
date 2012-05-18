@@ -64,12 +64,14 @@ public class MetricsBlastTestAspect
         }
     }
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         return null;
 
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         ServiceBroker sb = getServiceBroker();
         update = sb.getService(this, MetricsUpdateService.class, null);

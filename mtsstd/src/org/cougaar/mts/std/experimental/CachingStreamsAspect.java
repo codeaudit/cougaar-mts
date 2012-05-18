@@ -42,7 +42,8 @@ import org.cougaar.mts.base.StandardAspect;
 public class CachingStreamsAspect
         extends StandardAspect {
 
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new CachingMessageWriter(wtr);
@@ -60,19 +61,22 @@ public class CachingStreamsAspect
             other = stream2;
         }
 
-        public void write(int b)
+        @Override
+      public void write(int b)
                 throws java.io.IOException {
             out.write(b);
             other.write(b);
         }
 
-        public void write(byte[] b, int off, int len)
+        @Override
+      public void write(byte[] b, int off, int len)
                 throws java.io.IOException {
             out.write(b, off, len);
             other.write(b, off, len);
         }
 
-        public void write(byte[] b)
+        @Override
+      public void write(byte[] b)
                 throws java.io.IOException {
             out.write(b);
             other.write(b);
@@ -94,20 +98,23 @@ public class CachingStreamsAspect
             return cache;
         }
         
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_os = super.getObjectOutputStream(out);
             byte_os = new ByteArrayOutputStream();
             return new TeeOutputStream(raw_os, byte_os);
         }
 
-        public void finishOutput()
+        @Override
+      public void finishOutput()
                 throws java.io.IOException {
             super.finishOutput();
             byte_os.flush();
         }
 
-        public void postProcess() {
+        @Override
+      public void postProcess() {
             super.postProcess();
             cache = byte_os.toByteArray();
         }

@@ -34,7 +34,8 @@ import org.cougaar.mts.base.StandardAspect;
 
 public class ZinkyMessageTraceAspect
         extends StandardAspect {
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == SendLink.class) {
             return new SendLinkDelegate((SendLink) delegate);
         } else {
@@ -49,7 +50,8 @@ public class ZinkyMessageTraceAspect
             super(link);
         }
 
-        public void sendMessage(AttributedMessage msg) {
+        @Override
+      public void sendMessage(AttributedMessage msg) {
             LoggingService log = getLoggingService();
             if (log.isWarnEnabled()) {
                 log.warn("Sending " + msg);

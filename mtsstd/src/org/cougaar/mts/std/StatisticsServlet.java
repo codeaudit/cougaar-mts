@@ -43,7 +43,12 @@ import org.cougaar.core.servlet.ServletFrameset;
 public class StatisticsServlet
         extends ServletFrameset {
 
-    private final DecimalFormat f4_2 = new DecimalFormat("#0.00");
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   private final DecimalFormat f4_2 = new DecimalFormat("#0.00");
 
     private final MessageStatisticsService statisticsService;
 
@@ -52,15 +57,18 @@ public class StatisticsServlet
         statisticsService = sb.getService(this, MessageStatisticsService.class, null);
     }
 
-    public String getPath() {
+    @Override
+   public String getPath() {
         return "/message/statistics";
     }
 
-    public String getTitle() {
+    @Override
+   public String getTitle() {
         return getNodeID() + " Message Statistics";
     }
 
-    public void printPage(HttpServletRequest request, PrintWriter out) {
+    @Override
+   public void printPage(HttpServletRequest request, PrintWriter out) {
         String reset_string = request.getParameter("reset");
         boolean reset = reset_string != null && reset_string.equalsIgnoreCase("true");
 

@@ -32,12 +32,14 @@ public class ManagedServerSocket
         super();
     }
 
-    public void setDelegate(ServerSocket delegate) {
+    @Override
+   public void setDelegate(ServerSocket delegate) {
         super.setDelegate(delegate);
         is_ssl = delegate instanceof javax.net.ssl.SSLServerSocket;
     }
 
-    public Socket accept()
+    @Override
+   public Socket accept()
             throws IOException {
         ManagedSocket socket = new ManagedSocket(super.accept());
         return socket;
@@ -56,7 +58,8 @@ public class ManagedServerSocket
             return is_ssl;
         }
 
-        public void close()
+        @Override
+      public void close()
                 throws java.io.IOException {
             // seems excessive to res -- why not use isClosed() ?
             synchronized (this) {

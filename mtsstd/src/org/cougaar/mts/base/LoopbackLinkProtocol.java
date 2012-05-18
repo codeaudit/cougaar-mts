@@ -47,7 +47,8 @@ public class LoopbackLinkProtocol
         links = new HashMap<MessageAddress,DestinationLink>();
     }
 
-    public synchronized DestinationLink getDestinationLink(MessageAddress address) {
+    @Override
+   public synchronized DestinationLink getDestinationLink(MessageAddress address) {
         DestinationLink link = links.get(address);
         if (link == null) {
             link = new Link(address);
@@ -57,17 +58,20 @@ public class LoopbackLinkProtocol
         return link;
     }
 
-    public void registerClient(MessageTransportClient client) {
+    @Override
+   public void registerClient(MessageTransportClient client) {
         // Does nothing because the Database of local clients is held
         // by MessageTransportServerImpl
     }
 
-    public void unregisterClient(MessageTransportClient client) {
+    @Override
+   public void unregisterClient(MessageTransportClient client) {
         // Does nothing because the Database of local clients is held
         // by MessageTransportServerImpl
     }
 
-    public boolean addressKnown(MessageAddress address) {
+    @Override
+   public boolean addressKnown(MessageAddress address) {
         // true iff the address is local
         return getRegistry().isLocalClient(address);
     }

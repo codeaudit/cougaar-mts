@@ -52,7 +52,8 @@ public class SendQueueFactory
         this.id = id;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         impl = new SendQueueImpl(id + "/OutQ");
         addComponent(impl);

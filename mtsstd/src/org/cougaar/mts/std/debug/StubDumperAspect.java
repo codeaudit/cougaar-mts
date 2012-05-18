@@ -44,7 +44,8 @@ public class StubDumperAspect
         super();
     }
 
-    public Object getDelegate(Object delegate, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegate, Class<?> type) {
         if (type == NameSupport.class) {
             return new NameSupportDelegate((NameSupport) delegate);
         } else {
@@ -59,14 +60,16 @@ public class StubDumperAspect
             super(nameSupport);
         }
 
-        public void registerAgentInNameServer(URI reference, MessageAddress address, String protocol) {
+        @Override
+      public void registerAgentInNameServer(URI reference, MessageAddress address, String protocol) {
             super.registerAgentInNameServer(reference, address, protocol);
 
             loggingService.info("\nRegistering " + address + " for " + protocol + " = ["
                     + reference + "]");
         }
 
-        public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
+        @Override
+      public URI lookupAddressInNameServer(MessageAddress address, String protocol) {
             URI result = super.lookupAddressInNameServer(address, protocol);
             loggingService.info("\nLookup " + address + " for " + protocol + " = [" + result + "]");
             return result;

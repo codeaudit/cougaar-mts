@@ -59,7 +59,8 @@ public abstract class MTPOA
         "IDL:cougaar/MT:1.0"
     };
 
-    public String[] _all_interfaces(org.omg.PortableServer.POA poa, byte[] objectId) {
+    @Override
+   public String[] _all_interfaces(org.omg.PortableServer.POA poa, byte[] objectId) {
         return __ids.clone();
     }
 

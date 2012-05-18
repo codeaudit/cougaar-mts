@@ -42,7 +42,12 @@ import org.cougaar.mts.base.SocketFactory;
 public class SerializedMTImpl
         extends MTImpl
         implements SerializedMT {
-    public SerializedMTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public SerializedMTImpl(MessageAddress addr, ServiceBroker sb, SocketFactory socfac) {
         super(addr, sb, socfac);
     }
 

@@ -63,7 +63,8 @@ final class DestinationQueueImpl
     // workaround for bug 3723
     private boolean loaded = false;
 
-    protected synchronized void transitState(String op, int expectedState, int endState) {
+    @Override
+   protected synchronized void transitState(String op, int expectedState, int endState) {
         if (getModelState() == expectedState) {
             super.transitState(op, expectedState, endState);
         }
@@ -77,7 +78,8 @@ final class DestinationQueueImpl
         return true;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         if (!shouldLoad()) {
             return;
         }
@@ -92,7 +94,8 @@ final class DestinationQueueImpl
 
     }
 
-    int getLane() {
+    @Override
+   int getLane() {
         return ThreadService.WILL_BLOCK_LANE;
     }
 
@@ -129,7 +132,8 @@ final class DestinationQueueImpl
         previous = null;
     }
 
-    /**
+    @Override
+   /**
      * Processes the next dequeued message.
      */
     boolean dispatch(AttributedMessage message) {

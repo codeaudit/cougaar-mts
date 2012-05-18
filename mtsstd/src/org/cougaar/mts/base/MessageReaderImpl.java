@@ -48,40 +48,48 @@ public class MessageReaderImpl
             this.in = in;
         }
 
-        public int available()
+        @Override
+      public int available()
                 throws java.io.IOException {
             return in.available();
         }
 
-        public void close()
+        @Override
+      public void close()
                 throws java.io.IOException {
             in.close();
         }
 
-        public boolean markSupported() {
+        @Override
+      public boolean markSupported() {
             return false;
         }
 
-        public int read()
+        @Override
+      public int read()
                 throws java.io.IOException {
             return in.read();
         }
 
-        public int read(byte[] b)
+        @Override
+      public int read(byte[] b)
                 throws java.io.IOException {
             return in.read(b);
         }
 
-        public int read(byte[] b, int off, int len)
+        @Override
+      public int read(byte[] b, int off, int len)
                 throws java.io.IOException {
             return in.read(b, off, len);
         }
 
-        public synchronized void reset()
+        @Override
+      public synchronized void reset()
                 throws java.io.IOException {
         }
 
-        public long skip(long n)
+        @Override
+      public long skip(long n)
                 throws java.io.IOException {
             return in.skip(n);
         }

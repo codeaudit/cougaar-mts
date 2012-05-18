@@ -31,7 +31,6 @@ import org.cougaar.core.mts.SerializationUtils;
 import org.cougaar.mts.base.AttributedMessage;
 import org.cougaar.mts.base.CommFailureException;
 import org.cougaar.mts.base.CougaarIOException;
-import org.cougaar.mts.base.LinkProtocol;
 import org.cougaar.mts.base.MisdeliveredMessageException;
 import org.cougaar.mts.base.SocketFactory;
 
@@ -47,12 +46,14 @@ public class SerializedRMILinkProtocol
         super();
     }
 
-    protected String getProtocolType() {
+    @Override
+   protected String getProtocolType() {
         return "-SerializedRMI";
     }
 
     // Is this different?
-    protected int computeCost(AttributedMessage message) {
+    @Override
+   protected int computeCost(AttributedMessage message) {
         return super.computeCost(message);
     }
 
@@ -60,7 +61,8 @@ public class SerializedRMILinkProtocol
         return new SerializedMTImpl(myAddress, getServiceBroker(), socfac);
     }
 
-    protected MessageAttributes doForwarding(MT remote, AttributedMessage message)
+    @Override
+   protected MessageAttributes doForwarding(MT remote, AttributedMessage message)
             throws MisdeliveredMessageException, java.rmi.RemoteException, CommFailureException {
         if (remote instanceof SerializedMT) {
             byte[] messageBytes = null;

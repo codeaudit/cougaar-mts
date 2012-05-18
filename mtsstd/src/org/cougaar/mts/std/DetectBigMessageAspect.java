@@ -62,7 +62,8 @@ public class DetectBigMessageAspect
 
     // Return delegates for MessageReader, MessageWriter and
     // DestinationLink.
-    public Object getDelegate(Object delegatee, Class<?> type) {
+    @Override
+   public Object getDelegate(Object delegatee, Class<?> type) {
         if (type == MessageWriter.class) {
             MessageWriter wtr = (MessageWriter) delegatee;
             return new CountingMessageWriter(wtr);
@@ -81,7 +82,8 @@ public class DetectBigMessageAspect
         return null;
     }
 
-    public void load() {
+    @Override
+   public void load() {
         super.load();
         threshold = (int) getParameter("MaxMsgLen", MAX_DEFAULT);
         if (loggingService.isWarnEnabled()) {
@@ -91,6 +93,11 @@ public class DetectBigMessageAspect
 
     public static class MessageTooBigException
             extends java.io.IOException {
+
+      /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
     }
 
     private void checkCount(int count, String context, AttributedMessage msg)
@@ -109,7 +116,8 @@ public class DetectBigMessageAspect
             super(delegatee);
         }
 
-        public MessageAttributes forwardMessage(AttributedMessage message)
+        @Override
+      public MessageAttributes forwardMessage(AttributedMessage message)
                 throws NameLookupException, UnregisteredNameException, CommFailureException,
                 MisdeliveredMessageException {
             // Register Aspect as a Message Streaming filter
@@ -139,6 +147,7 @@ public class DetectBigMessageAspect
             // using super, since the default FilterOutputStream
             // methods aren't very efficient.
 
+            @Override
             public void write(int b)
                     throws java.io.IOException {
                 out.write(b);
@@ -146,6 +155,7 @@ public class DetectBigMessageAspect
                 checkCount(count, "write", msg);
             }
 
+            @Override
             public void write(byte[] b, int off, int len)
                     throws java.io.IOException {
                 out.write(b, off, len);
@@ -153,6 +163,7 @@ public class DetectBigMessageAspect
                 checkCount(count, "write", msg);
             }
 
+            @Override
             public void write(byte[] b)
                     throws java.io.IOException {
                 out.write(b);
@@ -167,7 +178,8 @@ public class DetectBigMessageAspect
         }
 
         // Create and return the byte-counting FilterOutputStream
-        public OutputStream getObjectOutputStream(ObjectOutput out)
+        @Override
+      public OutputStream getObjectOutputStream(ObjectOutput out)
                 throws java.io.IOException {
             OutputStream raw_os = super.getObjectOutputStream(out);
             return new CountingOutputStream(raw_os);
@@ -175,7 +187,8 @@ public class DetectBigMessageAspect
 
         // Save the message, since we'll need it later (in
         // postProcess).
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             super.finalizeAttributes(msg);
             this.msg = msg;
         }
@@ -199,6 +212,7 @@ public class DetectBigMessageAspect
                 super(wrapped);
             }
 
+            @Override
             public int read()
                     throws java.io.IOException {
                 ++count;
@@ -206,6 +220,7 @@ public class DetectBigMessageAspect
                 return in.read();
             }
 
+            @Override
             public int read(byte[] b, int off, int len)
                     throws java.io.IOException {
                 int inc = in.read(b, off, len);
@@ -214,6 +229,7 @@ public class DetectBigMessageAspect
                 return inc;
             }
 
+            @Override
             public int read(byte[] b)
                     throws java.io.IOException {
                 int inc = in.read(b);
@@ -227,13 +243,15 @@ public class DetectBigMessageAspect
             super(delegatee);
         }
 
-        public InputStream getObjectInputStream(ObjectInput in)
+        @Override
+      public InputStream getObjectInputStream(ObjectInput in)
                 throws java.io.IOException, ClassNotFoundException {
             InputStream raw_is = super.getObjectInputStream(in);
             return new CountingInputStream(raw_is);
         }
 
-        public void finalizeAttributes(AttributedMessage msg) {
+        @Override
+      public void finalizeAttributes(AttributedMessage msg) {
             super.finalizeAttributes(msg);
             this.msg = msg;
         }

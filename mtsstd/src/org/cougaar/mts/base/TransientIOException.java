@@ -37,7 +37,11 @@ import org.cougaar.util.log.Logging;
 public class TransientIOException
         extends CougaarIOException
         implements java.io.Serializable {
-    private transient final Logger logger =
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   private transient final Logger logger =
             Logging.getLogger("org.cougaar.mts.base.TransientIOException");
 
     public TransientIOException() {
@@ -49,19 +53,22 @@ public class TransientIOException
     }
 
     // Make these very quiet
-    public void printStackTrace() {
+    @Override
+   public void printStackTrace() {
         if (logger.isDebugEnabled()) {
             super.printStackTrace();
         }
     }
 
-    public void printStackTrace(java.io.PrintStream s) {
+    @Override
+   public void printStackTrace(java.io.PrintStream s) {
         if (logger.isDebugEnabled()) {
             super.printStackTrace(s);
         }
     }
 
-    public void printStackTrace(java.io.PrintWriter w) {
+    @Override
+   public void printStackTrace(java.io.PrintWriter w) {
         if (logger.isDebugEnabled()) {
             super.printStackTrace(w);
         }

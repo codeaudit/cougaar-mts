@@ -32,7 +32,12 @@ package org.cougaar.mts.base;
  **/
 public class CommFailureException
         extends Exception {
-    public CommFailureException(Exception nested) {
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+
+   public CommFailureException(Exception nested) {
         super(nested);
     }
 

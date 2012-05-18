@@ -44,7 +44,11 @@ abstract public class AgentStatusServlet
         extends BaseServlet // ServletFrameset
 {
 
-    protected AgentStatusService agentStatusService;
+    /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   protected AgentStatusService agentStatusService;
 
     public AgentStatusServlet(ServiceBroker sb) {
         super(sb);
@@ -78,7 +82,8 @@ abstract public class AgentStatusServlet
         row(out, name, Double.toString(value));
     }
 
-    public void printPage(HttpServletRequest request, PrintWriter out) {
+    @Override
+   public void printPage(HttpServletRequest request, PrintWriter out) {
         MessageAddress agent = null;
         String agentString = request.getParameter("agent");
         if (agentString != null) {
