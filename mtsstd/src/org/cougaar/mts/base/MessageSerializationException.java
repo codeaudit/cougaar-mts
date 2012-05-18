@@ -31,8 +31,7 @@ package org.cougaar.mts.base;
  * serialization reasons and if the send should therefore not be retried.
  */
 public class MessageSerializationException
-        extends DontRetryException
-        implements java.io.Serializable {
+        extends DontRetryException {
 
     /**
     * 

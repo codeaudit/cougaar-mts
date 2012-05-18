@@ -40,7 +40,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.cougaar.core.mts.AttributeConstants;
 import org.cougaar.core.mts.Attributes;
 import org.cougaar.core.mts.Message;
 import org.cougaar.core.mts.MessageAddress;
@@ -60,7 +59,7 @@ import org.cougaar.util.log.Logging;
  */
 public class AttributedMessage
         extends Message
-        implements Externalizable, MessageAttributes, AttributeConstants {
+        implements Externalizable, MessageAttributes {
 
     private static final String FILTERS_ATTRIBUTE = "Filters";
     private static final Logger logger = Logging.getLogger(AttributedMessage.class.getName());

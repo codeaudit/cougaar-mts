@@ -119,7 +119,7 @@ public class WasteCPUAspect
             while (System.currentTimeMillis() - startTime < wasteTime) {
                 count++;
             }
-
+            System.err.println(count);
             return super.forwardMessage(message);
 
         }

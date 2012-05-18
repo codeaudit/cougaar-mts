@@ -224,7 +224,10 @@ public class HTTPLinkProtocol
         return port;        
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({
+      "unchecked",
+      "unused"
+   })
     private int findRootServletPort(ServiceBroker sb) {
         // use the servlet service to get our local servlet port
         int port = -1;

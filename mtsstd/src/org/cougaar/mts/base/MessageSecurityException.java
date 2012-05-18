@@ -33,8 +33,7 @@ package org.cougaar.mts.base;
  */
 
 public class MessageSecurityException
-        extends DontRetryException
-        implements java.io.Serializable {
+        extends DontRetryException {
 
     /**
     * 

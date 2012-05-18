@@ -94,7 +94,8 @@ public class CachingStreamsAspect
             super(delegatee);
         }
 
-        public byte[] getCache() {
+        @SuppressWarnings("unused")
+      public byte[] getCache() {
             return cache;
         }
         

@@ -168,7 +168,7 @@ public class RMILinkProtocol
         } catch (IllegalArgumentException illegal_arg) {
             checkForMisdelivery(illegal_arg, message);
             // Not a misdelivery - rethrow the exception
-            throw illegal_arg;
+            throw new CommFailureException(illegal_arg);
         } finally {
             SchedulableStatus.endBlocking();
         }

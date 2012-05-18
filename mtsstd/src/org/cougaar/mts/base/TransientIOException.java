@@ -35,8 +35,7 @@ import org.cougaar.util.log.Logging;
  */
 
 public class TransientIOException
-        extends CougaarIOException
-        implements java.io.Serializable {
+        extends CougaarIOException {
     /**
     * 
     */
