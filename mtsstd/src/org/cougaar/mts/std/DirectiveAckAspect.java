@@ -100,7 +100,7 @@ public class DirectiveAckAspect
     
     /**
      * The delegate for {@link SendQueue} remembers each DirectiveMessage that
-     * requests a receipt. The delegate for {@DestinationLink}
+     * requests a receipt. The delegate for {@link DestinationLink}
      * checks for successful delivery (ie, no exceptions), and in that case
      * injects a receipt message back to the sending Agent.
      */
