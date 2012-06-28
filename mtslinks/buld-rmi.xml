@@ -1,0 +1,15 @@
+<project name="mtslinks" default="rmic-source">
+	<property name="module" value="mtslinks" />
+	<property name="classes.dir" value="tmp/classes"/>
+	<property name="cougaar.base" value="../.."/>
+	<target name="rmic-source">
+		<rmic base="${classes.dir}" stubversion="1.2" verify="true" includes="**/*Impl.class">
+			<classpath>
+				<path location="${classes.dir}"/>
+				<path location="${cougaar.base}/util/util/${classes.dir}" />
+				<path location="${cougaar.base}/core/core/${classes.dir}" />
+				<path location="${cougaar.base}/mts/mtsstd/${classes.dir}" />
+			</classpath>
+		</rmic>
+	</target>
+</project>
